@@ -1,8 +1,13 @@
 import React, { useState } from 'react';
-import { SafeAreaView, AsyncStorage, View, Text, TextInput, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { SafeAreaView, AsyncStorage, Dimensions, View, Text, TextInput, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import { loginUser } from '../apis/users'
 import { info } from '../../assets/info'
+
+const { height, width } = Dimensions.get('window')
+const offsetPadding = Constants.statusBarHeight
+const screenHeight = height - (offsetPadding * 2)
 
 export default function login({ navigation }) {
 	const [phonenumber, setPhonenumber] = useState(info.cellnumber)
@@ -40,13 +45,11 @@ export default function login({ navigation }) {
 					)
 				}
 			})
-			.catch((error) => {
-				alert(JSON.stringify(error))
-			})
+			.catch((error) => console.log(error))
 	}
 
 	return (
-		<SafeAreaView style={{ flex: 1 }}>
+		<View style={{ paddingVertical: offsetPadding }}>
 			<View style={style.box}>
 				<Image style={style.background} source={require('../../assets/auto-bg.jpg')}/>
 				<Text style={style.boxHeader}>Log-In</Text>
@@ -84,7 +87,7 @@ export default function login({ navigation }) {
 					<Text style={style.submitHeader}>Sign-In</Text>
 				</TouchableOpacity>
 			</View>
-		</SafeAreaView>
+		</View>
 	);
 }
 

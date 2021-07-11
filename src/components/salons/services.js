@@ -12,32 +12,19 @@ import Entypo from 'react-native-vector-icons/Entypo'
 const { height, width } = Dimensions.get('window')
 
 export default function services(props) {
-	const { id, name, map } = props.route.params
+	const { menuid, name, map, refetch } = props.route.params
+
 	const [permission, setPermission] = useState(null);
 	const [camComp, setCamcomp] = useState(null)
 	const [camType, setCamtype] = useState(Camera.Constants.Type.back);
 	const [showEdit, setShowedit] = useState('')
-	const [menus, setMenus] = useState([
-		/*{ key: "menu-0", id: "0", name: "Foot Care", image: require("../../../assets/nailsalon/footcare.jpeg") },
-		{ key: "menu-1", id: "1", name: "Foot Massage", image: require("../../../assets/nailsalon/footmassage.jpeg") },
-		{ key: "menu-2", id: "2", name: "Nail Enhancement", image: require("../../../assets/nailsalon/nailenhancement.jpeg") },
-		{ key: "menu-3", id: "3", name: "Hand Care", image: require("../../../assets/nailsalon/handcare.jpeg") },
-		{ key: "menu-4", id: "4", name: "Children 10 years & under", image: require("../../../assets/nailsalon/child.jpeg") },
-		{ key: "menu-5", id: "5", name: "Facial", image: require("../../../assets/nailsalon/facial.jpeg") },
-		{ key: "menu-6", id: "6", name: "Eyelash Extensions", image: require("../../../assets/nailsalon/eyelashextensions.jpeg") },
-		{ key: "menu-7", id: "7", name: "Waxing for women", image: require("../../../assets/nailsalon/womenwaxing.jpeg") },
-		{ key: "menu-8", id: "8", name: "Waxing for men", image: require("../../../assets/nailsalon/menwaxing.jpeg") },
-		{ key: "menu-9", id: "9", name: "Relaxing Massages", image: require("../../../assets/nailsalon/relaxingmassages.jpeg") }*/
-	])
-	const [products, setProducts] = useState([
-		//{ key: "product-0", id: "0", name: "", image: '' }
-	])
-	const [addMenu, setAddmenu] = useState({ show: false, info: '', image: '', errormsg: '' })
-	const [addProduct, setAddproduct] = useState({ show: false, info: '', image: '', options: [], errormsg: '' })
+	const [menus, setMenus] = useState([])
+	const [products, setProducts] = useState([])
+	const [addMenu, setAddmenu] = useState({ show: false, name: '', info: '', image: { uri: '', name: '' }, errormsg: '' })
 	const getTheInfo = async() => {
 		const userid = await AsyncStorage.getItem("userid")
 		const locationid = await AsyncStorage.getItem("locationid")
-		const data = { userid, locationid, categories: JSON.stringify(map) }
+		const data = { userid, locationid, parentmenuid: menuid }
 
 		getInfo(data)
 			.then((res) => {
@@ -55,8 +42,8 @@ export default function services(props) {
 						getAllMenus()
 					} else if (msg == "products") {
 						getAllProducts()
-					} else {
-
+					} else if (msg == "services") {
+						getAllServices()
 					}
 				}
 			})
@@ -64,7 +51,7 @@ export default function services(props) {
 	const getAllMenus = async() => {
 		const userid = await AsyncStorage.getItem("userid")
 		const locationid = await AsyncStorage.getItem("locationid")
-		const data = { userid, locationid, categories: JSON.stringify(map) }
+		const data = { userid, locationid, parentmenuid: menuid }
 
 		getMenus(data)
 			.then((res) => {
@@ -81,7 +68,7 @@ export default function services(props) {
 	const getAllProducts = async() => {
 		const userid = await AsyncStorage.getItem("userid")
 		const locationid = await AsyncStorage.getItem("locationid")
-		const data = { userid, locationid, menuid: id }
+		const data = { userid, locationid, menuid }
 
 		getProducts(data)
 			.then((res) => {
@@ -98,8 +85,8 @@ export default function services(props) {
 	const addTheNewMenu = async() => {
 		const userid = await AsyncStorage.getItem("userid")
 		const locationid = await AsyncStorage.getItem("locationid")
-		const { info, image } = addMenu
-		const data = { userid, locationid, categories: JSON.stringify(map), info, image }
+		const { name, info, image } = addMenu
+		const data = { userid, locationid, parentmenuid: menuid, name, info, image }
 
 		addNewMenu(data)
 			.then((res) => {
@@ -119,40 +106,11 @@ export default function services(props) {
 					const { id } = res
 
 					setShowedit('menus')
-					setAddmenu({ show: false, info: '', image: '', errormsg: '' })
-					setMenus([...menus, { key: "menu-" + id, id: id, name: info, image: image }])
+					setAddmenu({ show: false, name: '', info: '', image: '', errormsg: '' })
+					setMenus([...menus, { key: "menu-" + id, id: id, name: name, info: info, image: image }])
 
-					map.push(info)
-					props.navigation.push("services", { name: info, map })
-				}
-			})
-	}
-	const addTheNewProduct = async() => {
-		const userid = await AsyncStorage.getItem("userid")
-		const locationid = await AsyncStorage.getItem("locationid")
-		const { info, image } = addProduct
-		const data = { userid, locationid, menuid: id, info: info, image }
-
-		addNewProduct(data)
-			.then((res) => {
-				if (res.status == 200) {
-					if (!res.data.errormsg) {
-						return res.data
-					} else {
-						setAddproduct({
-							...addProduct,
-							errormsg: res.data.errormsg
-						})
-					}
-				}
-			})
-			.then((res) => {
-				if (res) {
-					const { id } = res
-
-					setShowedit('products')
-					setAddproduct({ show: false, info: '', image: '', errormsg: '' })
-					setProducts([...products, { key: "product-" + id, id: id, name: info, image: image }])
+					map.push(name)
+					props.navigation.push("services", { name: name, map })
 				}
 			})
 	}
@@ -193,21 +151,10 @@ export default function services(props) {
 				to: `${FileSystem.documentDirectory}/${char}.jpg`
 			})
 			.then(() => {
-				if (addMenu.show) {
-					setAddmenu({
-						...addMenu,
-						image: `${char}.jpg`
-
-						//`${FileSystem.documentDirectory}/${char}.jpg`
-					})
-				} else {
-					setAddproduct({
-						...addProduct,
-						image: `${char}.jpg`
-
-						//`${FileSystem.documentDirectory}/${char}.jpg`
-					})
-				}
+				setAddmenu({
+					...addMenu,
+					image: { uri: `${FileSystem.documentDirectory}/${char}.jpg`, name: `${char}.jpg` }
+				})
 			})
 		}
 	}
@@ -234,14 +181,7 @@ export default function services(props) {
 			.then((res) => {
 				if (res) {
 					setMenus(menus.filter((item, index) => index != menuindex))
-
-					if (menus.length > 0) {
-						setShowedit('menus')
-					} else if (products.length > 0) {
-						setShowedit('products')
-					} else {
-						setShowedit('')
-					}
+					getTheInfo()
 				}
 			})
 	}
@@ -256,20 +196,13 @@ export default function services(props) {
 			})
 			.then((res) => {
 				if (res) {
-					setProducts(products.filter((item, index) => index != productindex))
-
-					if (menus.length > 0) {
-						setShowedit('menus')
-					} else if (products.length > 0) {
-						setShowedit('products')
-					} else {
-						setShowedit('')
-					}
+					if (res) getTheInfo()
 				}
 			})
 	}
 
 	useEffect(() => {
+		openCamera()
 		getTheInfo()
 	}, [])
 
@@ -289,6 +222,12 @@ export default function services(props) {
 								<Text style={style.actionHeader}>Add Product</Text>
 							</TouchableOpacity>
 						)}
+
+						{(showEdit == '' || showEdit == 'services') && (
+							<TouchableOpacity style={style.action} onPress={() => setAddproduct({ ...addProduct, show: true })}>
+								<Text style={style.actionHeader}>Add Product</Text>
+							</TouchableOpacity>
+						)}
 					</View>
 				</View>
 					
@@ -299,7 +238,7 @@ export default function services(props) {
 							<TouchableOpacity key={item.key} style={style.menu} onPress={() => {
 								map.push(item.name)
 
-								props.navigation.push("services", { id: item.id, name: item.name, map })
+								props.navigation.push("services", { menuid: item.id, name: item.name, map })
 							}}>
 								<Text style={style.menuHeader}>{item.name}</Text>
 								{item.image ? <Image source={{ uri: item.image }} style={style.menuImage}/> : null}
@@ -327,20 +266,21 @@ export default function services(props) {
 				)}
 			</View>
 
-			{(addMenu.show || addProduct.show) && (
+			{addMenu.show && (
 				<Modal transparent={true}>
 					<SafeAreaView style={style.hiddenBox}>
 						{addMenu.show && (
 							<View style={style.addBox}>
 								<Text style={style.addHeader}>Enter menu name</Text>
 
-								<TextInput style={style.addInput} placeholder="Menu name" placeholderTextColor="rgba(127, 127, 127, 0.5)" onChangeText={(info) => setAddmenu({...addMenu, info: info })}/>
+								<TextInput style={style.addInput} placeholder="Menu name" placeholderTextColor="rgba(127, 127, 127, 0.5)" onChangeText={(name) => setAddmenu({...addMenu, name: name })} value={addMenu.name}/>
+								<TextInput style={style.infoInput} multiline={true} placeholder="Anything you want to say about this menu" placeholderTextColor="rgba(127, 127, 127, 0.5)" onChangeText={(info) => setAddmenu({...addMenu, info: info })} value={addMenu.info}/>
 
 								<View style={style.cameraContainer}>
 									<Text style={style.cameraHeader}>Menu photo</Text>
 
-									{addMenu.image ? (
-										<Image style={{ height: width * 0.5, width: width * 0.5 }} source={{ uri: image }}/>
+									{addMenu.image.uri ? (
+										<Image style={{ height: width * 0.5, width: width * 0.5 }} source={{ uri: addMenu.image.uri }}/>
 									) : (
 										<Camera style={style.camera} type={camType} ref={r => {setCamcomp(r)}}/>
 									)}
@@ -357,45 +297,6 @@ export default function services(props) {
 										<Text>Cancel</Text>
 									</TouchableOpacity>
 									<TouchableOpacity style={style.addAction} onPress={() => addTheNewMenu()}>
-										<Text>Done</Text>
-									</TouchableOpacity>
-								</View>
-							</View>
-						)}
-
-						{addProduct.show && (
-							<View style={style.addBox}>
-								<Text style={style.addHeader}>Enter product name</Text>
-
-								<TextInput style={style.addInput} placeholder="Product name" placeholderTextColor="rgba(127, 127, 127, 0.5)" onChangeText={(info) => setAddproduct({...addProduct, info: info })}/>
-
-								<View style={style.cameraContainer}>
-									<Text style={style.cameraHeader}>Product photo</Text>
-
-									{addProduct.image ? (
-										<Image style={{ height: width * 0.5, width: width * 0.5 }} source={{ uri: image }}/>
-									) : (
-										<Camera style={style.camera} type={camType} ref={r => {setCamcomp(r)}}/>
-									)}
-
-									<TouchableOpacity onPress={snapPhoto.bind(this)}>
-										<Entypo name="camera" size={30}/>
-									</TouchableOpacity>
-								</View>
-
-								<View style={style.addOptions}>
-									<TouchableOpacity style={style.addOption} onPress={() => {}}>
-										<Text style={style.addOption}>Add Option</Text>
-									</TouchableOpacity>
-								</View>
-
-								<Text style={style.errorMsg}>{addProduct.errormsg}</Text>
-
-								<View style={style.addActions}>
-									<TouchableOpacity style={style.addAction} onPress={() => setAddproduct({ show: false, info: '', image: '' })}>
-										<Text>Cancel</Text>
-									</TouchableOpacity>
-									<TouchableOpacity style={style.addAction} onPress={() => addTheNewProduct()}>
 										<Text>Done</Text>
 									</TouchableOpacity>
 								</View>
@@ -429,6 +330,10 @@ const style = StyleSheet.create({
 	productImage: { backgroundColor: 'black', borderRadius: 25, height: 50, marginLeft: 10, width: 50 },
 	productRemove: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 8, padding: 5 },
 	productRemoveHeader: { textAlign: 'center' },
+
+	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
+	bottomNav: { flexDirection: 'row', height: 30, margin: 5 },
+	bottomNavHeader: { fontWeight: 'bold', paddingVertical: 5 },
 
 	// hidden boxes
 	hiddenBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flex: 1, flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },

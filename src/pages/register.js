@@ -1,8 +1,13 @@
 import React, { useState } from 'react';
-import { AsyncStorage, SafeAreaView, View, Text, TextInput, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { AsyncStorage, Dimensions, View, Text, TextInput, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import { registerUser } from '../apis/users'
 import { info } from '../../assets/info'
+
+const { height, width } = Dimensions.get('window')
+const offsetPadding = Constants.statusBarHeight
+const screenHeight = height - (offsetPadding * 2)
 
 export default function register({ navigation }) {
 	const [phonenumber, setPhonenumber] = useState(info.cellnumber)
@@ -33,7 +38,7 @@ export default function register({ navigation }) {
 	}
 
 	return (
-		<SafeAreaView style={{ flex: 1 }}>
+		<View style={{ paddingVertical: offsetPadding }}>
 			<View style={style.box}>
 				<Image style={style.background} source={require('../../assets/auto-bg.jpg')}/>
 				<Text style={style.boxHeader}>Sign-Up</Text>
@@ -74,7 +79,7 @@ export default function register({ navigation }) {
 					<Text style={style.submitHeader}>Register</Text>
 				</TouchableOpacity>
 			</View>
-		</SafeAreaView>
+		</View>
 	);
 }
 

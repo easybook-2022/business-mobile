@@ -20,6 +20,9 @@ import Booktime from './src/pages/salons/booktime'
 // salons' components
 import Services from './src/components/salons/services'
 import Addproduct from './src/components/addproduct'
+import Addservice from './src/components/addservice'
+
+import Menu from './src/pages/menu'
 
 import Settings from './src/pages/settings'
 
@@ -60,14 +63,15 @@ export default function App() {
                         <Stack.Screen name="services" component={Services} options={({ navigation, route }) => ({
                             headerTitle: () => (
                                 <View>
-                                    <Text style={{ fontSize: 20, fontWeight: 'bold' }}>{route.params.name}</Text>
+                                    <Text style={{ fontSize: 20, fontWeight: 'bold' }}>Edit Menu: {route.params.name}</Text>
                                 </View>
                             ),
                             headerLeft: () => (
                                 <TouchableOpacity style={style.back} onPress={() => {
-                                    const { map } = route.params
+                                    const { map, refetch } = route.params
 
                                     map.pop()
+                                    refetch()
                                     navigation.goBack({ map })
                                 }}>
                                     <Text style={style.backHeader}>Go Back</Text>
@@ -82,6 +86,37 @@ export default function App() {
                             ),
                             headerLeft: () => (
                                 <TouchableOpacity style={style.back} onPress={() => navigation.goBack()}>
+                                    <Text style={style.backHeader}>Go Back</Text>
+                                </TouchableOpacity>
+                            )
+                        })}/>
+                        <Stack.Screen name="addservice" component={Addservice} options={({ navigation, route }) => ({
+                            headerTitle: () => (
+                                <View>
+                                    <Text style={{ fontSize: 20, fontWeight: 'bold' }}>Add Service</Text>
+                                </View>
+                            ),
+                            headerLeft: () => (
+                                <TouchableOpacity style={style.back} onPress={() => navigation.goBack()}>
+                                    <Text style={style.backHeader}>Go Back</Text>
+                                </TouchableOpacity>
+                            )
+                        })}/>
+                        <Stack.Screen name="menu" component={Menu} options={({ navigation, route }) => ({
+                            headerTitle: () => (
+                                <View>
+                                    <Text style={{ fontSize: 20, fontWeight: 'bold' }}>Edit Menu
+                                        {route.params.name && <Text style={{ fontSize: 15 }}>: {route.params.name}</Text>}
+                                    </Text>
+                                </View>
+                            ),
+                            headerLeft: () => (
+                                <TouchableOpacity style={style.back} onPress={() => {
+                                    const { refetch } = route.params
+
+                                    refetch()
+                                    navigation.goBack()
+                                }}>
                                     <Text style={style.backHeader}>Go Back</Text>
                                 </TouchableOpacity>
                             )

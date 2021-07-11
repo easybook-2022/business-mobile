@@ -1,18 +1,16 @@
 import axios from 'axios'
 import { LOCAL_API_URL, WIFI_API_URL } from "@env"
 
-const url = `${WIFI_API_URL}/locations/`
-
 export const registerLocation = (data) => {
 	return axios.post(
-		`${url}register_location`, 
+		`${WIFI_API_URL}/locations/register_location`, 
 		data
 	)
 }
 
 export const loginLocation = async(data) => {
 	return axios.post(
-		`${url}login_location`,
+		`${WIFI_API_URL}/locations/login_location`,
 		data
 	)
 }
@@ -32,7 +30,7 @@ export const setupLocation = (data) => {
 	form.append("userid", data.userid)
 
 	return axios.post(
-		`${url}setup_location`, 
+		`${WIFI_API_URL}/locations/setup_location`, 
 		form, 
 		{ headers: { 
 			'Content-Type': 'multipart/form-data' 
@@ -42,7 +40,7 @@ export const setupLocation = (data) => {
 
 export const getInfo = (data) => {
 	return axios.post(
-		`${url}get_info`,
+		`${WIFI_API_URL}/locations/get_info`,
 		data
 	)
 }

@@ -1,14 +1,14 @@
 import { LOCAL_API_URL, WIFI_API_URL } from "@env"
 
 export const info = {
-	cellnumber: "9058582828",
+	cellnumber: "6479263868",
 	password: "password",
-	storeName: "The One | Nail Salon",
-	addressOne: "775 Britannia Rd W",
-	addressTwo: "Unit 9",
-	city: "Mississauga",
+	storeName: "The Store",
+	addressOne: "275 Broadview Avenue",
+	addressTwo: "Unit # 32",
+	city: "Toronto",
 	province: "ON",
-	postalcode: "L5V 2Y1"
+	postalcode: "M4M 3H5"
 }
 
 export const logo_url = WIFI_API_URL + "/static/"

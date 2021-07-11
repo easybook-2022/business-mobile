@@ -5,7 +5,7 @@ import { CommonActions } from '@react-navigation/native';
 import * as FileSystem from 'expo-file-system'
 import { Camera } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator'
-import { addNewProduct } from '../apis/products'
+import { addNewService } from '../apis/services'
 
 import FontAwesome from 'react-native-vector-icons/FontAwesome'
 import AntDesign from 'react-native-vector-icons/AntDesign'
@@ -13,7 +13,7 @@ import Entypo from 'react-native-vector-icons/Entypo'
 
 const { width } = Dimensions.get('window')
 
-export default function addproduct(props) {
+export default function addservice(props) {
 	const { menuid, refetch } = props.route.params
 
 	const [permission, setPermission] = useState(null);
@@ -22,36 +22,18 @@ export default function addproduct(props) {
 	const [name, setName] = useState('')
 	const [info, setInfo] = useState('')
 	const [image, setImage] = useState({ uri: '', name: '' })
-	const [options, setOptions] = useState([])
 	const [price, setPrice] = useState('')
+	const [duration, setDuration] = useState('')
 	const [errorMsg, setErrormsg] = useState('')
 
-	const addTheNewProduct = async() => {
+	const addTheNewService = async() => {
 		const userid = await AsyncStorage.getItem("userid")
 		const locationid = await AsyncStorage.getItem("locationid")
 
-		for (let k = 0; k < options.length; k++) {
-			if (!options[k].text) {
-				setErrormsg("One of the customer options has empty values")
+		if (name && image.uri && price && duration) {
+			const data = { userid, locationid, menuid, name, info, image, price, duration }
 
-				return
-			}
-
-			if (!options[k].option) {
-				setErrormsg("One of the customer options has empty values")
-
-				return
-			}
-		}
-
-		if (name && image.uri && price) {
-			options.forEach(function (option) {
-				delete option['key']
-			})
-
-			const data = { userid, locationid, menuid, name, info, image, options, price }
-
-			addNewProduct(data)
+			addNewService(data)
 				.then((res) => {
 					if (res.status == 200) {
 						if (!res.data.errormsg) {
@@ -69,7 +51,7 @@ export default function addproduct(props) {
 				})
 		} else {
 			if (!name) {
-				setErrormsg("Please enter the product name")
+				setErrormsg("Please enter the service name")
 
 				return
 			}
@@ -81,7 +63,13 @@ export default function addproduct(props) {
 			}
 
 			if (!price) {
-				setErrormsg("Please enter the price of the product")
+				setErrormsg("Please enter the price of the service")
+
+				return
+			}
+
+			if (!duration) {
+				setErrormsg("Please enter the duration of this service")
 
 				return
 			}
@@ -149,13 +137,13 @@ export default function addproduct(props) {
 	return (
 		<ScrollView showsVerticalScrollIndicator={false}>
 			<View style={style.box}>
-				<Text style={style.addHeader}>Enter product info</Text>
+				<Text style={style.addHeader}>Enter service info</Text>
 
-				<TextInput style={style.addInput} placeholder="Product name" placeholderTextColor="rgba(127, 127, 127, 0.5)" onChangeText={(name) => setName(name)}/>
-				<TextInput style={style.infoInput} multiline={true} placeholder="Anything you want to say about this product (optional)" placeholderTextColor="rgba(127, 127, 127, 0.5)" onChangeText={(info) => setInfo(info)}/>
+				<TextInput style={style.addInput} placeholder="Service name" placeholderTextColor="rgba(127, 127, 127, 0.5)" onChangeText={(name) => setName(name)}/>
+				<TextInput style={style.infoInput} multiline={true} placeholder="Anything you want to say about this service (optional)" placeholderTextColor="rgba(127, 127, 127, 0.5)" onChangeText={(info) => setInfo(info)}/>
 
 				<View style={style.cameraContainer}>
-					<Text style={style.cameraHeader}>Product photo</Text>
+					<Text style={style.cameraHeader}>Service photo</Text>
 
 					{image.uri ? (
 						<>
@@ -176,85 +164,20 @@ export default function addproduct(props) {
 					)}	
 				</View>
 
-				<TouchableOpacity style={style.addOption} onPress={() => {
-					let new_key
-
-					if (options.length > 0) {
-						let last_option = options[options.length - 1]
-						new_key = parseInt(last_option.key) + 1
-					} else {
-						new_key = 0
-					}
-
-					setOptions([...options, { key: new_key.toString(), text: '', option: '' }])
-				}}>
-					<Text style={style.addOptionHeader}>Add Customer Option</Text>
-				</TouchableOpacity>
-
-				<View style={style.options}>
-					{options.map((option, index) => (
-						<View key={option.key} style={style.option}>
-							<TouchableOpacity style={style.optionRemove} onPress={() => {
-								let newOptions = [...options]
-
-								newOptions.splice(index, 1)
-
-								setOptions(newOptions)
-							}}>
-								<FontAwesome name="close" size={20}/>
-							</TouchableOpacity>
-							<TextInput style={style.optionInput} placeholder="eg. Size" value={option.text} onChangeText={(text) => {
-								let newOptions = [...options]
-
-								newOptions[index].text = text
-
-								setOptions(newOptions)
-							}}/>
-							<View style={style.types}>
-								<Text style={style.typesHeader}>Type:</Text>
-								<View style={style.optionTypes}>
-									<TouchableOpacity style={option.option == 'percentage' ? style.optionTypeSelected : style.optionType} onPress={() => {
-										let newOptions = [...options]
-
-										newOptions[index].option = 'percentage'
-
-										setOptions(newOptions)
-									}}>
-										<Text style={option.option == 'percentage' ? style.optionTypeHeaderSelected : style.optionTypeHeader}>Percentage</Text>
-									</TouchableOpacity>
-									<TouchableOpacity style={option.option == 'quantity' ? style.optionTypeSelected : style.optionType} onPress={() => {
-										let newOptions = [...options]
-										
-										newOptions[index].option = 'quantity'
-
-										setOptions(newOptions)
-									}}>
-										<Text style={option.option == 'quantity' ? style.optionTypeHeaderSelected : style.optionTypeHeader}>Quantity</Text>
-									</TouchableOpacity>
-									<TouchableOpacity style={option.option == 'size' ? style.optionTypeSelected : style.optionType} onPress={() => {
-										let newOptions = [...options]
-										
-										newOptions[index].option = 'size'
-
-										setOptions(newOptions)
-									}}>
-										<Text style={option.option == 'size' ? style.optionTypeHeaderSelected : style.optionTypeHeader}>Size</Text>
-									</TouchableOpacity>
-								</View>
-							</View>
-						</View>
-					))}
+				<View style={style.inputBox}>
+					<Text style={style.inputHeader}>Service price</Text>
+					<TextInput style={style.inputValue} placeholder="4.99" onChangeText={(price) => setPrice(price)}/>
 				</View>
 
-				<View style={style.priceBox}>
-					<Text style={style.priceHeader}>Product price</Text>
-					<TextInput style={style.priceInput} placeholder="4.99" onChangeText={(price) => setPrice(price)}/>
+				<View style={style.inputBox}>
+					<Text style={style.inputHeader}>Service duration</Text>
+					<TextInput style={style.inputValue} placeholder="4 hours" onChangeText={(duration) => setDuration(duration)}/>
 				</View>
 
 				<Text style={style.errorMsg}>{errorMsg}</Text>
 
 				<View style={style.addActions}>
-					<TouchableOpacity style={style.addAction} onPress={() => addTheNewProduct()}>
+					<TouchableOpacity style={style.addAction} onPress={() => addTheNewService()}>
 						<Text>Done</Text>
 					</TouchableOpacity>
 				</View>
@@ -272,22 +195,9 @@ const style = StyleSheet.create({
 	cameraHeader: { fontWeight: 'bold', paddingVertical: 5 },
 	camera: { height: width * 0.8, width: width * 0.8 },
 	cameraAction: { margin: 10 },
-	addOption: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 2 },
-	addOptionHeader: { fontSize: 13 },
-	options: { marginBottom: 50 },
-	option: { flexDirection: 'row', justifyContent: 'space-between' },
-	optionRemove: { alignItems: 'center', borderRadius: 12.5, borderStyle: 'solid', borderWidth: 2, height: 25, marginRight: 5, marginVertical: 20, width: 25 },
-	optionInput: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, height: 30, marginVertical: 19, padding: 3, width: 100 }, 
-	types: { alignItems: 'center' },
-	typesHeader: { fontSize: 10, fontWeight: 'bold', margin: 5 },
-	optionTypes: { flexDirection: 'row' },
-	optionType: { alignItems: 'center', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 2, padding: 5 },
-	optionTypeSelected: { alignItems: 'center', backgroundColor: 'black', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 2, padding: 5 },
-	optionTypeHeader: { fontSize: 10 },
-	optionTypeHeaderSelected: { color: 'white', fontSize: 10 },
-	priceBox: { flexDirection: 'row', marginBottom: 30 },
-	priceHeader: { fontSize: 15, fontWeight: 'bold', padding: 5 },
-	priceInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: '40%' },
+	inputBox: { flexDirection: 'row', marginBottom: 30 },
+	inputHeader: { fontSize: 15, fontWeight: 'bold', padding: 5 },
+	inputValue: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: '40%' },
 	errorMsg: { color: 'red', fontWeight: 'bold', marginBottom: 50, textAlign: 'center' },
 	addActions: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 50, width: '100%' },
 	addAction: { alignItems: 'center', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, padding: 5, width: 100 },

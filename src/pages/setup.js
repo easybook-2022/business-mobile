@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { AsyncStorage, Dimensions, SafeAreaView, ScrollView, View, Text, TextInput, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { AsyncStorage, Dimensions, ScrollView, View, Text, TextInput, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import Constants from 'expo-constants';
 import * as FileSystem from 'expo-file-system'
 import { Camera } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator'
@@ -13,6 +14,8 @@ import AntDesign from 'react-native-vector-icons/AntDesign'
 import Entypo from 'react-native-vector-icons/Entypo'
 
 const { height, width } = Dimensions.get('window')
+const offsetPadding = Constants.statusBarHeight
+const screenHeight = height - (offsetPadding * 2)
 
 export default function setup({ navigation }) {
 	const [permission, setPermission] = useState(null);
@@ -169,7 +172,7 @@ export default function setup({ navigation }) {
 	if (permission === null) return <View/>
 
 	return (
-		<SafeAreaView style={{ flex: 1 }}>
+		<View style={{ paddingVertical: offsetPadding }}>
 			<ScrollView style={{ width: '100%' }}>
 				<View style={style.box}>
 					<Text style={style.boxHeader}>Setup</Text>
@@ -226,7 +229,7 @@ export default function setup({ navigation }) {
 						</View>
 					</View>
 
-					<Text style={style.errorMsg}>{errorMsg}</Text>
+					{errorMsg ? <Text style={style.errorMsg}>{errorMsg}</Text> : null }
 
 					<TouchableOpacity style={style.setupButton} onPress={() => setupYourLocation()}>
 						<Text>Done</Text>
@@ -253,7 +256,7 @@ export default function setup({ navigation }) {
 					</TouchableOpacity>
 				</View>
 			</View>
-		</SafeAreaView>
+		</View>
 	)
 }
 
