@@ -9,6 +9,8 @@ import * as Font from 'expo-font';
 import Login from './src/pages/login'
 import Register from './src/pages/register'
 import Setup from './src/pages/setup'
+import Typesetup from './src/pages/typesetup'
+import Setuphours from './src/pages/setuphours'
 
 // restaurants
 import Restaurants from './src/pages/restaurants'
@@ -34,14 +36,14 @@ export default function App() {
 
     if (loaded) {
         const retrieveId = async() => {
-            let userid = await AsyncStorage.getItem("userid")
-            let setup = await AsyncStorage.getItem("setup")
+            let ownerid = await AsyncStorage.getItem("ownerid")
+            let phase = await AsyncStorage.getItem("phase")
 
-            if (userid) {
-                if (setup == "true") {
-                    setRoute("salons")
+            if (ownerid) {
+                if (phase) {
+                    setRoute(phase)
                 } else {
-                    setRoute("setup")
+                    setRoute("login")
                 }
             } else {
                 setRoute("login")
@@ -57,6 +59,8 @@ export default function App() {
                         <Stack.Screen name="login" component={Login} options={{ headerShown: false }}/>
                         <Stack.Screen name="register" component={Register} options={{ headerShown: false }}/>
                         <Stack.Screen name="setup" component={Setup} options={{ headerShown: false }}/>
+                        <Stack.Screen name="typesetup" component={Typesetup} options={{ headerShown: false }}/>
+                        <Stack.Screen name="setuphours" component={Setuphours} options={{ headerShown: false }}/>
                         <Stack.Screen name="restaurants" component={Restaurants} options={{ headerShown: false }}/>
                         <Stack.Screen name="salons" component={Salons} options={{ headerShown: false }}/>
                         <Stack.Screen name="booktime" component={Booktime} options={{ headerShown: false }}/>

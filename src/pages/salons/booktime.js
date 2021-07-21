@@ -1,61 +1,21 @@
 import React, { useEffect, useState } from 'react'
-import { ActivityIndicator, SafeAreaView, ScrollView, View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
-import { requestTime } from '../../apis/menus'
+import { AsyncStorage, ActivityIndicator, SafeAreaView, ScrollView, View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import { getServiceInfo } from '../../apis/services'
+import { getRequestInfo, rescheduleRequest } from '../../apis/appointments'
+import { getLocationHours } from '../../apis/locations'
 
 export default function booktime(props) {
-	let { name } = props.route.params
+	const { appointmentid } = props.route.params
 
-	let [service, setService] = useState(name)
-	let [times, setTimes] = useState([])
-	let [loaded, setLoaded] = useState(false)
+	const [name, setName] = useState('')
+	const [serviceId, setServiceid] = useState(0)
+	const [times, setTimes] = useState([])
+	const [loaded, setLoaded] = useState(false)
 
-	let [confirm, setConfirm] = useState({ show: false, time: "", requested: false })
+	const [confirm, setConfirm] = useState({ show: false, time: "", requested: false })
 
-	useEffect(() => {
-		let timenow = Date.now()
-		let k = 1
-
-		while (times.length < 100) {
-			timenow += (1000 * (60 * 10)) // push every 10 minutes
-
-			let timestr = new Date(timenow).toString().split(" ")[4]
-			let time = timestr.split(":")
-			let hour = parseInt(time[0])
-			let minute = time[1]
-			let period = hour > 11 ? "pm" : "am"
-
-			let currtime = parseInt(hour.toString() + "" + minute)
-
-			if (currtime >= 1000 && currtime <= (2000 - 50)) {
-				let timedisplay = (hour > 12 ? hour - 12 : hour) + ":" + minute + " " + period
-
-				k++
-				times.push({ key: (k - 1).toString(), header: timedisplay, time: timenow, booked: k % 2 == 0 ? true : false })
-			}
-		}
-
-		setTimes(times)
-		setLoaded(true)
-	}, [])
-
-	const selectTime = (time) => {
-		setConfirm({
-			...confirm,
-			show: true,
-			service: service,
-			time: time
-		})
-	}
-	const requestATime = () => {
-		let { service, time } = confirm
-		let data = { service, time }
-
-		setConfirm({
-			...confirm,
-			requested: true
-		})
-
-		requestTime(data)
+	const getTheRequestInfo = async() => {
+		getRequestInfo(appointmentid)
 			.then((res) => {
 				if (res.status == 200) {
 					return res.data
@@ -63,21 +23,85 @@ export default function booktime(props) {
 			})
 			.then((res) => {
 				if (res) {
-					let { serviceid } = res
+					const { locationId, name } = res.serviceInfo
 
-					setTimeout(function () {
-						setConfirm({
-							...confirm,
-							show: false,
-							requested: false
-						})
-					}, 2000)
+					setName(name)
+					getTheLocationHours(locationId)
 				}
+			})
+	}
+	const getTheLocationHours = async(locationid) => {
+		const day = new Date(Date.now()).toString().split(" ")[0]
+		const data = { locationid, day }
+
+		getLocationHours(data)
+			.then((res) => {
+				if (res.status == 200) {
+					return res.data
+				}
+			})
+			.then((res) => {
+				if (res) {
+					const { openTime, closeTime } = res
+					let openHour = openTime.hour, openMinute = openTime.minute, openPeriod = openTime.period
+					let closeHour = closeTime.hour, closeMinute = closeTime.minute, closePeriod = closeTime.period
+
+					openHour = openPeriod == "PM" ? parseInt(openHour) + 12 : openHour
+					closeHour = closePeriod == "PM" ? parseInt(closeHour) + 12 : closeHour
+
+					const currTime = new Date(Date.now()).toString().split(" ")
+
+					let openStr = currTime[0] + " " + currTime[1] + " " + currTime[2] + " " + currTime[3] + " " + openHour + ":" + openMinute
+					let closeStr = currTime[0] + " " + currTime[1] + " " + currTime[2] + " " + currTime[3] + " " + closeHour + ":" + closeMinute
+					let openDateStr = Date.parse(openStr), closeDateStr = Date.parse(closeStr)
+					let k = 1, newTimes = []
+
+					while (openDateStr < (closeDateStr - ((1000 * (60 * 10))))) {
+						openDateStr += (1000 * (60 * 10)) // push every 10 minutes
+
+						let timestr = new Date(openDateStr).toString().split(" ")[4]
+						let time = timestr.split(":")
+						let hour = parseInt(time[0])
+						let minute = time[1]
+						let period = hour > 11 ? "pm" : "am"
+
+						let currtime = parseInt(hour.toString() + "" + minute)
+
+						let timedisplay = (hour > 12 ? hour - 12 : hour) + ":" + minute + " " + period
+
+						k++
+						newTimes.push({ key: (k - 1).toString(), header: timedisplay, time: openDateStr, booked: false })
+					}
+
+					setTimes(newTimes)
+					setLoaded(true)
+				}
+			})
+	}
+	const selectTime = (header, time) => {
+		setConfirm({ ...confirm, show: true, service: name, timeheader: header, time: time })
+	}
+	const requestATime = () => {
+		let { service, time } = confirm
+		let data = { appointmentid, time }
+
+		rescheduleRequest(data)
+			.then((res) => {
+				if (res.status == 200) {
+					return res.data
+				}
+			})
+			.then((res) => {
+				if (res) setConfirm({ ...confirm, requested: true })
 			})
 			.catch((error) => {
 				alert(error.message)
 			})
 	}
+
+	useEffect(() => {
+		getTheRequestInfo()
+	}, [])
 
 	return (
 		<SafeAreaView style={{ flex: 1 }}>
@@ -97,7 +121,7 @@ export default function booktime(props) {
 							{times.map(info => (
 								<TouchableOpacity style={info.booked ? style.selected : style.unselect} disabled={info.booked} key={info.key} onPress={() => {
 									if (!info.booked) {
-										selectTime(info.header)
+										selectTime(info.header, info.time)
 									}
 								}}>
 									<Text style={{ color: info.booked ? 'white' : 'black', fontSize: 20 }}>{info.header}</Text>
@@ -117,7 +141,8 @@ export default function booktime(props) {
 									<>
 										<Text style={style.confirmHeader}>
 											<Text style={{ fontFamily: 'appFont' }}>Select this time for client</Text>
-											{'\n'} at {' ' + confirm.time}
+											{'\n'} at {' ' + confirm.timeheader + '\n for '}
+											{confirm.service}
 										</Text>
 
 										<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
@@ -135,8 +160,15 @@ export default function booktime(props) {
 									<>
 										<View style={style.requestedHeaders}>
 											<Text style={style.requestedHeader}>Time requested {'\n'}</Text>
-											<Text style={style.requestedHeaderInfo}>at {confirm.time} {'\n'}</Text>
-											<Text style={style.requestedHeaderInfo}>You will get notified by client</Text>
+											<Text style={style.requestedHeaderInfo}>at {confirm.timeheader} {'\n'}</Text>
+											<Text style={style.requestedHeaderInfo}>You will get notified by the client</Text>
+
+											<TouchableOpacity style={style.requestedClose} onPress={() => {
+												setConfirm({ ...confirm, show: false, requested: false })
+												props.navigation.goBack()
+											}}>
+												<Text style={style.requestedCloseHeader}>Ok</Text>
+											</TouchableOpacity>
 										</View>
 									</>
 								}
@@ -168,7 +200,9 @@ const style = StyleSheet.create({
 	confirmOptions: { flexDirection: 'row' },
 	confirmOption: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
 	confirmOptionHeader: { },
-	requestedHeaders: { alignItems: 'center' },
+	requestedHeaders: { alignItems: 'center', paddingHorizontal: 10 },
+	requestedClose: { borderRadius: 5, borderStyle: 'solid', borderWidth: 1, marginVertical: 10, padding: 5, width: 100 },
+	requestedCloseHeader: { fontFamily: 'appFont', fontSize: 20, textAlign: 'center' },
 	requestedHeader: { fontFamily: 'appFont', fontSize: 25 },
 	requestedHeaderInfo: { fontSize: 20, textAlign: 'center' },
 })

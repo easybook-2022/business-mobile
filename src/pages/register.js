@@ -13,6 +13,7 @@ export default function register({ navigation }) {
 	const [phonenumber, setPhonenumber] = useState(info.cellnumber)
 	const [password, setPassword] = useState(info.password)
 	const [confirmPassword, setConfirmpassword] = useState(info.password)
+	const [errorMsg, setErrormsg] = useState('')
 
 	const register = () => {
 		const data = { cellnumber: phonenumber, password: password, confirmPassword: confirmPassword }
@@ -20,7 +21,11 @@ export default function register({ navigation }) {
 		registerUser(data)
 			.then((res) => {
 				if (res.status == 200) {
-					return res.data
+					if (!res.data.errormsg) {
+						return res.data
+					} else {
+						setErrormsg(res.data.errormsg)
+					}
 				}
 
 				return
@@ -29,7 +34,7 @@ export default function register({ navigation }) {
 				if (res) {
 					const { id } = res
 
-					AsyncStorage.setItem("userid", id.toString())
+					AsyncStorage.setItem("ownerid", id.toString())
 					AsyncStorage.setItem("setup", "false")
 
 					navigation.navigate("setup")
@@ -58,6 +63,8 @@ export default function register({ navigation }) {
 						<Text style={style.inputHeader}>Confirm Password:</Text>
 						<TextInput style={style.input} secureTextEntry={true} onChangeText={(password) => setConfirmpassword(password)} value={confirmPassword}/>
 					</View>
+
+					<Text style={style.errorMsg}>{errorMsg}</Text>
 				</View>
 
 				<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>

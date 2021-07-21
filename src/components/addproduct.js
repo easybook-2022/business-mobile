@@ -27,7 +27,7 @@ export default function addproduct(props) {
 	const [errorMsg, setErrormsg] = useState('')
 
 	const addTheNewProduct = async() => {
-		const userid = await AsyncStorage.getItem("userid")
+		const ownerid = await AsyncStorage.getItem("ownerid")
 		const locationid = await AsyncStorage.getItem("locationid")
 
 		for (let k = 0; k < options.length; k++) {
@@ -49,7 +49,7 @@ export default function addproduct(props) {
 				delete option['key']
 			})
 
-			const data = { userid, locationid, menuid, name, info, image, options, price }
+			const data = { ownerid, locationid, menuid, name, info, image, options, price }
 
 			addNewProduct(data)
 				.then((res) => {

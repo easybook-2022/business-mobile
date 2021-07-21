@@ -22,9 +22,9 @@ export default function services(props) {
 	const [products, setProducts] = useState([])
 	const [addMenu, setAddmenu] = useState({ show: false, name: '', info: '', image: { uri: '', name: '' }, errormsg: '' })
 	const getTheInfo = async() => {
-		const userid = await AsyncStorage.getItem("userid")
+		const ownerid = await AsyncStorage.getItem("ownerid")
 		const locationid = await AsyncStorage.getItem("locationid")
-		const data = { userid, locationid, parentmenuid: menuid }
+		const data = { ownerid, locationid, parentmenuid: menuid }
 
 		getInfo(data)
 			.then((res) => {
@@ -49,9 +49,9 @@ export default function services(props) {
 			})
 	}
 	const getAllMenus = async() => {
-		const userid = await AsyncStorage.getItem("userid")
+		const ownerid = await AsyncStorage.getItem("ownerid")
 		const locationid = await AsyncStorage.getItem("locationid")
-		const data = { userid, locationid, parentmenuid: menuid }
+		const data = { ownerid, locationid, parentmenuid: menuid }
 
 		getMenus(data)
 			.then((res) => {
@@ -66,9 +66,9 @@ export default function services(props) {
 			})
 	}
 	const getAllProducts = async() => {
-		const userid = await AsyncStorage.getItem("userid")
+		const ownerid = await AsyncStorage.getItem("ownerid")
 		const locationid = await AsyncStorage.getItem("locationid")
-		const data = { userid, locationid, menuid }
+		const data = { ownerid, locationid, menuid }
 
 		getProducts(data)
 			.then((res) => {
@@ -83,10 +83,10 @@ export default function services(props) {
 			})
 	}
 	const addTheNewMenu = async() => {
-		const userid = await AsyncStorage.getItem("userid")
+		const ownerid = await AsyncStorage.getItem("ownerid")
 		const locationid = await AsyncStorage.getItem("locationid")
 		const { name, info, image } = addMenu
-		const data = { userid, locationid, parentmenuid: menuid, name, info, image }
+		const data = { ownerid, locationid, parentmenuid: menuid, name, info, image }
 
 		addNewMenu(data)
 			.then((res) => {

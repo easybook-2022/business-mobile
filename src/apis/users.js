@@ -1,35 +1,37 @@
 import axios from 'axios'
 import { LOCAL_API_URL, WIFI_API_URL } from "@env"
 
+const url = LOCAL_API_URL
+
 export const registerUser = (data) => {
 	return axios.post(
-		`${WIFI_API_URL}/users/register`,
+		`${url}/owners/register`,
 		data
 	)
 }
 
 export const loginUser = (data) => {
 	return axios.post(
-		`${WIFI_API_URL}/users/login`,
+		`${url}/owners/login`,
 		data
 	)
 }
 
 export const addBankaccount = (data) => {
 	return axios.post(
-		`${WIFI_API_URL}/users/add_bankaccount`,
+		`${url}/owners/add_bankaccount`,
 		data
 	)
 }
 
 export const getAccount = (accountid) => {
 	return axios.get(
-		`${WIFI_API_URL}/users/get_account/${accountid}`
+		`${url}/owners/get_account/${accountid}`
 	)
 }
 
 export const getBankaccount = (bankaccountid) => {
 	return axios.get(
-		`${WIFI_API_URL}/users/get_bankaccount/${bankaccountid}`
+		`${url}/owners/get_bankaccount/${bankaccountid}`
 	)
 }

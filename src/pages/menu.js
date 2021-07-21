@@ -38,9 +38,9 @@ export default function menu(props) {
 
 	const [addMenu, setAddmenu] = useState({ show: false, name: '', info: '', image: { uri: '', name: '' }, errormsg: '' })
 	const getTheInfo = async() => {
-		const userid = await AsyncStorage.getItem("userid")
+		const ownerid = await AsyncStorage.getItem("ownerid")
 		const locationid = await AsyncStorage.getItem("locationid")
-		const data = { userid, locationid, menuid }
+		const data = { ownerid, locationid, menuid }
 
 		setShowmenus(false)
 		setMenus([])
@@ -62,7 +62,7 @@ export default function menu(props) {
 			})
 			.then((res) => {
 				if (res) {
-					const { msg, storeName, storeAddress, storeLogo } = res
+					const { msg } = res
 
 					if (msg == "menus") {
 						getAllMenus()
@@ -77,9 +77,8 @@ export default function menu(props) {
 
 	// menus
 	const getAllMenus = async() => {
-		const userid = await AsyncStorage.getItem("userid")
 		const locationid = await AsyncStorage.getItem("locationid")
-		const data = { userid, locationid, parentmenuid: menuid }
+		const data = { locationid, parentmenuid: menuid }
 
 		getMenus(data)
 			.then((res) => {
@@ -96,10 +95,10 @@ export default function menu(props) {
 			})
 	}
 	const addTheNewMenu = async() => {
-		const userid = await AsyncStorage.getItem("userid")
+		const ownerid = await AsyncStorage.getItem("ownerid")
 		const locationid = await AsyncStorage.getItem("locationid")
 		const { name, info, image } = addMenu
-		const data = { userid, locationid, parentMenuid: menuid, name, info, image }
+		const data = { ownerid, locationid, parentMenuid: menuid, name, info, image }
 
 		addNewMenu(data)
 			.then((res) => {
@@ -139,9 +138,8 @@ export default function menu(props) {
 
 	// products
 	const getAllProducts = async() => {
-		const userid = await AsyncStorage.getItem("userid")
 		const locationid = await AsyncStorage.getItem("locationid")
-		const data = { userid, locationid, menuid: menuid }
+		const data = { locationid, menuid: menuid }
 
 		getProducts(data)
 			.then((res) => {
@@ -175,9 +173,8 @@ export default function menu(props) {
 
 	// services
 	const getAllServices = async() => {
-		const userid = await AsyncStorage.getItem("userid")
 		const locationid = await AsyncStorage.getItem("locationid")
-		const data = { userid, locationid, menuid: menuid }
+		const data = { locationid, menuid: menuid }
 
 		getServices(data)
 			.then((res) => {
@@ -404,7 +401,7 @@ export default function menu(props) {
 								<>
 									<Camera style={style.camera} type={camType} ref={r => {setCamcomp(r)}}/>
 
-									<TouchableOpacity onPress={snapPhoto.bind(this)}>
+									<TouchableOpacity style={style.cameraAction} onPress={snapPhoto.bind(this)}>
 										<Entypo name="camera" size={30}/>
 									</TouchableOpacity>
 								</>
@@ -445,8 +442,9 @@ const style = StyleSheet.create({
 	menuRemoveHeader: { textAlign: 'center' },
 	menuInfo: { marginVertical: 10 },
 
-	product: { alignItems: 'center', padding: 20 },
-	productHeader: { fontSize: 20, fontWeight: 'bold', paddingVertical: 10 },
+	product: { alignItems: 'center', padding: 20, width: (width / 3) - 10 },
+	productEmpty: { padding: 20, width: (width / 3) - 10 },
+	productHeader: { fontSize: 20, fontWeight: 'bold', paddingVertical: 10, textAlign: 'center' },
 	productImage: { backgroundColor: 'black', borderRadius: 25, height: 50, marginLeft: 10, width: 50 },
 	productPrice: { fontWeight: 'bold' },
 	productRemove: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 8, padding: 5 },

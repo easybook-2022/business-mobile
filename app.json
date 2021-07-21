@@ -19,7 +19,7 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "NSCameraUsageDescription": "EasyGO uses camera to allow you to capture a photo of your product/service"
+        "NSCameraUsageDescription": "EasyGO uses camera to allow you to capture a photo of your menu/product/service"
       }
     },
     "android": {

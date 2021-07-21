@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { AsyncStorage, ScrollView, ActivityIndicator, Dimensions, View, FlatList, Image, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native'
+import { AsyncStorage, SafeAreaView, ScrollView, ActivityIndicator, Dimensions, View, FlatList, Image, Text, TextInput, TouchableOpacity, StyleSheet, Modal } from 'react-native'
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import * as FileSystem from 'expo-file-system'
@@ -7,7 +7,8 @@ import { Camera } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator'
 import { logo_url } from '../../../assets/info'
 import { getInfo } from '../../apis/locations'
-import { getMenus, removeMenu, getRequests, getAppointments, acceptRequest, addNewMenu } from '../../apis/menus'
+import { getMenus, removeMenu, getAppointments, addNewMenu } from '../../apis/menus'
+import { getRequests, acceptRequest, cancelRequest } from '../../apis/appointments'
 import { getProducts, getServices, removeProduct } from '../../apis/products'
 
 import FontAwesome from 'react-native-vector-icons/FontAwesome'
@@ -30,44 +31,44 @@ export default function main(props) {
 	const [requests, setRequests] = useState([
 		{ // client requested time
 			key: "request-0", id: "10d0df0cidod-0", username: 'good girl 0', time: 1624540847504, name: "Foot Care", 
-			serviceimage: { image: require("../../../assets/nailsalon/footcare.jpeg"), width: 0, height: 0 }
+			image: require("../../../assets/nailsalon/footcare.jpeg")
 		},
 		{ // client requested time
 			key: "request-1", id: "10d0df0cidod-1", username: 'good girl 1', time: 1624540848604, name: "Foot Care", 
-			serviceimage: { image: require("../../../assets/nailsalon/footcare.jpeg"), width: 0, height: 0 }
+			image: require("../../../assets/nailsalon/footcare.jpeg")
 		},
 		{ // client requested time
 			key: "request-2", id: "10d0df0cidod-2", username: 'good girl 2', time: 1624540849704, name: "Foot Care", 
-			serviceimage: { image: require("../../../assets/nailsalon/footcare.jpeg"), width: 0, height: 0 }
+			image: require("../../../assets/nailsalon/footcare.jpeg")
 		},
 		{ // client requested time
 			key: "request-3", id: "10d0df0cidod-3", username: 'good girl 3', time: 1624571850804, name: "Foot Care", 
-			serviceimage: { image: require("../../../assets/nailsalon/footcare.jpeg"), width: 0, height: 0 }
+			image: require("../../../assets/nailsalon/footcare.jpeg")
 		}
 	])
 	const [appointments, setAppointments] = useState([
 		{
 			key: "appointment-0", id: "19c9d9f9d9f-0", username: "good girl 0", time: 1624541947504, name: "Foot Care",
-			serviceimage: { image: require("../../../assets/nailsalon/footcare.jpeg"), width: 0, height: 0 }
+			image: require("../../../assets/nailsalon/footcare.jpeg")
 		},
 		{
 			key: "appointment-1", id: "19c9d9f9d9f-1", username: "good girl 1", time: 1624542047504, name: "Foot Care",
-			serviceimage: { image: require("../../../assets/nailsalon/footcare.jpeg"), width: 0, height: 0 }
+			image: require("../../../assets/nailsalon/footcare.jpeg")
 		},
 		{
 			key: "appointment-2", id: "19c9d9f9d9f-2", username: "good girl 2", time: 1624542147504, name: "Foot Care",
-			serviceimage: { image: require("../../../assets/nailsalon/footcare.jpeg"), width: 0, height: 0 }
+			image: require("../../../assets/nailsalon/footcare.jpeg")
 		},
 		{
 			key: "appointment-3", id: "19c9d9f9d9f-3", username: "good girl 3", time: 1624542447504, name: "Foot Care",
-			serviceimage: { image: require("../../../assets/nailsalon/footcare.jpeg"), width: 0, height: 0 }
+			image: require("../../../assets/nailsalon/footcare.jpeg")
 		}
 	])
-	const [viewType, setViewtype] = useState("menus")
+	const [viewType, setViewtype] = useState('')
+	const [cancelRequestInfo, setCancelrequestinfo] = useState({ show: false, reason: "", id: 0, index: 0 })
 	const getTheInfo = async() => {
-		const userid = await AsyncStorage.getItem("userid")
 		const locationid = await AsyncStorage.getItem("locationid")
-		const data = { userid, locationid, menuid: '' }
+		const data = { locationid, menuid: '' }
 
 		getInfo(data)
 			.then((res) => {
@@ -103,14 +104,18 @@ export default function main(props) {
 		let minute = time[1]
 		let period = hour > 11 ? "pm" : "am"
 
-		hour = hour > 11 ? hour - 11 : hour
+		hour = hour > 12 ? hour - 12 : hour
 
 		let datestr = day + ", " + month + " " + date + ", " + year + " at " + hour + ":" + minute + " " + period;
 
 		return datestr
 	}
-	const getAllRequests = () => {
-		getRequests()
+	const getAllRequests = async() => {
+		const ownerid = await AsyncStorage.getItem("ownerid")
+		const locationid = await AsyncStorage.getItem("locationid")
+		const data = { ownerid, locationid }
+
+		getRequests(data)
 			.then((res) => {
 				if (res.status == 200) {
 					return res.data
@@ -118,7 +123,8 @@ export default function main(props) {
 			})
 			.then((res) => {
 				if (res) {
-
+					setRequests(res.requests)
+					setViewtype('requests')
 				}
 			})
 	}
@@ -135,8 +141,38 @@ export default function main(props) {
 				}
 			})
 	}
-	const acceptTheRequest = () => {
-		acceptRequest()
+	const cancelTheRequest = (requestid, index) => {
+		if (!cancelRequestInfo.show) {
+			setCancelrequestinfo({
+				...cancelRequestInfo,
+				show: true,
+				id: requestid,
+				index: index
+			})
+		} else {
+			const { reason, id, index } = cancelRequestInfo
+			const data = { id, reason }
+
+			cancelRequest(data)
+				.then((res) => {
+					if (res.status == 200) {
+						return res.data
+					}
+				})
+				.then((res) => {
+					if (res) {
+						const newRequests = [...requests]
+
+						newRequests.splice(index, 1)
+
+						setRequests(newRequests)
+						setCancelrequestinfo({ ...cancelRequestInfo, show: false, reason: "", requestid: 0, index: 0 })
+					}
+				})
+		}
+	}
+	const acceptTheRequest = (requestid, index) => {
+		acceptRequest(requestid)
 			.then((res) => {
 				if (res.status == 200) {
 					return res.data
@@ -144,16 +180,19 @@ export default function main(props) {
 			})
 			.then((res) => {
 				if (res) {
-					
+					const newRequests = [...requests]
+
+					newRequests.splice(index, 1)
+
+					setRequests(newRequests)
 				}
 			})
 	}
 	
 	useEffect(() => {
-		
 		getTheInfo()
 	}, [])
-
+	
 	return (
 		<View style={{ paddingVertical: offsetPadding }}>
 			<View style={style.box}>
@@ -183,24 +222,27 @@ export default function main(props) {
 					{viewType == "requests" && (
 						<FlatList
 							data={requests}
-							renderItem={({ item }) => 
+							renderItem={({ item, index }) => 
 								<View key={item.key} style={style.request}>
 									<View style={style.imageHolder}>
-										<Image source={item.serviceimage.image} style={{ height: 80, width: 80 }}/>
+										<Image source={{ uri: logo_url + item.image }} style={{ height: 80, width: 80 }}/>
 									</View>
 									<View style={style.requestInfo}>
 										<Text>
 											<Text style={{ fontWeight: 'bold' }}>{item.username + ' requested'}</Text> 
-											<Text style={{ fontWeight: 'bold' }}>{' ' + item.name}</Text> at 
+											<Text style={{ fontWeight: 'bold' }}>{' ' + item.name}</Text> on 
 											<Text style={{ fontWeight: 'bold' }}>{' ' + displayDateStr(item.time)}</Text>
 										</Text>
 
 										<View style={style.requestActions}>
 											<View style={{ flexDirection: 'row' }}>
-												<TouchableOpacity style={style.requestAction} onPress={() => props.navigation.navigate("booktime", { name: item.name })}>
+												<TouchableOpacity style={style.requestAction} onPress={() => props.navigation.navigate("booktime", { appointmentid: item.id })}>
 													<Text style={style.requestActionHeader}>Another time</Text>
 												</TouchableOpacity>
-												<TouchableOpacity style={style.requestAction} onPress={() => acceptTheRequest(item.id)}>
+												<TouchableOpacity style={style.requestAction} onPress={() => cancelTheRequest(item.id, index)}>
+													<Text style={style.requestActionHeader}>Cancel</Text>
+												</TouchableOpacity>
+												<TouchableOpacity style={style.requestAction} onPress={() => acceptTheRequest(item.id, index)}>
 													<Text style={style.requestActionHeader}>Accept</Text>
 												</TouchableOpacity>
 											</View>
@@ -244,6 +286,34 @@ export default function main(props) {
 					</View>
 				</View>
 			</View>
+
+			{cancelRequestInfo.show && (
+				<Modal transparent={true}>
+					<SafeAreaView style={{ flex: 1 }}>
+						<View style={style.cancelRequestBox}>
+							<Text style={style.cancelRequestHeader}>Tell the client the reason for this cancellation ?</Text>
+
+							<TextInput placeholder="Write your reason" multiline={true} style={style.cancelRequestInput} onChangeText={(reason) => {
+								setCancelrequestinfo({
+									...cancelRequestInfo,
+									reason: reason
+								})
+							}}/>
+
+							<View style={{ alignItems: 'center' }}>
+								<View style={style.cancelRequestActions}>
+									<TouchableOpacity style={style.cancelRequestTouch} onPress={() => setCancelrequestinfo({ ...cancelRequestInfo, show: false, id: 0, index: 0, reason: "" })}>
+										<Text style={style.cancelRequestTouchHeader}>Close</Text>
+									</TouchableOpacity>
+									<TouchableOpacity style={style.cancelRequestTouch} onPress={() => cancelTheRequest()}>
+										<Text style={style.cancelRequestTouchHeader}>Done</Text>
+									</TouchableOpacity>
+								</View>
+							</View>
+						</View>
+					</SafeAreaView>
+				</Modal>
+			)}
 		</View>
 	)
 }
@@ -288,5 +358,12 @@ const style = StyleSheet.create({
 	// height = 50
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 50, justifyContent: 'space-around', width: '100%' },
 	bottomNav: { flexDirection: 'row', height: 30, marginVertical: 10, marginHorizontal: 20 },
-	bottomNavHeader: { fontWeight: 'bold', paddingVertical: 5 }
+	bottomNavHeader: { fontWeight: 'bold', paddingVertical: 5 },
+
+	cancelRequestBox: { backgroundColor: 'white', height: '100%', width: '100%' },
+	cancelRequestHeader: { fontFamily: 'appFont', fontSize: 20, margin: 30, textAlign: 'center' },
+	cancelRequestInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: 20, height: 200, margin: '5%', padding: 10, width: '90%' },
+	cancelRequestActions: { flexDirection: 'row', justifyContent: 'space-around' },
+	cancelRequestTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 5, width: 100 },
+	cancelRequestTouchHeader: { textAlign: 'center' },
 })

@@ -1,9 +1,18 @@
 import axios from 'axios'
 import { LOCAL_API_URL, WIFI_API_URL } from "@env"
 
+const url = LOCAL_API_URL
+
 export const getServices = (data) => {
 	return axios.post(
-		`${WIFI_API_URL}/services/get_services`,
+		`${url}/services/get_services`,
+		data
+	)
+}
+
+export const getServiceInfo = (data) => {
+	return axios.post(
+		`${url}/services/get_service_info`,
 		data
 	)
 }
@@ -11,7 +20,7 @@ export const getServices = (data) => {
 export const addNewService = (data) => {
 	const form = new FormData()
 
-	form.append("userid", data.userid)
+	form.append("ownerid", data.ownerid)
 	form.append("locationid", data.locationid)
 	form.append("menuid", data.menuid)
 	form.append("name", data.name)
@@ -21,7 +30,7 @@ export const addNewService = (data) => {
 	form.append("duration", data.duration)
 
 	return axios.post(
-		`${WIFI_API_URL}/services/add_service`,
+		`${url}/services/add_service`,
 		form,
 		{ headers: {
 			'Content-Type': 'multipart/form-data'
@@ -30,5 +39,5 @@ export const addNewService = (data) => {
 }
 
 export const removeService = (id) => {
-	return axios.get(`${WIFI_API_URL}/services/remove_service/${id}`)
+	return axios.get(`${url}/services/remove_service/${id}`)
 }

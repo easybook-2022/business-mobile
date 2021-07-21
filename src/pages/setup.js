@@ -22,6 +22,7 @@ export default function setup({ navigation }) {
 	const [camComp, setCamcomp] = useState(null)
 	const [camType, setCamtype] = useState(Camera.Constants.Type.back);
 	const [storeName, setStorename] = useState(info.storeName)
+	const [phonenumber, setPhonenumber] = useState(info.phonenumber)
 	const [addressOne, setAddressone] = useState(info.addressOne)
 	const [addressTwo, setAddresstwo] = useState(info.addressTwo)
 	const [city, setCity] = useState(info.city)
@@ -31,13 +32,13 @@ export default function setup({ navigation }) {
 	const [errorMsg, setErrormsg] = useState('')
 
 	const setupYourLocation = async() => {
-		const userid = await AsyncStorage.getItem("userid")
+		const ownerid = await AsyncStorage.getItem("ownerid")
 
-		if (storeName && addressOne && addressTwo && city && province && postalcode && image.name) {
+		if (storeName && phonenumber, addressOne && addressTwo && city && province && postalcode && image.name) {
 			const [{ latitude, longitude }] = await Location.geocodeAsync(`${addressOne} ${addressTwo}, ${city} ${province}, ${postalcode}`)
 			const data = {
-				storeName, addressOne, addressTwo, city, province, postalcode, logo: image,
-				longitude, latitude, userid
+				storeName, phonenumber, addressOne, addressTwo, city, province, postalcode, logo: image,
+				longitude, latitude, ownerid
 			}
 
 			setupLocation(data)
@@ -55,12 +56,12 @@ export default function setup({ navigation }) {
 						const { id } = res
 
 						AsyncStorage.setItem("locationid", id.toString())
-						AsyncStorage.setItem("setup", "true")
+						AsyncStorage.setItem("phase", "typesetup")
 
 						navigation.dispatch(
 							CommonActions.reset({
 								index: 0,
-								routes: [{ name: "salons" }]
+								routes: [{ name: "typesetup" }]
 							})
 						)
 					}
@@ -68,6 +69,12 @@ export default function setup({ navigation }) {
 		} else {
 			if (!storeName) {
 				setErrormsg("Please enter your store name")
+
+				return
+			}
+
+			if (!phonenumber) {
+				setErrormsg("Please enter your store phone number")
 
 				return
 			}
@@ -184,6 +191,10 @@ export default function setup({ navigation }) {
 							<TextInput style={style.input} onChangeText={(storeName) => setStorename(storeName)} value={storeName}/>
 						</View>
 						<View style={style.inputContainer}>
+							<Text style={style.inputHeader}>Store Phone number:</Text>
+							<TextInput style={style.input} onChangeText={(phonenumber) => setPhonenumber(phonenumber)} value={phonenumber} keyboardType="numeric"/>
+						</View>
+						<View style={style.inputContainer}>
 							<Text style={style.inputHeader}>Address #1:</Text>
 							<TextInput style={style.input} onChangeText={(addressOne) => setPhonenumber(addressOne)} value={addressOne} keyboardType="numeric"/>
 						</View>
@@ -223,9 +234,7 @@ export default function setup({ navigation }) {
 										<Entypo name="camera" size={30}/>
 									</TouchableOpacity>
 								</>
-							)}
-
-									
+							)}	
 						</View>
 					</View>
 
@@ -270,7 +279,7 @@ const style = StyleSheet.create({
 	inputHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold' },
 	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: 20, padding: 5 },
 	cameraContainer: { alignItems: 'center', marginBottom: 50, width: '100%' },
-	cameraHeader: { fontWeight: 'bold', paddingVertical: 5 },
+	cameraHeader: { fontFamily: 'appFont', fontWeight: 'bold', paddingVertical: 5 },
 	camera: { height: width * 0.8, width: width * 0.8 },
 	cameraAction: { margin: 10 },
 	errorMsg: { color: 'red', fontWeight: 'bold', marginVertical: 10, textAlign: 'center' },

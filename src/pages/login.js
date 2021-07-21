@@ -31,16 +31,16 @@ export default function login({ navigation }) {
 			})
 			.then((res) => {
 				if (res) {
-					const { userid, locationid, msg } = res
+					const { ownerid, locationid, msg } = res
 
-					AsyncStorage.setItem("userid", userid.toString())
+					AsyncStorage.setItem("ownerid", ownerid.toString())
 					AsyncStorage.setItem("locationid", locationid ? locationid.toString() : "")
-					AsyncStorage.setItem("setup", msg == "setup" ? "false" : "true")
-
+					AsyncStorage.setItem("phase", msg)
+					
 					navigation.dispatch(
 						CommonActions.reset({
 							index: 0,
-							routes: [{ name: msg == "setup" ? "setup" : "salons" }]
+							routes: [{ name: msg }]
 						})
 					)
 				}
