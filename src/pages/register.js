@@ -35,7 +35,7 @@ export default function register({ navigation }) {
 					const { id } = res
 
 					AsyncStorage.setItem("ownerid", id.toString())
-					AsyncStorage.setItem("setup", "false")
+					AsyncStorage.setItem("phase", "setup")
 
 					navigation.navigate("setup")
 				}
@@ -94,10 +94,13 @@ const style = StyleSheet.create({
 	box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 	background: { height: '100%', position: 'absolute', width: '100%' },
 	boxHeader: { fontFamily: 'appFont', fontSize: 50, fontWeight: 'bold', paddingVertical: 30 },
+
 	inputsBox: { backgroundColor: 'white', paddingHorizontal: 20, width: '80%' },
 	inputContainer: { marginVertical: 5 },
 	inputHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold' },
 	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: 20, padding: 5 },
+	errorMsg: { color: 'red', fontWeight: 'bold', marginVertical: 20, textAlign: 'center' },
+
 	options: { flexDirection: 'row' },
 	option: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, padding: 5 },
 	optionHeader: {  },

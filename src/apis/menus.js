@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { LOCAL_API_URL, WIFI_API_URL } from "@env"
 
-const url = LOCAL_API_URL
+const url = WIFI_API_URL
 
 export const getMenus = (data) => {
 	return axios.post(
@@ -16,10 +16,6 @@ export const removeMenu = (id) => {
 
 export const getRequests = () => {
 	return axios.get(`${url}/menus/get_requests`)
-}
-
-export const getAppointments = () => {
-	return axios.get(`${url}/menus/get_appointments`)
 }
 
 export const addNewMenu = (data) => {

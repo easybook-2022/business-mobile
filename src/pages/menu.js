@@ -320,7 +320,7 @@ export default function menu(props) {
 						<TouchableOpacity key={item.key} style={style.menu} onPress={() => props.navigation.push("menu", { menuid: item.id, name: item.name, refetch: () => getTheInfo() })}>
 							<View style={{ flexDirection: 'row' }}>
 								<Text style={style.menuHeader}>{item.name}</Text>
-								<Image source={{ uri: logo_url + item.image.uri }} style={style.menuImage}/>
+								<Image source={{ uri: logo_url + item.image }} style={style.menuImage}/>
 								<TouchableOpacity style={style.menuRemove} onPress={() => removeTheMenu(item.id, index)}>
 									<Text style={style.menuRemoveHeader}>Remove</Text>
 								</TouchableOpacity>
@@ -357,6 +357,7 @@ export default function menu(props) {
 			{showServices && (
 				<FlatList
 					data={services}
+					style={{ height: height }}
 					renderItem={({ item, index }) => 
 						<View key={item.key} style={style.service}>
 							<View style={{ flexDirection: 'row', marginBottom: 10 }}>
@@ -372,7 +373,7 @@ export default function menu(props) {
 								<Text style={style.serviceInfo}>Time: <Text style={{ fontWeight: '400' }}>{item.duration}</Text></Text>
 							</View>
 
-							<Text style={style.serviceInfo}>Information: <Text style={{ fontWeight: '400' }}>{'\n' + item.info}</Text></Text>
+							{item.info ? <Text style={style.serviceInfo}>Information: <Text style={{ fontWeight: '400' }}>{'\n' + item.info}</Text></Text> : null}
 						</View>
 					}
 				/>

@@ -15,7 +15,7 @@ import Entypo from 'react-native-vector-icons/Entypo'
 
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
-const screenHeight = height - (offsetPadding * 2)
+const screenHeight = height - offsetPadding
 
 export default function setup({ navigation }) {
 	const [permission, setPermission] = useState(null);
@@ -34,7 +34,7 @@ export default function setup({ navigation }) {
 	const setupYourLocation = async() => {
 		const ownerid = await AsyncStorage.getItem("ownerid")
 
-		if (storeName && phonenumber, addressOne && addressTwo && city && province && postalcode && image.name) {
+		if (storeName && phonenumber, addressOne && city && province && postalcode && image.name) {
 			const [{ latitude, longitude }] = await Location.geocodeAsync(`${addressOne} ${addressTwo}, ${city} ${province}, ${postalcode}`)
 			const data = {
 				storeName, phonenumber, addressOne, addressTwo, city, province, postalcode, logo: image,
@@ -179,11 +179,11 @@ export default function setup({ navigation }) {
 	if (permission === null) return <View/>
 
 	return (
-		<View style={{ paddingVertical: offsetPadding }}>
-			<ScrollView style={{ width: '100%' }}>
+		<View style={{ paddingTop: offsetPadding }}>
+			<ScrollView style={{ height: screenHeight - 40, width: '100%' }}>
 				<View style={style.box}>
 					<Text style={style.boxHeader}>Setup</Text>
-					<Text style={style.boxMiniheader}>Enter your location</Text>
+					<Text style={style.boxMiniheader}>Enter your location information</Text>
 
 					<View style={style.inputsBox}>
 						<View style={style.inputContainer}>
@@ -216,7 +216,7 @@ export default function setup({ navigation }) {
 						</View>
 
 						<View style={style.cameraContainer}>
-							<Text style={style.cameraHeader}>Store Logo</Text>
+							<Text style={style.inputHeader}>Store Logo</Text>
 
 							{image.uri ? (
 								<>
@@ -285,7 +285,7 @@ const style = StyleSheet.create({
 	errorMsg: { color: 'red', fontWeight: 'bold', marginVertical: 10, textAlign: 'center' },
 	setupButton: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 20, padding: 10 },
 
-	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
+	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
 	bottomNav: { flexDirection: 'row', height: 30, marginVertical: 5, marginHorizontal: 20 },
 	bottomNavHeader: { fontWeight: 'bold', paddingVertical: 5 },
 })

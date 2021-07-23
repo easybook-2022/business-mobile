@@ -1,21 +1,26 @@
 import React, { useEffect, useState } from 'react'
-import { AsyncStorage, ActivityIndicator, SafeAreaView, ScrollView, View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
-import { getServiceInfo } from '../../apis/services'
-import { getRequestInfo, rescheduleRequest } from '../../apis/appointments'
-import { getLocationHours } from '../../apis/locations'
+import { AsyncStorage, ActivityIndicator, Dimensions, SafeAreaView, ScrollView, View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import { getLocationHours, getLocationProfile } from '../apis/locations'
+import { getReservationInfo, rescheduleReservation } from '../apis/schedules'
+
+import SimpleLineIcons from 'react-native-vector-icons/SimpleLineIcons'
+
+const { width } = Dimensions.get('window')
 
 export default function booktime(props) {
-	const { appointmentid } = props.route.params
+	let { reservationid } = props.route.params
 
-	const [name, setName] = useState('')
-	const [serviceId, setServiceid] = useState(0)
+	const [name, setName] = useState(name)
+	const [seaters, setSeaters] = useState(0)
 	const [times, setTimes] = useState([])
+	const [openTime, setOpentime] = useState(0)
+	const [closeTime, setClosetime] = useState(0)
 	const [loaded, setLoaded] = useState(false)
 
-	const [confirm, setConfirm] = useState({ show: false, time: "", requested: false })
+	const [confirm, setConfirm] = useState({ show: false, service: "", timeheader: "", time: "", requested: false })
 
-	const getTheRequestInfo = async() => {
-		getRequestInfo(appointmentid)
+	const getTheReservationInfo = async() => {
+		getReservationInfo(reservationid)
 			.then((res) => {
 				if (res.status == 200) {
 					return res.data
@@ -23,9 +28,10 @@ export default function booktime(props) {
 			})
 			.then((res) => {
 				if (res) {
-					const { locationId, name } = res.serviceInfo
+					const { locationId, name, seaters } = res.reservationInfo
 
 					setName(name)
+					setSeaters(seaters)
 					getTheLocationHours(locationId)
 				}
 			})
@@ -78,14 +84,12 @@ export default function booktime(props) {
 				}
 			})
 	}
-	const selectTime = (header, time) => {
-		setConfirm({ ...confirm, show: true, service: name, timeheader: header, time: time })
-	}
-	const requestATime = () => {
-		let { service, time } = confirm
-		let data = { appointmentid, time }
+	const rescheduleTheReservation = async() => {
+		const userid = await AsyncStorage.getItem("userid")
+		const { time } = confirm
+		const data = { reservationid, time }
 
-		rescheduleRequest(data)
+		rescheduleReservation(data)
 			.then((res) => {
 				if (res.status == 200) {
 					return res.data
@@ -94,13 +98,11 @@ export default function booktime(props) {
 			.then((res) => {
 				if (res) setConfirm({ ...confirm, requested: true })
 			})
-			.catch((error) => {
-				alert(error.message)
-			})
+			.catch((error) => console.log(error.message))
 	}
 
 	useEffect(() => {
-		getTheRequestInfo()
+		getTheReservationInfo()
 	}, [])
 
 	return (
@@ -110,27 +112,28 @@ export default function booktime(props) {
 					<Text style={style.backHeader}>Back</Text>
 				</TouchableOpacity>
 
-				<Text style={style.boxHeader}>Request another time for client</Text>
-				<Text style={style.serviceHeader}>Service: <Text style={{ fontWeight: 'bold' }}>{name}</Text></Text>
+				<Text style={style.boxHeader}>Request another time for {'\n' + seaters} {seaters == 1 ? 'person' : 'people'}</Text>
 
 				{!loaded ? 
 					<ActivityIndicator size="small"/>
 					:
 					<ScrollView>
-						<View style={style.times}>
-							{times.map(info => (
-								<TouchableOpacity style={info.booked ? style.selected : style.unselect} disabled={info.booked} key={info.key} onPress={() => {
-									if (!info.booked) {
-										selectTime(info.header, info.time)
-									}
-								}}>
-									<Text style={{ color: info.booked ? 'white' : 'black', fontSize: 20 }}>{info.header}</Text>
-								</TouchableOpacity>
-							))}
+						<Text style={style.timesHeader}>Availabilities</Text>
+						<View style={{ flexDirection: 'row', justifyContent: 'space-around', width: '100%' }}>
+							<View style={style.times}>
+								{times.map(info => (
+									<TouchableOpacity style={info.booked ? style.selected : style.unselect} disabled={info.booked} key={info.key} onPress={() => {
+										if (!info.booked) setConfirm({ ...confirm, show: true, service: name, timeheader: info.header, time: info.time })
+									}}>
+										<Text style={{ color: info.booked ? 'white' : 'black', fontSize: 15 }}>{info.header}</Text>
+									</TouchableOpacity>
+								))}
+							</View>
 						</View>
 					</ScrollView>
 				}
 			</View>
+
 
 			{confirm.show && (
 				<Modal transparent={true}>
@@ -140,17 +143,17 @@ export default function booktime(props) {
 								{!confirm.requested ? 
 									<>
 										<Text style={style.confirmHeader}>
-											<Text style={{ fontFamily: 'appFont' }}>Select this time for client</Text>
-											{'\n'} at {' ' + confirm.timeheader + '\n for '}
-											{confirm.service}
+											<Text style={{ fontFamily: 'appFont' }}>Request a reservation for {'\n' + seaters} {seaters == 1 ? 'person' : 'people'} </Text>
+											{'\n at ' + confirm.service}
+											{'\n at ' + confirm.timeheader}
 										</Text>
 
 										<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
 											<View style={style.confirmOptions}>
-												<TouchableOpacity style={style.confirmOption} onPress={() => setConfirm({ show: false, time: "", requested: false })}>
+												<TouchableOpacity style={style.confirmOption} onPress={() => setConfirm({ show: false, service: "", time: "" })}>
 													<Text style={style.confirmOptionHeader}>No</Text>
 												</TouchableOpacity>
-												<TouchableOpacity style={style.confirmOption} onPress={() => requestATime()}>
+												<TouchableOpacity style={style.confirmOption} onPress={() => rescheduleTheReservation()}>
 													<Text style={style.confirmOptionHeader}>Yes</Text>
 												</TouchableOpacity>
 											</View>
@@ -159,10 +162,10 @@ export default function booktime(props) {
 									:
 									<>
 										<View style={style.requestedHeaders}>
-											<Text style={style.requestedHeader}>Time requested {'\n'}</Text>
+											<Text style={style.requestedHeader}>Reservation requested at {'\n'}</Text>
+											<Text style={style.requestedHeaderInfo}>{confirm.service} {'\n'}</Text>
 											<Text style={style.requestedHeaderInfo}>at {confirm.timeheader} {'\n'}</Text>
-											<Text style={style.requestedHeaderInfo}>You will get notified by the client</Text>
-
+											<Text style={style.requestedHeaderInfo}>You will get notified by the diners</Text>
 											<TouchableOpacity style={style.requestedClose} onPress={() => {
 												setConfirm({ ...confirm, show: false, requested: false })
 												props.navigation.goBack()
@@ -186,12 +189,13 @@ const style = StyleSheet.create({
 	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, margin: 20, padding: 5, width: 100 },
 	backHeader: { fontFamily: 'appFont', fontSize: 20 },
 
-	boxHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', textAlign: 'center' },
-	serviceHeader: { fontSize: 25, textAlign: 'center', marginBottom: 50 },
+	boxHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', marginBottom: 50, textAlign: 'center' },
+	serviceHeader: { fontSize: 25, fontWeight: 'bold', textAlign: 'center', marginBottom: 50 },
 
-	times: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', width: '100%' },
-	unselect: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5 },
-	selected: { alignItems: 'center', backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5 },
+	timesHeader: { fontFamily: 'appFont', fontSize: 30, fontWeight: 'bold', textAlign: 'center' },
+	times: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', width: 300 },
+	unselect: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, padding: 5, width: 90 },
+	selected: { alignItems: 'center', backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, padding: 5, width: 90 },
 
 	// confirm & requested box
 	confirmBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },

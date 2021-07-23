@@ -4,11 +4,9 @@ import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import { setLocationType } from '../apis/locations'
 
-import AntDesign from 'react-native-vector-icons/AntDesign'
-
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
-const screenHeight = height - (offsetPadding * 2)
+const screenHeight = height - offsetPadding
 const iconSize = (width / 2) - 100
 
 export default function typesetup({ navigation }) {
@@ -29,6 +27,7 @@ export default function typesetup({ navigation }) {
 			.then((res) => {
 				if (res) {
 					AsyncStorage.setItem("phase", "setuphours")
+					AsyncStorage.setItem("type", type)
 
 					navigation.dispatch(
 						CommonActions.reset({
@@ -40,10 +39,10 @@ export default function typesetup({ navigation }) {
 			})
 	}
 	return (
-		<View style={{ paddingVertical: offsetPadding }}>
+		<View style={{ paddingTop: offsetPadding }}>
 			<View style={style.box}>
 				<Text style={style.boxHeader}>Setup</Text>
-				<Text style={style.boxMiniheader}>select your service</Text>
+				<Text style={style.boxMiniheader}>What kind of service are you</Text>
 
 				<View style={style.selections}>
 					<TouchableOpacity style={type == 'hair' ? style.selectionSelected : style.selection} onPress={() => setType('hair')}>
@@ -53,7 +52,7 @@ export default function typesetup({ navigation }) {
 						<Image source={require("../../assets/nailsalon.png")} style={style.selectionIcon}/>
 					</TouchableOpacity>
 					<TouchableOpacity style={type == 'restaurant' ? style.selectionSelected : style.selection} onPress={() => setType('restaurant')}>
-						<Image source={require("../../assets/fastfood.png")} style={style.selectionIcon}/>
+						<Image source={require("../../assets/food.png")} style={style.selectionIcon}/>
 					</TouchableOpacity>
 				</View>
 
@@ -65,9 +64,6 @@ export default function typesetup({ navigation }) {
 
 				<View style={style.bottomNavs}>
 					<View style={{ flexDirection: 'row' }}>
-						<TouchableOpacity style={style.bottomNav} onPress={() => navigation.navigate("settings")}>
-							<AntDesign name="setting" size={30}/>
-						</TouchableOpacity>
 						<TouchableOpacity style={style.bottomNav} onPress={() => {
 							AsyncStorage.clear()
 
@@ -103,7 +99,7 @@ const style = StyleSheet.create({
 	errorMsg: { color: 'red', fontWeight: 'bold', marginVertical: 10, textAlign: 'center' },
 	setupButton: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 20, padding: 10 },
 
-	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
+	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
 	bottomNav: { flexDirection: 'row', height: 30, marginVertical: 5, marginHorizontal: 20 },
 	bottomNavHeader: { fontWeight: 'bold', paddingVertical: 5 },
 })

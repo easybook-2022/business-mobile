@@ -31,10 +31,11 @@ export default function login({ navigation }) {
 			})
 			.then((res) => {
 				if (res) {
-					const { ownerid, locationid, msg } = res
+					const { ownerid, locationid, locationtype, msg } = res
 
 					AsyncStorage.setItem("ownerid", ownerid.toString())
 					AsyncStorage.setItem("locationid", locationid ? locationid.toString() : "")
+					AsyncStorage.setItem("locationtype", locationtype ? locationtype : "")
 					AsyncStorage.setItem("phase", msg)
 					
 					navigation.dispatch(

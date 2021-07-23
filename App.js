@@ -2,8 +2,12 @@ import 'react-native-gesture-handler';
 import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { AsyncStorage, SafeAreaView, Text, View, TouchableOpacity, StyleSheet } from 'react-native';
+import { AsyncStorage, SafeAreaView, Text, View, TouchableOpacity, StyleSheet, LogBox } from 'react-native';
 import * as Font from 'expo-font';
+
+LogBox.ignoreLogs([
+    'Non-serializable values were found in the navigation state',
+]);
 
 // pages
 import Login from './src/pages/login'
@@ -12,12 +16,13 @@ import Setup from './src/pages/setup'
 import Typesetup from './src/pages/typesetup'
 import Setuphours from './src/pages/setuphours'
 
+import Main from './src/pages/main'
+
 // restaurants
-import Restaurants from './src/pages/restaurants'
+import Makereservation from './src/pages/makereservation'
 
 // salons
-import Salons from './src/pages/salons'
-import Booktime from './src/pages/salons/booktime'
+import Booktime from './src/pages/booktime'
 
 // salons' components
 import Services from './src/components/salons/services'
@@ -61,8 +66,8 @@ export default function App() {
                         <Stack.Screen name="setup" component={Setup} options={{ headerShown: false }}/>
                         <Stack.Screen name="typesetup" component={Typesetup} options={{ headerShown: false }}/>
                         <Stack.Screen name="setuphours" component={Setuphours} options={{ headerShown: false }}/>
-                        <Stack.Screen name="restaurants" component={Restaurants} options={{ headerShown: false }}/>
-                        <Stack.Screen name="salons" component={Salons} options={{ headerShown: false }}/>
+                        <Stack.Screen name="main" component={Main} options={{ headerShown: false }}/>
+                        <Stack.Screen name="makereservation" component={Makereservation} options={{ headerShown: false }}/>
                         <Stack.Screen name="booktime" component={Booktime} options={{ headerShown: false }}/>
                         <Stack.Screen name="services" component={Services} options={({ navigation, route }) => ({
                             headerTitle: () => (

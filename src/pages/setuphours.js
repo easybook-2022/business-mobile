@@ -8,11 +8,10 @@ import AntDesign from 'react-native-vector-icons/AntDesign'
 
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
-const screenHeight = height - (offsetPadding * 2)
+const screenHeight = height - offsetPadding
 
-export default function setuphours(props) {
-	const { type } = props.route.params
-
+export default function setuphours({ navigation }) {
+	const [locationType, setLocationtype] = useState('')
 	const [days, setDays] = useState([
 		{ key: "0", header: "Sunday", opentime: { hour: "00", minute: "00", period: "AM" }, closetime: { hour: "00", minute: "00", period: "AM" }},
 		{ key: "1", header: "Monday", opentime: { hour: "00", minute: "00", period: "AM" }, closetime: { hour: "00", minute: "00", period: "AM" }},
@@ -97,96 +96,99 @@ export default function setuphours(props) {
 				}
 			})
 			.then((res) => {
-				let route
-
 				if (res) {
-					if (type == "hair" || type == "nail") {
-						route = "salons"
-					} else {
-						route = "restaurants"
-					}
+					AsyncStorage.setItem("phase", "main")
 
-					AsyncStorage.setItem("phase", route)
-
-					props.navigation.dispatch(
+					navigation.dispatch(
 						CommonActions.reset({
 							index: 0,
-							routes: [{ name: route }]
+							routes: [{ name: "main" }]
 						})
 					)
 				}
 			})
 	}
+	const getLocationType = async() => {
+		const type = await AsyncStorage.getItem("locationtype")
+
+		setLocationtype(type)
+	}
+
+	useEffect(() => {
+		getLocationType()
+	}, [])
 
 	return (
-		<View style={{ paddingVertical: offsetPadding }}>
-			<ScrollView style={{ width: '100%' }}>
+		<View style={{ paddingTop: offsetPadding }}>
+			<ScrollView style={{ height: screenHeight - 40, width: '100%' }}>
 				<View style={style.box}>
 					<Text style={style.boxHeader}>Setup</Text>
-					<Text style={style.boxMiniheader}>Set your store hours</Text>
+					<Text style={style.boxMiniheader}>Set your hours</Text>
 
 					<View style={style.days}>
 						{days.map((day, index) => (
-							<View key={index} style={{ flexDirection: 'row', marginVertical: 20 }}>
+							<View key={index} style={{ marginVertical: 20 }}>
 								<Text style={style.dayHeader}>{day.header}</Text>
-								<View style={style.timeSelection}>
-									<View style={style.selection}>
-										<TouchableOpacity onPress={() => updateTime(index, "hour", "up", true)}>
-											<AntDesign name="up" size={20}/>
-										</TouchableOpacity>
-										<Text style={style.selectionHeader}>{day.opentime.hour}</Text>
-										<TouchableOpacity onPress={() => updateTime(index, "hour", "down", true)}>
-											<AntDesign name="down" size={20}/>
-										</TouchableOpacity>
+								<View style={style.timeSelectionContainer}>
+									<View style={style.timeSelection}>
+										<View style={style.selection}>
+											<TouchableOpacity onPress={() => updateTime(index, "hour", "up", true)}>
+												<AntDesign name="up" size={30}/>
+											</TouchableOpacity>
+											<Text style={style.selectionHeader}>{day.opentime.hour}</Text>
+											<TouchableOpacity onPress={() => updateTime(index, "hour", "down", true)}>
+												<AntDesign name="down" size={30}/>
+											</TouchableOpacity>
+										</View>
+										<Text style={style.selectionDiv}>:</Text>
+										<View style={style.selection}>
+											<TouchableOpacity onPress={() => updateTime(index, "minute", "up", true)}>
+												<AntDesign name="up" size={30}/>
+											</TouchableOpacity>
+											<Text style={style.selectionHeader}>{day.opentime.minute}</Text>
+											<TouchableOpacity onPress={() => updateTime(index, "minute", "down", true)}>
+												<AntDesign name="down" size={30}/>
+											</TouchableOpacity>
+										</View>
+										<View style={style.selection}>
+											<TouchableOpacity onPress={() => updateTime(index, "period", "up", true)}>
+												<AntDesign name="up" size={30}/>
+											</TouchableOpacity>
+											<Text style={style.selectionHeader}>{day.opentime.period}</Text>
+											<TouchableOpacity onPress={() => updateTime(index, "period", "down", true)}>
+												<AntDesign name="down" size={30}/>
+											</TouchableOpacity>
+										</View>
 									</View>
-									<Text style={style.selectionDiv}>:</Text>
-									<View style={style.selection}>
-										<TouchableOpacity onPress={() => updateTime(index, "minute", "up", true)}>
-											<AntDesign name="up" size={20}/>
-										</TouchableOpacity>
-										<Text style={style.selectionHeader}>{day.opentime.minute}</Text>
-										<TouchableOpacity onPress={() => updateTime(index, "minute", "down", true)}>
-											<AntDesign name="down" size={20}/>
-										</TouchableOpacity>
-									</View>
-									<View style={style.selection}>
-										<TouchableOpacity onPress={() => updateTime(index, "period", "up", true)}>
-											<AntDesign name="up" size={20}/>
-										</TouchableOpacity>
-										<Text style={style.selectionHeader}>{day.opentime.period}</Text>
-										<TouchableOpacity onPress={() => updateTime(index, "period", "down", true)}>
-											<AntDesign name="down" size={20}/>
-										</TouchableOpacity>
-									</View>
-								</View>
-								<View style={style.timeSelection}>
-									<View style={style.selection}>
-										<TouchableOpacity onPress={() => updateTime(index, "hour", "up", false)}>
-											<AntDesign name="up" size={20}/>
-										</TouchableOpacity>
-										<Text style={style.selectionHeader}>{day.closetime.hour}</Text>
-										<TouchableOpacity onPress={() => updateTime(index, "hour", "down", false)}>
-											<AntDesign name="down" size={20}/>
-										</TouchableOpacity>
-									</View>
-									<Text style={style.selectionDiv}>:</Text>
-									<View style={style.selection}>
-										<TouchableOpacity onPress={() => updateTime(index, "minute", "up", false)}>
-											<AntDesign name="up" size={20}/>
-										</TouchableOpacity>
-										<Text style={style.selectionHeader}>{day.closetime.minute}</Text>
-										<TouchableOpacity onPress={() => updateTime(index, "minute", "down", false)}>
-											<AntDesign name="down" size={20}/>
-										</TouchableOpacity>
-									</View>
-									<View style={style.selection}>
-										<TouchableOpacity onPress={() => updateTime(index, "period", "up", false)}>
-											<AntDesign name="up" size={20}/>
-										</TouchableOpacity>
-										<Text style={style.selectionHeader}>{day.closetime.period}</Text>
-										<TouchableOpacity onPress={() => updateTime(index, "period", "down", false)}>
-											<AntDesign name="down" size={20}/>
-										</TouchableOpacity>
+									<View style={style.timeSelection}>
+										<View style={style.selection}>
+											<TouchableOpacity onPress={() => updateTime(index, "hour", "up", false)}>
+												<AntDesign name="up" size={30}/>
+											</TouchableOpacity>
+											<Text style={style.selectionHeader}>{day.closetime.hour}</Text>
+											<TouchableOpacity onPress={() => updateTime(index, "hour", "down", false)}>
+												<AntDesign name="down" size={30}/>
+											</TouchableOpacity>
+										</View>
+										<Text style={style.selectionDiv}>:</Text>
+										<View style={style.selection}>
+											<TouchableOpacity onPress={() => updateTime(index, "minute", "up", false)}>
+												<AntDesign name="up" size={30}/>
+											</TouchableOpacity>
+											<Text style={style.selectionHeader}>{day.closetime.minute}</Text>
+											<TouchableOpacity onPress={() => updateTime(index, "minute", "down", false)}>
+												<AntDesign name="down" size={30}/>
+											</TouchableOpacity>
+										</View>
+										<View style={style.selection}>
+											<TouchableOpacity onPress={() => updateTime(index, "period", "up", false)}>
+												<AntDesign name="up" size={30}/>
+											</TouchableOpacity>
+											<Text style={style.selectionHeader}>{day.closetime.period}</Text>
+											<TouchableOpacity onPress={() => updateTime(index, "period", "down", false)}>
+												<AntDesign name="down" size={30}/>
+											</TouchableOpacity>
+										</View>
 									</View>
 								</View>
 							</View>
@@ -198,6 +200,22 @@ export default function setuphours(props) {
 					</TouchableOpacity>
 				</View>
 			</ScrollView>
+			<View style={style.bottomNavs}>
+				<View style={{ flexDirection: 'row' }}>
+					<TouchableOpacity style={style.bottomNav} onPress={() => {
+						AsyncStorage.clear()
+
+						navigation.dispatch(
+							CommonActions.reset({
+								index: 1,
+								routes: [{ name: 'login' }]
+							})
+						);
+					}}>
+						<Text style={style.bottomNavHeader}>Log-Out</Text>
+					</TouchableOpacity>
+				</View>
+			</View>
 		</View>
 	)
 }
@@ -205,15 +223,20 @@ export default function setuphours(props) {
 const style = StyleSheet.create({
 	box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 	boxHeader: { fontFamily: 'appFont', fontSize: 50, fontWeight: 'bold', paddingVertical: 30 },
-	boxMiniheader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold' },
+	boxMiniheader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', marginBottom: 50 },
 
 	days: {  },
-	dayHeader: { fontSize: 20, marginHorizontal: 10, marginVertical: 30 },
-	timeSelection: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, flexDirection: 'row', height: 75, marginHorizontal: 5 },
-	selection: { margin: 5 },
-	selectionHeader: { fontSize: 15, textAlign: 'center' },
+	dayHeader: { fontSize: 20, marginHorizontal: 10, textAlign: 'center' },
+	timeSelectionContainer: { flexDirection: 'row' },
+	timeSelection: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, flexDirection: 'row', marginHorizontal: 5 },
+	selection: { alignItems: 'center', margin: 5 },
+	selectionHeader: { fontSize: 30, textAlign: 'center' },
 	selectionDiv: { fontSize: 15, marginVertical: 29 },
 
-	done: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: 100 },
+	done: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 30, padding: 5, width: 100 },
 	doneHeader: { fontWeight: 'bold', textAlign: 'center' },
+
+	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
+	bottomNav: { flexDirection: 'row', height: 30, marginVertical: 5, marginHorizontal: 20 },
+	bottomNavHeader: { fontWeight: 'bold', paddingVertical: 5 },
 })

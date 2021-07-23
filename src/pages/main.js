@@ -5,11 +5,11 @@ import { CommonActions } from '@react-navigation/native';
 import * as FileSystem from 'expo-file-system'
 import { Camera } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator'
-import { logo_url } from '../../../assets/info'
-import { getInfo } from '../../apis/locations'
-import { getMenus, removeMenu, getAppointments, addNewMenu } from '../../apis/menus'
-import { getRequests, acceptRequest, cancelRequest } from '../../apis/appointments'
-import { getProducts, getServices, removeProduct } from '../../apis/products'
+import { logo_url } from '../../assets/info'
+import { fetchNumRequests, fetchNumAppointments, fetchNumReservations, getInfo } from '../apis/locations'
+import { getMenus, removeMenu, addNewMenu } from '../apis/menus'
+import { getRequests, acceptRequest, cancelRequest, getAppointments, getReservations } from '../apis/schedules'
+import { getProducts, getServices, removeProduct } from '../apis/products'
 
 import FontAwesome from 'react-native-vector-icons/FontAwesome'
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5'
@@ -18,7 +18,7 @@ import Entypo from 'react-native-vector-icons/Entypo'
 
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
-const screenHeight = height - (offsetPadding * 2)
+const screenHeight = height - offsetPadding
 
 export default function main(props) {
 	const [permission, setPermission] = useState(null);
@@ -27,45 +27,63 @@ export default function main(props) {
 	const [storeIcon, setStoreicon] = useState('')
 	const [storeName, setStorename] = useState('')
 	const [storeAddress, setStoreaddress] = useState('')
+	const [locationType, setLocationtype] = useState('')
+	const [updateNumrequests, setUpdatenumrequests] = useState()
+	const [updateNumappointments, setUpdatenumappointments] = useState()
+	const [updateNumreservations, setUpdatenumreservations] = useState()
+
 	const [showEdit, setShowedit] = useState('')
-	const [requests, setRequests] = useState([
-		{ // client requested time
-			key: "request-0", id: "10d0df0cidod-0", username: 'good girl 0', time: 1624540847504, name: "Foot Care", 
-			image: require("../../../assets/nailsalon/footcare.jpeg")
-		},
-		{ // client requested time
-			key: "request-1", id: "10d0df0cidod-1", username: 'good girl 1', time: 1624540848604, name: "Foot Care", 
-			image: require("../../../assets/nailsalon/footcare.jpeg")
-		},
-		{ // client requested time
-			key: "request-2", id: "10d0df0cidod-2", username: 'good girl 2', time: 1624540849704, name: "Foot Care", 
-			image: require("../../../assets/nailsalon/footcare.jpeg")
-		},
-		{ // client requested time
-			key: "request-3", id: "10d0df0cidod-3", username: 'good girl 3', time: 1624571850804, name: "Foot Care", 
-			image: require("../../../assets/nailsalon/footcare.jpeg")
-		}
-	])
-	const [appointments, setAppointments] = useState([
-		{
-			key: "appointment-0", id: "19c9d9f9d9f-0", username: "good girl 0", time: 1624541947504, name: "Foot Care",
-			image: require("../../../assets/nailsalon/footcare.jpeg")
-		},
-		{
-			key: "appointment-1", id: "19c9d9f9d9f-1", username: "good girl 1", time: 1624542047504, name: "Foot Care",
-			image: require("../../../assets/nailsalon/footcare.jpeg")
-		},
-		{
-			key: "appointment-2", id: "19c9d9f9d9f-2", username: "good girl 2", time: 1624542147504, name: "Foot Care",
-			image: require("../../../assets/nailsalon/footcare.jpeg")
-		},
-		{
-			key: "appointment-3", id: "19c9d9f9d9f-3", username: "good girl 3", time: 1624542447504, name: "Foot Care",
-			image: require("../../../assets/nailsalon/footcare.jpeg")
-		}
-	])
-	const [viewType, setViewtype] = useState('')
+
+	const [requests, setRequests] = useState([])
+	const [numRequests, setNumrequests] = useState(0)
+
+	const [appointments, setAppointments] = useState([])
+	const [numAppointments, setNumappointments] = useState(0)
+
+	const [reservations, setReservations] = useState([])
+	const [numReservations, setNumreservations] = useState(0)
+
+	const [viewType, setViewtype] = useState('appointments')
 	const [cancelRequestInfo, setCancelrequestinfo] = useState({ show: false, reason: "", id: 0, index: 0 })
+	const fetchTheNumRequests = async() => {
+		const locationid = await AsyncStorage.getItem("locationid")
+
+		fetchNumRequests(locationid)
+			.then((res) => {
+				if (res.status == 200) {
+					return res.data
+				}
+			})
+			.then((res) => {
+				if (res) setNumrequests(res.numRequests)
+			})
+	}
+	const fetchTheNumAppointments = async() => {
+		const locationid = await AsyncStorage.getItem("locationid")
+
+		fetchNumAppointments(locationid)
+			.then((res) => {
+				if (res.status == 200) {
+					return res.data
+				}
+			})
+			.then((res) => {
+				if (res) setNumappointments(res.numAppointments)
+			})
+	}
+	const fetchTheNumReservations = async() => {
+		const locationid = await AsyncStorage.getItem("locationid")
+
+		fetchNumReservations(locationid)
+			.then((res) => {
+				if (res.status == 200) {
+					return res.data
+				}
+			})
+			.then((res) => {
+				if (res) setNumreservations(res.numReservations)
+			})
+	}
 	const getTheInfo = async() => {
 		const locationid = await AsyncStorage.getItem("locationid")
 		const data = { locationid, menuid: '' }
@@ -78,12 +96,24 @@ export default function main(props) {
 			})
 			.then((res) => {
 				if (res) {
-					const { msg, storeName, storeAddress, storeLogo } = res
+					const { msg, storeName, storeAddress, storeLogo, locationType } = res
 
 					setShowedit(msg)
 					setStorename(storeName)
 					setStoreaddress(storeAddress)
 					setStoreicon(storeLogo)
+					setLocationtype(locationType)
+
+					fetchTheNumRequests()
+					setUpdatenumrequests(setInterval(() => fetchTheNumRequests(), 5000))
+
+					if (locationType == 'salon') {
+						fetchTheNumAppointments()
+						setUpdatenumappointments(setInterval(() => fetchTheNumAppointments(), 5000))
+					} else if (locationType == 'restaurant') {
+						fetchTheNumReservations()
+						setUpdatenumreservations(setInterval(() => fetchTheNumReservations(), 5000))
+					}
 				}
 			})
 	}
@@ -128,8 +158,10 @@ export default function main(props) {
 				}
 			})
 	}
-	const getAllAppointments = () => {
-		getAppointments()
+	const getAllAppointments = async() => {
+		const locationid = await AsyncStorage.getItem("locationid")
+
+		getAppointments(locationid)
 			.then((res) => {
 				if (res.status == 200) {
 					return res.data
@@ -137,7 +169,24 @@ export default function main(props) {
 			})
 			.then((res) => {
 				if (res) {
+					setAppointments(res.appointments)
+					setNumappointments(res.numappointments)
+					setViewtype('appointments')
+				}
+			})
+	}
+	const getAllReservations = async() => {
+		const locationid = await AsyncStorage.getItem("locationid")
 
+		getReservations(locationid)
+			.then((res) => {
+				if (res.status == 200) {
+					return res.data
+				}
+			})
+			.then((res) => {
+				if (res) {
+					setReservation
 				}
 			})
 	}
@@ -191,10 +240,16 @@ export default function main(props) {
 	
 	useEffect(() => {
 		getTheInfo()
+
+		return () => {
+			clearInterval(updateNumrequests)
+			clearInterval(updateNumappointments)
+			clearInterval(updateNumreservations)
+		}
 	}, [])
 	
 	return (
-		<View style={{ paddingVertical: offsetPadding }}>
+		<View style={{ paddingTop: offsetPadding }}>
 			<View style={style.box}>
 				<View style={style.headers}>
 					<View style={style.storeIconHolder}>
@@ -210,12 +265,22 @@ export default function main(props) {
 							<TouchableOpacity style={style.nav} onPress={() => props.navigation.navigate("menu", { menuid: '', name: '', refetch: () => getTheInfo() })}>
 								<Text style={style.navHeader}>Edit Menu</Text>
 							</TouchableOpacity>
+
 							<TouchableOpacity style={style.nav} onPress={() => getAllRequests()}>
-								<Text style={style.navHeader}>Request(s)</Text>
+								<Text style={style.navHeader}>{numRequests} Request(s)</Text>
 							</TouchableOpacity>
-							<TouchableOpacity style={style.nav} onPress={() => getAllAppointments()}>
-								<Text style={style.navHeader}>Appointment(s)</Text>
-							</TouchableOpacity>
+
+							{locationType == 'salon' && (
+								<TouchableOpacity style={style.nav} onPress={() => getAllAppointments()}>
+									<Text style={style.navHeader}>{numAppointments} Appointment(s)</Text>
+								</TouchableOpacity>
+							)}
+
+							{locationType == 'restaurant' && (
+								<TouchableOpacity style={style.nav} onPress={() => getAllReservations()}>
+									<Text style={style.navHeader}>Reservation(s)</Text>
+								</TouchableOpacity>
+							)}
 						</View>
 					</View>
 
@@ -229,14 +294,30 @@ export default function main(props) {
 									</View>
 									<View style={style.requestInfo}>
 										<Text>
-											<Text style={{ fontWeight: 'bold' }}>{item.username + ' requested'}</Text> 
-											<Text style={{ fontWeight: 'bold' }}>{' ' + item.name}</Text> on 
-											<Text style={{ fontWeight: 'bold' }}>{' ' + displayDateStr(item.time)}</Text>
+											{locationType == 'salon' ? 
+												<>
+													<Text style={{ fontWeight: 'bold' }}>{item.username + ' requested'}</Text> 
+													<Text style={{ fontWeight: 'bold' }}>{' ' + item.name}</Text> on 
+													<Text style={{ fontWeight: 'bold' }}>{' ' + displayDateStr(item.time)}</Text>
+												</>
+												:
+												<>
+													<Text style={{ fontWeight: 'bold' }}>{item.username + ' booked reservation'}</Text> 
+													<Text style={{ fontWeight: 'bold' }}>{' for ' + item.name}</Text> on 
+													<Text style={{ fontWeight: 'bold' }}>{' ' + displayDateStr(item.time)}</Text>
+												</>
+											}
 										</Text>
 
 										<View style={style.requestActions}>
 											<View style={{ flexDirection: 'row' }}>
-												<TouchableOpacity style={style.requestAction} onPress={() => props.navigation.navigate("booktime", { appointmentid: item.id })}>
+												<TouchableOpacity style={style.requestAction} onPress={() => {
+													if (locationType == 'salon') {
+														props.navigation.navigate("booktime", { appointmentid: item.id })
+													} else {
+														props.navigation.navigate("makereservation", { reservationid: item.id })
+													}
+												}}>
 													<Text style={style.requestActionHeader}>Another time</Text>
 												</TouchableOpacity>
 												<TouchableOpacity style={style.requestAction} onPress={() => cancelTheRequest(item.id, index)}>
@@ -258,7 +339,15 @@ export default function main(props) {
 							data={appointments}
 							renderItem={({ item }) => 
 								<View key={item.key} style={style.appointment}>
-
+									<View style={style.imageHolder}>
+										<Image source={{ uri: logo_url + item.image }} style={{ height: 80, width: 80 }}/>
+									</View>
+									<Text style={style.appointmentHeader}>
+										<Text style={{ fontFamily: 'Arial', fontWeight: 'bold' }}>{item.username} </Text> 
+										has an appointment for
+										<Text style={{ fontFamily: 'Arial', fontWeight: 'bold' }}> {item.name}</Text>
+										{'\n'} on {displayDateStr(item.time)}
+									</Text>
 								</View>
 							}
 						/>
@@ -272,6 +361,10 @@ export default function main(props) {
 						</TouchableOpacity>
 
 						<TouchableOpacity style={style.bottomNav} onPress={() => {
+							clearInterval(updateNumrequests)
+							clearInterval(updateNumappointments)
+							clearInterval(updateNumreservations)
+
 							AsyncStorage.clear()
 
 							props.navigation.dispatch(
@@ -319,7 +412,7 @@ export default function main(props) {
 }
 
 const style = StyleSheet.create({
-	box: { backgroundColor: '#EAEAEA', height: '100%', width: '100%' },
+	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 
 	// height = 150
 	headers: { alignItems: 'center', flexDirection: 'column', height: 150, justifyContent: 'space-between', paddingVertical: 5 },
@@ -332,17 +425,8 @@ const style = StyleSheet.create({
 	nav: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: 13, marginHorizontal: 2, marginVertical: 3, padding: 2, width: (width / 3) - 10 },
 	navHeader: { fontSize: 13 },
 
-	// products
-	/*product: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, margin: 5, padding: 5, width: (width / 3) - 10 },
-	productEmpty: { borderRadius: 5, margin: 5, padding: 5, width: (width / 3) - 10 },
-	productHeader: { fontSize: 10, fontWeight: 'bold', paddingVertical: 10 },
-	productImage: { backgroundColor: 'black', borderRadius: 25, height: 50, width: 50 },
-	productPrice: { fontWeight: 'bold' },
-	productRemove: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 8, padding: 2 },
-	productRemoveHeader: { fontSize: 10, textAlign: 'center' },*/
-
 	// body
-	body: { height: screenHeight - 180 },
+	body: { height: screenHeight - 190 },
 
 	// client appointment requests
 	request: { borderRadius: 5, backgroundColor: 'white', flexDirection: 'row', justifyContent: 'space-between', marginHorizontal: 5, marginVertical: 2.5 },
@@ -354,10 +438,11 @@ const style = StyleSheet.create({
 
 	// client's appointments
 	appointment: { borderRadius: 5, backgroundColor: 'white', flexDirection: 'row', justifyContent: 'space-between', marginHorizontal: 5, marginVertical: 2.5 },
+	imageHolder: { borderRadius: 40, height: 80, margin: 5, overflow: 'hidden', width: 80 },
+	appointmentHeader: { fontFamily: 'appFont', fontSize: 20, padding: 10, width: width - 100 },
 
-	// height = 50
-	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 50, justifyContent: 'space-around', width: '100%' },
-	bottomNav: { flexDirection: 'row', height: 30, marginVertical: 10, marginHorizontal: 20 },
+	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
+	bottomNav: { flexDirection: 'row', height: 30, marginVertical: 5, marginHorizontal: 20 },
 	bottomNavHeader: { fontWeight: 'bold', paddingVertical: 5 },
 
 	cancelRequestBox: { backgroundColor: 'white', height: '100%', width: '100%' },
