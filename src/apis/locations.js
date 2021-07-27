@@ -1,18 +1,16 @@
 import axios from 'axios'
 import { LOCAL_API_URL, WIFI_API_URL } from "@env"
 
-const url = WIFI_API_URL
-
 export const registerLocation = data => {
 	return axios.post(
-		`${url}/locations/register_location`, 
+		`${WIFI_API_URL}/locations/register_location`, 
 		data
 	)
 }
 
 export const loginLocation = async(data) => {
 	return axios.post(
-		`${url}/locations/login_location`,
+		`${WIFI_API_URL}/locations/login_location`,
 		data
 	)
 }
@@ -35,7 +33,7 @@ export const setupLocation = data => {
 	form.append("ipAddress", data.ipAddress)
 
 	return axios.post(
-		`${url}/locations/setup_location`, 
+		`${WIFI_API_URL}/locations/setup_location`, 
 		form, 
 		{ headers: { 
 			'Content-Type': 'multipart/form-data' 
@@ -44,47 +42,47 @@ export const setupLocation = data => {
 }
 
 export const fetchNumRequests = id => {
-	return axios.get(`${url}/locations/fetch_num_requests/${id}`)
+	return axios.get(`${WIFI_API_URL}/locations/fetch_num_requests/${id}`)
 }
 
 export const fetchNumAppointments = data => {
 	return axios.post(
-		`${url}/locations/fetch_num_appointments`,
+		`${WIFI_API_URL}/locations/fetch_num_appointments`,
 		data
 	)
 }
 
 export const fetchNumReservations = data => {
 	return axios.post(
-		`${url}/locations/fetch_num_reservations`,
+		`${WIFI_API_URL}/locations/fetch_num_reservations`,
 		data
 	)
 }
 
 export const setLocationType = data => {
 	return axios.post(
-		`${url}/locations/set_type`,
+		`${WIFI_API_URL}/locations/set_type`,
 		data
 	)
 }
 
 export const setLocationHours = data => {
 	return axios.post(
-		`${url}/locations/set_hours`,
+		`${WIFI_API_URL}/locations/set_hours`,
 		data
 	)
 }
 
 export const getInfo = data => {
 	return axios.post(
-		`${url}/locations/get_info`,
+		`${WIFI_API_URL}/locations/get_info`,
 		data
 	)
 }
 
 export const getLocationHours = data => {
 	return axios.post(
-		`${url}/locations/get_hours`,
+		`${WIFI_API_URL}/locations/get_hours`,
 		data
 	)
 }

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { AsyncStorage, SafeAreaView, Dimensions, View, FlatList, Image, Text, TextInput, TouchableOpacity, StyleSheet, Modal } from 'react-native'
+import { AsyncStorage, Dimensions, View, FlatList, Image, Text, TextInput, TouchableOpacity, StyleSheet, Modal } from 'react-native'
 import * as FileSystem from 'expo-file-system'
 import { Camera } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator'
@@ -10,6 +10,8 @@ import { getProducts, addNewProduct } from '../../apis/products'
 import Entypo from 'react-native-vector-icons/Entypo'
 
 const { height, width } = Dimensions.get('window')
+const offsetPadding = Constants.statusBarHeight
+const screenHeight = height - (offsetPadding * 2)
 
 export default function services(props) {
 	const { menuid, name, map, refetch } = props.route.params
@@ -207,7 +209,7 @@ export default function services(props) {
 	}, [])
 
 	return (
-		<SafeAreaView style={{ flex: 1 }}>
+		<View style={{ paddingVertical: offsetPadding }}>
 			<View style={style.box}>
 				<View style={style.actionsContainer}>
 					<View style={style.actions}>
@@ -268,7 +270,7 @@ export default function services(props) {
 
 			{addMenu.show && (
 				<Modal transparent={true}>
-					<SafeAreaView style={style.hiddenBox}>
+					<View style={style.hiddenBox}>
 						{addMenu.show && (
 							<View style={style.addBox}>
 								<Text style={style.addHeader}>Enter menu name</Text>
@@ -302,10 +304,10 @@ export default function services(props) {
 								</View>
 							</View>
 						)}
-					</SafeAreaView>
+					</View>
 				</Modal>
 			)}
-		</SafeAreaView>
+		</View>
 	)
 }
 

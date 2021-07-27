@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { AsyncStorage, SafeAreaView, ScrollView, ActivityIndicator, Dimensions, View, FlatList, Image, Text, TextInput, TouchableOpacity, StyleSheet, Modal } from 'react-native'
+import { AsyncStorage, ScrollView, ActivityIndicator, Dimensions, View, FlatList, Image, Text, TextInput, TouchableOpacity, StyleSheet, Modal } from 'react-native'
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import * as FileSystem from 'expo-file-system'
@@ -424,7 +424,7 @@ export default function main(props) {
 
 			{cancelRequestInfo.show && (
 				<Modal transparent={true}>
-					<SafeAreaView style={{ flex: 1 }}>
+					<View style={{ paddingVertical: offsetPadding }}>
 						<View style={style.cancelRequestBox}>
 							<Text style={style.cancelRequestHeader}>Tell the client the reason for this cancellation ?</Text>
 
@@ -446,7 +446,7 @@ export default function main(props) {
 								</View>
 							</View>
 						</View>
-					</SafeAreaView>
+					</View>
 				</Modal>
 			)}
 		</View>

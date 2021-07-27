@@ -1,8 +1,12 @@
 import React, { useEffect, useState } from 'react'
-import { AsyncStorage, ActivityIndicator, SafeAreaView, ScrollView, View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import { AsyncStorage, ActivityIndicator, Dimensions, ScrollView, View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import { getServiceInfo } from '../apis/services'
 import { getAppointmentInfo, rescheduleAppointment } from '../apis/schedules'
 import { getLocationHours } from '../apis/locations'
+
+const { height, width } = Dimensions.get('window')
+const offsetPadding = Constants.statusBarHeight
+const screenHeight = height - (offsetPadding * 2)
 
 export default function booktime(props) {
 	const { appointmentid } = props.route.params
@@ -101,7 +105,7 @@ export default function booktime(props) {
 	}, [])
 
 	return (
-		<SafeAreaView style={{ flex: 1 }}>
+		<View style={{ paddingVertical: offsetPadding }}>
 			<View style={style.box}>
 				<TouchableOpacity style={style.back} onPress={() => props.navigation.goBack()}>
 					<Text style={style.backHeader}>Back</Text>
@@ -129,7 +133,7 @@ export default function booktime(props) {
 
 			{confirm.show && (
 				<Modal transparent={true}>
-					<SafeAreaView style={{ flex: 1 }}>
+					<View style={{ paddingVertical: offsetPadding }}>
 						<View style={style.confirmBox}>
 							<View style={style.confirmContainer}>
 								{!confirm.requested ? 
@@ -169,10 +173,10 @@ export default function booktime(props) {
 								}
 							</View>
 						</View>
-					</SafeAreaView>
+					</View>
 				</Modal>
 			)}
-		</SafeAreaView>
+		</View>
 	)
 }
 

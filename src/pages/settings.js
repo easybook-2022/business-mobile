@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { AsyncStorage, ActivityIndicator, SafeAreaView, ScrollView, View, Image, Text, TextInput, TouchableOpacity, StyleSheet, Modal } from 'react-native'
+import { AsyncStorage, ActivityIndicator, Dimensions, ScrollView, View, Image, Text, TextInput, TouchableOpacity, StyleSheet, Modal } from 'react-native'
 import stripe from 'tipsi-stripe'
 import { 
 	addOwner, updateOwner, addBankaccount, getAccounts, getBankaccounts, 
@@ -12,6 +12,10 @@ import AntDesign from 'react-native-vector-icons/AntDesign'
 stripe.setOptions({
 	publishableKey: 'pk_test_bWW1YHLx5wgY3rU9fk6cNhBu'
 })
+
+const { height, width } = Dimensions.get('window')
+const offsetPadding = Constants.statusBarHeight
+const screenHeight = height - (offsetPadding * 2)
 
 export default function settings({ navigation }) {
 	const [ownerid, setOwnerid] = useState('')
@@ -251,7 +255,7 @@ export default function settings({ navigation }) {
 	}, [])
 
 	return (
-		<SafeAreaView style={{ flex: 1 }}>
+		<View style={{ paddingVertical: offsetPadding }}>
 			<View style={style.box}>
 				<TouchableOpacity style={style.back} onPress={() => navigation.goBack()}>
 					<Text style={style.backHeader}>Back</Text>
@@ -356,7 +360,7 @@ export default function settings({ navigation }) {
 
 			{accountForm.show && (
 				<Modal transparent={true}>
-					<SafeAreaView style={{ flex: 1 }}>
+					<View style={{ paddingVertical: offsetPadding }}>
 						<View style={style.form}>
 							<View style={style.formContainer}>
 								<View style={{ alignItems: 'center', marginVertical: 20 }}>
@@ -409,13 +413,13 @@ export default function settings({ navigation }) {
 								</View>
 							</View>
 						</View>
-					</SafeAreaView>
+					</View>
 				</Modal>
 			)}
 
 			{bankAccountForm.show && (
 				<Modal transparent={true}>
-					<SafeAreaView style={{ flex: 1 }}>
+					<View style={{ paddingVertical: offsetPadding }}>
 						<View style={style.form}>
 							<View style={style.formContainer}>
 								<View style={{ alignItems: 'center', marginVertical: 20 }}>
@@ -483,10 +487,10 @@ export default function settings({ navigation }) {
 								</View>
 							</View>
 						</View>
-					</SafeAreaView>
+					</View>
 				</Modal>
 			)}
-		</SafeAreaView>
+		</View>
 	)
 }
 

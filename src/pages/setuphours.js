@@ -117,7 +117,7 @@ export default function setuphours({ navigation }) {
 	useEffect(() => {
 		getLocationType()
 	}, [])
-
+	
 	return (
 		<View style={{ paddingTop: offsetPadding }}>
 			<ScrollView style={{ height: screenHeight - 40, width: '100%' }}>

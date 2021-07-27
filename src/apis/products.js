@@ -1,11 +1,9 @@
 import axios from 'axios'
 import { LOCAL_API_URL, WIFI_API_URL } from "@env"
 
-const url = WIFI_API_URL
-
 export const getProducts = data => {
 	return axios.post(
-		`${url}/products/get_products`,
+		`${WIFI_API_URL}/products/get_products`,
 		data
 	)
 }
@@ -23,7 +21,7 @@ export const addNewProduct = data => {
 	form.append("price", data.price)
 
 	return axios.post(
-		`${url}/products/add_product`,
+		`${WIFI_API_URL}/products/add_product`,
 		form,
 		{ headers: {
 			'Content-Type': 'multipart/form-data'
@@ -32,5 +30,5 @@ export const addNewProduct = data => {
 }
 
 export const removeProduct = (id) => {
-	return axios.post(`${url}/products/remove_product/${id}`)
+	return axios.post(`${WIFI_API_URL}/products/remove_product/${id}`)
 }

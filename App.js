@@ -2,7 +2,7 @@ import 'react-native-gesture-handler';
 import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { AsyncStorage, SafeAreaView, Text, View, TouchableOpacity, StyleSheet, LogBox } from 'react-native';
+import { AsyncStorage, Text, View, TouchableOpacity, StyleSheet, LogBox } from 'react-native';
 import * as Font from 'expo-font';
 
 LogBox.ignoreLogs([
