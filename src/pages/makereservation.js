@@ -8,7 +8,7 @@ import SimpleLineIcons from 'react-native-vector-icons/SimpleLineIcons'
 const { width } = Dimensions.get('window')
 
 export default function booktime(props) {
-	let { reservationid } = props.route.params
+	let { userid, reservationid } = props.route.params
 
 	const [name, setName] = useState(name)
 	const [seaters, setSeaters] = useState(0)
@@ -48,7 +48,7 @@ export default function booktime(props) {
 			})
 			.then((res) => {
 				if (res) {
-					const { openTime, closeTime } = res
+					const { openTime, closeTime, scheduled } = res
 					let openHour = openTime.hour, openMinute = openTime.minute, openPeriod = openTime.period
 					let closeHour = closeTime.hour, closeMinute = closeTime.minute, closePeriod = closeTime.period
 
@@ -76,7 +76,7 @@ export default function booktime(props) {
 						let timedisplay = (hour > 12 ? hour - 12 : hour) + ":" + minute + " " + period
 
 						k++
-						newTimes.push({ key: (k - 1).toString(), header: timedisplay, time: openDateStr, booked: false })
+						newTimes.push({ key: (k - 1).toString(), header: timedisplay, time: openDateStr, booked: scheduled.indexOf(openDateStr) > -1 ? true : false })
 					}
 
 					setTimes(newTimes)

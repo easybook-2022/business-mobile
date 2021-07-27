@@ -1,34 +1,116 @@
-import React, { useState } from 'react'
-import { AsyncStorage, SafeAreaView, ScrollView, View, Image, Text, TextInput, TouchableOpacity, StyleSheet, Modal } from 'react-native'
-import { addBankaccount, getAccount, getBankaccount } from '../apis/users'
+import React, { useState, useEffect } from 'react'
+import { AsyncStorage, ActivityIndicator, SafeAreaView, ScrollView, View, Image, Text, TextInput, TouchableOpacity, StyleSheet, Modal } from 'react-native'
+import stripe from 'tipsi-stripe'
+import { 
+	addOwner, updateOwner, addBankaccount, getAccounts, getBankaccounts, 
+	setBankaccountDefault, getBankaccountInfo, deleteTheBankAccount
+} from '../apis/owners'
+import { info } from '../../assets/info'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
 
+stripe.setOptions({
+	publishableKey: 'pk_test_bWW1YHLx5wgY3rU9fk6cNhBu'
+})
+
 export default function settings({ navigation }) {
-	const [accountHolders, setAccountHolders] = useState([
-		{ key: "account-0", id: "1-d9d9diidssd-0", cellnumber: "1231231234" },
-		{ key: "account-1", id: "1-d9d9diidssd-1", cellnumber: "2342342345" }
-	])
-	const [bankAccounts, setBankAccounts] = useState([
-		{ key: "bankaccount-0", id: "10c0d-ds-f9d9f09d-0", bankimage: { photo: require("../../assets/bankaccount.png"), width: 0, height: 0 }, number: "****7890", default: true },
-		{ key: "bankaccount-1", id: "10c0d-ds-f9d9f09d-1", bankimage: { photo: require("../../assets/bankaccount.png"), width: 0, height: 0 }, number: "****7890", default: false },
-		{ key: "bankaccount-2", id: "10c0d-ds-f9d9f09d-2", bankimage: { photo: require("../../assets/bankaccount.png"), width: 0, height: 0 }, number: "****7890", default: false }
-	])
+	const [ownerid, setOwnerid] = useState('')
+	const [accountHolders, setAccountHolders] = useState([])
+	const [bankAccounts, setBankAccounts] = useState([])
+	const [loaded, setLoaded] = useState(false)
 	const [accountForm, setAccountform] = useState({
 		show: false,
 		type: '',
-		cellnumber: '', password: '', confirmpassword: ''
+		cellnumber: '', password: '', confirmPassword: ''
 	})
 	const [bankAccountForm, setBankaccountform] = useState({
 		show: false,
-		id: '',
+		index: -1,
 		type: '',
-		accountHolder: '', accountNumber: '', transitNumber: '', routingNumber: ''
+		accountNumber: '', 
+		countryCode: 'ca',
+		currency: 'cad',
+
+		// routing number: '0' + institution + transit number
+		institutionNumber: '',
+		placeholder: '',
+		transitNumber: '',
+
+		accountHolderName: '', 
+		accountHolderType: 'company' 
 	})
 
-	const addNewBankAccount = () => {
-		let { accountHolder, accountNumber, transitNumber, routingNumber } = bankAccountForm
-		let data = { accountHolder, accountNumber, transitNumber, routingNumber }
+	const addNewOwner = async() => {
+		const { cellnumber, password, confirmPassword } = accountForm
+		const data = { ownerid, cellnumber, password, confirmPassword }
+
+		addOwner(data)
+			.then((res) => {
+				if (res.status == 200) {
+					return res.data
+				}
+
+				return
+			})
+			.then((res) => {
+				if (res) {
+					setAccountform({
+						show: false,
+						type: '',
+						cellnumber: '',
+						password: '',
+						confirmPassword: ''
+					})
+					getAllAccounts()
+				}
+			})
+	}
+	const updateTheOwner = async() => {
+		const { cellnumber, password, confirmPassword } = accountForm
+		const data = { ownerid, cellnumber, password, confirmPassword }
+
+		updateOwner(data)
+			.then((res) => {
+				if (res.status == 200) {
+					return res.data
+				}
+
+				return
+			})
+			.then((res) => {
+				if (res) {
+					setAccountform({
+						show: false,
+						type: '',
+						cellnumber: '',
+						password: '',
+						confirmPassword: ''
+					})
+					getAllAccounts()
+				}
+			})
+	}
+
+	const addNewBankAccount = async() => {
+		const locationid = await AsyncStorage.getItem("locationid")
+		const { accountHolder, accountNumber, transitNumber, routingNumber } = bankAccountForm
+		const data = { locationid }
+		const params = {
+			// mandatory
+			accountNumber: '000123456789',
+			countryCode: 'us',
+
+			currency: 'usd',
+
+			// optional
+			routingNumber: '110000000', // 9 digits
+			accountHolderName: 'Test holder name',
+			accountHolderType: 'company', // "company" or "individual"
+		}
+
+		const token = await stripe.createTokenWithBankAccount(params)
+
+		data['banktoken'] = token.tokenId
 
 		addBankaccount(data)
 			.then((res) => {
@@ -46,13 +128,19 @@ export default function settings({ navigation }) {
 						index: 0,
 						accountHolder: '', accountNumber: '', transitNumber, routingNumber: ''
 					})
+					getAllBankaccounts()
 				}
 			})
 	}
-	const editAccount = (accountid, index) => {
-		let { cellnumber } = accountHolders[index]
+	const updateTheBankAccount = () => {
 
-		getAccount(accountid)
+	}
+
+	const useBankAccount = async(bankid) => {
+		const locationid = await AsyncStorage.getItem("locationid")
+		const data = { locationid, bankid }
+
+		setBankaccountDefault(data)
 			.then((res) => {
 				if (res.status == 200) {
 					return res.data
@@ -60,19 +148,25 @@ export default function settings({ navigation }) {
 			})
 			.then((res) => {
 				if (res) {
-					setAccountform({
-						...accountForm,
-						show: true,
-						type: 'edit',
-						cellnumber: cellnumber,
-						password: 'password',
-						confirmpassword: 'password'
+					const newBankaccounts = [...bankAccounts]
+
+					newBankaccounts.forEach(function (data) {
+						data.default = false
+
+						if (data.bankid == bankid) {
+							data.default = true
+						}
 					})
+
+					setBankAccounts(newBankaccounts)
 				}
 			})
 	}
-	const editBankAccount = (bankaccountid) => {
-		getBankaccount(bankaccountid)
+	const editBankAccount = async(bankid, index) => {
+		const locationid = await AsyncStorage.getItem("locationid")
+		const data = { locationid, bankid }
+
+		getBankaccountInfo(data)
 			.then((res) => {
 				if (res.status == 200) {
 					return res.data
@@ -80,15 +174,81 @@ export default function settings({ navigation }) {
 			})
 			.then((res) => {
 				if (res) {
+					const { account_holder_name, last4, transit_number, institution_number } = res.bankaccountInfo
+
 					setBankaccountform({
 						show: true,
+						index,
 						type: 'edit',
-						id: bankaccountid,
-						accountHolder: '123', accountNumber: '123', transitNumber: '123', routingNumber: '123'
+
+						accountNumber: "",
+						institutionNumber: institution_number,
+						placeholder: "****" + last4,
+						accountHolderName: account_holder_name, 
+						transitNumber: transit_number
 					})
 				}
 			})
 	}
+	const deleteBankAccount = async(bankid, index) => {
+		const locationid = await AsyncStorage.getItem("locationid")
+		const data = { locationid, bankid }
+
+		deleteTheBankAccount(data)
+			.then((res) => {
+				if (res.status == 200) {
+					return res.data
+				}
+			})
+			.then((res) => {
+				if (res) {
+					const newBankaccounts = [...bankAccounts]
+
+					newBankaccounts.splice(index, 1)
+
+					setBankAccounts(newBankaccounts)
+				}
+			})
+	}
+
+	const getAllAccounts = async() => {
+		const locationid = await AsyncStorage.getItem("locationid")
+		const ownerid = await AsyncStorage.getItem("ownerid")
+
+		getAccounts(locationid)
+			.then((res) => {
+				if (res.status == 200) {
+					return res.data
+				}
+			})
+			.then((res) => {
+				if (res) {
+					setOwnerid(ownerid)
+					setAccountHolders(res.accounts)
+				}
+			})
+	}
+	const getAllBankaccounts = async() => {
+		const locationid = await AsyncStorage.getItem("locationid")
+
+		getBankaccounts(locationid)
+			.then((res) => {
+				if (res.status == 200) {
+					return res.data
+				}
+			})
+			.then((res) => {
+				if (res) {
+					setBankAccounts(res.bankaccounts)
+					setLoaded(true)
+				}
+			})
+	}
+
+	useEffect(() => {
+		getAllAccounts()
+		getAllBankaccounts()
+	}, [])
 
 	return (
 		<SafeAreaView style={{ flex: 1 }}>
@@ -97,67 +257,101 @@ export default function settings({ navigation }) {
 					<Text style={style.backHeader}>Back</Text>
 				</TouchableOpacity>
 
-				<ScrollView>
-					<Text style={style.boxHeader}>Setting(s)</Text>
+				{loaded ? 
+					<ScrollView>
+						<Text style={style.boxHeader}>Setting(s)</Text>
 
-					<View style={style.accountHolders}>
-						<Text style={style.accountHoldersHeader}>Login User(s)</Text>
+						<View style={style.accountHolders}>
+							<Text style={style.accountHoldersHeader}>Login User(s)</Text>
 
-						<TouchableOpacity style={style.accountHoldersAdd} onPress={() => {
-							setAccountform({
-								...accountForm,
-								show: true,
-								type: 'add',
-								cellnumber: '', password: '', confirmpassword: ''
-							})
-						}}>
-							<Text>Add a Login User</Text>
-						</TouchableOpacity>
+							<TouchableOpacity style={style.accountHoldersAdd} onPress={() => {
+								setAccountform({
+									...accountForm,
+									show: true,
+									type: 'add',
+									cellnumber: '', password: '', confirmPassword: ''
+								})
+							}}>
+								<Text>Add a Login User</Text>
+							</TouchableOpacity>
 
-						{accountHolders.map((info, index) => (
-							<View key={info.key} style={style.account}>
-								<Text style={style.accountHeader}>#{index + 1}:</Text>
+							{accountHolders.map((info, index) => (
+								<View key={info.key} style={style.account}>
+									<Text style={style.accountHeader}>#{index + 1}:</Text>
 
-								<View style={style.accountEdit}>
-									<Text style={style.accountEditHeader}>{info.cellnumber}</Text>
-									<TouchableOpacity style={style.accountEditTouch} onPress={() => editAccount(info.id, index)}>
-										<Text>Change Info</Text>
-									</TouchableOpacity>
+									<View style={style.accountEdit}>
+										<Text style={style.accountEditHeader}>{info.cellnumber}</Text>
+										{info.id == ownerid && (
+											<TouchableOpacity style={style.accountEditTouch} onPress={() => {
+												setAccountform({
+													...accountForm,
+													show: true,
+													type: 'edit',
+													cellnumber: info.cellnumber,
+													password: '',
+													confirmPassword: ''
+												})
+											}}>
+												<Text>Change Info</Text>
+											</TouchableOpacity>
+										)}
+									</View>
 								</View>
-							</View>
-						))}
-					</View>
+							))}
+						</View>
 
-					<View style={style.bankaccountHolders}>
-						<Text style={style.bankaccountHoldersHeader}>Bank Account(s)</Text>
+						<View style={style.bankaccountHolders}>
+							<Text style={style.bankaccountHolderHeader}>Bank Account(s)</Text>
 
-						<TouchableOpacity style={style.bankaccountHoldersAdd} onPress={() => {
-							setBankaccountform({
-								...bankAccountForm,
-								show: true,
-								type: 'add',
-								accountHolder: '', accountNumber: '', transitNumber: '', routingNumber: ''
-							})
-						}}>
-							<Text>Add a bank account</Text>
-						</TouchableOpacity>
+							<TouchableOpacity style={style.bankaccountHolderAdd} onPress={() => {
+								setBankaccountform({
+									...bankAccountForm,
+									show: true,
+									type: 'add',
+									accountNumber: '', 
+									countryCode: 'ca',
+									currency: 'cad',
 
-						{bankAccounts.map((info, index) => (
-							<View key={info.key} style={style.bankaccount}>
-								<Text style={style.bankaccountHeader}>#{index + 1}:</Text>
-								<View style={style.bankaccountImageHolder}>
-									<Image source={info.bankimage.photo} style={style.bankaccountImage}/>
+									// routing number: '0' + institution + transit number
+									institutionNumber: '',
+									transitNumber: '',
+
+									accountHolderName: '', 
+									accountHolderType: 'company' 
+								})
+							}}>
+								<Text>Add a bank account</Text>
+							</TouchableOpacity>
+
+							{bankAccounts.map((info, index) => (
+								<View key={info.key} style={style.bankaccount}>
+									<View style={style.bankaccountRow}>
+										<Text style={style.bankaccountHeader}>#{index + 1}:</Text>
+										<View style={style.bankaccountImageHolder}>
+											<Image source={require("../../assets/rbc.png")} style={style.bankaccountImage}/>
+										</View>
+										<View style={style.bankaccountNumberHolder}>
+											<Text style={style.bankaccountNumberHeader}>{info.number}</Text>
+										</View>
+									</View>
+									<View style={style.bankaccountActions}>
+										<TouchableOpacity style={info.default ? style.bankaccountActionDisabled : style.bankaccountAction} disabled={info.default} onPress={() => useBankAccount(info.bankid)}>
+											<Text style={info.default ? style.bankaccountActionHeaderDisabled : style.bankaccountActionHeader}>Use as default</Text>
+										</TouchableOpacity>
+										<TouchableOpacity style={style.bankaccountAction} onPress={() => editBankAccount(info.bankid, index)}>
+											<Text style={style.bankaccountActionHeader}>Change info</Text>
+										</TouchableOpacity>
+										<TouchableOpacity style={info.default ? style.bankaccountActionDisabled : style.bankaccountAction} disabled={info.default} onPress={() => deleteBankAccount(info.bankid, index)}>
+											<Text style={info.default ? style.bankaccountActionHeaderDisabled : style.bankaccountActionHeader}>Delete</Text>
+										</TouchableOpacity>
+									</View>
 								</View>
-								<View style={style.bankaccountNumberHolder}>
-									<Text style={style.bankaccountNumberHeader}>{info.number}</Text>
-									<TouchableOpacity style={style.bankaccountEditTouch} onPress={() => editBankAccount(info.id)}>
-										<Text style={style.bankaccountEditHeader}>Change Info</Text>
-									</TouchableOpacity>
-								</View>
-							</View>
-						))}
-					</View>
-				</ScrollView>
+							))}
+						</View>
+					</ScrollView>
+					:
+					<ActivityIndicator marginTop={'50%'} size="small"/>
+				}
 			</View>
 
 			{accountForm.show && (
@@ -169,7 +363,7 @@ export default function settings({ navigation }) {
 									<TouchableOpacity onPress={() => {
 										setAccountform({
 											show: false,
-											cellnumber: '', password: '', confirmpassword: ''
+											cellnumber: '', password: '', confirmPassword: ''
 										})
 									}}>
 										<AntDesign name="closecircleo" size={30}/>
@@ -180,7 +374,7 @@ export default function settings({ navigation }) {
 
 								<View style={style.formInputField}>
 									<Text style={style.formInputHeader}>Cell number:</Text>
-									<TextInput style={style.formInputInput} onPress={(number) => setAccountform({
+									<TextInput style={style.formInputInput} onChangeText={(number) => setAccountform({
 										...accountForm,
 										cellnumber: number
 									})} value={accountForm.cellnumber}/>
@@ -188,7 +382,7 @@ export default function settings({ navigation }) {
 
 								<View style={style.formInputField}>
 									<Text style={style.formInputHeader}>Password:</Text>
-									<TextInput style={style.formInputInput} onPress={(password) => setAccountform({
+									<TextInput style={style.formInputInput} secureTextEntry={true} onChangeText={(password) => setAccountform({
 										...accountForm,
 										password: password
 									})} value={accountForm.password}/>
@@ -196,14 +390,20 @@ export default function settings({ navigation }) {
 
 								<View style={style.formInputField}>
 									<Text style={style.formInputHeader}>Confirm password:</Text>
-									<TextInput style={style.formInputInput} onPress={(password) => setAccountform({
+									<TextInput style={style.formInputInput} secureTextEntry={true} onChangeText={(password) => setAccountform({
 										...accountForm,
-										confirmpassword: confirmpassword
-									})} value={accountForm.confirmpassword}/>
+										confirmPassword: password
+									})} value={accountForm.confirmPassword}/>
 								</View>
 
 								<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-									<TouchableOpacity style={style.formSubmit} onPress={() => addNewAccount()}>
+									<TouchableOpacity style={style.formSubmit} onPress={() => {
+										if (accountForm.type == 'add') {
+											addNewOwner()
+										} else {
+											updateTheOwner()
+										}
+									}}>
 										<Text style={style.formSubmitHeader}>{accountForm.type == 'add' ? 'Add' : 'Save'} Account</Text>
 									</TouchableOpacity>
 								</View>
@@ -222,8 +422,17 @@ export default function settings({ navigation }) {
 									<TouchableOpacity onPress={() => {
 										setBankaccountform({
 											show: false,
-											id: '',
-											accountHolder: '', accountNumber: '', transitNumber: '', routingNumber: ''
+											index: -1,
+											accountNumber: '', 
+											countryCode: 'ca',
+											currency: 'cad',
+
+											// routing number: '0' + institution + transit number
+											institutionNumber: '',
+											transitNumber: '',
+
+											accountHolderName: '', 
+											accountHolderType: 'company' 
 										})
 									}}>
 										<AntDesign name="closecircleo" size={30}/>
@@ -234,36 +443,41 @@ export default function settings({ navigation }) {
 
 								<View style={style.formInputField}>
 									<Text style={style.formInputHeader}>Account Holder</Text>
-									<TextInput style={style.formInputInput} onPress={(holder) => setBankaccountform({
+									<TextInput style={style.formInputInput} onChangeText={(holder) => setBankaccountform({
 										...bankAccountForm,
-										accountHolder: holder
-									})} value={bankAccountForm.accountHolder}/>
+										accountHolderName: holder.toString()
+									})} value={bankAccountForm.accountHolderName}/>
 								</View>
 								<View style={style.formInputField}>
-									<Text style={style.formInputHeader}>Account Number #</Text>
-									<TextInput style={style.formInputInput} onPress={(number) => setBankaccountform({
+									<Text style={style.formInputHeader}>Account Number</Text>
+									<TextInput style={style.formInputInput} onChangeText={(number) => setBankaccountform({
 										...bankAccountForm,
-										accountNumber: number
-									})} value={bankAccountForm.accountNumber}/>
+										accountNumber: number.toString()
+									})} value={bankAccountForm.accountNumber} placeholder={bankAccountForm.placeholder}/>
 								</View>
-								
 								<View style={style.formInputField}>
-									<Text style={style.formInputHeader}>Transit Number #</Text>
-									<TextInput style={style.formInputInput} onPress={(number) => setBankaccountform({
+									<Text style={style.formInputHeader}>Institution Number</Text>
+									<TextInput style={style.formInputInput} onChangeText={(number) => setBankaccountform({
 										...bankAccountForm,
-										transitNumber: number
+										institutionNumber: number.toString()
+									})} value={bankAccountForm.institutionNumber}/>
+								</View>
+								<View style={style.formInputField}>
+									<Text style={style.formInputHeader}>Transit Number</Text>
+									<TextInput style={style.formInputInput} onChangeText={(number) => setBankaccountform({
+										...bankAccountForm,
+										transitNumber: number.toString()
 									})} value={bankAccountForm.transitNumber}/>
-								</View>
-								<View style={style.formInputField}>
-									<Text style={style.formInputHeader}>Routing Number</Text>
-									<TextInput style={style.formInputInput} onPress={(number) => setBankaccountform({
-										...bankAccountForm,
-										routingNumber: number
-									})} value={bankAccountForm.routingNumber}/>
 								</View>
 
 								<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-									<TouchableOpacity style={style.formSubmit} onPress={() => addNewBankAccount()}>
+									<TouchableOpacity style={style.formSubmit} onPress={() => {
+										if (bankAccountForm.type == 'add') {
+											addNewBankAccount()
+										} else {
+											updateTheBankAccount()
+										}
+									}}>
 										<Text style={style.formSubmitHeader}>{bankAccountForm.type == 'add' ? 'Add' : 'Save'} Bank Account</Text>
 									</TouchableOpacity>
 								</View>
@@ -292,15 +506,20 @@ const style = StyleSheet.create({
 	accountEditTouch: { alignItems: 'center', borderRadius: 2, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5 },
 
 	bankaccountHolders: { alignItems: 'center', marginHorizontal: 10, marginTop: 50 },
-	bankaccountHoldersHeader: { fontFamily: 'appFont', fontSize: 20, textAlign: 'center' },
-	bankaccountHoldersAdd: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 3, padding: 5 },
-	bankaccount: { flexDirection: 'row', justifyContent: 'space-between', marginVertical: 10 },
+	bankaccountHolderHeader: { fontFamily: 'appFont', fontSize: 20, textAlign: 'center' },
+	bankaccountHolderAdd: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 3, padding: 5 },
+	bankaccount: { marginVertical: 30 },
+	bankaccountRow: { flexDirection: 'row', justifyContent: 'space-between' },
 	bankaccountHeader: { fontSize: 20, fontWeight: 'bold', padding: 5 },
-	bankaccountImageHolder: {  },
+	bankaccountImageHolder: { height: 40, margin: 2, width: 40 },
 	bankaccountImage: { height: 40, width: 40 },
 	bankaccountNumberHolder: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 5, flexDirection: 'row', justifyContent: 'space-between', padding: 5, width: '70%' },
 	bankaccountNumberHeader: { fontSize: 20, paddingVertical: 4, textAlign: 'center', width: '50%' },
-	bankaccountEditTouch: { alignItems: 'center', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, padding: 5 },
+	bankaccountActions: { flexDirection: 'row', justifyContent: 'space-around' },
+	bankaccountAction: { borderRadius: 2, borderStyle: 'solid', borderWidth: 2, marginTop: 5, padding: 5, width: 100 },
+	bankaccountActionHeader: { fontSize: 12, textAlign: 'center' },
+	bankaccountActionDisabled: { backgroundColor: 'black', borderRadius: 2, borderStyle: 'solid', borderWidth: 2, marginTop: 5, padding: 5, width: 100 },
+	bankaccountActionHeaderDisabled: { color: 'white', fontSize: 12, textAlign: 'center' },
 
 	// form
 	form: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },

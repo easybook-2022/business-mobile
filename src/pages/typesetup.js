@@ -3,6 +3,7 @@ import { AsyncStorage, Dimensions, View, FlatList, Text, TextInput, Image, Touch
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import { setLocationType } from '../apis/locations'
+import { info } from '../../assets/info'
 
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
@@ -10,7 +11,7 @@ const screenHeight = height - offsetPadding
 const iconSize = (width / 2) - 100
 
 export default function typesetup({ navigation }) {
-	const [type, setType] = useState('')
+	const [type, setType] = useState(info.storeType)
 	const [errorMsg, setErrormsg] = useState('')
 
 	const done = async() => {

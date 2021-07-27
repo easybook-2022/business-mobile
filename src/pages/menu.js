@@ -20,6 +20,9 @@ const screenHeight = height - (offsetPadding * 2)
 export default function menu(props) {
 	const { menuid, refetch } = props.route.params
 
+	const [menuName, setMenuname] = useState('')
+	const [menuInfo, setMenuinfo] = useState('')
+
 	const [permission, setPermission] = useState(null);
 	const [camComp, setCamcomp] = useState(null)
 	const [camType, setCamtype] = useState(Camera.Constants.Type.back);
@@ -62,7 +65,10 @@ export default function menu(props) {
 			})
 			.then((res) => {
 				if (res) {
-					const { msg } = res
+					const { msg, menuName, menuInfo } = res
+
+					setMenuname(menuName)
+					setMenuinfo(menuInfo)
 
 					if (msg == "menus") {
 						getAllMenus()
@@ -313,6 +319,13 @@ export default function menu(props) {
 				</View>
 			</View>
 
+			{(menuName || menuInfo) ? 
+				<View style={style.headers}>
+					<Text style={[style.header, { fontFamily: 'appFont' }]}>{menuName}</Text>
+					<Text style={style.header}>{menuInfo}</Text>
+				</View>
+			: null }
+
 			{showMenus && (
 				<FlatList
 					data={menus}
@@ -335,7 +348,7 @@ export default function menu(props) {
 				<FlatList
 					data={products}
 					renderItem={({ item, index }) => 
-						<View key={item.key} style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
+						<View key={item.key} style={style.row}>
 							{item.row.map((info, infoindex) => (
 								info.name ? 
 									<View key={info.key} style={style.product}>
@@ -436,6 +449,11 @@ const style = StyleSheet.create({
 	actionSelected: { alignItems: 'center', backgroundColor: 'grey', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 3, width: 100 },
 	actionSelectedHeader: { color: 'white' },
 
+	headers: { marginVertical: 20 },
+	header: { fontWeight: 'bold', fontSize: 20, textAlign: 'center' },
+
+	row: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
+
 	menu: { padding: 20 },
 	menuHeader: { fontSize: 20, fontWeight: 'bold', paddingVertical: 10 },
 	menuImage: { backgroundColor: 'black', borderRadius: 25, height: 50, marginLeft: 10, width: 50 },
@@ -446,10 +464,10 @@ const style = StyleSheet.create({
 	product: { alignItems: 'center', padding: 20, width: (width / 3) - 10 },
 	productEmpty: { padding: 20, width: (width / 3) - 10 },
 	productHeader: { fontSize: 20, fontWeight: 'bold', paddingVertical: 10, textAlign: 'center' },
-	productImage: { backgroundColor: 'black', borderRadius: 25, height: 50, marginLeft: 10, width: 50 },
+	productImage: { backgroundColor: 'black', borderRadius: 25, height: 50, width: 50 },
 	productPrice: { fontWeight: 'bold' },
 	productRemove: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 8, padding: 5 },
-	productRemoveHeader: { textAlign: 'center' },
+	productRemoveHeader: { fontSize: 10, textAlign: 'center' },
 
 	service: { backgroundColor: 'white', marginHorizontal: 10, marginTop: 10, padding: 20 },
 	serviceHeader: { fontSize: 20, fontWeight: 'bold', paddingVertical: 10 },

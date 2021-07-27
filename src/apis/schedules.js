@@ -10,11 +10,11 @@ export const getRequests = (data) => {
 	)
 }
 
-export const getAppointmentInfo = (id) => {
+export const getAppointmentInfo = id => {
 	return axios.get(`${url}/schedules/get_appointment_info/${id}`)
 }
 
-export const getReservationInfo = (id) => {
+export const getReservationInfo = id => {
 	return axios.get(`${url}/schedules/get_reservation_info/${id}`)
 }
 
@@ -32,7 +32,7 @@ export const rescheduleReservation = (data) => {
 	)
 }
 
-export const acceptRequest = (id) => {
+export const acceptRequest = id => {
 	return axios.get(`${url}/schedules/accept_request/${id}`)
 }
 
@@ -43,10 +43,10 @@ export const cancelRequest = (data) => {
 	)
 }
 
-export const getAppointments = (id) => {
+export const getAppointments = id => {
 	return axios.get(`${url}/schedules/get_appointments/${id}`)
 }
 
-export const getReservations = (id) => {
+export const getReservations = id => {
 	return axios.get(`${url}/schedules/get_reservations/${id}`)
 }

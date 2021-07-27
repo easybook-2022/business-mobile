@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AsyncStorage, Dimensions, ScrollView, View, Text, TextInput, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { NetworkInfo } from 'react-native-network-info';
 import Constants from 'expo-constants';
 import * as FileSystem from 'expo-file-system'
 import { Camera } from 'expo-camera';
@@ -33,12 +34,14 @@ export default function setup({ navigation }) {
 
 	const setupYourLocation = async() => {
 		const ownerid = await AsyncStorage.getItem("ownerid")
+		const ipAddress = await NetworkInfo.getIPAddress()
 
 		if (storeName && phonenumber, addressOne && city && province && postalcode && image.name) {
 			const [{ latitude, longitude }] = await Location.geocodeAsync(`${addressOne} ${addressTwo}, ${city} ${province}, ${postalcode}`)
+			const time = (Date.now() / 1000).toString().split(".")[0]
 			const data = {
 				storeName, phonenumber, addressOne, addressTwo, city, province, postalcode, logo: image,
-				longitude, latitude, ownerid
+				longitude, latitude, ownerid, time, ipAddress
 			}
 
 			setupLocation(data)

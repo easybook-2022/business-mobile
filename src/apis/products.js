@@ -3,14 +3,14 @@ import { LOCAL_API_URL, WIFI_API_URL } from "@env"
 
 const url = WIFI_API_URL
 
-export const getProducts = (data) => {
+export const getProducts = data => {
 	return axios.post(
 		`${url}/products/get_products`,
 		data
 	)
 }
 
-export const addNewProduct = (data) => {
+export const addNewProduct = data => {
 	const form = new FormData()
 
 	form.append("ownerid", data.ownerid)

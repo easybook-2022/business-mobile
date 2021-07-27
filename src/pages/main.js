@@ -18,7 +18,7 @@ import Entypo from 'react-native-vector-icons/Entypo'
 
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
-const screenHeight = height - offsetPadding
+const screenHeight = height - (offsetPadding * 2)
 
 export default function main(props) {
 	const [permission, setPermission] = useState(null);
@@ -43,46 +43,56 @@ export default function main(props) {
 	const [reservations, setReservations] = useState([])
 	const [numReservations, setNumreservations] = useState(0)
 
-	const [viewType, setViewtype] = useState('appointments')
+	const [viewType, setViewtype] = useState('')
 	const [cancelRequestInfo, setCancelrequestinfo] = useState({ show: false, reason: "", id: 0, index: 0 })
 	const fetchTheNumRequests = async() => {
 		const locationid = await AsyncStorage.getItem("locationid")
 
-		fetchNumRequests(locationid)
-			.then((res) => {
-				if (res.status == 200) {
-					return res.data
-				}
-			})
-			.then((res) => {
-				if (res) setNumrequests(res.numRequests)
-			})
+		if (locationid != null) {
+			fetchNumRequests(locationid)
+				.then((res) => {
+					if (res.status == 200) {
+						return res.data
+					}
+				})
+				.then((res) => {
+					if (res) setNumrequests(res.numRequests)
+				})
+		}
 	}
 	const fetchTheNumAppointments = async() => {
 		const locationid = await AsyncStorage.getItem("locationid")
+		const time = Date.now()
+		const data = { locationid, time }
 
-		fetchNumAppointments(locationid)
-			.then((res) => {
-				if (res.status == 200) {
-					return res.data
-				}
-			})
-			.then((res) => {
-				if (res) setNumappointments(res.numAppointments)
-			})
+		if (locationid != null) {
+			fetchNumAppointments(data)
+				.then((res) => {
+					if (res.status == 200) {
+						return res.data
+					}
+				})
+				.then((res) => {
+					if (res) setNumappointments(res.numAppointments)
+				})
+		}
 	}
 	const fetchTheNumReservations = async() => {
 		const locationid = await AsyncStorage.getItem("locationid")
+		const time = Date.now()
+		const data = { locationid, time }
 
-		fetchNumReservations(locationid)
-			.then((res) => {
-				if (res.status == 200) {
-					return res.data
-				}
-			})
-			.then((res) => {
-				if (res) setNumreservations(res.numReservations)
-			})
+		if (locationid != null) {
+			fetchNumReservations(data)
+				.then((res) => {
+					if (res.status == 200) {
+						return res.data
+					}
+				})
+				.then((res) => {
+					if (res) setNumreservations(res.numReservations)
+				})
+		}
 	}
 	const getTheInfo = async() => {
 		const locationid = await AsyncStorage.getItem("locationid")
@@ -114,6 +124,8 @@ export default function main(props) {
 						fetchTheNumReservations()
 						setUpdatenumreservations(setInterval(() => fetchTheNumReservations(), 5000))
 					}
+
+					getAllReservations()
 				}
 			})
 	}
@@ -186,7 +198,9 @@ export default function main(props) {
 			})
 			.then((res) => {
 				if (res) {
-					setReservation
+					setReservations(res.reservations)
+					setNumreservations(res.numreservations)
+					setViewtype('reservations')
 				}
 			})
 	}
@@ -215,6 +229,7 @@ export default function main(props) {
 						newRequests.splice(index, 1)
 
 						setRequests(newRequests)
+						setNumrequests(numRequests - 1)
 						setCancelrequestinfo({ ...cancelRequestInfo, show: false, reason: "", requestid: 0, index: 0 })
 					}
 				})
@@ -234,6 +249,8 @@ export default function main(props) {
 					newRequests.splice(index, 1)
 
 					setRequests(newRequests)
+					setNumrequests(numRequests - 1)
+					setNumappointments(numAppointments + 1)
 				}
 			})
 	}
@@ -249,7 +266,7 @@ export default function main(props) {
 	}, [])
 	
 	return (
-		<View style={{ paddingTop: offsetPadding }}>
+		<View style={{ paddingVertical: offsetPadding }}>
 			<View style={style.box}>
 				<View style={style.headers}>
 					<View style={style.storeIconHolder}>
@@ -278,7 +295,7 @@ export default function main(props) {
 
 							{locationType == 'restaurant' && (
 								<TouchableOpacity style={style.nav} onPress={() => getAllReservations()}>
-									<Text style={style.navHeader}>Reservation(s)</Text>
+									<Text style={style.navHeader}>{numReservations} Reservation(s)</Text>
 								</TouchableOpacity>
 							)}
 						</View>
@@ -315,7 +332,7 @@ export default function main(props) {
 													if (locationType == 'salon') {
 														props.navigation.navigate("booktime", { appointmentid: item.id })
 													} else {
-														props.navigation.navigate("makereservation", { reservationid: item.id })
+														props.navigation.navigate("makereservation", { userid: item.userId, reservationid: item.id })
 													}
 												}}>
 													<Text style={style.requestActionHeader}>Another time</Text>
@@ -338,11 +355,11 @@ export default function main(props) {
 						<FlatList
 							data={appointments}
 							renderItem={({ item }) => 
-								<View key={item.key} style={style.appointment}>
+								<View key={item.key} style={style.schedule}>
 									<View style={style.imageHolder}>
 										<Image source={{ uri: logo_url + item.image }} style={{ height: 80, width: 80 }}/>
 									</View>
-									<Text style={style.appointmentHeader}>
+									<Text style={style.scheduleHeader}>
 										<Text style={{ fontFamily: 'Arial', fontWeight: 'bold' }}>{item.username} </Text> 
 										has an appointment for
 										<Text style={{ fontFamily: 'Arial', fontWeight: 'bold' }}> {item.name}</Text>
@@ -352,11 +369,36 @@ export default function main(props) {
 							}
 						/>
 					)}
+
+					{viewType == "reservations" && (
+						<FlatList
+							data={reservations}
+							renderItem={({ item }) => 
+								<View key={item.key} style={style.schedule}>
+									<View style={style.imageHolder}>
+										<Image source={{ uri: logo_url + item.image }} style={{ height: 80, width: 80 }}/>
+									</View>
+									<Text style={style.scheduleHeader}>
+										<Text style={{ fontFamily: 'Arial', fontWeight: 'bold' }}>{item.username} </Text> 
+										booked a reservation for
+										<Text style={{ fontFamily: 'Arial', fontWeight: 'bold' }}> {item.name}</Text>
+										{'\n'} on {displayDateStr(item.time)} for {item.seaters} {item.seaters == 1 ? 'person' : 'people'}
+									</Text>
+								</View>
+							}
+						/>
+					)}
 				</View>
 
 				<View style={style.bottomNavs}>
 					<View style={{ flexDirection: 'row' }}>
-						<TouchableOpacity style={style.bottomNav} onPress={() => props.navigation.navigate("settings")}>
+						<TouchableOpacity style={style.bottomNav} onPress={() => {
+							clearInterval(updateNumrequests)
+							clearInterval(updateNumappointments)
+							clearInterval(updateNumreservations)
+							
+							props.navigation.navigate("settings")
+						}}>
 							<AntDesign name="setting" size={30}/>
 						</TouchableOpacity>
 
@@ -436,10 +478,10 @@ const style = StyleSheet.create({
 	requestAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 5, width: 80 },
 	requestActionHeader: { fontSize: 10 },
 
-	// client's appointments
-	appointment: { borderRadius: 5, backgroundColor: 'white', flexDirection: 'row', justifyContent: 'space-between', marginHorizontal: 5, marginVertical: 2.5 },
+	// client's schedule
+	schedule: { borderRadius: 5, backgroundColor: 'white', flexDirection: 'row', justifyContent: 'space-between', marginHorizontal: 5, marginVertical: 2.5 },
 	imageHolder: { borderRadius: 40, height: 80, margin: 5, overflow: 'hidden', width: 80 },
-	appointmentHeader: { fontFamily: 'appFont', fontSize: 20, padding: 10, width: width - 100 },
+	scheduleHeader: { fontFamily: 'appFont', fontSize: 20, padding: 10, width: width - 100 },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
 	bottomNav: { flexDirection: 'row', height: 30, marginVertical: 5, marginHorizontal: 20 },

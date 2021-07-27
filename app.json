@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "EasyGO (Services)",
-    "slug": "easygo",
+    "slug": "easygo-services",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -18,18 +18,17 @@
     ],
     "ios": {
       "supportsTablet": true,
+      "bundleIdentifier": "com.geottuse.serviceapp.services",
+      "buildNumber": "0",
       "infoPlist": {
-        "NSCameraUsageDescription": "EasyGO uses camera to allow you to capture a photo of your menu/product/service"
+        "NSCameraUsageDescription": "EasyGO (Services) uses camera to allow you to capture a photo of your location/menu/product/service"
       }
     },
     "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#FFFFFF"
-      }
+      "package": "com.geottuse.serviceapp.services"
     },
-    "web": {
-      "favicon": "./assets/favicon.png"
+    "notification": {
+      "icon": "./assets/notification.png"
     }
   }
 }

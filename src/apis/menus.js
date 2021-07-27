@@ -10,7 +10,7 @@ export const getMenus = (data) => {
 	)
 }
 
-export const removeMenu = (id) => {
+export const removeMenu = id => {
 	return axios.post(`${url}/menus/remove_menu/${id}`)
 }
 

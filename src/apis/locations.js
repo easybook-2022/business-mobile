@@ -31,6 +31,8 @@ export const setupLocation = data => {
 	form.append("longitude", data.longitude)
 	form.append("latitude", data.latitude)
 	form.append("ownerid", data.ownerid)
+	form.append("time", data.time)
+	form.append("ipAddress", data.ipAddress)
 
 	return axios.post(
 		`${url}/locations/setup_location`, 
@@ -45,12 +47,18 @@ export const fetchNumRequests = id => {
 	return axios.get(`${url}/locations/fetch_num_requests/${id}`)
 }
 
-export const fetchNumAppointments = id => {
-	return axios.get(`${url}/locations/fetch_num_appointments/${id}`)
+export const fetchNumAppointments = data => {
+	return axios.post(
+		`${url}/locations/fetch_num_appointments`,
+		data
+	)
 }
 
-export const fetchNumReservations = id => {
-	return axios.get(`${url}/locations/fetch_num_reservations/${id}`)
+export const fetchNumReservations = data => {
+	return axios.post(
+		`${url}/locations/fetch_num_reservations`,
+		data
+	)
 }
 
 export const setLocationType = data => {
