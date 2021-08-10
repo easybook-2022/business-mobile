@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import { AsyncStorage, Dimensions, View, FlatList, Text, TextInput, Image, TouchableOpacity, StyleSheet, Modal } from 'react-native'
 import Constants from 'expo-constants';
+import { CommonActions } from '@react-navigation/native';
 import * as FileSystem from 'expo-file-system'
 import { Camera } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator'
 import { logo_url } from '../../assets/info'
 import { getInfo } from '../apis/locations'
-import { getMenus, removeMenu, addNewMenu } from '../apis/menus'
+import { getMenus, addNewMenu, removeMenu, editMenu, saveMenu } from '../apis/menus'
 import { getProducts, removeProduct } from '../apis/products'
 import { getServices, removeService } from '../apis/services'
 
@@ -15,7 +16,7 @@ import Entypo from 'react-native-vector-icons/Entypo'
 
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
-const screenHeight = height - (offsetPadding * 2)
+const screenHeight = height - offsetPadding
 
 export default function menu(props) {
 	const { menuid, refetch } = props.route.params
@@ -39,7 +40,11 @@ export default function menu(props) {
 	const [services, setServices] = useState([])
 	const [numServices, setNumservices] = useState(0)
 
-	const [addMenu, setAddmenu] = useState({ show: false, name: '', info: '', image: { uri: '', name: '' }, errormsg: '' })
+	const [menuForm, setMenuform] = useState({ 
+		show: false, type: '', id: '', 
+		index: -1, name: '', info: '', 
+		image: { uri: '', name: '' }, errormsg: '' 
+	})
 	const getTheInfo = async() => {
 		const ownerid = await AsyncStorage.getItem("ownerid")
 		const locationid = await AsyncStorage.getItem("locationid")
@@ -103,7 +108,7 @@ export default function menu(props) {
 	const addTheNewMenu = async() => {
 		const ownerid = await AsyncStorage.getItem("ownerid")
 		const locationid = await AsyncStorage.getItem("locationid")
-		const { name, info, image } = addMenu
+		const { name, info, image } = menuForm
 		const data = { ownerid, locationid, parentMenuid: menuid, name, info, image }
 
 		addNewMenu(data)
@@ -112,8 +117,8 @@ export default function menu(props) {
 					if (!res.data.errormsg) {
 						return res.data
 					} else {
-						setAddmenu({
-							...addMenu,
+						setMenuform({
+							...menuForm,
 							errormsg: res.data.errormsg
 						})
 					}
@@ -124,13 +129,13 @@ export default function menu(props) {
 					const { id } = res
 
 					setShowmenus(true)
-					setAddmenu({ show: false, name: '', info: '', image: '', errormsg: '' })
+					setMenuform({ show: false, type: '', index: -1, name: '', info: '', image: { uri: '', name: '' }, errormsg: '' })
 					setMenus([...menus, { key: "menu-" + id, id: id, name: name, info: info, image: image }])
 					getTheInfo()
 				}
 			})
 	}
-	const removeTheMenu = (id, menuindex) => {
+	const removeTheMenu = (id) => {
 		removeMenu(id)
 			.then((res) => {
 				if (res.status == 200) {
@@ -140,6 +145,56 @@ export default function menu(props) {
 			.then((res) => {
 				if (res) getTheInfo()
 			})
+	}
+	const editTheMenu = (id, index) => {
+		editMenu(id)
+			.then((res) => {
+				if (res.status == 200) {
+					return res.data
+				}
+			})
+			.then((res) => {
+				if (res) {
+					const { name, info, image } = res.info
+
+					setMenuform({
+						show: true,
+						type: 'edit',
+						id, index, name, info, image: {
+							uri: logo_url + image,
+							name: image
+						}
+					})
+				}
+			})
+	}
+	const saveTheMenu = () => {
+		const { id, index, name, info, image } = menuForm
+		const data = { id, name, info, image }
+
+		saveMenu(data)
+			.then((res) => {
+				if (res.status == 200) {
+					return res.data
+				}
+			})
+			.then((res) => {
+				if (res) {
+					const newMenus = [...menus]
+					const menu = {...newMenus[index], name, info, image: image.name }
+
+					newMenus[index] = menu
+
+					setMenuform({
+						show: false,
+						type: '',
+						id: '', name: '', info: '', image: { uri: '', name: '' },
+						errormsg: ''
+					})
+					
+					setMenus(newMenus)
+				}
+			})	
 	}
 
 	// products
@@ -249,8 +304,8 @@ export default function menu(props) {
 				to: `${FileSystem.documentDirectory}/${char}.jpg`
 			})
 			.then(() => {
-				setAddmenu({
-					...addMenu,
+				setMenuform({
+					...menuForm,
 					image: { uri: `${FileSystem.documentDirectory}/${char}.jpg`, name: `${char}.jpg` }
 				})
 			})
@@ -267,7 +322,7 @@ export default function menu(props) {
 			setPermission(status === 'granted')
 		}
 	}
-
+	
 	useEffect(() => {
 		openCamera()
 		getTheInfo()
@@ -275,139 +330,187 @@ export default function menu(props) {
 
 	return (
 		<View style={style.box}>
-			<View style={style.actionsContainer}>
-				<View style={style.actions}>
-					{(numProducts == 0 && numServices == 0) && (
-						<TouchableOpacity style={showMenus ? style.actionSelected : style.action} disabled={showMenus} onPress={() => getAllMenus()}>
-							<Text>Menu</Text>
-						</TouchableOpacity>
-					)}
+			<View style={style.menuBox}>
+				<View style={style.actionsContainer}>
+					<View style={style.actions}>
+						{(numProducts == 0 && numServices == 0) && (
+							<TouchableOpacity style={showMenus ? style.actionSelected : style.action} disabled={showMenus} onPress={() => getAllMenus()}>
+								<Text>Menu</Text>
+							</TouchableOpacity>
+						)}
 
-					{(numMenus == 0 && numServices == 0) && (
-						<TouchableOpacity style={showProducts ? style.actionSelected : style.action} disabled={showProducts} onPress={() => getAllProducts()}>
-							<Text>Product(s)</Text>
-						</TouchableOpacity>
-					)}
+						{(numMenus == 0 && numServices == 0) && (
+							<TouchableOpacity style={showProducts ? style.actionSelected : style.action} disabled={showProducts} onPress={() => getAllProducts()}>
+								<Text>Product(s)</Text>
+							</TouchableOpacity>
+						)}
 
-					{(numMenus == 0 && numProducts == 0) && (
-						<TouchableOpacity style={showServices ? style.actionSelected : style.action} disabled={showServices} onPress={() => getAllServices()}>
-							<Text>Service(s)</Text>
-						</TouchableOpacity>
-					)}
+						{(numMenus == 0 && numProducts == 0) && (
+							<TouchableOpacity style={showServices ? style.actionSelected : style.action} disabled={showServices} onPress={() => getAllServices()}>
+								<Text>Service(s)</Text>
+							</TouchableOpacity>
+						)}
+					</View>
+					<View style={style.actions}>
+						{(numProducts == 0 && numServices == 0) && (
+							<TouchableOpacity style={style.action} onPress={() => setMenuform({ ...menuForm, show: true, type: 'add' })}>
+								<Text>Add Menu</Text>
+							</TouchableOpacity>
+						)}
+							
+						{(numMenus == 0 && numServices == 0) && (
+							<TouchableOpacity style={style.action} onPress={() => props.navigation.navigate("addproduct", { menuid: menuid, refetch: () => getAllProducts() })}>
+								<Text>Add Product</Text>
+							</TouchableOpacity>
+						)}
+
+						{(numMenus == 0 && numProducts == 0) && (
+							<TouchableOpacity style={style.action} onPress={() => props.navigation.navigate("addservice", { menuid: menuid, refetch: () => getAllServices() })}>
+								<Text>Add Service</Text>
+							</TouchableOpacity>
+						)}
+					</View>
 				</View>
+
+				{(menuName || menuInfo) ? 
+					<View style={style.headers}>
+						<Text style={[style.header, { fontFamily: 'appFont' }]}>{menuName}</Text>
+						<Text style={style.header}>{menuInfo}</Text>
+					</View>
+				: null }
 			</View>
 
-			<View style={style.actionsContainer}>
-				<View style={style.actions}>
-					{(numProducts == 0 && numServices == 0) && (
-						<TouchableOpacity style={style.action} onPress={() => setAddmenu({ ...addMenu, show: true })}>
-							<Text>Add Menu</Text>
-						</TouchableOpacity>
-					)}
-						
-					{(numMenus == 0 && numServices == 0) && (
-						<TouchableOpacity style={style.action} onPress={() => props.navigation.navigate("addproduct", { menuid: menuid, refetch: () => getAllProducts() })}>
-							<Text>Add Product</Text>
-						</TouchableOpacity>
-					)}
+			<View style={style.body}>
+				{showMenus && (
+					<FlatList
+						data={menus}
+						renderItem={({ item, index }) => 
+							<TouchableOpacity key={item.key} style={style.menu} onPress={() => props.navigation.push("menu", { menuid: item.id, name: item.name, refetch: () => getTheInfo() })}>
+								<View style={{ flexDirection: 'row' }}>
+									<Text style={style.menuHeader}>{item.name}</Text>
+									<Image source={{ uri: logo_url + item.image }} style={style.menuImage}/>
+									<TouchableOpacity style={style.menuAction} onPress={() => removeTheMenu(item.id)}>
+										<Text style={style.menuActionHeader}>Remove</Text>
+									</TouchableOpacity>
+									<TouchableOpacity style={style.menuAction} onPress={() => editTheMenu(item.id, index)}>
+										<Text style={style.menuActionHeader}>Edit</Text>
+									</TouchableOpacity>
+								</View>
+								<Text style={style.menuInfo}>{item.info}</Text>
+							</TouchableOpacity>
+						}
+					/>
+				)}
 
-					{(numMenus == 0 && numProducts == 0) && (
-						<TouchableOpacity style={style.action} onPress={() => props.navigation.navigate("addservice", { menuid: menuid, refetch: () => getAllServices() })}>
-							<Text>Add Service</Text>
-						</TouchableOpacity>
-					)}
-				</View>
-			</View>
-
-			{(menuName || menuInfo) ? 
-				<View style={style.headers}>
-					<Text style={[style.header, { fontFamily: 'appFont' }]}>{menuName}</Text>
-					<Text style={style.header}>{menuInfo}</Text>
-				</View>
-			: null }
-
-			{showMenus && (
-				<FlatList
-					data={menus}
-					renderItem={({ item, index }) => 
-						<TouchableOpacity key={item.key} style={style.menu} onPress={() => props.navigation.push("menu", { menuid: item.id, name: item.name, refetch: () => getTheInfo() })}>
-							<View style={{ flexDirection: 'row' }}>
-								<Text style={style.menuHeader}>{item.name}</Text>
-								<Image source={{ uri: logo_url + item.image }} style={style.menuImage}/>
-								<TouchableOpacity style={style.menuRemove} onPress={() => removeTheMenu(item.id, index)}>
-									<Text style={style.menuRemoveHeader}>Remove</Text>
-								</TouchableOpacity>
+				{showProducts && (
+					<FlatList
+						data={products}
+						renderItem={({ item, index }) => 
+							<View key={item.key} style={style.row}>
+								{item.row.map((info, infoindex) => (
+									info.name ? 
+										<View key={info.key} style={style.product}>
+											<Text style={style.productHeader}>{info.name}</Text>
+											<Image source={{ uri: logo_url + info.image }} style={style.productImage}/>
+											{info.price ? <Text style={style.productPrice}>$ {info.price}</Text> : null}
+											<TouchableOpacity style={style.productAction} onPress={() => removeTheProduct(info.id)}>
+												<Text style={style.productActionHeader}>Remove</Text>
+											</TouchableOpacity>
+											<TouchableOpacity style={style.productAction} onPress={() => props.navigation.navigate("addproduct", { menuid, id: info.id, refetch: () => getAllProducts() })}>
+												<Text style={style.productActionHeader}>Edit</Text>
+											</TouchableOpacity>
+										</View>
+										:
+										<View key={info.key} style={style.productEmpty}></View>
+								))}
 							</View>
-							<Text style={style.menuInfo}>{item.info}</Text>
-						</TouchableOpacity>
-					}
-				/>
-			)}
+						}
+					/>
+				)}
 
-			{showProducts && (
-				<FlatList
-					data={products}
-					renderItem={({ item, index }) => 
-						<View key={item.key} style={style.row}>
-							{item.row.map((info, infoindex) => (
-								info.name ? 
-									<View key={info.key} style={style.product}>
-										<Text style={style.productHeader}>{info.name}</Text>
-										<Image source={{ uri: logo_url + info.image }} style={style.productImage}/>
-										<Text style={style.productPrice}>$ {info.price}</Text>
-										<TouchableOpacity style={style.productRemove} onPress={() => removeTheProduct(info.id)}>
-											<Text style={style.productRemoveHeader}>Remove</Text>
+				{showServices && (
+					<FlatList
+						data={services}
+						style={{ height: height }}
+						renderItem={({ item, index }) => 
+							<View key={item.key} style={style.service}>
+								<View style={{ flexDirection: 'row', marginBottom: 10 }}>
+									<Text style={style.serviceHeader}>{item.name}</Text>
+									<Image source={{ uri: logo_url + item.image }} style={style.serviceImage}/>
+								
+								</View>
+
+								<View style={{ flexDirection: 'row', marginBottom: 10 }}>
+									<Text style={style.serviceInfo}>Price: <Text style={{ fontWeight: '400' }}>$ {item.price}</Text></Text>
+									<Text style={style.serviceInfo}>Time: <Text style={{ fontWeight: '400' }}>{item.duration}</Text></Text>
+								</View>
+
+								{item.info ? <Text style={style.serviceInfo}>Information: <Text style={{ fontWeight: '400' }}>{'\n' + item.info}</Text></Text> : null}
+
+								<View style={{ alignItems: 'center' }}>
+									<View style={style.serviceActions}>
+										<TouchableOpacity style={style.serviceAction} onPress={() => removeTheService(item.id)}>
+											<Text style={style.serviceActionHeader}>Remove</Text>
+										</TouchableOpacity>
+										<TouchableOpacity style={style.serviceAction} onPress={() => props.navigation.navigate("addservice", { menuid, id: item.id, refetch: () => getAllServices() })}>
+											<Text style={style.serviceActionHeader}>Edit</Text>
 										</TouchableOpacity>
 									</View>
-									:
-									<View key={info.key} style={style.productEmpty}></View>
-							))}
-						</View>
-					}
-				/>
-			)}
-
-			{showServices && (
-				<FlatList
-					data={services}
-					style={{ height: height }}
-					renderItem={({ item, index }) => 
-						<View key={item.key} style={style.service}>
-							<View style={{ flexDirection: 'row', marginBottom: 10 }}>
-								<Text style={style.serviceHeader}>{item.name}</Text>
-								<Image source={{ uri: logo_url + item.image }} style={style.serviceImage}/>
-								<TouchableOpacity style={style.serviceRemove} onPress={() => removeTheService(item.id)}>
-									<Text style={style.serviceRemoveHeader}>Remove</Text>
-								</TouchableOpacity>
+								</View>
 							</View>
+						}
+					/>
+				)}
+			</View>
 
-							<View style={{ flexDirection: 'row', marginBottom: 10 }}>
-								<Text style={style.serviceInfo}>Price: <Text style={{ fontWeight: '400' }}>$ {item.price}</Text></Text>
-								<Text style={style.serviceInfo}>Time: <Text style={{ fontWeight: '400' }}>{item.duration}</Text></Text>
-							</View>
+			<View style={style.bottomNavs}>
+				<View style={{ flexDirection: 'row' }}>
+					<TouchableOpacity style={style.bottomNav} onPress={() => props.navigation.navigate("settings")}>
+						<AntDesign name="setting" size={30}/>
+					</TouchableOpacity>
 
-							{item.info ? <Text style={style.serviceInfo}>Information: <Text style={{ fontWeight: '400' }}>{'\n' + item.info}</Text></Text> : null}
-						</View>
-					}
-				/>
-			)}
+					<TouchableOpacity style={style.bottomNav} onPress={() => {
+						props.navigation.dispatch(
+							CommonActions.reset({
+								index: 1,
+								routes: [{ name: 'main' }]
+							})
+						);
+					}}>
+						<Entypo name="home" size={30}/>
+					</TouchableOpacity>
 
-			{addMenu.show && (
+					<TouchableOpacity style={style.bottomNav} onPress={() => {
+						AsyncStorage.clear()
+
+						props.navigation.dispatch(
+							CommonActions.reset({
+								index: 1,
+								routes: [{ name: 'login' }]
+							})
+						);
+					}}>
+						<Text style={style.bottomNavHeader}>Log-Out</Text>
+					</TouchableOpacity>
+				</View>
+			</View>
+
+			{menuForm.show && (
 				<Modal transparent={true}>
 					<View style={style.addBox}>
 						<Text style={style.addHeader}>Enter menu info</Text>
 
-						<TextInput style={style.addInput} placeholder="Menu name" placeholderTextColor="rgba(127, 127, 127, 0.5)" onChangeText={(name) => setAddmenu({...addMenu, name: name })} value={addMenu.name}/>
-						<TextInput style={style.infoInput} multiline={true} placeholder="Anything you want to say about this menu" placeholderTextColor="rgba(127, 127, 127, 0.5)" onChangeText={(info) => setAddmenu({...addMenu, info: info })} value={addMenu.info}/>
+						<TextInput style={style.addInput} placeholder="Menu name" placeholderTextColor="rgba(127, 127, 127, 0.5)" onChangeText={(name) => setMenuform({...menuForm, name: name })} value={menuForm.name}/>
+						<TextInput style={style.infoInput} multiline={true} placeholder="Anything you want to say about this menu" placeholderTextColor="rgba(127, 127, 127, 0.5)" onChangeText={(info) => setMenuform({...menuForm, info: info })} value={menuForm.info}/>
 
 						<View style={style.cameraContainer}>
 							<Text style={style.cameraHeader}>Menu photo</Text>
 
-							{addMenu.image.uri ? (
+							{menuForm.image.uri ? (
 								<>
-									<Image style={{ height: width * 0.6, width: width * 0.6 }} source={{ uri: addMenu.image.uri }}/>
+									<Image style={{ height: width * 0.6, width: width * 0.6 }} source={{ uri: menuForm.image.uri }}/>
 
-									<TouchableOpacity style={style.cameraAction} onPress={() => setAddmenu({...addMenu, image: { uri: '', name: '' }})}>
+									<TouchableOpacity style={style.cameraAction} onPress={() => setMenuform({...menuForm, image: { uri: '', name: '' }})}>
 										<AntDesign name="closecircleo" size={30}/>
 									</TouchableOpacity>
 								</>
@@ -422,13 +525,19 @@ export default function menu(props) {
 							)}
 						</View>
 
-						<Text style={style.errorMsg}>{addMenu.errormsg}</Text>
+						<Text style={style.errorMsg}>{menuForm.errormsg}</Text>
 
 						<View style={style.addActions}>
-							<TouchableOpacity style={style.addAction} onPress={() => setAddmenu({ show: false, info: '', image: '' })}>
+							<TouchableOpacity style={style.addAction} onPress={() => setMenuform({ ...menuForm, show: false, name: '', info: '', image: { uri: '', name: ''} })}>
 								<Text>Cancel</Text>
 							</TouchableOpacity>
-							<TouchableOpacity style={style.addAction} onPress={() => addTheNewMenu()}>
+							<TouchableOpacity style={style.addAction} onPress={() => {
+								if (menuForm.type == 'add') {
+									addTheNewMenu()
+								} else {
+									saveTheMenu()
+								}
+							}}>
 								<Text>Done</Text>
 							</TouchableOpacity>
 						</View>
@@ -440,41 +549,48 @@ export default function menu(props) {
 }
 
 const style = StyleSheet.create({
-	box: { backgroundColor: '#EAEAEA', height: '100%', width: '100%' },
+	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', paddingBottom: offsetPadding, width: '100%' },
 
-	actionsContainer: { backgroundColor: 'rgba(127, 127, 127, 0.2)', flexDirection: 'row', justifyContent: 'space-around', paddingVertical: 10 },
-	actions: { flexDirection: 'row', justifyContent: 'space-between' },
+	menuBox: { height: 160 },
+	actionsContainer: { backgroundColor: 'rgba(127, 127, 127, 0.2)', paddingVertical: 10 },
+	actions: { flexDirection: 'row', justifyContent: 'space-around', marginVertical: 5 },
 	action: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 3, width: 100 },
 	actionHeader: { color: 'black' },
 	actionSelected: { alignItems: 'center', backgroundColor: 'grey', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 3, width: 100 },
 	actionSelectedHeader: { color: 'white' },
 
-	headers: { marginVertical: 20 },
+	headers: { marginVertical: 10 },
 	header: { fontWeight: 'bold', fontSize: 20, textAlign: 'center' },
 
+	body: { height: screenHeight - 265 },
 	row: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
 
 	menu: { padding: 20 },
 	menuHeader: { fontSize: 20, fontWeight: 'bold', paddingVertical: 10 },
 	menuImage: { backgroundColor: 'black', borderRadius: 25, height: 50, marginLeft: 10, width: 50 },
-	menuRemove: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 8, padding: 5 },
-	menuRemoveHeader: { textAlign: 'center' },
+	menuAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 8, padding: 7, width: 80 },
+	menuActionHeader: { textAlign: 'center' },
 	menuInfo: { marginVertical: 10 },
 
 	product: { alignItems: 'center', padding: 20, width: (width / 3) - 10 },
 	productEmpty: { padding: 20, width: (width / 3) - 10 },
 	productHeader: { fontSize: 20, fontWeight: 'bold', paddingVertical: 10, textAlign: 'center' },
-	productImage: { backgroundColor: 'black', borderRadius: 25, height: 50, width: 50 },
+	productImage: { backgroundColor: 'black', borderRadius: 25, height: 50, marginBottom: 5, width: 50 },
 	productPrice: { fontWeight: 'bold' },
-	productRemove: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 8, padding: 5 },
-	productRemoveHeader: { fontSize: 10, textAlign: 'center' },
+	productAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginBottom: 2, marginHorizontal: 8, padding: 5, width: 60 },
+	productActionHeader: { fontSize: 10, textAlign: 'center' },
 
 	service: { backgroundColor: 'white', marginHorizontal: 10, marginTop: 10, padding: 20 },
 	serviceHeader: { fontSize: 20, fontWeight: 'bold', paddingVertical: 10 },
 	serviceImage: { backgroundColor: 'black', borderRadius: 25, height: 50, marginLeft: 10, width: 50 },
 	serviceInfo: { fontWeight: 'bold', marginRight: 10 },
-	serviceRemove: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 8, padding: 5 },
-	serviceRemoveHeader: { textAlign: 'center' },
+	serviceActions: { flexDirection: 'row', justifyContent: 'space-between', width: 180 },
+	serviceAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 8, padding: 5, width: 70 },
+	serviceActionHeader: { textAlign: 'center' },
+
+	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
+	bottomNav: { flexDirection: 'row', height: 30, marginVertical: 5, marginHorizontal: 20 },
+	bottomNavHeader: { fontWeight: 'bold', paddingVertical: 5 },
 
 	// hidden boxes
 	// add box
@@ -485,6 +601,7 @@ const style = StyleSheet.create({
 	cameraContainer: { alignItems: 'center', marginVertical: 10, width: '100%' },
 	cameraHeader: { fontWeight: 'bold', paddingVertical: 5 },
 	camera: { height: width * 0.6, width: width * 0.6 },
+	cameraAction: { marginVertical: 10 },
 	errorMsg: { color: 'red', fontWeight: 'bold', marginVertical: 20, textAlign: 'center' },
 	addActions: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
 	addAction: { alignItems: 'center', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, padding: 5, width: 100 },

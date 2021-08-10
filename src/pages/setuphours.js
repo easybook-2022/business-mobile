@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { AsyncStorage, Dimensions, ScrollView, View, Text, TextInput, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { AsyncStorage, ActivityIndicator, Dimensions, ScrollView, View, Text, TextInput, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import { setLocationHours } from '../apis/locations'
@@ -8,7 +8,7 @@ import AntDesign from 'react-native-vector-icons/AntDesign'
 
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
-const screenHeight = height - offsetPadding
+const screenHeight = height - (offsetPadding * 2)
 
 export default function setuphours({ navigation }) {
 	const [locationType, setLocationtype] = useState('')
@@ -21,6 +21,7 @@ export default function setuphours({ navigation }) {
 		{ key: "5", header: "Friday", opentime: { hour: "00", minute: "00", period: "AM" }, closetime: { hour: "00", minute: "00", period: "AM" }},
 		{ key: "6", header: "Saturday", opentime: { hour: "00", minute: "00", period: "AM" }, closetime: { hour: "00", minute: "00", period: "AM" }}
 	])
+	const [loading, setLoading] = useState(false)
 
 	const updateTime = (index, timetype, dir, open) => {
 		const newDays = [...days]
@@ -83,8 +84,10 @@ export default function setuphours({ navigation }) {
 		const locationid = await AsyncStorage.getItem("locationid")
 		const hours = {}
 
+		setLoading(true)
+
 		days.forEach(function (day) {
-			hours[day.header] = { opentime: day.opentime, closetime: day.closetime }
+			hours[day.header.substr(0, 3)] = { opentime: day.opentime, closetime: day.closetime }
 		})
 
 		const data = { ownerid, locationid, hours }
@@ -92,7 +95,11 @@ export default function setuphours({ navigation }) {
 		setLocationHours(data)
 			.then((res) => {
 				if (res.status == 200) {
-					return res.data
+					if (!res.data.errormsg) {
+						return res.data
+					} else {
+						setLoading(false)
+					}
 				}
 			})
 			.then((res) => {
@@ -113,15 +120,15 @@ export default function setuphours({ navigation }) {
 
 		setLocationtype(type)
 	}
-
+	
 	useEffect(() => {
 		getLocationType()
 	}, [])
-	
+
 	return (
-		<View style={{ paddingTop: offsetPadding }}>
+		<View style={{ paddingVertical: offsetPadding }}>
 			<ScrollView style={{ height: screenHeight - 40, width: '100%' }}>
-				<View style={style.box}>
+				<View style={[style.box, { opacity: loading ? 0.6 : 1 }]}>
 					<Text style={style.boxHeader}>Setup</Text>
 					<Text style={style.boxMiniheader}>Set your hours</Text>
 
@@ -195,7 +202,9 @@ export default function setuphours({ navigation }) {
 						))}
 					</View>
 
-					<TouchableOpacity style={style.done} onPress={() => done()}>
+					{loading && <ActivityIndicator size="large"/>}
+
+					<TouchableOpacity style={style.done} disabled={loading} onPress={() => done()}>
 						<Text style={style.doneHeader}>Done</Text>
 					</TouchableOpacity>
 				</View>

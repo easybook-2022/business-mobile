@@ -4,7 +4,8 @@ import { CommonActions } from '@react-navigation/native';
 import * as FileSystem from 'expo-file-system'
 import { Camera } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator'
-import { addNewService } from '../apis/services'
+import { logo_url } from '../../assets/info'
+import { getServiceInfo, addNewService, updateService } from '../apis/services'
 
 import FontAwesome from 'react-native-vector-icons/FontAwesome'
 import AntDesign from 'react-native-vector-icons/AntDesign'
@@ -13,7 +14,9 @@ import Entypo from 'react-native-vector-icons/Entypo'
 const { width } = Dimensions.get('window')
 
 export default function addservice(props) {
-	const { menuid, refetch } = props.route.params
+	const params = props.route.params
+	const { menuid, refetch } = params
+	const serviceid = params.id ? params.id : ""
 
 	const [permission, setPermission] = useState(null);
 	const [camComp, setCamcomp] = useState(null)
@@ -74,6 +77,54 @@ export default function addservice(props) {
 			}
 		}
 	}
+	const updateTheService = async() => {
+		const ownerid = await AsyncStorage.getItem("ownerid")
+		const locationid = await AsyncStorage.getItem("locationid")
+
+		if (name && image.uri && price && duration) {
+			const data = { ownerid, locationid, menuid, name, info, image, price, duration }
+
+			updateService(data)
+				.then((res) => {
+					if (res.status == 200) {
+						return res.data
+					} else {
+						setErrormsg(res.data.errormsg)
+					}
+				})
+				.then((res) => {
+					if (res) {
+						refetch()
+						props.navigation.goBack()
+					}
+				})
+		} else {
+			if (!name) {
+				setErrormsg("Please enter the service name")
+
+				return
+			}
+
+			if (!image.uri) {
+				setErrormsg("Please take a good photo")
+
+				return
+			}
+
+			if (!price) {
+				setErrormsg("Please enter the price of the service")
+
+				return
+			}
+
+			if (!duration) {
+				setErrormsg("Please enter the duration of this service")
+
+				return
+			}
+		}
+	}
+
 	const snapPhoto = async() => {
 		let letters = [
 			"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", 
@@ -127,8 +178,32 @@ export default function addservice(props) {
 		}
 	}
 
+	const getTheServiceInfo = async() => {
+		getServiceInfo(serviceid)
+			.then((res) => {
+				if (res.status == 200) {
+					return res.data
+				}
+			})
+			.then((res) => {
+				if (res) {
+					const { serviceInfo } = res
+
+					setName(serviceInfo.name)
+					setInfo(serviceInfo.info)
+					setImage({ uri: logo_url + serviceInfo.image, name: serviceInfo.image })
+					setPrice(serviceInfo.price)
+					setDuration(serviceInfo.duration)
+				}
+			})
+	}
+
 	useEffect(() => {
 		(async() => openCamera())()
+
+		if (serviceid) {
+			getTheServiceInfo()
+		}
 	}, [])
 
 	if (permission === null) return <View/>
@@ -138,8 +213,8 @@ export default function addservice(props) {
 			<View style={style.box}>
 				<Text style={style.addHeader}>Enter service info</Text>
 
-				<TextInput style={style.addInput} placeholder="Service name" placeholderTextColor="rgba(127, 127, 127, 0.5)" onChangeText={(name) => setName(name)}/>
-				<TextInput style={style.infoInput} multiline={true} placeholder="Anything you want to say about this service (optional)" placeholderTextColor="rgba(127, 127, 127, 0.5)" onChangeText={(info) => setInfo(info)}/>
+				<TextInput style={style.addInput} placeholder="Service name" placeholderTextColor="rgba(127, 127, 127, 0.5)" onChangeText={(name) => setName(name)} value={name}/>
+				<TextInput style={style.infoInput} multiline={true} placeholder="Anything you want to say about this service (optional)" placeholderTextColor="rgba(127, 127, 127, 0.5)" onChangeText={(info) => setInfo(info)} value={info}/>
 
 				<View style={style.cameraContainer}>
 					<Text style={style.cameraHeader}>Service photo</Text>
@@ -165,19 +240,25 @@ export default function addservice(props) {
 
 				<View style={style.inputBox}>
 					<Text style={style.inputHeader}>Service price</Text>
-					<TextInput style={style.inputValue} placeholder="4.99" onChangeText={(price) => setPrice(price)}/>
+					<TextInput style={style.inputValue} placeholder="4.99" onChangeText={(price) => setPrice(price)} value={price}/>
 				</View>
 
 				<View style={style.inputBox}>
 					<Text style={style.inputHeader}>Service duration</Text>
-					<TextInput style={style.inputValue} placeholder="4 hours" onChangeText={(duration) => setDuration(duration)}/>
+					<TextInput style={style.inputValue} placeholder="4 hours" onChangeText={(duration) => setDuration(duration)} value={duration}/>
 				</View>
 
 				<Text style={style.errorMsg}>{errorMsg}</Text>
 
 				<View style={style.addActions}>
-					<TouchableOpacity style={style.addAction} onPress={() => addTheNewService()}>
-						<Text>Done</Text>
+					<TouchableOpacity style={style.addAction} onPress={() => {
+						if (!serviceid) {
+							addTheNewService()
+						} else {
+							updateTheService()
+						}
+					}}>
+						<Text>{!serviceid ? "Done" : "Save"}</Text>
 					</TouchableOpacity>
 				</View>
 			</View>

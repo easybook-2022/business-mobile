@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { AsyncStorage, ActivityIndicator, Dimensions, ScrollView, View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
-import { getLocationHours, getLocationProfile } from '../apis/locations'
+import Constants from 'expo-constants';
+import { getLocationHours } from '../apis/locations'
 import { getReservationInfo, rescheduleReservation } from '../apis/schedules'
 
 import SimpleLineIcons from 'react-native-vector-icons/SimpleLineIcons'
@@ -13,7 +14,7 @@ export default function booktime(props) {
 	let { userid, reservationid } = props.route.params
 
 	const [name, setName] = useState(name)
-	const [seaters, setSeaters] = useState(0)
+	const [diners, setDiners] = useState(0)
 	const [times, setTimes] = useState([])
 	const [openTime, setOpentime] = useState(0)
 	const [closeTime, setClosetime] = useState(0)
@@ -30,10 +31,10 @@ export default function booktime(props) {
 			})
 			.then((res) => {
 				if (res) {
-					const { locationId, name, seaters } = res.reservationInfo
+					const { locationId, name, diners } = res.reservationInfo
 
 					setName(name)
-					setSeaters(seaters)
+					setDiners(diners)
 					getTheLocationHours(locationId)
 				}
 			})
@@ -114,7 +115,7 @@ export default function booktime(props) {
 					<Text style={style.backHeader}>Back</Text>
 				</TouchableOpacity>
 
-				<Text style={style.boxHeader}>Request another time for {'\n' + seaters} {seaters == 1 ? 'person' : 'people'}</Text>
+				<Text style={style.boxHeader}>Request another time for {'\n' + diners} {diners == 1 ? 'person' : 'people'}</Text>
 
 				{!loaded ? 
 					<ActivityIndicator size="small"/>
@@ -145,7 +146,7 @@ export default function booktime(props) {
 								{!confirm.requested ? 
 									<>
 										<Text style={style.confirmHeader}>
-											<Text style={{ fontFamily: 'appFont' }}>Request a reservation for {'\n' + seaters} {seaters == 1 ? 'person' : 'people'} </Text>
+											<Text style={{ fontFamily: 'appFont' }}>Request a reservation for {'\n' + diners} {diners == 1 ? 'person' : 'people'} </Text>
 											{'\n at ' + confirm.service}
 											{'\n at ' + confirm.timeheader}
 										</Text>

@@ -32,8 +32,11 @@ export const rescheduleReservation = (data) => {
 	)
 }
 
-export const acceptRequest = id => {
-	return axios.get(`${WIFI_API_URL}/schedules/accept_request/${id}`)
+export const acceptRequest = data => {
+	return axios.post(
+		`${WIFI_API_URL}/schedules/accept_request`,
+		data
+	)
 }
 
 export const cancelRequest = (data) => {
@@ -49,4 +52,12 @@ export const getAppointments = id => {
 
 export const getReservations = id => {
 	return axios.get(`${WIFI_API_URL}/schedules/get_reservations/${id}`)
+}
+
+export const getScheduleInfo = id => {
+	return axios.get(`${WIFI_API_URL}/schedules/get_schedule_info/${id}`)
+}
+
+export const getOrders = id => {
+	return axios.get(`${WIFI_API_URL}/schedules/get_orders/${id}`)
 }

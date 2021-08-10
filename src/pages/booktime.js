@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { AsyncStorage, ActivityIndicator, Dimensions, ScrollView, View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import Constants from 'expo-constants';
 import { getServiceInfo } from '../apis/services'
 import { getAppointmentInfo, rescheduleAppointment } from '../apis/schedules'
 import { getLocationHours } from '../apis/locations'

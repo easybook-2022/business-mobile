@@ -36,6 +36,13 @@ export const addBankaccount = data => {
 	)
 }
 
+export const updateBankaccount = data => {
+	return axios.post(
+		`${WIFI_API_URL}/owners/update_bankaccount`,
+		data
+	)
+}
+
 export const getAccounts = locationid => {
 	return axios.get(`${WIFI_API_URL}/owners/get_accounts/${locationid}`)
 }

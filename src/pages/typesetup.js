@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react'
-import { AsyncStorage, Dimensions, View, FlatList, Text, TextInput, Image, TouchableOpacity, StyleSheet, Modal } from 'react-native'
+import { AsyncStorage, ActivityIndicator, Dimensions, View, FlatList, Text, TextInput, Image, TouchableOpacity, StyleSheet, Modal } from 'react-native'
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import { setLocationType } from '../apis/locations'
-import { info } from '../../assets/info'
+import { userInfo } from '../../assets/info'
 
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
@@ -11,7 +11,8 @@ const screenHeight = height - offsetPadding
 const iconSize = (width / 2) - 100
 
 export default function typesetup({ navigation }) {
-	const [type, setType] = useState(info.storeType)
+	const [type, setType] = useState(userInfo.storeType)
+	const [loading, setLoading] = useState(false)
 	const [errorMsg, setErrormsg] = useState('')
 
 	const done = async() => {
@@ -19,10 +20,16 @@ export default function typesetup({ navigation }) {
 		const locationid = await AsyncStorage.getItem("locationid")
 		const data = { ownerid, locationid, type }
 
+		setLoading(true)
+
 		setLocationType(data)
 			.then((res) => {
 				if (res.status == 200) {
-					return res.data
+					if (!res.data.errormsg) {
+						return res.data
+					} else {
+						setLoading(false)
+					}
 				}
 			})
 			.then((res) => {
@@ -40,8 +47,8 @@ export default function typesetup({ navigation }) {
 			})
 	}
 	return (
-		<View style={{ paddingTop: offsetPadding }}>
-			<View style={style.box}>
+		<View style={{ paddingVertical: offsetPadding }}>
+			<View style={[style.box, { opacity: loading ? 0.6 : 1 }]}>
 				<Text style={style.boxHeader}>Setup</Text>
 				<Text style={style.boxMiniheader}>What kind of service are you</Text>
 
@@ -57,7 +64,9 @@ export default function typesetup({ navigation }) {
 					</TouchableOpacity>
 				</View>
 
-				<TouchableOpacity style={style.done} onPress={() => done()}>
+				{loading && <ActivityIndicator size="large"/>}
+
+				<TouchableOpacity style={style.done} disabled={loading} onPress={() => done()}>
 					<Text style={style.doneHeader}>Done</Text>
 				</TouchableOpacity>
 

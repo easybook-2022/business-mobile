@@ -11,15 +11,36 @@ const stores = [
 	{ id: 7, storeName: "TIPS NAIL BAR®", storeType: "nail", phonenumber: "4164058477", addressOne: "848 Danforth Ave", addressTwo: "", city: "Toronto", province: "ON", postalcode: "M4J 1L7" },
 	{ id: 8, storeName: "Pho Com Tam 168 Vietnamese Cuisines", storeType: "restaurant", phonenumber: "4169166432", addressOne: "1018 Gerrard St E", addressTwo: "", city: "Toronto", province: "ON", postalcode: "M4M 1Z3" }
 ]
-const { storeName, storeType, phonenumber, addressOne, addressTwo, city, province, postalcode } = stores[0]
+const bankAccount = [
+	{ 
+		id: 0, 
+		accountNumber: '000123456789', countryCode: 'us', currency: 'usd', 
+		routingNumber: '110000000', accountHolderName: 'Test holder name one', 
+	},
+	{
+		id: 1, 
+		accountNumber: '000123456789', countryCode: 'us', currency: 'usd', 
+		routingNumber: '110000000', accountHolderName: 'Test holder name two', 
+	},
+	{
+		id: 2, 
+		accountNumber: '000123456789', countryCode: 'us', currency: 'usd', 
+		routingNumber: '110000000', accountHolderName: 'Test holder name three', 
+	}
+]
+const { storeName, storeType, phonenumber, addressOne, addressTwo, city, province, postalcode } = stores[5]
+const { accountNumber, countryCode, currency, routingNumber, accountHolderName } = bankAccount[0]
 
-export const info = {
+export const userInfo = {
 	cellnumber: phonenumber,
 	password: "password",
 	storeName, storeType,
 	phonenumber, addressOne,
 	addressTwo, city,
-	province, postalcode
+	province, postalcode,
+	accountNumber, countryCode, 
+	currency, routingNumber, 
+	accountHolderName
 }
 
 export const logo_url = WIFI_API_URL + "/static/"

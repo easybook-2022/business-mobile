@@ -6,7 +6,7 @@ import * as FileSystem from 'expo-file-system'
 import { Camera } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator'
 import { logo_url } from '../../assets/info'
-import { fetchNumRequests, fetchNumAppointments, fetchNumReservations, getInfo } from '../apis/locations'
+import { fetchNumRequests, fetchNumAppointments, fetchNumReservations, fetchNumorders, getInfo } from '../apis/locations'
 import { getMenus, removeMenu, addNewMenu } from '../apis/menus'
 import { getRequests, acceptRequest, cancelRequest, getAppointments, getReservations } from '../apis/schedules'
 import { getProducts, getServices, removeProduct } from '../apis/products'
@@ -20,17 +20,17 @@ const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - (offsetPadding * 2)
 
+let updateNumrequests, updateNumappointments, updateNumreservations, updateNumcustomerorders
+
 export default function main(props) {
 	const [permission, setPermission] = useState(null);
 	const [camComp, setCamcomp] = useState(null)
 	const [camType, setCamtype] = useState(Camera.Constants.Type.back);
+	const [userId, setUserid] = useState('')
 	const [storeIcon, setStoreicon] = useState('')
 	const [storeName, setStorename] = useState('')
 	const [storeAddress, setStoreaddress] = useState('')
 	const [locationType, setLocationtype] = useState('')
-	const [updateNumrequests, setUpdatenumrequests] = useState()
-	const [updateNumappointments, setUpdatenumappointments] = useState()
-	const [updateNumreservations, setUpdatenumreservations] = useState()
 
 	const [showEdit, setShowedit] = useState('')
 
@@ -45,6 +45,8 @@ export default function main(props) {
 
 	const [viewType, setViewtype] = useState('')
 	const [cancelRequestInfo, setCancelrequestinfo] = useState({ show: false, reason: "", id: 0, index: 0 })
+	const [acceptRequestInfo, setAcceptrequestinfo] = useState({ show: false, requestid: "", tablenum: "", errorMsg: "" })
+
 	const fetchTheNumRequests = async() => {
 		const locationid = await AsyncStorage.getItem("locationid")
 
@@ -62,11 +64,9 @@ export default function main(props) {
 	}
 	const fetchTheNumAppointments = async() => {
 		const locationid = await AsyncStorage.getItem("locationid")
-		const time = Date.now()
-		const data = { locationid, time }
 
 		if (locationid != null) {
-			fetchNumAppointments(data)
+			fetchNumAppointments(locationid)
 				.then((res) => {
 					if (res.status == 200) {
 						return res.data
@@ -79,11 +79,9 @@ export default function main(props) {
 	}
 	const fetchTheNumReservations = async() => {
 		const locationid = await AsyncStorage.getItem("locationid")
-		const time = Date.now()
-		const data = { locationid, time }
 
 		if (locationid != null) {
-			fetchNumReservations(data)
+			fetchNumReservations(locationid)
 				.then((res) => {
 					if (res.status == 200) {
 						return res.data
@@ -94,7 +92,15 @@ export default function main(props) {
 				})
 		}
 	}
+	const fetchTheNumOrders = async() => {
+		const locationid = await AsyncStorage.getItem("locationid")
+
+		if (locationid != null) {
+			getAllReservations()
+		}
+	}
 	const getTheInfo = async() => {
+		const userid = await AsyncStorage.getItem("userid")
 		const locationid = await AsyncStorage.getItem("locationid")
 		const data = { locationid, menuid: '' }
 
@@ -109,27 +115,29 @@ export default function main(props) {
 					const { msg, storeName, storeAddress, storeLogo, locationType } = res
 
 					setShowedit(msg)
+					setUserid(userid)
 					setStorename(storeName)
 					setStoreaddress(storeAddress)
 					setStoreicon(storeLogo)
 					setLocationtype(locationType)
 
 					fetchTheNumRequests()
-					setUpdatenumrequests(setInterval(() => fetchTheNumRequests(), 5000))
 
 					if (locationType == 'salon') {
 						fetchTheNumAppointments()
-						setUpdatenumappointments(setInterval(() => fetchTheNumAppointments(), 5000))
 					} else if (locationType == 'restaurant') {
 						fetchTheNumReservations()
-						setUpdatenumreservations(setInterval(() => fetchTheNumReservations(), 5000))
 					}
 
-					getAllReservations()
+					if (locationType == 'salon') {
+						getAllAppointments()
+					} else {
+						getAllReservations()
+					}
 				}
 			})
 	}
-	const displayDateStr = (unixtime) => {
+	const displayTimestr = (unixtime) => {
 		let weekdays = { "Mon": "Monday", "Tue": "Tuesday", "Wed": "Wednesday", "Thu": "Thursday", "Fri": "Friday", "Sat": "Saturday", "Sun": "Sunday" }
 		let months = { 
 			"Jan": "January", "Feb": "February", "Mar": "March", "Apr": "April", "May": "May", "Jun": "June", 
@@ -148,9 +156,11 @@ export default function main(props) {
 
 		hour = hour > 12 ? hour - 12 : hour
 
-		let datestr = day + ", " + month + " " + date + ", " + year + " at " + hour + ":" + minute + " " + period;
+		//day + ", " + month + " " + date + ", " + year + " at " + 
 
-		return datestr
+		let timestr = hour + ":" + minute + " " + period;
+
+		return timestr
 	}
 	const getAllRequests = async() => {
 		const ownerid = await AsyncStorage.getItem("ownerid")
@@ -236,32 +246,57 @@ export default function main(props) {
 		}
 	}
 	const acceptTheRequest = (requestid, index) => {
-		acceptRequest(requestid)
-			.then((res) => {
-				if (res.status == 200) {
-					return res.data
-				}
+		if (!acceptRequestInfo.show) {
+			setAcceptrequestinfo({
+				...acceptRequestInfo,
+				show: true,
+				requestid
 			})
-			.then((res) => {
-				if (res) {
-					const newRequests = [...requests]
+		} else {
+			const { requestid, tablenum } = acceptRequestInfo
 
-					newRequests.splice(index, 1)
+			if (tablenum) {
+				const data = { requestid, tablenum }
 
-					setRequests(newRequests)
-					setNumrequests(numRequests - 1)
-					setNumappointments(numAppointments + 1)
-				}
-			})
+				acceptRequest(data)
+					.then((res) => {
+						if (res.status == 200) {
+							return res.data
+						}
+					})
+					.then((res) => {
+						if (res) {
+							const newRequests = [...requests]
+
+							newRequests.splice(index, 1)
+
+							setRequests(newRequests)
+							setNumrequests(numRequests - 1)
+							setNumappointments(numAppointments + 1)
+							setAcceptrequestinfo({ show: false, tablenum: "" })
+
+							getAllReservations()
+						}
+					})
+			} else {
+				setAcceptrequestinfo({ ...acceptRequestInfo, errorMsg: "Please enter the table number for the diner" })
+			}
+		}
 	}
 	
 	useEffect(() => {
 		getTheInfo()
 
+		updateNumrequests = setInterval(() => fetchTheNumRequests(), 1000)
+		updateNumappointments = setInterval(() => fetchTheNumAppointments(), 1000)
+		updateNumreservations = setInterval(() => fetchTheNumReservations(), 1000)
+		updateNumorders = setInterval(() => fetchTheNumOrders(), 5000)
+
 		return () => {
 			clearInterval(updateNumrequests)
 			clearInterval(updateNumappointments)
 			clearInterval(updateNumreservations)
+			clearInterval(updateNumorders)
 		}
 	}, [])
 	
@@ -279,114 +314,143 @@ export default function main(props) {
 				<View style={style.body}>
 					<View style={style.navs}>
 						<View style={{ flexDirection: 'row' }}>
-							<TouchableOpacity style={style.nav} onPress={() => props.navigation.navigate("menu", { menuid: '', name: '', refetch: () => getTheInfo() })}>
-								<Text style={style.navHeader}>Edit Menu</Text>
-							</TouchableOpacity>
-
-							<TouchableOpacity style={style.nav} onPress={() => getAllRequests()}>
-								<Text style={style.navHeader}>{numRequests} Request(s)</Text>
+							<TouchableOpacity style={viewType == "requests" ? style.navSelected : style.nav} onPress={() => getAllRequests()}>
+								<Text style={viewType == "requests" ? style.navHeaderSelected : style.navHeader}>{numRequests} Request(s)</Text>
 							</TouchableOpacity>
 
 							{locationType == 'salon' && (
-								<TouchableOpacity style={style.nav} onPress={() => getAllAppointments()}>
-									<Text style={style.navHeader}>{numAppointments} Appointment(s)</Text>
+								<TouchableOpacity style={viewType == "appointments" ? style.navSelected : style.nav} onPress={() => getAllAppointments()}>
+									<Text style={viewType == "appointments" ? style.navHeaderSelected : style.navHeader}>{numAppointments} Appointment(s)</Text>
 								</TouchableOpacity>
 							)}
 
 							{locationType == 'restaurant' && (
-								<TouchableOpacity style={style.nav} onPress={() => getAllReservations()}>
-									<Text style={style.navHeader}>{numReservations} Reservation(s)</Text>
+								<TouchableOpacity style={viewType == "reservations" ? style.navSelected : style.nav} onPress={() => getAllReservations()}>
+									<Text style={viewType == "reservations" ? style.navHeaderSelected : style.navHeader}>{numReservations} Reservation(s)</Text>
 								</TouchableOpacity>
 							)}
 						</View>
 					</View>
 
 					{viewType == "requests" && (
-						<FlatList
-							data={requests}
-							renderItem={({ item, index }) => 
-								<View key={item.key} style={style.request}>
-									<View style={style.imageHolder}>
-										<Image source={{ uri: logo_url + item.image }} style={{ height: 80, width: 80 }}/>
-									</View>
-									<View style={style.requestInfo}>
-										<Text>
-											{locationType == 'salon' ? 
-												<>
-													<Text style={{ fontWeight: 'bold' }}>{item.username + ' requested'}</Text> 
-													<Text style={{ fontWeight: 'bold' }}>{' ' + item.name}</Text> on 
-													<Text style={{ fontWeight: 'bold' }}>{' ' + displayDateStr(item.time)}</Text>
-												</>
-												:
-												<>
-													<Text style={{ fontWeight: 'bold' }}>{item.username + ' booked reservation'}</Text> 
-													<Text style={{ fontWeight: 'bold' }}>{' for ' + item.name}</Text> on 
-													<Text style={{ fontWeight: 'bold' }}>{' ' + displayDateStr(item.time)}</Text>
-												</>
-											}
-										</Text>
+						requests.length > 0 ? 
+							<FlatList
+								data={requests}
+								renderItem={({ item, index }) => 
+									<View key={item.key} style={style.request}>
+										<View style={style.imageHolder}>
+											<Image source={{ uri: logo_url + item.image }} style={{ height: 80, width: 80 }}/>
+										</View>
+										<View style={style.requestInfo}>
+											<Text>
+												{locationType == 'salon' ? 
+													<>
+														<Text style={{ fontWeight: 'bold' }}>{item.username + ' requested'}</Text> 
+														<Text style={{ fontWeight: 'bold' }}>{' ' + item.name}</Text> on 
+														<Text style={{ fontWeight: 'bold' }}>{' ' + displayTimestr(item.time)}</Text>
+													</>
+													:
+													<>
+														<Text><Text style={{ fontWeight: 'bold' }}>{item.username}</Text> is booking a reservation</Text>
+														<Text style={{ fontWeight: 'bold' }}>{'\n'}at {displayTimestr(item.time)}</Text>
+														<Text style={{ fontWeight: 'bold' }}>{' for ' + item.diners + ' ' + (item.diners == 1 ? 'person' : 'people')}</Text>
+													</>
+												}
+											</Text>
 
-										<View style={style.requestActions}>
-											<View style={{ flexDirection: 'row' }}>
-												<TouchableOpacity style={style.requestAction} onPress={() => {
-													if (locationType == 'salon') {
-														props.navigation.navigate("booktime", { appointmentid: item.id })
-													} else {
-														props.navigation.navigate("makereservation", { userid: item.userId, reservationid: item.id })
-													}
-												}}>
-													<Text style={style.requestActionHeader}>Another time</Text>
-												</TouchableOpacity>
-												<TouchableOpacity style={style.requestAction} onPress={() => cancelTheRequest(item.id, index)}>
-													<Text style={style.requestActionHeader}>Cancel</Text>
-												</TouchableOpacity>
-												<TouchableOpacity style={style.requestAction} onPress={() => acceptTheRequest(item.id, index)}>
-													<Text style={style.requestActionHeader}>Accept</Text>
-												</TouchableOpacity>
+											<View style={style.requestActions}>
+												<View style={{ flexDirection: 'row' }}>
+													<TouchableOpacity style={style.requestAction} onPress={() => {
+														if (locationType == 'salon') {
+															props.navigation.navigate("booktime", { appointmentid: item.id })
+														} else {
+															props.navigation.navigate("makereservation", { userid: item.userId, reservationid: item.id })
+														}
+													}}>
+														<Text style={style.requestActionHeader}>Another time</Text>
+													</TouchableOpacity>
+													<TouchableOpacity style={style.requestAction} onPress={() => cancelTheRequest(item.id, index)}>
+														<Text style={style.requestActionHeader}>Cancel</Text>
+													</TouchableOpacity>
+													<TouchableOpacity style={style.requestAction} onPress={() => acceptTheRequest(item.id, index)}>
+														<Text style={style.requestActionHeader}>Accept</Text>
+													</TouchableOpacity>
+												</View>
 											</View>
 										</View>
 									</View>
-								</View>
-							}
-						/>
+								}
+							/>
+							:
+							<View style={style.bodyResult}>
+								<Text style={style.bodyResultHeader}>No request(s) yet</Text>
+							</View>
 					)}
 
 					{viewType == "appointments" && (
-						<FlatList
-							data={appointments}
-							renderItem={({ item }) => 
-								<View key={item.key} style={style.schedule}>
-									<View style={style.imageHolder}>
-										<Image source={{ uri: logo_url + item.image }} style={{ height: 80, width: 80 }}/>
+						appointments.length > 0 ? 
+							<FlatList
+								data={appointments}
+								renderItem={({ item }) => 
+									<View key={item.key} style={style.schedule}>
+										<View style={style.imageHolder}>
+											<Image source={{ uri: logo_url + item.image }} style={{ height: 80, width: 80 }}/>
+										</View>
+										<Text style={style.scheduleHeader}>
+											<Text style={{ fontFamily: 'Arial', fontWeight: 'bold' }}>{item.username} </Text> 
+											has an appointment for
+											<Text style={{ fontFamily: 'Arial', fontWeight: 'bold' }}> {item.name}</Text>
+											{'\n'} on {displayTimestr(item.time)}
+										</Text>
 									</View>
-									<Text style={style.scheduleHeader}>
-										<Text style={{ fontFamily: 'Arial', fontWeight: 'bold' }}>{item.username} </Text> 
-										has an appointment for
-										<Text style={{ fontFamily: 'Arial', fontWeight: 'bold' }}> {item.name}</Text>
-										{'\n'} on {displayDateStr(item.time)}
-									</Text>
-								</View>
-							}
-						/>
+								}
+							/>
+							:
+							<View style={style.bodyResult}>
+								<Text style={style.bodyResultHeader}>No appointment(s) yet</Text>
+							</View>
 					)}
 
 					{viewType == "reservations" && (
-						<FlatList
-							data={reservations}
-							renderItem={({ item }) => 
-								<View key={item.key} style={style.schedule}>
-									<View style={style.imageHolder}>
-										<Image source={{ uri: logo_url + item.image }} style={{ height: 80, width: 80 }}/>
+						reservations.length > 0 ?
+							<FlatList
+								data={reservations}
+								renderItem={({ item }) => 
+									<View key={item.key} style={style.schedule}>
+										<View style={style.scheduleRow}>
+											<View style={style.imageHolder}>
+												<Image source={{ uri: logo_url + item.image }} style={{ height: 80, width: 80 }}/>
+											</View>
+											<Text style={style.scheduleHeader}>
+												<Text style={{ fontFamily: 'Arial', fontWeight: 'bold' }}>{item.username}{'\n'}</Text> 
+												made a reservation
+												{'\n'} at {''}
+												<Text style={{ fontFamily: 'Arial', fontWeight: 'bold' }}>{displayTimestr(item.time)}</Text>
+												{''} for {'\n'}
+
+												<Text style={{ fontFamily: 'Arial', fontWeight: 'bold' }}>
+													{item.diners} {item.diners > 1 ? 'people' : 'person'}
+												</Text>
+
+												{'\n'}for table: <Text style={{ fontFamily: 'Arial', fontWeight: 'bold' }}>{item.table}</Text>
+											</Text>
+										</View>
+
+										<View style={{ alignItems: 'center', marginVertical: 10 }}>
+											<View style={{ flexDirection: 'row' }}>
+												<TouchableOpacity style={style.scheduleOrders} onPress={() => props.navigation.navigate("orders", { scheduleid: item.id })}>
+													<Text style={style.scheduleOrdersHeader}>Customers' Orders</Text>
+												</TouchableOpacity>
+												<Text style={style.scheduleNumOrders}>{item.numMakings > 0 && '(' + item.numMakings + ')'}</Text>
+											</View>
+										</View>									
 									</View>
-									<Text style={style.scheduleHeader}>
-										<Text style={{ fontFamily: 'Arial', fontWeight: 'bold' }}>{item.username} </Text> 
-										booked a reservation for
-										<Text style={{ fontFamily: 'Arial', fontWeight: 'bold' }}> {item.name}</Text>
-										{'\n'} on {displayDateStr(item.time)} for {item.seaters} {item.seaters == 1 ? 'person' : 'people'}
-									</Text>
-								</View>
-							}
-						/>
+								}
+							/>
+							:
+							<View style={style.bodyResult}>
+								<Text style={style.bodyResultHeader}>No reservation(s) yet</Text>
+							</View>
 					)}
 				</View>
 
@@ -396,17 +460,17 @@ export default function main(props) {
 							clearInterval(updateNumrequests)
 							clearInterval(updateNumappointments)
 							clearInterval(updateNumreservations)
-							
+
 							props.navigation.navigate("settings")
 						}}>
 							<AntDesign name="setting" size={30}/>
 						</TouchableOpacity>
 
-						<TouchableOpacity style={style.bottomNav} onPress={() => {
-							clearInterval(updateNumrequests)
-							clearInterval(updateNumappointments)
-							clearInterval(updateNumreservations)
+						<TouchableOpacity style={style.bottomNav} onPress={() => props.navigation.navigate("menu", { menuid: '', name: '', refetch: () => getTheInfo() })}>
+							<Text style={style.bottomNavHeader}>Edit Menu</Text>
+						</TouchableOpacity>
 
+						<TouchableOpacity style={style.bottomNav} onPress={() => {
 							AsyncStorage.clear()
 
 							props.navigation.dispatch(
@@ -426,7 +490,7 @@ export default function main(props) {
 				<Modal transparent={true}>
 					<View style={{ paddingVertical: offsetPadding }}>
 						<View style={style.cancelRequestBox}>
-							<Text style={style.cancelRequestHeader}>Tell the client the reason for this cancellation ?</Text>
+							<Text style={style.cancelRequestHeader}>Tell the diner the reason for this cancellation ?</Text>
 
 							<TextInput placeholder="Write your reason" multiline={true} style={style.cancelRequestInput} onChangeText={(reason) => {
 								setCancelrequestinfo({
@@ -449,6 +513,36 @@ export default function main(props) {
 					</View>
 				</Modal>
 			)}
+
+			{acceptRequestInfo.show && (
+				<Modal transparent={true}>
+					<View style={{ paddingVertial: offsetPadding }}>
+						<View style={style.acceptRequestBox}>
+							<Text style={style.acceptRequestHeader}>Tell the diner the table number?</Text>
+
+							<TextInput placeholder="What table will be available" style={style.acceptRequestInput} onChangeText={(tablenum) => {
+								setAcceptrequestinfo({
+									...acceptRequestInfo,
+									tablenum
+								})
+							}}/>
+
+							{acceptRequestInfo.errorMsg ? <Text style={style.errorMsg}>{acceptRequestInfo.errorMsg}</Text> : null}
+
+							<View style={{ alignItems: 'center' }}>
+								<View style={style.acceptRequestActions}>
+									<TouchableOpacity style={style.acceptRequestTouch} onPress={() => setAcceptrequestinfo({ ...acceptRequestInfo, show: false, tablenum: "" })}>
+										<Text style={style.acceptRequestTouchHeader}>Close</Text>
+									</TouchableOpacity>
+									<TouchableOpacity style={style.acceptRequestTouch} onPress={() => acceptTheRequest()}>
+										<Text style={style.acceptRequestTouchHeader}>Done</Text>
+									</TouchableOpacity>
+								</View>
+							</View>
+						</View>
+					</View>
+				</Modal>
+			)}
 		</View>
 	)
 }
@@ -456,7 +550,6 @@ export default function main(props) {
 const style = StyleSheet.create({
 	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 
-	// height = 150
 	headers: { alignItems: 'center', flexDirection: 'column', height: 150, justifyContent: 'space-between', paddingVertical: 5 },
 	storeIconHolder: { borderRadius: 35, height: 70, overflow: 'hidden', width: 70 },
 	image: { height: 70, width: 70 },
@@ -466,6 +559,8 @@ const style = StyleSheet.create({
 	navs: { alignItems: 'center', backgroundColor: 'rgba(127, 127, 127, 0.1)', height: 30 },
 	nav: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: 13, marginHorizontal: 2, marginVertical: 3, padding: 2, width: (width / 3) - 10 },
 	navHeader: { fontSize: 13 },
+	navSelected: { alignItems: 'center', backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: 13, marginHorizontal: 2, marginVertical: 3, padding: 2, width: (width / 3) - 10 },
+	navHeaderSelected: { color: 'white', fontSize: 13 },
 
 	// body
 	body: { height: screenHeight - 190 },
@@ -479,9 +574,16 @@ const style = StyleSheet.create({
 	requestActionHeader: { fontSize: 10 },
 
 	// client's schedule
-	schedule: { borderRadius: 5, backgroundColor: 'white', flexDirection: 'row', justifyContent: 'space-between', marginHorizontal: 5, marginVertical: 2.5 },
+	schedule: { alignItems: 'center', borderRadius: 5, backgroundColor: 'white', marginHorizontal: 5, marginVertical: 2.5 },
+	scheduleRow: { flexDirection: 'row', justifyContent: 'space-between' },
 	imageHolder: { borderRadius: 40, height: 80, margin: 5, overflow: 'hidden', width: 80 },
-	scheduleHeader: { fontFamily: 'appFont', fontSize: 20, padding: 10, width: width - 100 },
+	scheduleHeader: { fontFamily: 'appFont', fontSize: 20, padding: 10, textAlign: 'center', width: width - 100 },
+	scheduleOrders: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: 150 },
+	scheduleOrdersHeader: { textAlign: 'center' },
+	scheduleNumOrders: { fontWeight: 'bold', padding: 8 },
+
+	bodyResult: { alignItems: 'center', flexDirection: 'column', height: screenHeight - 220, justifyContent: 'space-around' },
+	bodyResultHeader: { fontWeight: 'bold' },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
 	bottomNav: { flexDirection: 'row', height: 30, marginVertical: 5, marginHorizontal: 20 },
@@ -493,4 +595,13 @@ const style = StyleSheet.create({
 	cancelRequestActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	cancelRequestTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 5, width: 100 },
 	cancelRequestTouchHeader: { textAlign: 'center' },
+
+	acceptRequestBox: { backgroundColor: 'white', height: '100%', width: '100%' },
+	acceptRequestHeader: { fontFamily: 'appFont', fontSize: 20, margin: 30, textAlign: 'center' },
+	acceptRequestInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: 20, margin: '5%', padding: 10, width: '90%' },
+	acceptRequestActions: { flexDirection: 'row', justifyContent: 'space-around' },
+	acceptRequestTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 5, width: 100 },
+	acceptRequestTouchHeader: { textAlign: 'center' },
+
+	errorMsg: { color: 'red', fontWeight: 'bold', marginVertical: 30, textAlign: 'center' },
 })

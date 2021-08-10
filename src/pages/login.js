@@ -3,15 +3,15 @@ import { AsyncStorage, Dimensions, View, Text, TextInput, Image, TouchableOpacit
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import { loginUser } from '../apis/owners'
-import { info } from '../../assets/info'
+import { userInfo } from '../../assets/info'
 
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - (offsetPadding * 2)
 
 export default function login({ navigation }) {
-	const [phonenumber, setPhonenumber] = useState(info.cellnumber)
-	const [password, setPassword] = useState(info.password)
+	const [phonenumber, setPhonenumber] = useState(userInfo.cellnumber)
+	const [password, setPassword] = useState(userInfo.password)
 	const [errorMsg, setErrormsg] = useState('')
 
 	const login = () => {
@@ -97,7 +97,7 @@ const style = StyleSheet.create({
 	background: { height: '100%', position: 'absolute', width: '100%' },
 	boxHeader: { color: 'white', fontFamily: 'appFont', fontSize: 50, fontWeight: 'bold', paddingVertical: 30 },
 	
-	inputsBox: { backgroundColor: 'rgba(255, 255, 255, 0.5)', paddingHorizontal: 20, width: '80%' },
+	inputsBox: { backgroundColor: 'white', paddingHorizontal: 20, width: '80%' },
 	inputContainer: { marginVertical: 5 },
 	inputHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold' },
 	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: 20, padding: 5 },

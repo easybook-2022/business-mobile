@@ -8,10 +8,6 @@ export const getMenus = (data) => {
 	)
 }
 
-export const removeMenu = id => {
-	return axios.post(`${WIFI_API_URL}/menus/remove_menu/${id}`)
-}
-
 export const getRequests = () => {
 	return axios.get(`${WIFI_API_URL}/menus/get_requests`)
 }
@@ -31,6 +27,31 @@ export const addNewMenu = (data) => {
 		form,
 		{ headers: {
 			'Content-Type': 'multipart/form-data'
+		}}
+	)
+}
+
+export const removeMenu = id => {
+	return axios.get(`${WIFI_API_URL}/menus/remove_menu/${id}`)
+}
+
+export const editMenu = id => {
+	return axios.get(`${WIFI_API_URL}/menus/edit_menu/${id}`)
+}
+
+export const saveMenu = data => {
+	const form = new FormData()
+
+	form.append("id", data.id)
+	form.append("name", data.name)
+	form.append("info", data.info)
+	form.append("image", { uri: data.image.uri, name: data.image.name })
+
+	return axios.post(
+		`${WIFI_API_URL}/menus/save_menu`,
+		form,
+		{ headers: { 
+			'Content-Type': 'multipart/form-data' 
 		}}
 	)
 }

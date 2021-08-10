@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AsyncStorage, Dimensions, ScrollView, View, Text, TextInput, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { AsyncStorage, ActivityIndicator, Dimensions, ScrollView, View, Text, TextInput, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { NetworkInfo } from 'react-native-network-info';
 import Constants from 'expo-constants';
 import * as FileSystem from 'expo-file-system'
@@ -8,7 +8,7 @@ import * as ImageManipulator from 'expo-image-manipulator'
 import * as Location from 'expo-location';
 import { CommonActions } from '@react-navigation/native';
 import { setupLocation } from '../apis/locations'
-import { info } from '../../assets/info'
+import { userInfo } from '../../assets/info'
 
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5'
 import AntDesign from 'react-native-vector-icons/AntDesign'
@@ -16,33 +16,36 @@ import Entypo from 'react-native-vector-icons/Entypo'
 
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
-const screenHeight = height - offsetPadding
+const screenHeight = height - (offsetPadding * 2)
 
 export default function setup({ navigation }) {
 	const [permission, setPermission] = useState(null);
 	const [camComp, setCamcomp] = useState(null)
 	const [camType, setCamtype] = useState(Camera.Constants.Type.back);
-	const [storeName, setStorename] = useState(info.storeName)
-	const [phonenumber, setPhonenumber] = useState(info.phonenumber)
-	const [addressOne, setAddressone] = useState(info.addressOne)
-	const [addressTwo, setAddresstwo] = useState(info.addressTwo)
-	const [city, setCity] = useState(info.city)
-	const [province, setProvice] = useState(info.province)
-	const [postalcode, setPostalcode] = useState(info.postalcode)
-	const [image, setImage] = useState({ uri: '', name: '' })
+	const [storeName, setStorename] = useState(userInfo.storeName)
+	const [phonenumber, setPhonenumber] = useState(userInfo.phonenumber)
+	const [addressOne, setAddressone] = useState(userInfo.addressOne)
+	const [addressTwo, setAddresstwo] = useState(userInfo.addressTwo)
+	const [city, setCity] = useState(userInfo.city)
+	const [province, setProvice] = useState(userInfo.province)
+	const [postalcode, setPostalcode] = useState(userInfo.postalcode)
+	const [logo, setLogo] = useState({ uri: '', name: '' })
+	const [loading, setLoading] = useState(false)
 	const [errorMsg, setErrormsg] = useState('')
 
 	const setupYourLocation = async() => {
 		const ownerid = await AsyncStorage.getItem("ownerid")
 		const ipAddress = await NetworkInfo.getIPAddress()
 
-		if (storeName && phonenumber, addressOne && city && province && postalcode && image.name) {
+		if (storeName && phonenumber, addressOne && city && province && postalcode && logo.name) {
 			const [{ latitude, longitude }] = await Location.geocodeAsync(`${addressOne} ${addressTwo}, ${city} ${province}, ${postalcode}`)
 			const time = (Date.now() / 1000).toString().split(".")[0]
 			const data = {
-				storeName, phonenumber, addressOne, addressTwo, city, province, postalcode, logo: image,
+				storeName, phonenumber, addressOne, addressTwo, city, province, postalcode, logo,
 				longitude, latitude, ownerid, time, ipAddress
 			}
+
+			setLoading(true)
 
 			setupLocation(data)
 				.then((res) => {
@@ -51,6 +54,7 @@ export default function setup({ navigation }) {
 							return res.data
 						} else {
 							setErrormsg(res.data.errormsg)
+							setLoading(false)
 						}
 					}
 				})
@@ -112,7 +116,7 @@ export default function setup({ navigation }) {
 				return
 			}
 
-			if (!image.name) {
+			if (!logo.name) {
 				setErrormsg("Please take a good photo of your store")
 
 				return
@@ -156,7 +160,7 @@ export default function setup({ navigation }) {
 				to: `${FileSystem.documentDirectory}/${char}.jpg`
 			})
 			.then(() => {
-				setImage({
+				setLogo({
 					uri: `${FileSystem.documentDirectory}/${char}.jpg`,
 					name: `${char}.jpg`
 				})
@@ -182,9 +186,9 @@ export default function setup({ navigation }) {
 	if (permission === null) return <View/>
 
 	return (
-		<View style={{ paddingTop: offsetPadding }}>
+		<View style={{ paddingVertical: offsetPadding }}>
 			<ScrollView style={{ height: screenHeight - 40, width: '100%' }}>
-				<View style={style.box}>
+				<View style={[style.box, { opacity: loading ? 0.6 : 1 }]}>
 					<Text style={style.boxHeader}>Setup</Text>
 					<Text style={style.boxMiniheader}>Enter your location information</Text>
 
@@ -221,11 +225,11 @@ export default function setup({ navigation }) {
 						<View style={style.cameraContainer}>
 							<Text style={style.inputHeader}>Store Logo</Text>
 
-							{image.uri ? (
+							{logo.uri ? (
 								<>
-									<Image style={style.camera} source={{ uri: image.uri }}/>
+									<Image style={style.camera} source={{ uri: logo.uri }}/>
 
-									<TouchableOpacity style={style.cameraAction} onPress={() => setImage({ uri: '', name: '' })}>
+									<TouchableOpacity style={style.cameraAction} onPress={() => setLogo({ uri: '', name: '' })}>
 										<AntDesign name="closecircleo" size={30}/>
 									</TouchableOpacity>
 								</>
@@ -243,7 +247,9 @@ export default function setup({ navigation }) {
 
 					{errorMsg ? <Text style={style.errorMsg}>{errorMsg}</Text> : null }
 
-					<TouchableOpacity style={style.setupButton} onPress={() => setupYourLocation()}>
+					{loading && <ActivityIndicator size="large"/>}
+
+					<TouchableOpacity style={style.setupButton} disabled={loading} onPress={() => setupYourLocation()}>
 						<Text>Done</Text>
 					</TouchableOpacity>
 				</View>
