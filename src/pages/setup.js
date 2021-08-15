@@ -195,31 +195,31 @@ export default function setup({ navigation }) {
 					<View style={style.inputsBox}>
 						<View style={style.inputContainer}>
 							<Text style={style.inputHeader}>Store Name:</Text>
-							<TextInput style={style.input} onChangeText={(storeName) => setStorename(storeName)} value={storeName}/>
+							<TextInput style={style.input} onChangeText={(storeName) => setStorename(storeName)} value={storeName} autoCorrect={false}/>
 						</View>
 						<View style={style.inputContainer}>
 							<Text style={style.inputHeader}>Store Phone number:</Text>
-							<TextInput style={style.input} onChangeText={(phonenumber) => setPhonenumber(phonenumber)} value={phonenumber} keyboardType="numeric"/>
+							<TextInput style={style.input} onChangeText={(phonenumber) => setPhonenumber(phonenumber)} value={phonenumber} keyboardType="numeric" autoCorrect={false}/>
 						</View>
 						<View style={style.inputContainer}>
 							<Text style={style.inputHeader}>Address #1:</Text>
-							<TextInput style={style.input} onChangeText={(addressOne) => setPhonenumber(addressOne)} value={addressOne} keyboardType="numeric"/>
+							<TextInput style={style.input} onChangeText={(addressOne) => setPhonenumber(addressOne)} value={addressOne} keyboardType="numeric" autoCorrect={false}/>
 						</View>
 						<View style={style.inputContainer}>
 							<Text style={style.inputHeader}>Address #2:</Text>
-							<TextInput style={style.input} onChangeText={(addressTwo) => setPhonenumber(addressTwo)} value={addressTwo} keyboardType="numeric"/>
+							<TextInput style={style.input} onChangeText={(addressTwo) => setPhonenumber(addressTwo)} value={addressTwo} keyboardType="numeric" autoCorrect={false}/>
 						</View>
 						<View style={style.inputContainer}>
 							<Text style={style.inputHeader}>City:</Text>
-							<TextInput style={style.input} onChangeText={(city) => setPhonenumber(city)} value={city} keyboardType="numeric"/>
+							<TextInput style={style.input} onChangeText={(city) => setPhonenumber(city)} value={city} keyboardType="numeric" autoCorrect={false}/>
 						</View>
 						<View style={style.inputContainer}>
 							<Text style={style.inputHeader}>Province:</Text>
-							<TextInput style={style.input} onChangeText={(province) => setPhonenumber(province)} value={province} keyboardType="numeric"/>
+							<TextInput style={style.input} onChangeText={(province) => setPhonenumber(province)} value={province} keyboardType="numeric" autoCorrect={false}/>
 						</View>
 						<View style={style.inputContainer}>
 							<Text style={style.inputHeader}>Postal Code:</Text>
-							<TextInput style={style.input} onChangeText={(postalcode) => setPhonenumber(postalcode)} value={postalcode} keyboardType="numeric"/>
+							<TextInput style={style.input} onChangeText={(postalcode) => setPhonenumber(postalcode)} value={postalcode} keyboardType="numeric" autoCorrect={false}/>
 						</View>
 
 						<View style={style.cameraContainer}>

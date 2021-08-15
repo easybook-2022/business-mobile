@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { AsyncStorage, ActivityIndicator, Dimensions, ScrollView, View, Text, TextInput, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { AsyncStorage, ActivityIndicator, Dimensions, ScrollView, View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import { setLocationHours } from '../apis/locations'

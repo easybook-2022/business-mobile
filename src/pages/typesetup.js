@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { AsyncStorage, ActivityIndicator, Dimensions, View, FlatList, Text, TextInput, Image, TouchableOpacity, StyleSheet, Modal } from 'react-native'
+import { AsyncStorage, ActivityIndicator, Dimensions, View, FlatList, Text, Image, TouchableOpacity, StyleSheet, Modal } from 'react-native'
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import { setLocationType } from '../apis/locations'
@@ -14,7 +14,7 @@ export default function typesetup({ navigation }) {
 	const [type, setType] = useState(userInfo.storeType)
 	const [loading, setLoading] = useState(false)
 	const [errorMsg, setErrormsg] = useState('')
-
+	
 	const done = async() => {
 		const ownerid = await AsyncStorage.getItem("ownerid")
 		const locationid = await AsyncStorage.getItem("locationid")

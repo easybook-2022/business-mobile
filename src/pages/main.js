@@ -45,7 +45,7 @@ export default function main(props) {
 
 	const [viewType, setViewtype] = useState('')
 	const [cancelRequestInfo, setCancelrequestinfo] = useState({ show: false, reason: "", id: 0, index: 0 })
-	const [acceptRequestInfo, setAcceptrequestinfo] = useState({ show: false, requestid: "", tablenum: "", errorMsg: "" })
+	const [acceptRequestInfo, setAcceptrequestinfo] = useState({ show: false, type: "", requestid: "", tablenum: "", errorMsg: "" })
 
 	const fetchTheNumRequests = async() => {
 		const locationid = await AsyncStorage.getItem("locationid")
@@ -90,13 +90,6 @@ export default function main(props) {
 				.then((res) => {
 					if (res) setNumreservations(res.numReservations)
 				})
-		}
-	}
-	const fetchTheNumOrders = async() => {
-		const locationid = await AsyncStorage.getItem("locationid")
-
-		if (locationid != null) {
-			getAllReservations()
 		}
 	}
 	const getTheInfo = async() => {
@@ -246,57 +239,78 @@ export default function main(props) {
 		}
 	}
 	const acceptTheRequest = (requestid, index) => {
-		if (!acceptRequestInfo.show) {
-			setAcceptrequestinfo({
-				...acceptRequestInfo,
-				show: true,
-				requestid
-			})
+		const { type } = requestid ? requests[index] : acceptRequestInfo
+
+		if (type == "nail") {
+			const data = { requestid, tablenum: "" }
+
+			acceptRequest(data)
+				.then((res) => {
+					if (res.status == 200) {
+						return res.data
+					}
+				})
+				.then((res) => {
+					if (res) {
+						const newRequests = [...requests]
+
+						newRequests.splice(index, 1)
+
+						setRequests(newRequests)
+						setNumrequests(numRequests - 1)
+						setNumappointments(numAppointments + 1)
+						setAcceptrequestinfo({ show: false, tablenum: "" })
+
+						getAllReservations()
+					}
+				})
 		} else {
-			const { requestid, tablenum } = acceptRequestInfo
-
-			if (tablenum) {
-				const data = { requestid, tablenum }
-
-				acceptRequest(data)
-					.then((res) => {
-						if (res.status == 200) {
-							return res.data
-						}
-					})
-					.then((res) => {
-						if (res) {
-							const newRequests = [...requests]
-
-							newRequests.splice(index, 1)
-
-							setRequests(newRequests)
-							setNumrequests(numRequests - 1)
-							setNumappointments(numAppointments + 1)
-							setAcceptrequestinfo({ show: false, tablenum: "" })
-
-							getAllReservations()
-						}
-					})
+			if (!acceptRequestInfo.show) {
+				setAcceptrequestinfo({ ...acceptRequestInfo, show: true, type, requestid })
 			} else {
-				setAcceptrequestinfo({ ...acceptRequestInfo, errorMsg: "Please enter the table number for the diner" })
+				const { requestid, tablenum } = acceptRequestInfo
+
+				if (tablenum) {
+					const data = { requestid, tablenum }
+
+					acceptRequest(data)
+						.then((res) => {
+							if (res.status == 200) {
+								return res.data
+							}
+						})
+						.then((res) => {
+							if (res) {
+								const newRequests = [...requests]
+
+								newRequests.splice(index, 1)
+
+								setRequests(newRequests)
+								setNumrequests(numRequests - 1)
+								setNumappointments(numAppointments + 1)
+								setAcceptrequestinfo({ show: false, tablenum: "" })
+
+								getAllReservations()
+							}
+						})
+				} else {
+					setAcceptrequestinfo({ ...acceptRequestInfo, errorMsg: "Please enter the table number for the diner" })
+				}
 			}
 		}
 	}
-	
+
 	useEffect(() => {
 		getTheInfo()
 
 		updateNumrequests = setInterval(() => fetchTheNumRequests(), 1000)
 		updateNumappointments = setInterval(() => fetchTheNumAppointments(), 1000)
 		updateNumreservations = setInterval(() => fetchTheNumReservations(), 1000)
-		updateNumorders = setInterval(() => fetchTheNumOrders(), 5000)
 
 		return () => {
 			clearInterval(updateNumrequests)
 			clearInterval(updateNumappointments)
 			clearInterval(updateNumreservations)
-			clearInterval(updateNumorders)
 		}
 	}, [])
 	
@@ -338,44 +352,46 @@ export default function main(props) {
 								data={requests}
 								renderItem={({ item, index }) => 
 									<View key={item.key} style={style.request}>
-										<View style={style.imageHolder}>
-											<Image source={{ uri: logo_url + item.image }} style={{ height: 80, width: 80 }}/>
+										<View style={{ flexDirection: 'row' }}>
+											<View style={style.imageHolder}>
+												<Image source={{ uri: logo_url + item.image }} style={{ height: 50, width: 50 }}/>
+											</View>
+											<View style={style.requestInfo}>
+												<Text>
+													{locationType == 'salon' ? 
+														<>
+															<Text style={{ fontWeight: 'bold' }}>{item.username + ' requested'}</Text> 
+															<Text style={{ fontWeight: 'bold' }}>{' ' + item.name}</Text> on 
+															<Text style={{ fontWeight: 'bold' }}>{' ' + displayTimestr(item.time)}</Text>
+														</>
+														:
+														<>
+															<Text><Text style={{ fontWeight: 'bold' }}>{item.username}</Text> is booking a reservation</Text>
+															<Text style={{ fontWeight: 'bold' }}>{'\n'}at {displayTimestr(item.time)}</Text>
+															<Text style={{ fontWeight: 'bold' }}>{' for ' + item.diners + ' ' + (item.diners == 1 ? 'person' : 'people')}</Text>
+														</>
+													}
+												</Text>
+											</View>
 										</View>
-										<View style={style.requestInfo}>
-											<Text>
-												{locationType == 'salon' ? 
-													<>
-														<Text style={{ fontWeight: 'bold' }}>{item.username + ' requested'}</Text> 
-														<Text style={{ fontWeight: 'bold' }}>{' ' + item.name}</Text> on 
-														<Text style={{ fontWeight: 'bold' }}>{' ' + displayTimestr(item.time)}</Text>
-													</>
-													:
-													<>
-														<Text><Text style={{ fontWeight: 'bold' }}>{item.username}</Text> is booking a reservation</Text>
-														<Text style={{ fontWeight: 'bold' }}>{'\n'}at {displayTimestr(item.time)}</Text>
-														<Text style={{ fontWeight: 'bold' }}>{' for ' + item.diners + ' ' + (item.diners == 1 ? 'person' : 'people')}</Text>
-													</>
-												}
-											</Text>
 
-											<View style={style.requestActions}>
-												<View style={{ flexDirection: 'row' }}>
-													<TouchableOpacity style={style.requestAction} onPress={() => {
-														if (locationType == 'salon') {
-															props.navigation.navigate("booktime", { appointmentid: item.id })
-														} else {
-															props.navigation.navigate("makereservation", { userid: item.userId, reservationid: item.id })
-														}
-													}}>
-														<Text style={style.requestActionHeader}>Another time</Text>
-													</TouchableOpacity>
-													<TouchableOpacity style={style.requestAction} onPress={() => cancelTheRequest(item.id, index)}>
-														<Text style={style.requestActionHeader}>Cancel</Text>
-													</TouchableOpacity>
-													<TouchableOpacity style={style.requestAction} onPress={() => acceptTheRequest(item.id, index)}>
-														<Text style={style.requestActionHeader}>Accept</Text>
-													</TouchableOpacity>
-												</View>
+										<View style={style.requestActions}>
+											<View style={{ flexDirection: 'row' }}>
+												<TouchableOpacity style={style.requestAction} onPress={() => {
+													if (locationType == 'salon') {
+														props.navigation.navigate("booktime", { appointmentid: item.id, refetch: () => getAllRequests() })
+													} else {
+														props.navigation.navigate("makereservation", { userid: item.userId, reservationid: item.id })
+													}
+												}}>
+													<Text style={style.requestActionHeader}>Another time</Text>
+												</TouchableOpacity>
+												<TouchableOpacity style={style.requestAction} onPress={() => cancelTheRequest(item.id, index)}>
+													<Text style={style.requestActionHeader}>Cancel</Text>
+												</TouchableOpacity>
+												<TouchableOpacity style={style.requestAction} onPress={() => acceptTheRequest(item.id, index)}>
+													<Text style={style.requestActionHeader}>Accept</Text>
+												</TouchableOpacity>
 											</View>
 										</View>
 									</View>
@@ -497,7 +513,7 @@ export default function main(props) {
 									...cancelRequestInfo,
 									reason: reason
 								})
-							}}/>
+							}} autoCorrect={false}/>
 
 							<View style={{ alignItems: 'center' }}>
 								<View style={style.cancelRequestActions}>
@@ -516,7 +532,7 @@ export default function main(props) {
 
 			{acceptRequestInfo.show && (
 				<Modal transparent={true}>
-					<View style={{ paddingVertial: offsetPadding }}>
+					<View style={style.acceptRequestContainer}>
 						<View style={style.acceptRequestBox}>
 							<Text style={style.acceptRequestHeader}>Tell the diner the table number?</Text>
 
@@ -525,13 +541,16 @@ export default function main(props) {
 									...acceptRequestInfo,
 									tablenum
 								})
-							}}/>
+							}} autoCorrect={false}/>
 
 							{acceptRequestInfo.errorMsg ? <Text style={style.errorMsg}>{acceptRequestInfo.errorMsg}</Text> : null}
 
 							<View style={{ alignItems: 'center' }}>
 								<View style={style.acceptRequestActions}>
-									<TouchableOpacity style={style.acceptRequestTouch} onPress={() => setAcceptrequestinfo({ ...acceptRequestInfo, show: false, tablenum: "" })}>
+									<TouchableOpacity style={style.acceptRequestTouch} onPress={() => {
+										getAllRequests()
+										setAcceptrequestinfo({ ...acceptRequestInfo, show: false, tablenum: "" })
+									}}>
 										<Text style={style.acceptRequestTouchHeader}>Close</Text>
 									</TouchableOpacity>
 									<TouchableOpacity style={style.acceptRequestTouch} onPress={() => acceptTheRequest()}>
@@ -558,7 +577,7 @@ const style = StyleSheet.create({
 
 	navs: { alignItems: 'center', backgroundColor: 'rgba(127, 127, 127, 0.1)', height: 30 },
 	nav: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: 13, marginHorizontal: 2, marginVertical: 3, padding: 2, width: (width / 3) - 10 },
-	navHeader: { fontSize: 13 },
+	navHeader: { color: 'black', fontSize: 13 },
 	navSelected: { alignItems: 'center', backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: 13, marginHorizontal: 2, marginVertical: 3, padding: 2, width: (width / 3) - 10 },
 	navHeaderSelected: { color: 'white', fontSize: 13 },
 
@@ -566,17 +585,18 @@ const style = StyleSheet.create({
 	body: { height: screenHeight - 190 },
 
 	// client appointment requests
-	request: { borderRadius: 5, backgroundColor: 'white', flexDirection: 'row', justifyContent: 'space-between', marginHorizontal: 5, marginVertical: 2.5 },
+	request: { borderRadius: 5, backgroundColor: 'white', marginHorizontal: 5, marginVertical: 2.5 },
+	requestRow: { flexDirection: 'row', justifyContent: 'space-between' },
 	imageHolder: { borderRadius: 40, height: 80, margin: 5, overflow: 'hidden', width: 80 },
 	requestInfo: { fontFamily: 'appFont', fontSize: 20, padding: 10, width: width - 100 },
-	requestActions: { flexDirection: 'row', justifyContent: 'space-around', marginTop: 20 },
+	requestActions: { flexDirection: 'row', justifyContent: 'space-around', marginVertical: 10 },
 	requestAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 5, width: 80 },
-	requestActionHeader: { fontSize: 10 },
+	requestActionHeader: { fontSize: 10, textAlign: 'center' },
 
 	// client's schedule
 	schedule: { alignItems: 'center', borderRadius: 5, backgroundColor: 'white', marginHorizontal: 5, marginVertical: 2.5 },
 	scheduleRow: { flexDirection: 'row', justifyContent: 'space-between' },
-	imageHolder: { borderRadius: 40, height: 80, margin: 5, overflow: 'hidden', width: 80 },
+	imageHolder: { borderRadius: 25, height: 50, margin: 5, overflow: 'hidden', width: 50 },
 	scheduleHeader: { fontFamily: 'appFont', fontSize: 20, padding: 10, textAlign: 'center', width: width - 100 },
 	scheduleOrders: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: 150 },
 	scheduleOrdersHeader: { textAlign: 'center' },
@@ -596,7 +616,8 @@ const style = StyleSheet.create({
 	cancelRequestTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 5, width: 100 },
 	cancelRequestTouchHeader: { textAlign: 'center' },
 
-	acceptRequestBox: { backgroundColor: 'white', height: '100%', width: '100%' },
+	acceptRequestContainer: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
+	acceptRequestBox: { backgroundColor: 'white', width: '80%' },
 	acceptRequestHeader: { fontFamily: 'appFont', fontSize: 20, margin: 30, textAlign: 'center' },
 	acceptRequestInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: 20, margin: '5%', padding: 10, width: '90%' },
 	acceptRequestActions: { flexDirection: 'row', justifyContent: 'space-around' },

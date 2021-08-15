@@ -379,7 +379,7 @@ export default function menu(props) {
 					</View>
 				: null }
 			</View>
-
+			
 			<View style={style.body}>
 				{showMenus && (
 					<FlatList
@@ -500,8 +500,8 @@ export default function menu(props) {
 					<View style={style.addBox}>
 						<Text style={style.addHeader}>Enter menu info</Text>
 
-						<TextInput style={style.addInput} placeholder="Menu name" placeholderTextColor="rgba(127, 127, 127, 0.5)" onChangeText={(name) => setMenuform({...menuForm, name: name })} value={menuForm.name}/>
-						<TextInput style={style.infoInput} multiline={true} placeholder="Anything you want to say about this menu" placeholderTextColor="rgba(127, 127, 127, 0.5)" onChangeText={(info) => setMenuform({...menuForm, info: info })} value={menuForm.info}/>
+						<TextInput style={style.addInput} placeholder="Menu name" placeholderTextColor="rgba(127, 127, 127, 0.5)" onChangeText={(name) => setMenuform({...menuForm, name: name })} value={menuForm.name} autoCorrect={false}/>
+						<TextInput style={style.infoInput} multiline={true} placeholder="Anything you want to say about this menu" placeholderTextColor="rgba(127, 127, 127, 0.5)" onChangeText={(info) => setMenuform({...menuForm, info: info })} value={menuForm.info} autoCorrect={false} autoCompleteType="off"/>
 
 						<View style={style.cameraContainer}>
 							<Text style={style.cameraHeader}>Menu photo</Text>
@@ -516,7 +516,7 @@ export default function menu(props) {
 								</>
 							) : (
 								<>
-									<Camera style={style.camera} type={camType} ref={r => {setCamcomp(r)}}/>
+									<Camera style={style.camera} type={camType} ref={r => { setCamcomp(r) }}/>
 
 									<TouchableOpacity style={style.cameraAction} onPress={snapPhoto.bind(this)}>
 										<Entypo name="camera" size={30}/>
@@ -562,7 +562,7 @@ const style = StyleSheet.create({
 	headers: { marginVertical: 10 },
 	header: { fontWeight: 'bold', fontSize: 20, textAlign: 'center' },
 
-	body: { height: screenHeight - 265 },
+	body: { height: screenHeight - 200 },
 	row: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
 
 	menu: { padding: 20 },
@@ -597,7 +597,7 @@ const style = StyleSheet.create({
 	addBox: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '100%', justifyContent: 'space-around', paddingVertical: offsetPadding, width: '100%' },
 	addHeader: { fontSize: 20, fontWeight: 'bold' },
 	addInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, fontSize: 13, padding: 10, width: '90%' },
-	infoInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, fontSize: 13, height: 100, padding: 10, width: '90%' },
+	infoInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, fontSize: 13, height: 100, marginVertical: 5, padding: 10, textAlignVertical: 'top', width: '90%' },
 	cameraContainer: { alignItems: 'center', marginVertical: 10, width: '100%' },
 	cameraHeader: { fontWeight: 'bold', paddingVertical: 5 },
 	camera: { height: width * 0.6, width: width * 0.6 },

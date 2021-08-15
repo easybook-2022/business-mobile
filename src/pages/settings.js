@@ -6,24 +6,19 @@ import * as FileSystem from 'expo-file-system'
 import { Camera } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator'
 import * as Location from 'expo-location';
-import stripe from 'tipsi-stripe'
 import { logo_url } from '../../assets/info'
 import { 
 	addOwner, updateOwner, addBankaccount, updateBankaccount, getAccounts, getBankaccounts, 
 	setBankaccountDefault, getBankaccountInfo, deleteTheBankAccount
 } from '../apis/owners'
 import { getLocationProfile, updateLocation, setLocationHours } from '../apis/locations'
-import { userInfo } from '../../assets/info'
+import { userInfo, stripe_key } from '../../assets/info'
 
 // bank account
 const { accountNumber, countryCode, currency, routingNumber, accountHolderName } = userInfo
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import Entypo from 'react-native-vector-icons/Entypo'
-
-stripe.setOptions({
-	publishableKey: 'pk_test_bWW1YHLx5wgY3rU9fk6cNhBu'
-})
 
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
@@ -322,16 +317,37 @@ export default function settings({ navigation }) {
 		const locationid = await AsyncStorage.getItem("locationid")
 		const { accountHolderName, accountNumber, transitNumber, routingNumber } = bankAccountForm
 		const data = { locationid }
-		const params = {
-			accountNumber, countryCode,
-			currency, routingNumber,
-			accountHolderName, accountHolderType: 'company'
-		}
+		const bankaccountDetails = {
+			"bank_account[country]": countryCode,
+			"bank_account[currency]": currency,
+			"bank_account[account_holder_name]": accountHolderName,
+			"bank_account[account_holder_type]": "company",
+			"bank_account[routing_number]": routingNumber,
+			"bank_account[account_number]": accountNumber
+		};
 
 		if (accountNumber && countryCode && currency && routingNumber && accountHolderName) {
-			const token = await stripe.createTokenWithBankAccount(params)
+			let formBody = [];
+			
+			for (let property in bankaccountDetails) {
+				let encodedKey = encodeURIComponent(property);
+				let encodedValue = encodeURIComponent(bankaccountDetails[property]);
+				formBody.push(encodedKey + "=" + encodedValue);
+			}
+			formBody = formBody.join("&");
+			
+			const resp = await fetch("https://api.stripe.com/v1/tokens", {
+				method: "post",
+				headers: {
+					Accept: "application/json",
+					"Content-Type": "application/x-www-form-urlencoded",
+					Authorization: "Bearer " + stripe_key,
+				},
+				body: formBody,
+			});
+			const json = await resp.json()
 
-			data['banktoken'] = token.tokenId
+			data['banktoken'] = json.id
 
 			setBankaccountform({ ...bankAccountForm, loading: true })
 
@@ -462,14 +478,36 @@ export default function settings({ navigation }) {
 		const locationid = await AsyncStorage.getItem("locationid")
 		const { id, accountHolderName, accountNumber, routingNumber, institutionNumber, transitNumber } = bankAccountForm
 		const data = { oldbanktoken: id, locationid }
-		const params = {
-			accountNumber, countryCode,
-			currency, routingNumber,
-			accountHolderName, accountHolderType: 'company'
-		}
-		const token = await stripe.createTokenWithBankAccount(params)
+		const bankaccountDetails = {
+			"bank_account[country]": countryCode,
+			"bank_account[currency]": currency,
+			"bank_account[account_holder_name]": accountHolderName,
+			"bank_account[account_holder_type]": "company",
+			"bank_account[routing_number]": routingNumber,
+			"bank_account[account_number]": accountNumber
+		};
 
-		data['banktoken'] = token.tokenId
+		let formBody = [];
+			
+		for (let property in bankaccountDetails) {
+			let encodedKey = encodeURIComponent(property);
+			let encodedValue = encodeURIComponent(bankaccountDetails[property]);
+			formBody.push(encodedKey + "=" + encodedValue);
+		}
+		formBody = formBody.join("&");
+		
+		const resp = await fetch("https://api.stripe.com/v1/tokens", {
+			method: "post",
+			headers: {
+				Accept: "application/json",
+				"Content-Type": "application/x-www-form-urlencoded",
+				Authorization: "Bearer sk_test_lft1B76yZfF2oEtD5rI3y8dz",
+			},
+			body: formBody,
+		});
+		const json = await resp.json()
+
+		data['banktoken'] = json.id
 
 		updateBankaccount(data)
 			.then((res) => {
@@ -651,31 +689,31 @@ export default function settings({ navigation }) {
 									<View style={style.inputsBox}>
 										<View style={style.inputContainer}>
 											<Text style={style.inputHeader}>Store Name:</Text>
-											<TextInput style={style.input} onChangeText={(storeName) => setStorename(storeName)} value={storeName}/>
+											<TextInput style={style.input} onChangeText={(storeName) => setStorename(storeName)} value={storeName} autoCorrect={false}/>
 										</View>
 										<View style={style.inputContainer}>
 											<Text style={style.inputHeader}>Store Phone number:</Text>
-											<TextInput style={style.input} onChangeText={(phonenumber) => setPhonenumber(phonenumber)} value={phonenumber} keyboardType="numeric"/>
+											<TextInput style={style.input} onChangeText={(phonenumber) => setPhonenumber(phonenumber)} value={phonenumber} keyboardType="numeric" autoCorrect={false}/>
 										</View>
 										<View style={style.inputContainer}>
 											<Text style={style.inputHeader}>Address #1:</Text>
-											<TextInput style={style.input} onChangeText={(addressOne) => setAddressone(addressOne)} value={addressOne} keyboardType="numeric"/>
+											<TextInput style={style.input} onChangeText={(addressOne) => setAddressone(addressOne)} value={addressOne} keyboardType="numeric" autoCorrect={false}/>
 										</View>
 										<View style={style.inputContainer}>
 											<Text style={style.inputHeader}>Address #2:</Text>
-											<TextInput style={style.input} onChangeText={(addressTwo) => setAddresstwo(addressTwo)} value={addressTwo} keyboardType="numeric"/>
+											<TextInput style={style.input} onChangeText={(addressTwo) => setAddresstwo(addressTwo)} value={addressTwo} keyboardType="numeric" autoCorrect={false}/>
 										</View>
 										<View style={style.inputContainer}>
 											<Text style={style.inputHeader}>City:</Text>
-											<TextInput style={style.input} onChangeText={(city) => setCity(city)} value={city} keyboardType="numeric"/>
+											<TextInput style={style.input} onChangeText={(city) => setCity(city)} value={city} keyboardType="numeric" autoCorrect={false}/>
 										</View>
 										<View style={style.inputContainer}>
 											<Text style={style.inputHeader}>Province:</Text>
-											<TextInput style={style.input} onChangeText={(province) => setProvince(province)} value={province} keyboardType="numeric"/>
+											<TextInput style={style.input} onChangeText={(province) => setProvince(province)} value={province} keyboardType="numeric" autoCorrect={false}/>
 										</View>
 										<View style={style.inputContainer}>
 											<Text style={style.inputHeader}>Postal Code:</Text>
-											<TextInput style={style.input} onChangeText={(postalcode) => setPostalcode(postalcode)} value={postalcode} keyboardType="numeric"/>
+											<TextInput style={style.input} onChangeText={(postalcode) => setPostalcode(postalcode)} value={postalcode} keyboardType="numeric" autoCorrect={false}/>
 										</View>
 
 										<View style={style.cameraContainer}>
@@ -930,7 +968,7 @@ export default function settings({ navigation }) {
 									<TextInput style={style.formInputInput} onChangeText={(number) => setAccountform({
 										...accountForm,
 										cellnumber: number
-									})} value={accountForm.cellnumber}/>
+									})} value={accountForm.cellnumber} autoCorrect={false}/>
 								</View>
 
 								<View style={style.formInputField}>
@@ -938,7 +976,7 @@ export default function settings({ navigation }) {
 									<TextInput style={style.formInputInput} secureTextEntry={true} onChangeText={(password) => setAccountform({
 										...accountForm,
 										password: password
-									})} value={accountForm.password}/>
+									})} value={accountForm.password} autoCorrect={false}/>
 								</View>
 
 								<View style={style.formInputField}>
@@ -946,7 +984,7 @@ export default function settings({ navigation }) {
 									<TextInput style={style.formInputInput} secureTextEntry={true} onChangeText={(password) => setAccountform({
 										...accountForm,
 										confirmPassword: password
-									})} value={accountForm.confirmPassword}/>
+									})} value={accountForm.confirmPassword} autoCorrect={false}/>
 								</View>
 
 								{accountForm.errorMsg ? <Text style={style.errorMsg}>{accountForm.errorMsg}</Text> : null}
@@ -1002,28 +1040,28 @@ export default function settings({ navigation }) {
 									<TextInput style={style.formInputInput} onChangeText={(holder) => setBankaccountform({
 										...bankAccountForm,
 										accountHolderName: holder.toString()
-									})} value={bankAccountForm.accountHolderName}/>
+									})} value={bankAccountForm.accountHolderName} autoCorrect={false}/>
 								</View>
 								<View style={style.formInputField}>
 									<Text style={style.formInputHeader}>Account Number</Text>
 									<TextInput style={style.formInputInput} onChangeText={(number) => setBankaccountform({
 										...bankAccountForm,
 										accountNumber: number.toString()
-									})} value={bankAccountForm.accountNumber} placeholder={bankAccountForm.placeholder}/>
+									})} value={bankAccountForm.accountNumber} placeholder={bankAccountForm.placeholder} autoCorrect={false}/>
 								</View>
 								<View style={style.formInputField}>
 									<Text style={style.formInputHeader}>Institution Number</Text>
 									<TextInput style={style.formInputInput} onChangeText={(number) => setBankaccountform({
 										...bankAccountForm,
 										institutionNumber: number.toString()
-									})} value={bankAccountForm.institutionNumber}/>
+									})} value={bankAccountForm.institutionNumber} autoCorrect={false}/>
 								</View>
 								<View style={style.formInputField}>
 									<Text style={style.formInputHeader}>Transit Number</Text>
 									<TextInput style={style.formInputInput} onChangeText={(number) => setBankaccountform({
 										...bankAccountForm,
 										transitNumber: number.toString()
-									})} value={bankAccountForm.transitNumber}/>
+									})} value={bankAccountForm.transitNumber} autoCorrect={false}/>
 								</View>
 
 								{bankAccountForm.errorMsg ? <Text style={style.errorMsg}>{bankAccountForm.errorMsg}</Text> : null}
@@ -1051,7 +1089,7 @@ export default function settings({ navigation }) {
 
 const style = StyleSheet.create({
 	box: { alignItems: 'center', height: '100%', width: '100%' },
-	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, margin: 20, padding: 5, width: 100 },
+	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, height: 34, margin: 20, padding: 5, width: 100 },
 	backHeader: { fontFamily: 'appFont', fontSize: 20 },
 	boxHeader: { fontFamily: 'appFont', fontSize: 50, textAlign: 'center' },
 	header: { fontFamily: 'appFont', fontSize: 20, marginTop: 100, textAlign: 'center' },

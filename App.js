@@ -1,7 +1,7 @@
 import 'react-native-gesture-handler';
 import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { AsyncStorage, Text, View, TouchableOpacity, StyleSheet, LogBox } from 'react-native';
 import * as Font from 'expo-font';
 
@@ -34,7 +34,7 @@ import Menu from './src/pages/menu'
 
 import Settings from './src/pages/settings'
 
-const Stack = createStackNavigator();
+const Stack = createNativeStackNavigator();
 
 export default function App() {
     const [loaded] = Font.useFonts({ appFont: require('./assets/Chilanka-Regular.ttf') });
@@ -113,7 +113,7 @@ export default function App() {
                                 </TouchableOpacity>
                             )
                         })}/>
-                        <Stack.Screen name="menu" component={Menu} options={({ navigation, route }) => ({
+                        <Stack.Screen name="menu" component={Menu} disableMode={false} options={({ navigation, route }) => ({
                             headerTitle: () => (
                                 <View>
                                     <Text style={{ fontSize: 20, fontWeight: 'bold' }}>Edit Menu

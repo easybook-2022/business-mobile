@@ -29,11 +29,10 @@ export default function addservice(props) {
 	const [errorMsg, setErrormsg] = useState('')
 
 	const addTheNewService = async() => {
-		const ownerid = await AsyncStorage.getItem("ownerid")
 		const locationid = await AsyncStorage.getItem("locationid")
 
 		if (name && image.uri && price && duration) {
-			const data = { ownerid, locationid, menuid, name, info, image, price, duration }
+			const data = { locationid, menuid, name, info, image, price, duration }
 
 			addNewService(data)
 				.then((res) => {
@@ -78,11 +77,10 @@ export default function addservice(props) {
 		}
 	}
 	const updateTheService = async() => {
-		const ownerid = await AsyncStorage.getItem("ownerid")
 		const locationid = await AsyncStorage.getItem("locationid")
 
 		if (name && image.uri && price && duration) {
-			const data = { ownerid, locationid, menuid, name, info, image, price, duration }
+			const data = { locationid, menuid, serviceid, name, info, image, price, duration }
 
 			updateService(data)
 				.then((res) => {

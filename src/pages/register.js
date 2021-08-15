@@ -51,17 +51,17 @@ export default function register({ navigation }) {
 				<View style={style.inputsBox}>
 					<View style={style.inputContainer}>
 						<Text style={style.inputHeader}>Phone number:</Text>
-						<TextInput style={style.input} onChangeText={(phonenumber) => setPhonenumber(phonenumber)} value={phonenumber} keyboardType="numeric"/>
+						<TextInput style={style.input} onChangeText={(phonenumber) => setPhonenumber(phonenumber)} value={phonenumber} keyboardType="numeric" autoCorrect={false}/>
 					</View>
 
 					<View style={style.inputContainer}>
 						<Text style={style.inputHeader}>Password:</Text>
-						<TextInput style={style.input} secureTextEntry={true} onChangeText={(password) => setPassword(password)} value={password}/>
+						<TextInput style={style.input} secureTextEntry={true} onChangeText={(password) => setPassword(password)} value={password} autoCorrect={false}/>
 					</View>
 
 					<View style={style.inputContainer}>
 						<Text style={style.inputHeader}>Confirm Password:</Text>
-						<TextInput style={style.input} secureTextEntry={true} onChangeText={(password) => setConfirmpassword(password)} value={confirmPassword}/>
+						<TextInput style={style.input} secureTextEntry={true} onChangeText={(password) => setConfirmpassword(password)} value={confirmPassword} autoCorrect={false}/>
 					</View>
 
 					<Text style={style.errorMsg}>{errorMsg}</Text>

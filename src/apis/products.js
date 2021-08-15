@@ -1,15 +1,15 @@
 import axios from 'axios'
-import { LOCAL_API_URL, WIFI_API_URL } from "@env"
+import { local_api_url, wifi_api_url } from '../../assets/info'
 
 export const getProducts = data => {
 	return axios.post(
-		`${WIFI_API_URL}/products/get_products`,
+		`${wifi_api_url}/products/get_products`,
 		data
 	)
 }
 
 export const getProductInfo = id => {
-	return axios.get(`${WIFI_API_URL}/products/get_product_info/${id}`)
+	return axios.get(`${wifi_api_url}/products/get_product_info/${id}`)
 }
 
 export const addNewProduct = data => {
@@ -27,7 +27,7 @@ export const addNewProduct = data => {
 	form.append("price", data.price)
 
 	return axios.post(
-		`${WIFI_API_URL}/products/add_product`,
+		`${wifi_api_url}/products/add_product`,
 		form,
 		{ headers: {
 			'Content-Type': 'multipart/form-data'
@@ -40,8 +40,8 @@ export const updateProduct = data => {
 
 	form.append("ownerid", data.ownerid)
 	form.append("locationid", data.locationid)
-	form.append("productid", data.productid)
 	form.append("menuid", data.menuid)
+	form.append("productid", data.productid)
 	form.append("name", data.name)
 	form.append("info", data.info)
 	form.append("image", { uri: data.image.uri, name: data.image.name })
@@ -51,7 +51,7 @@ export const updateProduct = data => {
 	form.append("price", data.price)
 
 	return axios.post(
-		`${WIFI_API_URL}/products/update_product`,
+		`${wifi_api_url}/products/update_product`,
 		form,
 		{ headers: {
 			'Content-Type': 'multipart/form-data'
@@ -60,5 +60,5 @@ export const updateProduct = data => {
 }
 
 export const removeProduct = (id) => {
-	return axios.post(`${WIFI_API_URL}/products/remove_product/${id}`)
+	return axios.post(`${wifi_api_url}/products/remove_product/${id}`)
 }

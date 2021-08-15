@@ -1,4 +1,4 @@
-rootProject.name = 'EasyGO (Services)'
+rootProject.name = 'easygo-business'
 
 apply from: '../node_modules/react-native-unimodules/gradle.groovy'
 includeUnimodulesProjects()

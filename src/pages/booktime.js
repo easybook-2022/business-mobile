@@ -10,7 +10,7 @@ const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - (offsetPadding * 2)
 
 export default function booktime(props) {
-	const { appointmentid } = props.route.params
+	const { appointmentid, refetch } = props.route.params
 
 	const [name, setName] = useState('')
 	const [serviceId, setServiceid] = useState(0)
@@ -100,7 +100,7 @@ export default function booktime(props) {
 				alert(error.message)
 			})
 	}
-
+	
 	useEffect(() => {
 		getTheAppointmentInfo()
 	}, [])
@@ -141,8 +141,8 @@ export default function booktime(props) {
 									<>
 										<Text style={style.confirmHeader}>
 											<Text style={{ fontFamily: 'appFont' }}>Select this time for client</Text>
-											{'\n'} at {' ' + confirm.timeheader + '\n for '}
-											{confirm.service}
+											{'\n'} at {' ' + confirm.timeheader + '\n for \n'}
+											<Text style={{ fontFamily: 'appFont', fontSize: 30 }}>{confirm.service}</Text>
 										</Text>
 
 										<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
@@ -164,7 +164,8 @@ export default function booktime(props) {
 											<Text style={style.requestedHeaderInfo}>You will get notified by the client</Text>
 
 											<TouchableOpacity style={style.requestedClose} onPress={() => {
-												setConfirm({ ...confirm, show: false, requested: false })
+												setConfirm({ ...confirm, show: false, requested: false, errormsg: "" })
+												refetch()
 												props.navigation.goBack()
 											}}>
 												<Text style={style.requestedCloseHeader}>Ok</Text>
@@ -198,8 +199,8 @@ const style = StyleSheet.create({
 	confirmContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },
 	confirmHeader: { fontSize: 20, fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
 	confirmOptions: { flexDirection: 'row' },
-	confirmOption: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
-	confirmOptionHeader: { },
+	confirmOption: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 60 },
+	confirmOptionHeader: { textAlign: 'center' },
 	requestedHeaders: { alignItems: 'center', paddingHorizontal: 10 },
 	requestedClose: { borderRadius: 5, borderStyle: 'solid', borderWidth: 1, marginVertical: 10, padding: 5, width: 100 },
 	requestedCloseHeader: { fontFamily: 'appFont', fontSize: 20, textAlign: 'center' },

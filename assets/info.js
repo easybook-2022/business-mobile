@@ -1,5 +1,3 @@
-import { LOCAL_API_URL, WIFI_API_URL } from "@env"
-
 const stores = [
 	{ id: 0, storeName: "TopCut", storeType: "hair", phonenumber: "4162037200", addressOne: "9 King St E", addressTwo: "", city: "Toronto", province: "ON", postalcode: "M5C 3C5" },
 	{ id: 1, storeName: "Pho House", storeType: "restaurant", phonenumber: "4167787888", addressOne: "625 Gerrard St E", addressTwo: "", city: "Toronto", province: "ON", postalcode: "M4M 1Y2" },
@@ -31,6 +29,8 @@ const bankAccount = [
 const { storeName, storeType, phonenumber, addressOne, addressTwo, city, province, postalcode } = stores[5]
 const { accountNumber, countryCode, currency, routingNumber, accountHolderName } = bankAccount[0]
 
+export const local_api_url = "http://localhost:5000"
+export const wifi_api_url = "http://192.168.0.16:5000"
 export const userInfo = {
 	cellnumber: phonenumber,
 	password: "password",
@@ -42,5 +42,6 @@ export const userInfo = {
 	currency, routingNumber, 
 	accountHolderName
 }
+export const stripe_key = "sk_test_lft1B76yZfF2oEtD5rI3y8dz"
 
-export const logo_url = WIFI_API_URL + "/static/"
+export const logo_url = wifi_api_url + "/static/"

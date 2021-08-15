@@ -31,7 +31,6 @@ export default function addproduct(props) {
 	const [errorMsg, setErrormsg] = useState('')
 	
 	const addTheNewProduct = async() => {
-		const ownerid = await AsyncStorage.getItem("ownerid")
 		const locationid = await AsyncStorage.getItem("locationid")
 		const sizenames = { "small": false, "medium": false, "large": false, "extra large": false }
 
@@ -106,7 +105,7 @@ export default function addproduct(props) {
 				delete size['key']
 			})
 
-			const data = { ownerid, locationid, menuid, name, info, image, options, others, sizes, price: sizes.length > 0 ? "" : price }
+			const data = { locationid, menuid, name, info, image, options, others, sizes, price: sizes.length > 0 ? "" : price }
 
 			addNewProduct(data)
 				.then((res) => {
@@ -145,7 +144,6 @@ export default function addproduct(props) {
 		}
 	}
 	const updateTheProduct = async() => {
-		const ownerid = await AsyncStorage.getItem("ownerid")
 		const locationid = await AsyncStorage.getItem("locationid")
 		const sizenames = { "small": false, "medium": false, "large": false, "extra large": false }
 
@@ -220,7 +218,7 @@ export default function addproduct(props) {
 				delete size['key']
 			})
 
-			const data = { ownerid, locationid, menuid, name, info, image, options, others, sizes, price: sizes.length > 0 ? "" : price }
+			const data = { locationid, menuid, productid, name, info, image, options, others, sizes, price: sizes.length > 0 ? "" : price }
 
 			updateProduct(data)
 				.then((res) => {
@@ -376,8 +374,8 @@ export default function addproduct(props) {
 			<View style={style.box}>
 				<Text style={style.addHeader}>Enter product info</Text>
 
-				<TextInput style={style.addInput} placeholder="Product name" placeholderTextColor="rgba(127, 127, 127, 0.5)" onChangeText={(name) => setName(name)} value={name}/>
-				<TextInput style={style.infoInput} multiline={true} placeholder="Anything you want to say about this product (optional)" placeholderTextColor="rgba(127, 127, 127, 0.5)" onChangeText={(info) => setInfo(info)} value={info}/>
+				<TextInput style={style.addInput} placeholder="Product name" placeholderTextColor="rgba(127, 127, 127, 0.5)" onChangeText={(name) => setName(name)} value={name} autoCorrect={false}/>
+				<TextInput style={style.infoInput} multiline={true} placeholder="Anything you want to say about this product (optional)" placeholderTextColor="rgba(127, 127, 127, 0.5)" onChangeText={(info) => setInfo(info)} value={info} autoCorrect={false}/>
 
 				<View style={style.cameraContainer}>
 					<Text style={style.cameraHeader}>Product photo</Text>
@@ -435,7 +433,7 @@ export default function addproduct(props) {
 								newOptions[index].text = text
 
 								setOptions(newOptions)
-							}}/>
+							}} autoCorrect={false}/>
 							<View style={style.optionTypesBox}>
 								<Text style={style.optionTypesHeader}>Type:</Text>
 								<View style={style.optionTypes}>
@@ -497,21 +495,21 @@ export default function addproduct(props) {
 								newOthers[index].name = name.toString()
 
 								setOthers(newOthers)
-							}}/>
+							}} autoCorrect={false}/>
 							<TextInput style={style.otherInput} placeholder="eg. Tapioca" value={other.input} onChangeText={(input) => {
 								let newOthers = [...others]
 
 								newOthers[index].input = input.toString()
 
 								setOthers(newOthers)
-							}}/>
+							}} autoCorrect={false}/>
 							<TextInput style={style.otherPrice} placeholder="eg. 0.50" value={other.price} onChangeText={(price) => {
 								let newOthers = [...others]
 
 								newOthers[index].price = price.toString()
 
 								setOthers(newOthers)
-							}}/>
+							}} autoCorrect={false}/>
 						</View>
 					))}
 				</View>
@@ -550,7 +548,7 @@ export default function addproduct(props) {
 								newSizes[index].price = price.toString()
 
 								setSizes(newSizes)
-							}}/>
+							}} autoCorrect={false}/>
 							<View style={style.sizeTypesBox}>
 								<Text style={style.sizeTypesHeader}>Size:</Text>
 								<View style={style.sizeTypes}>
@@ -574,7 +572,7 @@ export default function addproduct(props) {
 				{sizes.length == 0 && (
 					<View style={style.priceBox}>
 						<Text style={style.priceHeader}>Product price</Text>
-						<TextInput style={style.priceInput} placeholder="4.99" onChangeText={(price) => setPrice(price.toString())} value={price.toString()}/>
+						<TextInput style={style.priceInput} placeholder="4.99" onChangeText={(price) => setPrice(price.toString())} value={price.toString()} autoCorrect={false}/>
 					</View>
 				)}
 

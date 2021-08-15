@@ -13,7 +13,7 @@ export default function login({ navigation }) {
 	const [phonenumber, setPhonenumber] = useState(userInfo.cellnumber)
 	const [password, setPassword] = useState(userInfo.password)
 	const [errorMsg, setErrormsg] = useState('')
-
+	
 	const login = () => {
 		const data = { cellnumber: phonenumber, password: password }
 
@@ -58,12 +58,12 @@ export default function login({ navigation }) {
 				<View style={style.inputsBox}>
 					<View style={style.inputContainer}>
 						<Text style={style.inputHeader}>Phone number:</Text>
-						<TextInput style={style.input} onChangeText={(phonenumber) => setPhonenumber(phonenumber)} value={phonenumber} keyboardType="numeric"/>
+						<TextInput style={style.input} onChangeText={(phonenumber) => setPhonenumber(phonenumber)} value={phonenumber} keyboardType="numeric" autoCorrect={false}/>
 					</View>
 
 					<View style={style.inputContainer}>
 						<Text style={style.inputHeader}>Password:</Text>
-						<TextInput style={style.input} secureEntry={true} onChangeText={(password) => setPassword(password)} secureTextEntry={true} value={password}/>
+						<TextInput style={style.input} secureEntry={true} onChangeText={(password) => setPassword(password)} secureTextEntry={true} value={password} autoCorrect={false}/>
 					</View>
 
 					<Text style={style.errorMsg}>{errorMsg}</Text>

@@ -1,15 +1,15 @@
 import axios from 'axios'
-import { LOCAL_API_URL, WIFI_API_URL } from "@env"
+import { local_api_url, wifi_api_url } from '../../assets/info'
 
 export const getMenus = (data) => {
 	return axios.post(
-		`${WIFI_API_URL}/menus/get_menus`,
+		`${wifi_api_url}/menus/get_menus`,
 		data
 	)
 }
 
 export const getRequests = () => {
-	return axios.get(`${WIFI_API_URL}/menus/get_requests`)
+	return axios.get(`${wifi_api_url}/menus/get_requests`)
 }
 
 export const addNewMenu = (data) => {
@@ -23,7 +23,7 @@ export const addNewMenu = (data) => {
 	form.append("image", { uri: data.image.uri, name: data.image.name })
 
 	return axios.post(
-		`${WIFI_API_URL}/menus/add_menu`,
+		`${wifi_api_url}/menus/add_menu`,
 		form,
 		{ headers: {
 			'Content-Type': 'multipart/form-data'
@@ -32,11 +32,11 @@ export const addNewMenu = (data) => {
 }
 
 export const removeMenu = id => {
-	return axios.get(`${WIFI_API_URL}/menus/remove_menu/${id}`)
+	return axios.get(`${wifi_api_url}/menus/remove_menu/${id}`)
 }
 
 export const editMenu = id => {
-	return axios.get(`${WIFI_API_URL}/menus/edit_menu/${id}`)
+	return axios.get(`${wifi_api_url}/menus/edit_menu/${id}`)
 }
 
 export const saveMenu = data => {
@@ -48,7 +48,7 @@ export const saveMenu = data => {
 	form.append("image", { uri: data.image.uri, name: data.image.name })
 
 	return axios.post(
-		`${WIFI_API_URL}/menus/save_menu`,
+		`${wifi_api_url}/menus/save_menu`,
 		form,
 		{ headers: { 
 			'Content-Type': 'multipart/form-data' 

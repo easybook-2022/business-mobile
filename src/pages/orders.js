@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { AsyncStorage, ActivityIndicator, Dimensions, ScrollView, View, FlatList, Text, TextInput, Image, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import { AsyncStorage, ActivityIndicator, Dimensions, ScrollView, View, FlatList, Text, Image, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import Constants from 'expo-constants';
 import { logo_url } from '../../assets/info'
 import { getScheduleInfo, getOrders, deliverRound } from '../apis/schedules'
@@ -10,7 +10,7 @@ const screenHeight = height - offsetPadding
 
 export default function orders(props) {
 	const { scheduleid } = props.route.params
-
+	
 	const [name, setName] = useState('')
 	const [table, setTable] = useState('')
 	const [timeStr, setTimestr] = useState('')
