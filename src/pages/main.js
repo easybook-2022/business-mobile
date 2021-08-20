@@ -448,7 +448,7 @@ export default function main(props) {
 													{item.diners} {item.diners > 1 ? 'people' : 'person'}
 												</Text>
 
-												{'\n'}for table: <Text style={{ fontFamily: 'Arial', fontWeight: 'bold' }}>{item.table}</Text>
+												{'\n'}for table: <Text style={{ fontFamily: 'Arial', fontWeight: 'bold' }}>#{item.table}</Text>
 											</Text>
 										</View>
 
@@ -534,7 +534,7 @@ export default function main(props) {
 				<Modal transparent={true}>
 					<View style={style.acceptRequestContainer}>
 						<View style={style.acceptRequestBox}>
-							<Text style={style.acceptRequestHeader}>Tell the diner the table number?</Text>
+							<Text style={style.acceptRequestHeader}>Tell the diner the table #?</Text>
 
 							<TextInput placeholder="What table will be available" style={style.acceptRequestInput} onChangeText={(tablenum) => {
 								setAcceptrequestinfo({

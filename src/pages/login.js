@@ -13,7 +13,7 @@ export default function login({ navigation }) {
 	const [phonenumber, setPhonenumber] = useState(userInfo.cellnumber)
 	const [password, setPassword] = useState(userInfo.password)
 	const [errorMsg, setErrormsg] = useState('')
-	
+
 	const login = () => {
 		const data = { cellnumber: phonenumber, password: password }
 
@@ -50,57 +50,59 @@ export default function login({ navigation }) {
 	}
 
 	return (
-		<View style={{ paddingVertical: offsetPadding }}>
-			<View style={style.box}>
-				<Image style={style.background} source={require('../../assets/auto-bg.png')}/>
-				<Text style={style.boxHeader}>Log-In</Text>
+		<View style={style.login}>
+			<View style={{ paddingVertical: offsetPadding }}>
+				<View style={style.box}>
+					<Text style={style.boxHeader}>Log-In</Text>
 
-				<View style={style.inputsBox}>
-					<View style={style.inputContainer}>
-						<Text style={style.inputHeader}>Phone number:</Text>
-						<TextInput style={style.input} onChangeText={(phonenumber) => setPhonenumber(phonenumber)} value={phonenumber} keyboardType="numeric" autoCorrect={false}/>
+					<View style={style.inputsBox}>
+						<View style={style.inputContainer}>
+							<Text style={style.inputHeader}>Phone number:</Text>
+							<TextInput style={style.input} onChangeText={(phonenumber) => setPhonenumber(phonenumber)} value={phonenumber} keyboardType="numeric" autoCorrect={false}/>
+						</View>
+
+						<View style={style.inputContainer}>
+							<Text style={style.inputHeader}>Password:</Text>
+							<TextInput style={style.input} secureEntry={true} onChangeText={(password) => setPassword(password)} secureTextEntry={true} value={password} autoCorrect={false}/>
+						</View>
+
+						<Text style={style.errorMsg}>{errorMsg}</Text>
 					</View>
 
-					<View style={style.inputContainer}>
-						<Text style={style.inputHeader}>Password:</Text>
-						<TextInput style={style.input} secureEntry={true} onChangeText={(password) => setPassword(password)} secureTextEntry={true} value={password} autoCorrect={false}/>
+					<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+						<View style={style.options}>
+							<TouchableOpacity style={style.option} onPress={() => {
+								navigation.dispatch(
+									CommonActions.reset({
+										index: 1,
+										routes: [{ name: 'register' }]
+									})
+								);
+							}}>
+								<Text style={style.optionHeader}>Don't have an account ? Sign up</Text>
+							</TouchableOpacity>
+						</View>
 					</View>
 
-					<Text style={style.errorMsg}>{errorMsg}</Text>
+					<TouchableOpacity style={style.submit} onPress={login}>
+						<Text style={style.submitHeader}>Sign-In</Text>
+					</TouchableOpacity>
 				</View>
-
-				<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-					<View style={style.options}>
-						<TouchableOpacity style={style.option} onPress={() => {
-							navigation.dispatch(
-								CommonActions.reset({
-									index: 1,
-									routes: [{ name: 'register' }]
-								})
-							);
-						}}>
-							<Text style={style.optionHeader}>Don't have an account ? Sign up</Text>
-						</TouchableOpacity>
-					</View>
-				</View>
-
-				<TouchableOpacity style={style.submit} onPress={login}>
-					<Text style={style.submitHeader}>Sign-In</Text>
-				</TouchableOpacity>
 			</View>
 		</View>
 	);
 }
 
 const style = StyleSheet.create({
+	login: { backgroundColor: '#0288FF', height: '100%', width: '100%' },
 	box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 	background: { height: '100%', position: 'absolute', width: '100%' },
 	boxHeader: { color: 'white', fontFamily: 'appFont', fontSize: 50, fontWeight: 'bold', paddingVertical: 30 },
 	
-	inputsBox: { backgroundColor: 'white', paddingHorizontal: 20, width: '80%' },
+	inputsBox: { backgroundColor: 'rgba(2, 136, 255, 0.1)', paddingHorizontal: 20, width: '80%' },
 	inputContainer: { marginVertical: 5 },
 	inputHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold' },
-	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: 20, padding: 5 },
+	input: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: 20, padding: 10 },
 	errorMsg: { color: 'red', fontWeight: 'bold', marginVertical: 20, textAlign: 'center' },
 	
 	options: { flexDirection: 'row' },

@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "easygo-business",
-    "slug": "easygo-business",
+    "name": "EasyGO(Service)",
+    "slug": "easygo-service",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
