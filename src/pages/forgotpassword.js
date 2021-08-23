@@ -2,22 +2,20 @@ import React, { useState } from 'react';
 import { AsyncStorage, Dimensions, View, Text, TextInput, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
-import { loginUser } from '../apis/owners'
+import { getCode } from '../apis/owners'
 import { userInfo } from '../../assets/info'
 
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - (offsetPadding * 2)
 
-export default function login({ navigation }) {
-	const [phonenumber, setPhonenumber] = useState(userInfo.cellnumber)
-	const [password, setPassword] = useState(userInfo.password)
+export default function forgotpassword({ navigation }) {
+	const [info, setInfo] = useState({ phonenumber: userInfo.cellnumber, resetcode: '', sent: false })
+	const [code, setCode] = useState('')
 	const [errorMsg, setErrormsg] = useState('')
 
-	const login = () => {
-		const data = { cellnumber: phonenumber, password: password }
-
-		loginUser(data)
+	const getTheCode = () => {
+		getCode(info.phonenumber)
 			.then((res) => {
 				if (res.status == 200) {
 					if (!res.data.errormsg) {
@@ -31,40 +29,44 @@ export default function login({ navigation }) {
 			})
 			.then((res) => {
 				if (res) {
-					const { ownerid, locationid, locationtype, msg } = res
+					const { code } = res
 
-					AsyncStorage.setItem("ownerid", ownerid.toString())
-					AsyncStorage.setItem("locationid", locationid ? locationid.toString() : "")
-					AsyncStorage.setItem("locationtype", locationtype ? locationtype : "")
-					AsyncStorage.setItem("phase", msg)
-					
-					navigation.dispatch(
-						CommonActions.reset({
-							index: 0,
-							routes: [{ name: msg }]
-						})
-					)
+					setInfo({ ...info, sent: true })
+					setCode(code)
 				}
 			})
 			.catch((error) => console.log(error))
 	}
+	const done = () => {
+		const { resetcode } = info
+
+		if (code == resetcode) {
+			navigation.navigate("resetpassword", { cellnumber: info.phonenumber })
+		} else {
+			setErrormsg("Reset code is wrong")
+		}
+	}
 
 	return (
-		<View style={style.login}>
+		<View style={style.forgotpassword}>
 			<View style={{ paddingVertical: offsetPadding }}>
 				<View style={style.box}>
-					<Text style={style.boxHeader}>Log-In</Text>
+					<Text style={style.boxHeader}>Forgot Password</Text>
 
 					<View style={style.inputsBox}>
-						<View style={style.inputContainer}>
-							<Text style={style.inputHeader}>Phone number:</Text>
-							<TextInput style={style.input} onChangeText={(phonenumber) => setPhonenumber(phonenumber)} value={phonenumber} keyboardType="numeric" autoCorrect={false}/>
-						</View>
+						{!info.sent ? 
+							<View style={style.inputContainer}>
+								<Text style={style.inputHeader}>Phone number:</Text>
+								<TextInput style={style.input} onChangeText={(phonenumber) => setInfo({ ...info, phonenumber })} value={info.phonenumber} keyboardType="numeric" autoCorrect={false}/>
+							</View>
+							:
+							<View style={style.inputContainer}>
+								<Text style={style.resetCodeHeader}>Please enter the reset code sent your phone</Text>
 
-						<View style={style.inputContainer}>
-							<Text style={style.inputHeader}>Password:</Text>
-							<TextInput style={style.input} secureEntry={true} onChangeText={(password) => setPassword(password)} secureTextEntry={true} value={password} autoCorrect={false}/>
-						</View>
+								<Text style={style.inputHeader}>Reset Code:</Text>
+								<TextInput style={style.input} onChangeText={(resetcode) => setInfo({ ...info, resetcode })} keyboardType="numeric" value={info.resetcode} autoCorrect={false}/>
+							</View>
+						}
 
 						<Text style={style.errorMsg}>{errorMsg}</Text>
 					</View>
@@ -81,22 +83,30 @@ export default function login({ navigation }) {
 							}}>
 								<Text style={style.optionHeader}>Don't have an account ? Sign up</Text>
 							</TouchableOpacity>
-							<TouchableOpacity style={style.option} onPress={() => {
-								navigation.dispatch(
-									CommonActions.reset({
-										index: 1,
-										routes: [{ name: 'forgotpassword' }]
-									})
-								)
-							}}>
-								<Text style={style.optionHeader}>Forgot your password ? Reset here</Text>
-							</TouchableOpacity>
+							<View style={style.options}>
+								<TouchableOpacity style={style.option} onPress={() => {
+									navigation.dispatch(
+										CommonActions.reset({
+											index: 1,
+											routes: [{ name: 'login' }]
+										})
+									);
+								}}>
+									<Text style={style.optionHeader}>Already a member ? Log in</Text>
+								</TouchableOpacity>
+							</View>
 						</View>
 					</View>
 
-					<TouchableOpacity style={style.submit} onPress={login}>
-						<Text style={style.submitHeader}>Sign-In</Text>
-					</TouchableOpacity>
+					{!info.sent ? 
+						<TouchableOpacity style={style.submit} onPress={() => getTheCode()}>
+							<Text style={style.submitHeader}>Get Code</Text>
+						</TouchableOpacity>
+						:
+						<TouchableOpacity style={style.submit} onPress={() => done()}>
+							<Text style={style.submitHeader}>Done</Text>
+						</TouchableOpacity>
+					}
 				</View>
 			</View>
 		</View>
@@ -104,10 +114,10 @@ export default function login({ navigation }) {
 }
 
 const style = StyleSheet.create({
-	login: { backgroundColor: '#0288FF', height: '100%', width: '100%' },
+	forgotpassword: { backgroundColor: '#0288FF', height: '100%', width: '100%' },
 	box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 	background: { height: '100%', position: 'absolute', width: '100%' },
-	boxHeader: { color: 'white', fontFamily: 'appFont', fontSize: 50, fontWeight: 'bold', paddingVertical: 30 },
+	boxHeader: { color: 'white', fontFamily: 'appFont', fontSize: 30, fontWeight: 'bold', paddingVertical: 30 },
 	
 	inputsBox: { backgroundColor: 'rgba(2, 136, 255, 0.1)', paddingHorizontal: 20, width: '80%' },
 	inputContainer: { marginVertical: 5 },

@@ -71,3 +71,14 @@ export const deleteTheBankAccount = data => {
 		data
 	)
 }
+
+export const getCode = phonenumber => {
+	return axios.get(`${wifi_api_url}/owners/get_reset_code/${phonenumber}`)
+}
+
+export const resetPassword = data => {
+	return axios.post(
+		`${wifi_api_url}/owners/reset_password`,
+		data
+	)
+}

@@ -24,7 +24,9 @@ const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - (offsetPadding * 2)
 
-export default function settings({ navigation }) {
+export default function settings(props) {
+	const required = props.route.params ? props.route.params.required : ""
+
 	const [ownerid, setOwnerid] = useState('')
 	const [permission, setPermission] = useState(null);
 	const [camComp, setCamcomp] = useState(null)
@@ -313,6 +315,25 @@ export default function settings({ navigation }) {
 			})
 	}
 
+	const openBankAccountForm = () => {
+		setBankaccountform({
+			...bankAccountForm,
+			show: true,
+			id: '',
+			type: 'add',
+			accountNumber: accountNumber, 
+			countryCode: countryCode,
+			currency: currency,
+
+			// routing number: '0' + institution + transit number
+			routingNumber: routingNumber,
+			institutionNumber: routingNumber.substr(1, 3),
+			placeholder: '',
+			transitNumber: routingNumber.substr(4),
+
+			accountHolderName: accountHolderName
+		})
+	}
 	const addNewBankAccount = async() => {
 		const locationid = await AsyncStorage.getItem("locationid")
 		const { accountHolderName, accountNumber, transitNumber, routingNumber } = bankAccountForm
@@ -667,12 +688,17 @@ export default function settings({ navigation }) {
 		getTheLocationProfile()
 		getAllAccounts()
 		getAllBankaccounts()
+
 		openCamera()
+
+		if (required == "bankaccount") {
+			openBankAccountForm()
+		}
 	}, [])
 
 	return (
 		<View style={{ paddingVertical: offsetPadding }}>
-			<TouchableOpacity style={style.back} onPress={() => navigation.goBack()}>
+			<TouchableOpacity style={style.back} onPress={() => props.navigation.goBack()}>
 				<Text style={style.backHeader}>Back</Text>
 			</TouchableOpacity>
 
@@ -886,25 +912,7 @@ export default function settings({ navigation }) {
 								<View style={style.bankaccountHolders}>
 									<Text style={style.bankaccountHolderHeader}>Bank Account(s)</Text>
 
-									<TouchableOpacity style={style.bankaccountHolderAdd} onPress={() => {
-										setBankaccountform({
-											...bankAccountForm,
-											show: true,
-											id: '',
-											type: 'add',
-											accountNumber: accountNumber, 
-											countryCode: countryCode,
-											currency: currency,
-
-											// routing number: '0' + institution + transit number
-											routingNumber: routingNumber,
-											institutionNumber: routingNumber.substr(1, 3),
-											placeholder: '',
-											transitNumber: routingNumber.substr(4),
-
-											accountHolderName: accountHolderName
-										})
-									}}>
+									<TouchableOpacity style={style.bankaccountHolderAdd} onPress={() => openBankAccountForm()}>
 										<Text>Add a bank account</Text>
 									</TouchableOpacity>
 
@@ -921,13 +929,13 @@ export default function settings({ navigation }) {
 											</View>
 											<View style={style.bankaccountActions}>
 												<TouchableOpacity style={info.default ? style.bankaccountActionDisabled : style.bankaccountAction} disabled={info.default} onPress={() => useBankAccount(info.bankid)}>
-													<Text style={info.default ? style.bankaccountActionHeaderDisabled : style.bankaccountActionHeader}>Use as default</Text>
+													<Text style={info.default ? style.bankaccountActionHeaderDisabled : style.bankaccountActionHeader}>Set default</Text>
 												</TouchableOpacity>
 												<TouchableOpacity style={info.default ? style.bankaccountActionDisabled : style.bankaccountAction} disabled={info.default} onPress={() => editBankAccount(info.bankid, index)}>
-													<Text style={info.default ? style.bankaccountActionHeaderDisabled : style.bankaccountActionHeader}>Change info</Text>
+													<Text style={info.default ? style.bankaccountActionHeaderDisabled : style.bankaccountActionHeader}>Edit</Text>
 												</TouchableOpacity>
 												<TouchableOpacity style={info.default ? style.bankaccountActionDisabled : style.bankaccountAction} disabled={info.default} onPress={() => deleteBankAccount(info.bankid, index)}>
-													<Text style={info.default ? style.bankaccountActionHeaderDisabled : style.bankaccountActionHeader}>Delete</Text>
+													<Text style={info.default ? style.bankaccountActionHeaderDisabled : style.bankaccountActionHeader}>Remove</Text>
 												</TouchableOpacity>
 											</View>
 										</View>
@@ -1092,7 +1100,7 @@ const style = StyleSheet.create({
 	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, height: 34, margin: 20, padding: 5, width: 100 },
 	backHeader: { fontFamily: 'appFont', fontSize: 20 },
 	boxHeader: { fontFamily: 'appFont', fontSize: 50, textAlign: 'center' },
-	header: { fontFamily: 'appFont', fontSize: 20, marginTop: 100, textAlign: 'center' },
+	header: { fontFamily: 'appFont', fontSize: 20, marginTop: 20, textAlign: 'center' },
 
 	inputsBox: { paddingHorizontal: 20, width: '100%' },
 	inputContainer: { marginVertical: 20 },
@@ -1110,10 +1118,10 @@ const style = StyleSheet.create({
 	timeSelectionContainer: { flexDirection: 'row' },
 	timeSelection: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, flexDirection: 'row', marginHorizontal: 5 },
 	selection: { alignItems: 'center', margin: 5 },
-	selectionHeader: { fontSize: 30, textAlign: 'center' },
-	selectionDiv: { fontSize: 15, marginVertical: 29 },
+	selectionHeader: { fontSize: 20, textAlign: 'center' },
+	selectionDiv: { fontSize: 29, marginVertical: 27 },
 
-	accountHolders: { alignItems: 'center', marginHorizontal: 10, marginTop: 100 },
+	accountHolders: { alignItems: 'center', marginHorizontal: 10, marginTop: 20 },
 	accountHoldersHeader: { fontFamily: 'appFont', fontSize: 20, textAlign: 'center' },
 	accountHoldersAdd: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 3, padding: 5 },
 	account: { flexDirection: 'row', justifyContent: 'space-between', marginVertical: 10 },
@@ -1122,7 +1130,7 @@ const style = StyleSheet.create({
 	accountEditHeader: { fontSize: 20, paddingVertical: 4, textAlign: 'center', width: '50%' },
 	accountEditTouch: { alignItems: 'center', borderRadius: 2, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5 },
 
-	bankaccountHolders: { alignItems: 'center', marginHorizontal: 10, marginTop: 100 },
+	bankaccountHolders: { alignItems: 'center', marginHorizontal: 10, marginTop: 20 },
 	bankaccountHolderHeader: { fontFamily: 'appFont', fontSize: 20, textAlign: 'center' },
 	bankaccountHolderAdd: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 3, padding: 5 },
 	bankaccount: { marginVertical: 30 },
@@ -1133,18 +1141,18 @@ const style = StyleSheet.create({
 	bankaccountNumberHolder: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 5, flexDirection: 'row', justifyContent: 'space-between', padding: 5, width: '70%' },
 	bankaccountNumberHeader: { fontSize: 20, paddingVertical: 4, textAlign: 'center', width: '50%' },
 	bankaccountActions: { flexDirection: 'row', justifyContent: 'space-around' },
-	bankaccountAction: { borderRadius: 2, borderStyle: 'solid', borderWidth: 2, marginTop: 5, padding: 5, width: 100 },
-	bankaccountActionHeader: { fontSize: 12, textAlign: 'center' },
-	bankaccountActionDisabled: { backgroundColor: 'black', borderRadius: 2, borderStyle: 'solid', borderWidth: 2, marginTop: 5, padding: 5, width: 100 },
-	bankaccountActionHeaderDisabled: { color: 'white', fontSize: 12, textAlign: 'center' },
+	bankaccountAction: { borderRadius: 2, borderStyle: 'solid', borderWidth: 2, marginTop: 5, padding: 5, width: 80 },
+	bankaccountActionHeader: { fontSize: 10, textAlign: 'center' },
+	bankaccountActionDisabled: { backgroundColor: 'black', borderRadius: 2, borderStyle: 'solid', borderWidth: 2, marginTop: 5, padding: 5, width: 80 },
+	bankaccountActionHeaderDisabled: { color: 'white', fontSize: 10, textAlign: 'center' },
 
 	editButton: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 20, padding: 5, width: 300 },
 	editButtonHeader: { fontSize: 13, fontWeight: 'bold', textAlign: 'center' },
 
 	// form
 	form: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
-	formContainer: { backgroundColor: 'white', height: '80%', width: '80%' },
-	formHeader: { fontWeight: 'bold', marginVertical: 20, textAlign: 'center' },
+	formContainer: { backgroundColor: 'white', flexDirection: 'column', height: '90%', justifyContent: 'space-between', paddingVertical: 10, width: '90%' },
+	formHeader: { fontWeight: 'bold', marginVertical: 10, textAlign: 'center' },
 	formInputField: { marginBottom: 20, marginHorizontal: '10%', width: '80%' },
 	formInputHeader: { fontSize: 20, fontWeight: 'bold' },
 	formInputInput: { borderRadius: 2, borderStyle: 'solid', borderWidth: 3, padding: 5, width: '100%' },

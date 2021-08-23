@@ -542,7 +542,7 @@ export default function addproduct(props) {
 							}}>
 								<FontAwesome name="close" size={20}/>
 							</TouchableOpacity>
-							<TextInput style={style.sizeInput} placeholder="eg. 4.99" value={size.price} onChangeText={(price) => {
+							<TextInput style={style.sizeInput} placeholder="eg. 4.99" value={size.price.toString()} onChangeText={(price) => {
 								let newSizes = [...sizes]
 
 								newSizes[index].price = price.toString()
@@ -552,16 +552,20 @@ export default function addproduct(props) {
 							<View style={style.sizeTypesBox}>
 								<Text style={style.sizeTypesHeader}>Size:</Text>
 								<View style={style.sizeTypes}>
-									{["Small", "Medium", "Large", "Extra large"].map((sizeopt, sizeindex) => (
-										<TouchableOpacity key={sizeindex.toString()} style={size.name == sizeopt.toLowerCase() ? style.sizeTypeSelected : style.sizeType} onPress={() => {
-											let newSizes = [...sizes]
+									{[["Small", "Medium"], ["Large", "Extra large"]].map((row, rowindex) => (
+										<View key={rowindex.toString()} style={style.sizeTypesRow}>
+											{row.map((sizeopt, sizeindex) => (
+												<TouchableOpacity key={sizeindex.toString()} style={size.name == sizeopt.toLowerCase() ? style.sizeTypeSelected : style.sizeType} onPress={() => {
+													let newSizes = [...sizes]
 
-											newSizes[index].name = sizeopt.toLowerCase()
+													newSizes[index].name = sizeopt.toLowerCase()
 
-											setSizes(newSizes)
-										}}>
-											<Text style={size.name == sizeopt.toLowerCase() ? style.sizeTypeHeaderSelected : style.sizeTypeHeader}>{sizeopt}</Text>
-										</TouchableOpacity>
+													setSizes(newSizes)
+												}}>
+													<Text style={size.name == sizeopt.toLowerCase() ? style.sizeTypeHeaderSelected : style.sizeTypeHeader}>{sizeopt}</Text>
+												</TouchableOpacity>
+											))}
+										</View>
 									))}
 								</View>
 							</View>
@@ -621,18 +625,19 @@ const style = StyleSheet.create({
 
 	other: { flexDirection: 'row', justifyContent: 'space-between' },
 	otherRemove: { alignItems: 'center', borderRadius: 12.5, borderStyle: 'solid', borderWidth: 2, height: 25, marginRight: 5, marginVertical: 20, width: 25 },
-	otherName: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, height: 30, marginVertical: 19, padding: 3, width: 100 }, 
-	otherInput: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, height: 30, marginVertical: 19, marginLeft: 10, padding: 3, width: 100 }, 
-	otherPrice: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, height: 30, marginVertical: 19, marginLeft: 10, padding: 3, width: 100 }, 
+	otherName: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, height: 30, marginVertical: 19, padding: 3, width: (width / 3) - 40 }, 
+	otherInput: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, height: 30, marginVertical: 19, marginLeft: 10, padding: 3, width: (width / 3) - 40 }, 
+	otherPrice: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, height: 30, marginVertical: 19, marginLeft: 10, padding: 3, width: (width / 3) - 40 }, 
 
-	size: { flexDirection: 'row', justifyContent: 'space-between' },
+	size: { flexDirection: 'row', justifyContent: 'space-between', marginVertical: 20 },
 	sizeRemove: { alignItems: 'center', borderRadius: 12.5, borderStyle: 'solid', borderWidth: 2, height: 25, marginRight: 5, marginVertical: 20, width: 25 },
 	sizeInput: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, height: 30, marginVertical: 19, padding: 3, width: 100 }, 
-	sizeTypesBox: { alignItems: 'center' },
+	sizeTypesBox: { alignItems: 'center', marginTop: -18 },
 	sizeTypesHeader: { fontSize: 10, fontWeight: 'bold', margin: 5 },
-	sizeTypes: { flexDirection: 'row' },
-	sizeType: { alignItems: 'center', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 2, padding: 5 },
-	sizeTypeSelected: { alignItems: 'center', backgroundColor: 'black', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 2, padding: 5 },
+	sizeTypes: {  },
+	sizeTypesRow: { flexDirection: 'row' },
+	sizeType: { alignItems: 'center', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, margin: 2, padding: 5 },
+	sizeTypeSelected: { alignItems: 'center', backgroundColor: 'black', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, margin: 2, padding: 5 },
 	sizeTypeHeader: { fontSize: 10 },
 	sizeTypeHeaderSelected: { color: 'white', fontSize: 10 },
 	

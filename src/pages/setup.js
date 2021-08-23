@@ -92,12 +92,6 @@ export default function setup({ navigation }) {
 				return
 			}
 
-			if (!addressTwo) {
-				setErrormsg("Please enter the Address # 2")
-
-				return
-			}
-
 			if (!city) {
 				setErrormsg("Please enter the city")
 

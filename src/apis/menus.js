@@ -35,8 +35,8 @@ export const removeMenu = id => {
 	return axios.get(`${wifi_api_url}/menus/remove_menu/${id}`)
 }
 
-export const editMenu = id => {
-	return axios.get(`${wifi_api_url}/menus/edit_menu/${id}`)
+export const getMenuInfo = id => {
+	return axios.get(`${wifi_api_url}/menus/get_menu_info/${id}`)
 }
 
 export const saveMenu = data => {

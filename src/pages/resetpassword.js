@@ -2,22 +2,24 @@ import React, { useState } from 'react';
 import { AsyncStorage, Dimensions, View, Text, TextInput, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
-import { loginUser } from '../apis/owners'
+import { resetPassword } from '../apis/owners'
 import { userInfo } from '../../assets/info'
 
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - (offsetPadding * 2)
 
-export default function login({ navigation }) {
-	const [phonenumber, setPhonenumber] = useState(userInfo.cellnumber)
-	const [password, setPassword] = useState(userInfo.password)
+export default function resetpassword(props) {
+	const { cellnumber } = props.route.params
+
+	const [newPassword, setNewpassword] = useState('')
+	const [confirmPassword, setConfirmpassword] = useState('')
 	const [errorMsg, setErrormsg] = useState('')
 
-	const login = () => {
-		const data = { cellnumber: phonenumber, password: password }
+	const reset = () => {
+		const data = { cellnumber, newPassword, confirmPassword }
 
-		loginUser(data)
+		resetPassword(data)
 			.then((res) => {
 				if (res.status == 200) {
 					if (!res.data.errormsg) {
@@ -38,7 +40,7 @@ export default function login({ navigation }) {
 					AsyncStorage.setItem("locationtype", locationtype ? locationtype : "")
 					AsyncStorage.setItem("phase", msg)
 					
-					navigation.dispatch(
+					props.navigation.dispatch(
 						CommonActions.reset({
 							index: 0,
 							routes: [{ name: msg }]
@@ -50,20 +52,20 @@ export default function login({ navigation }) {
 	}
 
 	return (
-		<View style={style.login}>
+		<View style={style.resetpassword}>
 			<View style={{ paddingVertical: offsetPadding }}>
 				<View style={style.box}>
-					<Text style={style.boxHeader}>Log-In</Text>
+					<Text style={style.boxHeader}>Reset Password</Text>
 
 					<View style={style.inputsBox}>
 						<View style={style.inputContainer}>
-							<Text style={style.inputHeader}>Phone number:</Text>
-							<TextInput style={style.input} onChangeText={(phonenumber) => setPhonenumber(phonenumber)} value={phonenumber} keyboardType="numeric" autoCorrect={false}/>
+							<Text style={style.inputHeader}>New password:</Text>
+							<TextInput style={style.input} secureTextEntry={true} onChangeText={(password) => setNewpassword(password)} value={newPassword} keyboardType="numeric" autoCorrect={false}/>
 						</View>
 
 						<View style={style.inputContainer}>
-							<Text style={style.inputHeader}>Password:</Text>
-							<TextInput style={style.input} secureEntry={true} onChangeText={(password) => setPassword(password)} secureTextEntry={true} value={password} autoCorrect={false}/>
+							<Text style={style.inputHeader}>Confirm password:</Text>
+							<TextInput style={style.input} secureTextEntry={true} onChangeText={(password) => setConfirmpassword(password)} value={confirmPassword} keyboardType="numeric" autoCorrect={false}/>
 						</View>
 
 						<Text style={style.errorMsg}>{errorMsg}</Text>
@@ -81,21 +83,23 @@ export default function login({ navigation }) {
 							}}>
 								<Text style={style.optionHeader}>Don't have an account ? Sign up</Text>
 							</TouchableOpacity>
-							<TouchableOpacity style={style.option} onPress={() => {
-								navigation.dispatch(
-									CommonActions.reset({
-										index: 1,
-										routes: [{ name: 'forgotpassword' }]
-									})
-								)
-							}}>
-								<Text style={style.optionHeader}>Forgot your password ? Reset here</Text>
-							</TouchableOpacity>
+							<View style={style.options}>
+								<TouchableOpacity style={style.option} onPress={() => {
+									navigation.dispatch(
+										CommonActions.reset({
+											index: 1,
+											routes: [{ name: 'login' }]
+										})
+									);
+								}}>
+									<Text style={style.optionHeader}>Already a member ? Log in</Text>
+								</TouchableOpacity>
+							</View>
 						</View>
 					</View>
 
-					<TouchableOpacity style={style.submit} onPress={login}>
-						<Text style={style.submitHeader}>Sign-In</Text>
+					<TouchableOpacity style={style.submit} onPress={() => reset()}>
+						<Text style={style.submitHeader}>Done</Text>
 					</TouchableOpacity>
 				</View>
 			</View>
@@ -104,10 +108,10 @@ export default function login({ navigation }) {
 }
 
 const style = StyleSheet.create({
-	login: { backgroundColor: '#0288FF', height: '100%', width: '100%' },
+	resetpassword: { backgroundColor: '#0288FF', height: '100%', width: '100%' },
 	box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 	background: { height: '100%', position: 'absolute', width: '100%' },
-	boxHeader: { color: 'white', fontFamily: 'appFont', fontSize: 50, fontWeight: 'bold', paddingVertical: 30 },
+	boxHeader: { color: 'white', fontFamily: 'appFont', fontSize: 30, fontWeight: 'bold', paddingVertical: 30 },
 	
 	inputsBox: { backgroundColor: 'rgba(2, 136, 255, 0.1)', paddingHorizontal: 20, width: '80%' },
 	inputContainer: { marginVertical: 5 },

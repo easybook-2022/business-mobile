@@ -26,11 +26,11 @@ const bankAccount = [
 		routingNumber: '110000000', accountHolderName: 'Test holder name three', 
 	}
 ]
-const { storeName, storeType, phonenumber, addressOne, addressTwo, city, province, postalcode } = stores[6]
+const { storeName, storeType, phonenumber, addressOne, addressTwo, city, province, postalcode } = stores[0]
 const { accountNumber, countryCode, currency, routingNumber, accountHolderName } = bankAccount[0]
 
 export const local_api_url = "http://localhost:5000"
-export const wifi_api_url = "http://192.168.0.16:5000"
+export const wifi_api_url = "http://192.168.0.14:5000"
 export const userInfo = {
 	cellnumber: phonenumber,
 	password: "password",

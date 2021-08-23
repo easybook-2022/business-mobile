@@ -190,7 +190,7 @@ export default function addservice(props) {
 					setName(serviceInfo.name)
 					setInfo(serviceInfo.info)
 					setImage({ uri: logo_url + serviceInfo.image, name: serviceInfo.image })
-					setPrice(serviceInfo.price)
+					setPrice(serviceInfo.price.toString())
 					setDuration(serviceInfo.duration)
 				}
 			})
@@ -238,7 +238,7 @@ export default function addservice(props) {
 
 				<View style={style.inputBox}>
 					<Text style={style.inputHeader}>Service price</Text>
-					<TextInput style={style.inputValue} placeholder="4.99" onChangeText={(price) => setPrice(price)} value={price}/>
+					<TextInput style={style.inputValue} placeholder="4.99" onChangeText={(price) => setPrice(price.toString())} value={price}/>
 				</View>
 
 				<View style={style.inputBox}>

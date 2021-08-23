@@ -6,10 +6,10 @@ import { getScheduleInfo, getOrders, deliverRound } from '../apis/schedules'
 
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
-const screenHeight = height - offsetPadding
+const screenHeight = height - (offsetPadding * 2)
 
 export default function orders(props) {
-	const { scheduleid } = props.route.params
+	const { scheduleid, refetch } = props.route.params
 	
 	const [name, setName] = useState('')
 	const [table, setTable] = useState('')
@@ -86,7 +86,10 @@ export default function orders(props) {
 	return (
 		<View style={{ paddingVertical: offsetPadding }}>
 			<View style={style.box}>
-				<TouchableOpacity style={style.back} onPress={() => props.navigation.goBack()}>
+				<TouchableOpacity style={style.back} onPress={() => {
+					refetch()
+					props.navigation.goBack()
+				}}>
 					<Text style={style.backHeader}>Back</Text>
 				</TouchableOpacity>
 
@@ -120,7 +123,7 @@ export default function orders(props) {
 												))}
 
 												<Text style={style.orderItemQuantity}>Quantity: {order.quantity}</Text>
-												<Text style={style.orderItemPrice}>Cost: $ {(order.price * order.quantity).toFixed(2)}</Text>
+												<Text style={style.orderItemPrice}>Cost: $ {(order.price).toFixed(2)}</Text>
 											</View>
 										</View>
 									))

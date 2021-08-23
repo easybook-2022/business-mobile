@@ -59,3 +59,18 @@ export const getScheduleInfo = id => {
 export const getOrders = id => {
 	return axios.get(`${wifi_api_url}/schedules/get_orders/${id}`)
 }
+
+export const deliverRound = data => {
+	return axios.post(
+		`${wifi_api_url}/schedules/deliver_round`,
+		data
+	)
+}
+
+export const doneDining = id => {
+	return axios.get(`${wifi_api_url}/schedules/done_dining/${id}`)
+}
+
+export const doneService = id => {
+	return axios.get(`${wifi_api_url}/schedules/done_service/${id}`)
+}
