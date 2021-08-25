@@ -104,6 +104,10 @@ export const getInfo = data => {
 	)
 }
 
+export const changeLocationState = id => {
+	return axios.get(`${wifi_api_url}/locations/change_location_state/${id}`)
+}
+
 export const getLocationHours = data => {
 	return axios.post(
 		`${wifi_api_url}/locations/get_hours`,

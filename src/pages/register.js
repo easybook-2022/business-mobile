@@ -41,7 +41,7 @@ export default function register({ navigation }) {
 				}
 			})
 	}
-
+	
 	return (
 		<View style={style.register}>
 			<View style={{ paddingTop: offsetPadding }}>
@@ -79,6 +79,16 @@ export default function register({ navigation }) {
 							}}>
 								<Text style={style.optionHeader}>Already a member ? Log in</Text>
 							</TouchableOpacity>
+							<TouchableOpacity style={style.option} onPress={() => {
+								navigation.dispatch(
+									CommonActions.reset({
+										index: 1,
+										routes: [{ name: 'forgotpassword' }]
+									})
+								)
+							}}>
+								<Text style={style.optionHeader}>Forgot your password ? Reset here</Text>
+							</TouchableOpacity>
 						</View>
 					</View>
 
@@ -103,8 +113,8 @@ const style = StyleSheet.create({
 	input: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: 20, padding: 10 },
 	errorMsg: { color: 'red', fontWeight: 'bold', marginVertical: 20, textAlign: 'center' },
 
-	options: { flexDirection: 'row' },
-	option: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, padding: 5 },
+	options: {  },
+	option: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, marginVertical: 5, padding: 5 },
 	optionHeader: {  },
 	submit: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontFamily: 'appFont', marginVertical: 40, padding: 10 },
 	submitHeader: { fontWeight: 'bold' },

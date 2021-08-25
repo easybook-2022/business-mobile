@@ -128,7 +128,7 @@ export default function setuphours({ navigation }) {
 	return (
 		<View style={style.setuphours}>
 			<View style={{ paddingVertical: offsetPadding }}>
-				<ScrollView style={{ height: screenHeight - 40, width: '100%' }}>
+				<ScrollView style={{ backgroundColor: '#EAEAEA', height: screenHeight - 40, width: '100%' }}>
 					<View style={[style.box, { opacity: loading ? 0.6 : 1 }]}>
 						<Text style={style.boxHeader}>Setup</Text>
 						<Text style={style.boxMiniheader}>Set your hours</Text>
@@ -233,9 +233,9 @@ export default function setuphours({ navigation }) {
 
 const style = StyleSheet.create({
 	setuphours: { backgroundColor: 'white' },
-	box: { alignItems: 'center', backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
+	box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 	boxHeader: { fontFamily: 'appFont', fontSize: 50, fontWeight: 'bold', paddingVertical: 30 },
-	boxMiniheader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', marginBottom: 50 },
+	boxMiniheader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', marginBottom: 30 },
 
 	days: {  },
 	dayHeader: { fontSize: 20, marginHorizontal: 10, textAlign: 'center' },

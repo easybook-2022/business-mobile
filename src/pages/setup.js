@@ -178,94 +178,96 @@ export default function setup({ navigation }) {
 	}, [])
 
 	if (permission === null) return <View/>
-
+		
 	return (
-		<View style={{ paddingVertical: offsetPadding }}>
-			<ScrollView style={{ height: screenHeight - 40, width: '100%' }}>
-				<View style={[style.box, { opacity: loading ? 0.6 : 1 }]}>
-					<Text style={style.boxHeader}>Setup</Text>
-					<Text style={style.boxMiniheader}>Enter your location information</Text>
+		<View style={style.setup}>
+			<View style={{ paddingVertical: offsetPadding }}>
+				<ScrollView style={{ backgroundColor: '#EAEAEA', height: screenHeight - 40, width: '100%' }}>
+					<View style={[style.box, { opacity: loading ? 0.6 : 1 }]}>
+						<Text style={style.boxHeader}>Setup</Text>
+						<Text style={style.boxMiniheader}>Enter your location information</Text>
 
-					<View style={style.inputsBox}>
-						<View style={style.inputContainer}>
-							<Text style={style.inputHeader}>Store Name:</Text>
-							<TextInput style={style.input} onChangeText={(storeName) => setStorename(storeName)} value={storeName} autoCorrect={false}/>
-						</View>
-						<View style={style.inputContainer}>
-							<Text style={style.inputHeader}>Store Phone number:</Text>
-							<TextInput style={style.input} onChangeText={(phonenumber) => setPhonenumber(phonenumber)} value={phonenumber} keyboardType="numeric" autoCorrect={false}/>
-						</View>
-						<View style={style.inputContainer}>
-							<Text style={style.inputHeader}>Address #1:</Text>
-							<TextInput style={style.input} onChangeText={(addressOne) => setPhonenumber(addressOne)} value={addressOne} keyboardType="numeric" autoCorrect={false}/>
-						</View>
-						<View style={style.inputContainer}>
-							<Text style={style.inputHeader}>Address #2:</Text>
-							<TextInput style={style.input} onChangeText={(addressTwo) => setPhonenumber(addressTwo)} value={addressTwo} keyboardType="numeric" autoCorrect={false}/>
-						</View>
-						<View style={style.inputContainer}>
-							<Text style={style.inputHeader}>City:</Text>
-							<TextInput style={style.input} onChangeText={(city) => setPhonenumber(city)} value={city} keyboardType="numeric" autoCorrect={false}/>
-						</View>
-						<View style={style.inputContainer}>
-							<Text style={style.inputHeader}>Province:</Text>
-							<TextInput style={style.input} onChangeText={(province) => setPhonenumber(province)} value={province} keyboardType="numeric" autoCorrect={false}/>
-						</View>
-						<View style={style.inputContainer}>
-							<Text style={style.inputHeader}>Postal Code:</Text>
-							<TextInput style={style.input} onChangeText={(postalcode) => setPhonenumber(postalcode)} value={postalcode} keyboardType="numeric" autoCorrect={false}/>
+						<View style={style.inputsBox}>
+							<View style={style.inputContainer}>
+								<Text style={style.inputHeader}>Store Name:</Text>
+								<TextInput style={style.input} onChangeText={(storeName) => setStorename(storeName)} value={storeName} autoCorrect={false}/>
+							</View>
+							<View style={style.inputContainer}>
+								<Text style={style.inputHeader}>Store Phone number:</Text>
+								<TextInput style={style.input} onChangeText={(phonenumber) => setPhonenumber(phonenumber)} value={phonenumber} keyboardType="numeric" autoCorrect={false}/>
+							</View>
+							<View style={style.inputContainer}>
+								<Text style={style.inputHeader}>Address #1:</Text>
+								<TextInput style={style.input} onChangeText={(addressOne) => setPhonenumber(addressOne)} value={addressOne} keyboardType="numeric" autoCorrect={false}/>
+							</View>
+							<View style={style.inputContainer}>
+								<Text style={style.inputHeader}>Address #2:</Text>
+								<TextInput style={style.input} onChangeText={(addressTwo) => setPhonenumber(addressTwo)} value={addressTwo} keyboardType="numeric" autoCorrect={false}/>
+							</View>
+							<View style={style.inputContainer}>
+								<Text style={style.inputHeader}>City:</Text>
+								<TextInput style={style.input} onChangeText={(city) => setPhonenumber(city)} value={city} keyboardType="numeric" autoCorrect={false}/>
+							</View>
+							<View style={style.inputContainer}>
+								<Text style={style.inputHeader}>Province:</Text>
+								<TextInput style={style.input} onChangeText={(province) => setPhonenumber(province)} value={province} keyboardType="numeric" autoCorrect={false}/>
+							</View>
+							<View style={style.inputContainer}>
+								<Text style={style.inputHeader}>Postal Code:</Text>
+								<TextInput style={style.input} onChangeText={(postalcode) => setPhonenumber(postalcode)} value={postalcode} keyboardType="numeric" autoCorrect={false}/>
+							</View>
+
+							<View style={style.cameraContainer}>
+								<Text style={style.inputHeader}>Store Logo</Text>
+
+								{logo.uri ? (
+									<>
+										<Image style={style.camera} source={{ uri: logo.uri }}/>
+
+										<TouchableOpacity style={style.cameraAction} onPress={() => setLogo({ uri: '', name: '' })}>
+											<AntDesign name="closecircleo" size={30}/>
+										</TouchableOpacity>
+									</>
+								) : (
+									<>
+										<Camera style={style.camera} type={camType} ref={r => {setCamcomp(r)}}/>
+
+										<TouchableOpacity style={style.cameraAction} onPress={snapPhoto.bind(this)}>
+											<Entypo name="camera" size={30}/>
+										</TouchableOpacity>
+									</>
+								)}	
+							</View>
 						</View>
 
-						<View style={style.cameraContainer}>
-							<Text style={style.inputHeader}>Store Logo</Text>
+						{errorMsg ? <Text style={style.errorMsg}>{errorMsg}</Text> : null }
 
-							{logo.uri ? (
-								<>
-									<Image style={style.camera} source={{ uri: logo.uri }}/>
+						{loading && <ActivityIndicator size="large"/>}
 
-									<TouchableOpacity style={style.cameraAction} onPress={() => setLogo({ uri: '', name: '' })}>
-										<AntDesign name="closecircleo" size={30}/>
-									</TouchableOpacity>
-								</>
-							) : (
-								<>
-									<Camera style={style.camera} type={camType} ref={r => {setCamcomp(r)}}/>
-
-									<TouchableOpacity style={style.cameraAction} onPress={snapPhoto.bind(this)}>
-										<Entypo name="camera" size={30}/>
-									</TouchableOpacity>
-								</>
-							)}	
-						</View>
+						<TouchableOpacity style={style.setupButton} disabled={loading} onPress={() => setupYourLocation()}>
+							<Text>Done</Text>
+						</TouchableOpacity>
 					</View>
+				</ScrollView>
 
-					{errorMsg ? <Text style={style.errorMsg}>{errorMsg}</Text> : null }
+				<View style={style.bottomNavs}>
+					<View style={{ flexDirection: 'row' }}>
+						<TouchableOpacity style={style.bottomNav} onPress={() => navigation.navigate("settings")}>
+							<AntDesign name="setting" size={30}/>
+						</TouchableOpacity>
+						<TouchableOpacity style={style.bottomNav} onPress={() => {
+							AsyncStorage.clear()
 
-					{loading && <ActivityIndicator size="large"/>}
-
-					<TouchableOpacity style={style.setupButton} disabled={loading} onPress={() => setupYourLocation()}>
-						<Text>Done</Text>
-					</TouchableOpacity>
-				</View>
-			</ScrollView>
-
-			<View style={style.bottomNavs}>
-				<View style={{ flexDirection: 'row' }}>
-					<TouchableOpacity style={style.bottomNav} onPress={() => navigation.navigate("settings")}>
-						<AntDesign name="setting" size={30}/>
-					</TouchableOpacity>
-					<TouchableOpacity style={style.bottomNav} onPress={() => {
-						AsyncStorage.clear()
-
-						navigation.dispatch(
-							CommonActions.reset({
-								index: 1,
-								routes: [{ name: 'login' }]
-							})
-						);
-					}}>
-						<Text style={style.bottomNavHeader}>Log-Out</Text>
-					</TouchableOpacity>
+							navigation.dispatch(
+								CommonActions.reset({
+									index: 1,
+									routes: [{ name: 'login' }]
+								})
+							);
+						}}>
+							<Text style={style.bottomNavHeader}>Log-Out</Text>
+						</TouchableOpacity>
+					</View>
 				</View>
 			</View>
 		</View>
@@ -273,6 +275,7 @@ export default function setup({ navigation }) {
 }
 
 const style = StyleSheet.create({
+	setup: { backgroundColor: 'white' },
 	box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 	boxHeader: { fontFamily: 'appFont', fontSize: 50, fontWeight: 'bold', paddingVertical: 30 },
 	boxMiniheader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold' },
@@ -285,8 +288,8 @@ const style = StyleSheet.create({
 	cameraHeader: { fontFamily: 'appFont', fontWeight: 'bold', paddingVertical: 5 },
 	camera: { height: width * 0.8, width: width * 0.8 },
 	cameraAction: { margin: 10 },
-	errorMsg: { color: 'red', fontWeight: 'bold', marginVertical: 10, textAlign: 'center' },
-	setupButton: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 20, padding: 10 },
+	errorMsg: { color: 'red', fontWeight: 'bold', marginVertical: 0, textAlign: 'center' },
+	setupButton: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 10, padding: 10 },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
 	bottomNav: { flexDirection: 'row', height: 30, marginVertical: 5, marginHorizontal: 20 },

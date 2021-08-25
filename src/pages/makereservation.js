@@ -11,7 +11,7 @@ const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - (offsetPadding * 2)
 
 export default function booktime(props) {
-	let { userid, reservationid } = props.route.params
+	let { userid, reservationid, refetch } = props.route.params
 
 	const [name, setName] = useState(name)
 	const [diners, setDiners] = useState(0)
@@ -20,7 +20,7 @@ export default function booktime(props) {
 	const [closeTime, setClosetime] = useState(0)
 	const [loaded, setLoaded] = useState(false)
 
-	const [confirm, setConfirm] = useState({ show: false, service: "", timeheader: "", time: "", requested: false })
+	const [confirm, setConfirm] = useState({ show: false, service: "", timeheader: "", time: "", tablenum: "", errorMsg: "", requested: false })
 
 	const getTheReservationInfo = async() => {
 		getReservationInfo(reservationid)
@@ -99,7 +99,10 @@ export default function booktime(props) {
 				}
 			})
 			.then((res) => {
-				if (res) setConfirm({ ...confirm, requested: true })
+				if (res) {
+					setConfirm({ ...confirm, requested: true })
+					refetch()
+				}
 			})
 			.catch((error) => console.log(error.message))
 	}
@@ -115,14 +118,14 @@ export default function booktime(props) {
 					<Text style={style.backHeader}>Back</Text>
 				</TouchableOpacity>
 
-				<Text style={style.boxHeader}>Request another time for {'\n' + diners} {diners == 1 ? 'person' : 'people'}</Text>
+				<Text style={style.boxHeader}>Request another time for {diners > 0 ? '\n' + diners + ' ' + (diners == 1 ? 'person' : 'people') : "1 person"}</Text>
 
 				{!loaded ? 
 					<ActivityIndicator size="small"/>
 					:
 					<ScrollView>
 						<Text style={style.timesHeader}>Availabilities</Text>
-						<View style={{ flexDirection: 'row', justifyContent: 'space-around', width: '100%' }}>
+						<View style={{ flexDirection: 'row', justifyContent: 'space-around', marginBottom: 50, width: '100%' }}>
 							<View style={style.times}>
 								{times.map(info => (
 									<TouchableOpacity style={info.booked ? style.selected : style.unselect} disabled={info.booked} key={info.key} onPress={() => {
@@ -136,8 +139,7 @@ export default function booktime(props) {
 					</ScrollView>
 				}
 			</View>
-
-
+			
 			{confirm.show && (
 				<Modal transparent={true}>
 					<View style={{ paddingVertical: offsetPadding }}>
@@ -146,10 +148,21 @@ export default function booktime(props) {
 								{!confirm.requested ? 
 									<>
 										<Text style={style.confirmHeader}>
-											<Text style={{ fontFamily: 'appFont' }}>Request a reservation for {'\n' + diners} {diners == 1 ? 'person' : 'people'} </Text>
+											<Text style={{ fontFamily: 'appFont' }}>Request a different time for {diners > 0 ? '\n' + diners + ' ' + (diners == 1 ? 'person' : 'people') : '1 person'}</Text>
 											{'\n at ' + confirm.service}
 											{'\n at ' + confirm.timeheader}
 										</Text>
+
+										<Text style={style.acceptRequestHeader}>Tell the diner the table #?</Text>
+
+										<TextInput placeholder="What table will be available" style={style.acceptRequestInput} onChangeText={(tablenum) => {
+											setAcceptrequestinfo({
+												...acceptRequestInfo,
+												tablenum
+											})
+										}} autoCorrect={false}/>
+
+										{acceptRequestInfo.errorMsg ? <Text style={style.errorMsg}>{acceptRequestInfo.errorMsg}</Text> : null}
 
 										<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
 											<View style={style.confirmOptions}>
@@ -163,20 +176,18 @@ export default function booktime(props) {
 										</View>
 									</>
 									:
-									<>
-										<View style={style.requestedHeaders}>
-											<Text style={style.requestedHeader}>Reservation requested at {'\n'}</Text>
-											<Text style={style.requestedHeaderInfo}>{confirm.service} {'\n'}</Text>
-											<Text style={style.requestedHeaderInfo}>at {confirm.timeheader} {'\n'}</Text>
-											<Text style={style.requestedHeaderInfo}>You will get notified by the diners</Text>
-											<TouchableOpacity style={style.requestedClose} onPress={() => {
-												setConfirm({ ...confirm, show: false, requested: false })
-												props.navigation.goBack()
-											}}>
-												<Text style={style.requestedCloseHeader}>Ok</Text>
-											</TouchableOpacity>
-										</View>
-									</>
+									<View style={style.requestedHeaders}>
+										<Text style={style.requestedHeader}>Reservation requested at {'\n'}</Text>
+										<Text style={style.requestedHeaderInfo}>{confirm.service} {'\n'}</Text>
+										<Text style={style.requestedHeaderInfo}>at {confirm.timeheader} {'\n'}</Text>
+										<Text style={style.requestedHeaderInfo}>You will get notified by the diners</Text>
+										<TouchableOpacity style={style.requestedClose} onPress={() => {
+											setConfirm({ ...confirm, show: false, requested: false })
+											props.navigation.goBack()
+										}}>
+											<Text style={style.requestedCloseHeader}>Ok</Text>
+										</TouchableOpacity>
+									</View>
 								}
 							</View>
 						</View>
@@ -189,7 +200,7 @@ export default function booktime(props) {
 
 const style = StyleSheet.create({
 	box: { backgroundColor: '#EAEAEA', height: '100%', width: '100%' },
-	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, margin: 20, padding: 5, width: 100 },
+	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, height: 30, margin: 20, padding: 5, width: 100 },
 	backHeader: { fontFamily: 'appFont', fontSize: 20 },
 
 	boxHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', marginBottom: 50, textAlign: 'center' },

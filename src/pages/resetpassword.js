@@ -50,7 +50,7 @@ export default function resetpassword(props) {
 			})
 			.catch((error) => console.log(error))
 	}
-
+	
 	return (
 		<View style={style.resetpassword}>
 			<View style={{ paddingVertical: offsetPadding }}>

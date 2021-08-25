@@ -26,7 +26,7 @@ const bankAccount = [
 		routingNumber: '110000000', accountHolderName: 'Test holder name three', 
 	}
 ]
-const { storeName, storeType, phonenumber, addressOne, addressTwo, city, province, postalcode } = stores[0]
+const { storeName, storeType, phonenumber, addressOne, addressTwo, city, province, postalcode } = stores[1]
 const { accountNumber, countryCode, currency, routingNumber, accountHolderName } = bankAccount[0]
 
 export const local_api_url = "http://localhost:5000"

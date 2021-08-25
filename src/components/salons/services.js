@@ -268,7 +268,7 @@ export default function services(props) {
 					/>
 				)}
 			</View>
-
+			
 			{addMenu.show && (
 				<Modal transparent={true}>
 					<View style={style.hiddenBox}>

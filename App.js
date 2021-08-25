@@ -147,6 +147,6 @@ export default function App() {
 }
 
 const style = StyleSheet.create({
-    back: { alignItems: 'center', borderRadius: 3, borderStyle: 'solid', borderWidth: 1, margin: 5, padding: 5 },
+    back: { alignItems: 'center', borderRadius: 3, borderStyle: 'solid', borderWidth: 1, padding: 5 },
     backHeader: { fontWeight: 'bold' },
 })

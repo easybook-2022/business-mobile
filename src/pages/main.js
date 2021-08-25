@@ -6,7 +6,7 @@ import * as FileSystem from 'expo-file-system'
 import { Camera } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator'
 import { logo_url } from '../../assets/info'
-import { fetchNumRequests, fetchNumAppointments, fetchNumReservations, fetchNumorders, getInfo } from '../apis/locations'
+import { fetchNumRequests, fetchNumAppointments, fetchNumReservations, fetchNumorders, getInfo, changeLocationState } from '../apis/locations'
 import { getMenus, removeMenu, addNewMenu } from '../apis/menus'
 import { getRequests, acceptRequest, cancelRequest, doneDining, doneService, getAppointments, getReservations } from '../apis/schedules'
 import { getProducts, getServices, removeProduct } from '../apis/products'
@@ -31,6 +31,7 @@ export default function main(props) {
 	const [storeName, setStorename] = useState('')
 	const [storeAddress, setStoreaddress] = useState('')
 	const [locationType, setLocationtype] = useState('')
+	const [locationState, setLocationstate] = useState('')
 
 	const [showEdit, setShowedit] = useState('')
 
@@ -106,7 +107,7 @@ export default function main(props) {
 			})
 			.then((res) => {
 				if (res) {
-					const { msg, storeName, storeAddress, storeLogo, locationType } = res
+					const { msg, storeName, storeAddress, storeLogo, locationType, locationState } = res
 
 					setShowedit(msg)
 					setUserid(userid)
@@ -114,6 +115,7 @@ export default function main(props) {
 					setStoreaddress(storeAddress)
 					setStoreicon(storeLogo)
 					setLocationtype(locationType)
+					setLocationstate(locationState)
 
 					fetchTheNumRequests()
 
@@ -129,6 +131,19 @@ export default function main(props) {
 						getAllReservations()
 					}
 				}
+			})
+	}
+	const changeTheLocationState = async() => {
+		const locationid = await AsyncStorage.getItem("locationid")
+
+		changeLocationState(locationid)
+			.then((res) => {
+				if (res.status == 200) {
+					return res.data
+				}
+			})
+			.then((res) => {
+				if (res) setLocationstate(res.state)
 			})
 	}
 	const displayTimestr = (unixtime) => {
@@ -431,7 +446,7 @@ export default function main(props) {
 															<>
 																<Text><Text style={{ fontWeight: 'bold' }}>{item.username}</Text> is booking a reservation</Text>
 																<Text style={{ fontWeight: 'bold' }}>{'\n'}at {displayTimestr(item.time)}</Text>
-																<Text style={{ fontWeight: 'bold' }}>{' for ' + item.diners + ' ' + (item.diners == 1 ? 'person' : 'people')}</Text>
+																<Text style={{ fontWeight: 'bold' }}>{item.diners > 0 ? ' for ' + item.diners + ' ' + (item.diners == 1 ? 'person' : 'people') : ' for 1 person'}</Text>
 															</>
 														}
 													</Text>
@@ -444,7 +459,10 @@ export default function main(props) {
 														if (locationType == 'salon') {
 															props.navigation.navigate("booktime", { appointmentid: item.id, refetch: () => getAllRequests() })
 														} else {
-															props.navigation.navigate("makereservation", { userid: item.userId, reservationid: item.id })
+															props.navigation.navigate("makereservation", { userid: item.userId, reservationid: item.id, refetch: () => {
+																fetchTheNumRequests()
+																getAllRequests()
+															}})
 														}
 													}}>
 														<Text style={style.requestActionHeader}>Another time</Text>
@@ -561,8 +579,12 @@ export default function main(props) {
 								<AntDesign name="setting" size={30}/>
 							</TouchableOpacity>
 
-							<TouchableOpacity style={style.bottomNav} onPress={() => props.navigation.navigate("menu", { menuid: '', name: '', refetch: () => getTheInfo() })}>
+							<TouchableOpacity style={style.bottomNavButton} onPress={() => props.navigation.navigate("menu", { menuid: '', name: '', refetch: () => getTheInfo() })}>
 								<Text style={style.bottomNavHeader}>Edit Menu</Text>
+							</TouchableOpacity>
+
+							<TouchableOpacity style={style.bottomNavButton} onPress={() => changeTheLocationState()}>
+								<Text style={style.bottomNavHeader}>Set {locationState == "unlist" ? "active" : "inactive"}</Text>
 							</TouchableOpacity>
 
 							<TouchableOpacity style={style.bottomNav} onPress={() => {
@@ -641,7 +663,7 @@ export default function main(props) {
 						</View>
 					</Modal>
 				)}
-
+				
 				{showBankaccountrequired.show && (
 					<Modal transparent={true}>
 						<View style={{ paddingVertical: offsetPadding }}>
@@ -730,6 +752,7 @@ const style = StyleSheet.create({
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
 	bottomNav: { flexDirection: 'row', height: 30, marginVertical: 5, marginHorizontal: 20 },
+	bottomNavButton: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, padding: 3 },
 	bottomNavHeader: { fontWeight: 'bold', paddingVertical: 5 },
 
 	cancelRequestBox: { backgroundColor: 'white', height: '100%', width: '100%' },

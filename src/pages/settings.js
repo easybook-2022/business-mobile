@@ -702,7 +702,7 @@ export default function settings(props) {
 				<Text style={style.backHeader}>Back</Text>
 			</TouchableOpacity>
 
-			<ScrollView style={{ height: screenHeight - 40, width: '100%' }}>
+			<ScrollView style={{ height: screenHeight - 74, width: '100%' }}>
 				<View style={[style.box, { opacity: loading ? 0.6 : 1 }]}>
 					<Text style={style.boxHeader}>Setting(s)</Text>
 					
@@ -1014,7 +1014,7 @@ export default function settings(props) {
 					</View>
 				</Modal>
 			)}
-
+			
 			{bankAccountForm.show && (
 				<Modal transparent={true}>
 					<View style={{ paddingVertical: offsetPadding }}>
@@ -1127,7 +1127,7 @@ const style = StyleSheet.create({
 	account: { flexDirection: 'row', justifyContent: 'space-between', marginVertical: 10 },
 	accountHeader: { fontSize: 20, fontWeight: 'bold', padding: 5 },
 	accountEdit: { backgroundColor: 'rgba(127, 127, 127, 0.3)', borderRadius: 4, flexDirection: 'row', justifyContent: 'space-between', width: '80%' },
-	accountEditHeader: { fontSize: 20, paddingVertical: 4, textAlign: 'center', width: '50%' },
+	accountEditHeader: { fontSize: 20, paddingVertical: 8, textAlign: 'center', width: '50%' },
 	accountEditTouch: { alignItems: 'center', borderRadius: 2, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5 },
 
 	bankaccountHolders: { alignItems: 'center', marginHorizontal: 10, marginTop: 20 },

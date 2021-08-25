@@ -16,7 +16,7 @@ import Entypo from 'react-native-vector-icons/Entypo'
 
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
-const screenHeight = height - offsetPadding
+const screenHeight = height - (offsetPadding * 2)
 
 export default function menu(props) {
 	const { menuid, refetch } = props.route.params
@@ -390,26 +390,24 @@ export default function menu(props) {
 		<View style={style.boxContainer}>
 			<View style={style.box}>
 				<View style={style.menuBox}>
-					<View style={style.actionsContainer}>
-						<View style={style.actions}>
-							{(numProducts == 0 && numServices == 0) && (
-								<TouchableOpacity style={style.action} onPress={() => setMenuform({ ...menuForm, show: true, type: 'add' })}>
-									<Text style={style.actionHeader}>Add Menu</Text>
-								</TouchableOpacity>
-							)}
-								
-							{(numMenus == 0 && numServices == 0) && (
-								<TouchableOpacity style={style.action} onPress={() => props.navigation.navigate("addproduct", { menuid: menuid, refetch: () => getAllProducts() })}>
-									<Text style={style.actionHeader}>Add Product</Text>
-								</TouchableOpacity>
-							)}
+					<View style={style.actions}>
+						{(numProducts == 0 && numServices == 0) && (
+							<TouchableOpacity style={style.action} onPress={() => setMenuform({ ...menuForm, show: true, type: 'add' })}>
+								<Text style={style.actionHeader}>Add Menu</Text>
+							</TouchableOpacity>
+						)}
+							
+						{(numMenus == 0 && numServices == 0) && (
+							<TouchableOpacity style={style.action} onPress={() => props.navigation.navigate("addproduct", { menuid: menuid, refetch: () => getAllProducts() })}>
+								<Text style={style.actionHeader}>Add Product</Text>
+							</TouchableOpacity>
+						)}
 
-							{(numMenus == 0 && numProducts == 0) && (
-								<TouchableOpacity style={style.action} onPress={() => props.navigation.navigate("addservice", { menuid: menuid, refetch: () => getAllServices() })}>
-									<Text style={style.actionHeader}>Add Service</Text>
-								</TouchableOpacity>
-							)}
-						</View>
+						{(numMenus == 0 && numProducts == 0) && (
+							<TouchableOpacity style={style.action} onPress={() => props.navigation.navigate("addservice", { menuid: menuid, refetch: () => getAllServices() })}>
+								<Text style={style.actionHeader}>Add Service</Text>
+							</TouchableOpacity>
+						)}
 					</View>
 
 					{(menuName || menuInfo) ? 
@@ -420,7 +418,7 @@ export default function menu(props) {
 					: null }
 				</View>
 				
-				<View style={style.body}>
+				<View style={{ height: (menuName || menuInfo) ? screenHeight - 200 : screenHeight - 145 }}>
 					{showMenus && (
 						<FlatList
 							data={menus}
@@ -452,7 +450,11 @@ export default function menu(props) {
 											<View key={info.key} style={style.product}>
 												<Text style={style.productHeader}>{info.name}</Text>
 												<Image source={{ uri: logo_url + info.image }} style={style.productImage}/>
-												{info.price ? <Text style={style.productPrice}>$ {info.price}</Text> : null}
+												{info.price ? 
+													<Text style={style.productPrice}>$ {info.price}</Text>
+													:
+													<Text style={style.productPrice}>{info.sizes} size{info.sizes == 1 ? '' : 's'}</Text>
+												}
 												<TouchableOpacity style={style.productAction} onPress={() => removeTheProduct(info.id)}>
 													<Text style={style.productActionHeader}>Remove</Text>
 												</TouchableOpacity>
@@ -593,11 +595,13 @@ export default function menu(props) {
 							<View style={style.menuInfoBox}>
 								<Text style={style.menuInfoBoxHeader}>Delete menu confirmation</Text>
 
-								<View style={style.menuInfoImageHolder}>
-									<Image source={{ uri: logo_url + removeMenuinfo.image }} style={style.menuInfoImage}/>
+								<View style={{ alignItems: 'center' }}>
+									<View style={style.menuInfoImageHolder}>
+										<Image source={{ uri: logo_url + removeMenuinfo.image }} style={style.menuInfoImage}/>
+									</View>
+									<Text style={style.menuInfoName}>{removeMenuinfo.name}</Text>
+									<Text style={style.menuInfoInfo}>{removeMenuinfo.info}</Text>
 								</View>
-								<Text style={style.menuInfoName}>{removeMenuinfo.name}</Text>
-								<Text style={style.menuInfoInfo}>{removeMenuinfo.info}</Text>
 
 								<Text style={style.menuInfoHeader}>Are you sure you want to delete this menu and its categories</Text>
 
@@ -635,29 +639,24 @@ export default function menu(props) {
 									))}
 
 									{removeProductinfo.others.map((other, otherindex) => (
-										other.selected ? 
-											<Text key={other.key} style={style.itemInfo}>
-												<Text style={{ fontWeight: 'bold' }}>{other.name}: </Text>
-												<Text>{other.input}</Text>
-												<Text> ($ {other.price.toFixed(2)})</Text>
-											</Text>
-										: null
+										<Text key={other.key} style={style.itemInfo}>
+											<Text style={{ fontWeight: 'bold' }}>{other.name}: </Text>
+											<Text>{other.input}</Text>
+											<Text> ($ {other.price.toFixed(2)})</Text>
+										</Text>
 									))}
 
 									{removeProductinfo.sizes.map((size, sizeindex) => (
-										size.selected ? 
-											<Text key={size.key} style={style.itemInfo}>
-												<Text style={{ fontWeight: 'bold' }}>Size: </Text>
-												<Text>{size.name}</Text>
-											</Text>
-										: null
+										<Text key={size.key} style={style.itemInfo}>
+											<Text style={{ fontWeight: 'bold' }}>Size #{sizeindex + 1}: </Text>
+											<Text>{size.name} ($ {size.price.toFixed(2)})</Text>
+										</Text>
 									))}
 								</View>
 
-								<View>
-									<Text style={style.productInfoQuantity}><Text style={{ fontWeight: 'bold' }}>Quantity: </Text>{removeProductinfo.quantity}</Text>
+								{removeProductinfo.price ? 
 									<Text style={style.productInfoPrice}><Text style={{ fontWeight: 'bold' }}>Price: </Text>$ {(removeProductinfo.price).toFixed(2)}</Text>
-								</View>
+								: null }
 
 								{removeProductinfo.numorderers > 0 && (
 									<View>
@@ -716,18 +715,17 @@ export default function menu(props) {
 
 const style = StyleSheet.create({
 	boxContainer: { backgroundColor: 'white', height: '100%', width: '100%' },
-	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', justifyContent: 'space-between', width: '100%' },
+	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: screenHeight - 44, justifyContent: 'space-between', width: '100%' },
 
-	menuBox: { height: 110 },
-	actionsContainer: { backgroundColor: 'rgba(127, 127, 127, 0.2)', paddingVertical: 10 },
-	actions: { flexDirection: 'row', justifyContent: 'space-around', marginVertical: 5 },
-	action: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 3, width: 80 },
+	menuBox: {  },
+	actions: { backgroundColor: 'rgba(127, 127, 127, 0.2)', flexDirection: 'row', height: 55, justifyContent: 'space-around' },
+	action: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, height: 23, marginVertical: 15, padding: 3, width: 80 },
 	actionHeader: { color: 'black', fontSize: 10 },
 
 	headers: { marginVertical: 10 },
 	header: { fontWeight: 'bold', fontSize: 15, textAlign: 'center' },
 
-	body: { height: screenHeight - 200 },
+	body: {  },
 	row: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
 
 	menu: { padding: 20 },
@@ -775,6 +773,10 @@ const style = StyleSheet.create({
 	menuInfoContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', paddingVertical: offsetPadding, width: '100%' },
 	menuInfoBox: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '80%', justifyContent: 'space-between', padding: 10, width: '80%' },
 	menuInfoBoxHeader: { fontSize: 20, textAlign: 'center' },
+	menuInfoImageHolder: { borderRadius: 50, height: 100, overflow: 'hidden', width: 100 },
+	menuInfoImage: { height: 100, width: 100 },
+	menuInfoName: { fontSize: 25, fontWeight: 'bold' },
+	menuInfoInfo: { fontSize: 20, fontWeight: 'bold'},
 	menuInfoHeader: { fontSize: 15, paddingHorizontal: 10, textAlign: 'center' },
 	menuInfoInfo: { fontSize: 15 },
 	menuInfoActions: { flexDirection: 'row', justifyContent: 'space-around' },
@@ -787,7 +789,7 @@ const style = StyleSheet.create({
 	productInfoBoxHeader: { fontSize: 20, textAlign: 'center' },
 	productInfoImageHolder: { borderRadius: 40, height: 80, overflow: 'hidden', width: 80 },
 	productInfoImage: { height: 80, width: 80 },
-	productInfoName: { fontWeight: 'bold' },
+	productInfoName: { fontSize: 25, fontWeight: 'bold' },
 	productInfoQuantity: {  },
 	productInfoPrice: {  },
 	productInfoOrderers: { fontWeight: 'bold' },
