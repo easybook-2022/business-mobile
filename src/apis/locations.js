@@ -75,6 +75,10 @@ export const fetchNumAppointments = id => {
 	return axios.get(`${wifi_api_url}/locations/fetch_num_appointments/${id}`)
 }
 
+export const fetchNumCartOrderers = id => {
+	return axios.get(`${wifi_api_url}/locations/fetch_num_cartorderers/${id}`)
+}
+
 export const fetchNumReservations = id => {
 	return axios.get(`${wifi_api_url}/locations/fetch_num_reservations/${id}`)
 }

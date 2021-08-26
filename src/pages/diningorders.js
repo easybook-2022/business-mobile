@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react'
 import { AsyncStorage, ActivityIndicator, Dimensions, ScrollView, View, FlatList, Text, Image, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import Constants from 'expo-constants';
 import { logo_url } from '../../assets/info'
-import { getScheduleInfo, getOrders, deliverRound } from '../apis/schedules'
+import { getScheduleInfo, getDiningOrders, deliverRound } from '../apis/schedules'
 
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - (offsetPadding * 2)
 
-export default function orders(props) {
+export default function diningorders(props) {
 	const { scheduleid, refetch } = props.route.params
 	
 	const [name, setName] = useState('')
@@ -42,7 +42,7 @@ export default function orders(props) {
 			})
 	}
 	const getTheOrders = () => {
-		getOrders(scheduleid)
+		getDiningOrders(scheduleid)
 			.then((res) => {
 				if (res.status == 200) {
 					return res.data
@@ -114,12 +114,30 @@ export default function orders(props) {
 												</View>
 												<Text style={style.orderItemName}>{order.name}</Text>
 
-												{order.options.map((option, infoindex) => (
-													<Text key={infoindex.toString()} style={style.itemInfo}>
+												{order.options.map(option => (
+													<Text key={option.key} style={style.itemInfo}>
 														<Text style={{ fontWeight: 'bold' }}>{option.header}: </Text> 
 														{option.selected}
 														{option.type == 'percentage' && '%'}
 													</Text>
+												))}
+
+												{order.others.map(other => (
+													other.selected ? 
+														<Text key={other.key} style={style.itemInfo}>
+															<Text style={{ fontWeight: 'bold' }}>{other.name}: </Text> 
+															<Text>{other.input}</Text>
+														</Text>
+													: null
+												))}
+
+												{order.sizes.map(size => (
+													other.selected ? 
+														<Text key={size.key} style={style.itemInfo}>
+															<Text style={{ fontWeight: 'bold' }}>{other.name}: </Text> 
+															<Text>{other.input}</Text>
+														</Text>
+													: null
 												))}
 
 												<Text style={style.orderItemQuantity}>Quantity: {order.quantity}</Text>

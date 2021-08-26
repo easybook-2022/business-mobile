@@ -477,7 +477,7 @@ export default function addproduct(props) {
 								new_key = 0
 							}
 
-							setOthers([...others, { key: "other-" + new_key.toString(), name: '', input: '' }])
+							setOthers([...others, { key: "other-" + new_key.toString(), name: '', input: '', price: "0.00" }])
 						}}>
 							<Text style={style.addOptionHeader}>Add Text Option</Text>
 						</TouchableOpacity>

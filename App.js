@@ -19,7 +19,8 @@ import Typesetup from './src/pages/typesetup'
 import Setuphours from './src/pages/setuphours'
 
 import Main from './src/pages/main'
-import Orders from './src/pages/orders'
+import Cartorders from './src/pages/cartorders'
+import Diningorders from './src/pages/diningorders'
 
 // restaurants
 import Makereservation from './src/pages/makereservation'
@@ -72,7 +73,8 @@ export default function App() {
                         <Stack.Screen name="typesetup" component={Typesetup} options={{ headerShown: false }}/>
                         <Stack.Screen name="setuphours" component={Setuphours} options={{ headerShown: false }}/>
                         <Stack.Screen name="main" component={Main} options={{ headerShown: false }}/>
-                        <Stack.Screen name="orders" component={Orders} options={{ headerShown: false }}/>
+                        <Stack.Screen name="cartorders" component={Cartorders} options={{ headerShown: false }}/>
+                        <Stack.Screen name="diningorders" component={Diningorders} options={{ headerShown: false }}/>
                         <Stack.Screen name="makereservation" component={Makereservation} options={{ headerShown: false }}/>
                         <Stack.Screen name="booktime" component={Booktime} options={{ headerShown: false }}/>
                         <Stack.Screen name="services" component={Services} options={({ navigation, route }) => ({

@@ -252,9 +252,6 @@ export default function setup({ navigation }) {
 
 				<View style={style.bottomNavs}>
 					<View style={{ flexDirection: 'row' }}>
-						<TouchableOpacity style={style.bottomNav} onPress={() => navigation.navigate("settings")}>
-							<AntDesign name="setting" size={30}/>
-						</TouchableOpacity>
 						<TouchableOpacity style={style.bottomNav} onPress={() => {
 							AsyncStorage.clear()
 

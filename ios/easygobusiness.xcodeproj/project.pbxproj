@@ -14,7 +14,7 @@
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
 		96905EF65AED1B983A6B3ABC /* libPods-easygobusiness.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 58EEBF8E8E6FB1BC6CAF49B5 /* libPods-easygobusiness.a */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
-		569890BD598D4092B2C09B83 /* noop-file.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D1437CC39804E02884C4A3F /* noop-file.swift */; };
+		04D53D023E4B4510A8638EBB /* noop-file.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7892A51E94C3406D90DF5469 /* noop-file.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -33,8 +33,8 @@
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		ED2971642150620600B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS12.0.sdk/System/Library/Frameworks/JavaScriptCore.framework; sourceTree = DEVELOPER_DIR; };
-		2D1437CC39804E02884C4A3F /* noop-file.swift */ = {isa = PBXFileReference; name = "noop-file.swift"; path = "easygobusiness/noop-file.swift"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.swift; explicitFileType = undefined; includeInIndex = 0; };
-		7AC6AA27573A46EEA2E845F5 /* easygobusiness-Bridging-Header.h */ = {isa = PBXFileReference; name = "easygobusiness-Bridging-Header.h"; path = "easygobusiness/easygobusiness-Bridging-Header.h"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; explicitFileType = undefined; includeInIndex = 0; };
+		7892A51E94C3406D90DF5469 /* noop-file.swift */ = {isa = PBXFileReference; name = "noop-file.swift"; path = "easygobusiness/noop-file.swift"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.swift; explicitFileType = undefined; includeInIndex = 0; };
+		8207C3E98F044F7CB248A631 /* easygobusiness-Bridging-Header.h */ = {isa = PBXFileReference; name = "easygobusiness-Bridging-Header.h"; path = "easygobusiness/easygobusiness-Bridging-Header.h"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; explicitFileType = undefined; includeInIndex = 0; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -61,8 +61,8 @@
 				13B07FB11A68108700A75B9A /* LaunchScreen.xib */,
 				13B07FB71A68108700A75B9A /* main.m */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				2D1437CC39804E02884C4A3F /* noop-file.swift */,
-				7AC6AA27573A46EEA2E845F5 /* easygobusiness-Bridging-Header.h */,
+				7892A51E94C3406D90DF5469 /* noop-file.swift */,
+				8207C3E98F044F7CB248A631 /* easygobusiness-Bridging-Header.h */,
 			);
 			name = easygobusiness;
 			sourceTree = "<group>";
@@ -188,7 +188,7 @@
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				13B07FBD1A68108700A75B9A /* LaunchScreen.xib in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				6A4BB94FE3FD418CB5DCC08F /* easygobusiness-Bridging-Header.h in Resources */,
+				2518EF15E7F544FAA7B3050F /* easygobusiness-Bridging-Header.h in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -277,7 +277,7 @@
 			files = (
 				13B07FBC1A68108700A75B9A /* AppDelegate.m in Sources */,
 				13B07FC11A68108700A75B9A /* main.m in Sources */,
-				569890BD598D4092B2C09B83 /* noop-file.swift in Sources */,
+				04D53D023E4B4510A8638EBB /* noop-file.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

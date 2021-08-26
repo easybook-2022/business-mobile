@@ -418,7 +418,7 @@ export default function menu(props) {
 					: null }
 				</View>
 				
-				<View style={{ height: (menuName || menuInfo) ? screenHeight - 200 : screenHeight - 145 }}>
+				<View style={{ height: (menuName || menuInfo) ? screenHeight - 195 : screenHeight - 145 }}>
 					{showMenus && (
 						<FlatList
 							data={menus}
@@ -719,7 +719,7 @@ const style = StyleSheet.create({
 
 	menuBox: {  },
 	actions: { backgroundColor: 'rgba(127, 127, 127, 0.2)', flexDirection: 'row', height: 55, justifyContent: 'space-around' },
-	action: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, height: 23, marginVertical: 15, padding: 3, width: 80 },
+	action: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, marginVertical: 10, padding: 10, width: (width / 3) - 20 },
 	actionHeader: { color: 'black', fontSize: 10 },
 
 	headers: { marginVertical: 10 },

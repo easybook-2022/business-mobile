@@ -6,9 +6,9 @@ import * as FileSystem from 'expo-file-system'
 import { Camera } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator'
 import { logo_url } from '../../assets/info'
-import { fetchNumRequests, fetchNumAppointments, fetchNumReservations, fetchNumorders, getInfo, changeLocationState } from '../apis/locations'
+import { fetchNumRequests, fetchNumAppointments, fetchNumCartOrderers, fetchNumReservations, fetchNumorders, getInfo, changeLocationState } from '../apis/locations'
 import { getMenus, removeMenu, addNewMenu } from '../apis/menus'
-import { getRequests, acceptRequest, cancelRequest, doneDining, doneService, getAppointments, getReservations } from '../apis/schedules'
+import { getRequests, acceptRequest, cancelRequest, doneDining, doneService, getAppointments, getCartOrderers, getReservations } from '../apis/schedules'
 import { getProducts, getServices, removeProduct } from '../apis/products'
 
 import FontAwesome from 'react-native-vector-icons/FontAwesome'
@@ -20,13 +20,12 @@ const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - (offsetPadding * 2)
 
-let updateNumrequests, updateNumappointments, updateNumreservations, updateNumcustomerorders
+let updateNumrequests, updateNumappointments, updateNumcartorderers, updateNumreservations
 
 export default function main(props) {
 	const [permission, setPermission] = useState(null);
 	const [camComp, setCamcomp] = useState(null)
 	const [camType, setCamtype] = useState(Camera.Constants.Type.back);
-	const [userId, setUserid] = useState('')
 	const [storeIcon, setStoreicon] = useState('')
 	const [storeName, setStorename] = useState('')
 	const [storeAddress, setStoreaddress] = useState('')
@@ -41,13 +40,17 @@ export default function main(props) {
 	const [appointments, setAppointments] = useState([])
 	const [numAppointments, setNumappointments] = useState(0)
 
+	const [cartOrderers, setCartorderers] = useState([])
+	const [numCartorderers, setNumcartorderers] = useState(0)
+
 	const [reservations, setReservations] = useState([])
 	const [numReservations, setNumreservations] = useState(0)
 
 	const [viewType, setViewtype] = useState('')
 	const [cancelRequestInfo, setCancelrequestinfo] = useState({ show: false, reason: "", id: 0, index: 0 })
 	const [acceptRequestInfo, setAcceptrequestinfo] = useState({ show: false, type: "", requestid: "", tablenum: "", errorMsg: "" })
-	const [showBankaccountrequired, setShowbankaccountrequired] = useState({ show: false, index: 0 })
+	const [showBankaccountrequired, setShowbankaccountrequired] = useState({ show: false, index: 0, type: "" })
+	const [showMenurequired, setShowmenurequired] = useState(false)
 
 	const fetchTheNumRequests = async() => {
 		const locationid = await AsyncStorage.getItem("locationid")
@@ -76,6 +79,21 @@ export default function main(props) {
 				})
 				.then((res) => {
 					if (res) setNumappointments(res.numAppointments)
+				})
+		}
+	}
+	const fetchTheNumCartOrderers = async() => {
+		const locationid = await AsyncStorage.getItem("locationid")
+
+		if (locationid != null) {
+			fetchNumCartOrderers(locationid)
+				.then((res) => {
+					if (res.status == 200) {
+						return res.data
+					}
+				})
+				.then((res) => {
+					if (res) setNumcartorderers(res.numCartorderers)
 				})
 		}
 	}
@@ -110,7 +128,6 @@ export default function main(props) {
 					const { msg, storeName, storeAddress, storeLogo, locationType, locationState } = res
 
 					setShowedit(msg)
-					setUserid(userid)
 					setStorename(storeName)
 					setStoreaddress(storeAddress)
 					setStoreicon(storeLogo)
@@ -144,6 +161,25 @@ export default function main(props) {
 			})
 			.then((res) => {
 				if (res) setLocationstate(res.state)
+			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					if (err.response.data.status) {
+						const status = err.response.data.status
+
+						switch (status) {
+							case "menusetuprequired":
+								setShowmenurequired(true)
+
+								break;
+							case "bankaccountrequired":
+								setShowbankaccountrequired({ show: true, index, "type": "listlocation" })
+
+								break
+							default:
+						}
+					}
+				}
 			})
 	}
 	const displayTimestr = (unixtime) => {
@@ -204,6 +240,25 @@ export default function main(props) {
 					setNumappointments(res.numappointments)
 					setViewtype('appointments')
 				}
+			})
+	}
+	const getAllCartOrderers = async() => {
+		const locationid = await AsyncStorage.getItem("locationid")
+
+		getCartOrderers(locationid)
+			.then((res) => {
+				if (res.status == 200) {
+					return res.data
+				}
+			})
+			.then((res) => {
+				if (res) {
+					setCartorderers(res.cartOrderers)
+					setViewtype('cartorderers')
+				}
+			})
+			.catch((err) => {
+				alert(err.message)
 			})
 	}
 	const getAllReservations = async() => {
@@ -367,7 +422,7 @@ export default function main(props) {
 
 						switch (status) {
 							case "bankaccountrequired":
-								setShowbankaccountrequired({ show: true, index })
+								setShowbankaccountrequired({ show: true, index, "type": "doneservice" })
 
 								break;
 							default:
@@ -382,11 +437,13 @@ export default function main(props) {
 
 		updateNumrequests = setInterval(() => fetchTheNumRequests(), 1000)
 		updateNumappointments = setInterval(() => fetchTheNumAppointments(), 1000)
+		updateNumcartorderers = setInterval(() => fetchTheNumCartOrderers(), 1000)
 		updateNumreservations = setInterval(() => fetchTheNumReservations(), 1000)
 
 		return () => {
 			clearInterval(updateNumrequests)
 			clearInterval(updateNumappointments)
+			clearInterval(updateNumcartorderers)
 			clearInterval(updateNumreservations)
 		}
 	}, [])
@@ -407,18 +464,26 @@ export default function main(props) {
 						<View style={style.navs}>
 							<View style={{ flexDirection: 'row' }}>
 								<TouchableOpacity style={viewType == "requests" ? style.navSelected : style.nav} onPress={() => getAllRequests()}>
-									<Text style={viewType == "requests" ? style.navHeaderSelected : style.navHeader}>{numRequests} Request(s)</Text>
+									<Text style={viewType == "requests" ? style.navHeaderSelected : style.navHeader}>{numRequests}</Text>
+									<Text style={viewType == "requests" ? style.navHeaderSelected : style.navHeader}>Request(s)</Text>
 								</TouchableOpacity>
 
 								{locationType == 'salon' && (
 									<TouchableOpacity style={viewType == "appointments" ? style.navSelected : style.nav} onPress={() => getAllAppointments()}>
-										<Text style={viewType == "appointments" ? style.navHeaderSelected : style.navHeader}>{numAppointments} Appointment(s)</Text>
+										<Text style={viewType == "appointments" ? style.navHeaderSelected : style.navHeader}>{numAppointments}</Text>
+										<Text style={viewType == "appointments" ? style.navHeaderSelected : style.navHeader}>Appointment(s)</Text>
 									</TouchableOpacity>
 								)}
 
+								<TouchableOpacity style={viewType == "cartorderers" ? style.navSelected : style.nav} onPress={() => getAllCartOrderers()}>
+									<Text style={viewType == "cartorderers" ? style.navHeaderSelected : style.navHeader}>{numCartorderers}</Text>
+									<Text style={viewType == "cartorderers" ? style.navHeaderSelected : style.navHeader}>Orderer(s)</Text>
+								</TouchableOpacity>
+
 								{locationType == 'restaurant' && (
 									<TouchableOpacity style={viewType == "reservations" ? style.navSelected : style.nav} onPress={() => getAllReservations()}>
-										<Text style={viewType == "reservations" ? style.navHeaderSelected : style.navHeader}>{numReservations} Reservation(s)</Text>
+										<Text style={viewType == "reservations" ? style.navHeaderSelected : style.navHeader}>{numReservations}</Text>
+										<Text style={viewType == "reservations" ? style.navHeaderSelected : style.navHeader}>Reservation(s)</Text>
 									</TouchableOpacity>
 								)}
 							</View>
@@ -514,6 +579,31 @@ export default function main(props) {
 								:
 								<View style={style.bodyResult}>
 									<Text style={style.bodyResultHeader}>No appointment(s) yet</Text>
+								</View>
+						)}
+
+						{viewType == "cartorderers" && (
+							cartOrderers.length > 0 ? 
+								<FlatList
+									data={cartOrderers}
+									renderItem={({ item, index }) => 
+										<View key={item.key} style={style.cartorderer}>
+											<View style={style.cartordererImageHolder}>
+												<Image style={style.cartordererImage} source={{ uri: logo_url + item.profile }}/>
+											</View>
+											<View style={style.cartordererInfo}>
+												<Text style={style.cartordererUsername}>{item.username}</Text>
+												<Text style={style.cartordererOrderNumber}>Order #{item.orderNumber}</Text>
+												<TouchableOpacity style={style.cartordererSeeOrders} onPress={() => props.navigation.navigate("cartorders", { userid: item.id, ordernumber: item.orderNumber, refetch: () => getAllCartOrderers() })}>
+													<Text style={style.cartordererSeeOrdersHeader}>See Order(s) ({item.numOrders})</Text>
+												</TouchableOpacity>
+											</View>
+										</View>
+									}
+								/>
+								:
+								<View style={style.bodyResult}>
+									<Text style={style.bodyResultHeader}>No order(s) yet</Text>
 								</View>
 						)}
 
@@ -666,37 +756,82 @@ export default function main(props) {
 				
 				{showBankaccountrequired.show && (
 					<Modal transparent={true}>
-						<View style={{ paddingVertical: offsetPadding }}>
-							<View style={style.bankaccountRequiredBox}>
-								<View style={style.bankaccountRequiredContainer}>
-									<Text style={style.bankaccountRequiredHeader}>
-										You need to provide a bank account to receive
-										your payment
+						<View style={style.requiredBoxContainer}>
+							<View style={style.requiredBox}>
+								<View style={style.requiredContainer}>
+									<Text style={style.requiredHeader}>
+										You need to provide a bank account to
+
+										{bankaccountrequired.type == "doneservice" ? 
+											' receive your payment'
+											:
+											' list your location for customers to see'
+										}
 									</Text>
 
-									<View style={style.bankaccountRequiredActions}>
-										<TouchableOpacity style={style.bankaccountRequiredAction} onPress={() => {
-											const newAppointments = [...appointments]
-											const { index } = showBankaccountrequired
+									<View style={style.requiredActions}>
+										<TouchableOpacity style={style.requiredAction} onPress={() => {
+											if (bankaccountrequired.type == "doneservice") {
+												const newAppointments = [...appointments]
+												const { index } = showBankaccountrequired
 
-											newAppointments[index].gettingPayment = false
+												newAppointments[index].gettingPayment = false
 
-											setShowbankaccountrequired({ show: false, index: 0 })
-											setAppointments(newAppointments)
+												setAppointments(newAppointments)
+											}
+												
+
+											setShowbankaccountrequired({ show: false, index: 0, type: "" })
 										}}>
-											<Text style={style.bankaccountRequiredActionHeader}>Close</Text>
+											<Text style={style.requiredActionHeader}>Close</Text>
 										</TouchableOpacity>
-										<TouchableOpacity style={style.bankaccountRequiredAction} onPress={() => {
-											const { index } = showBankaccountrequired
-											const newAppointments = [...appointments]
+										<TouchableOpacity style={style.requiredAction} onPress={() => {
+											if (bankaccountrequired.type == "doneservice") {
+												const { index } = showBankaccountrequired
+												const newAppointments = [...appointments]
 
-											newAppointments[index].gettingPayment = false
+												newAppointments[index].gettingPayment = false
 
-											setShowbankaccountrequired({ show: false, index: 0 })
-											setAppointments(newAppointments)
+												setAppointments(newAppointments)
+											}
+												
+
+											setShowbankaccountrequired({ show: false, index: 0, type: "" })
 											props.navigation.navigate("settings", { required: "bankaccount" })
 										}}>
-											<Text style={style.bankaccountRequiredActionHeader}>Ok</Text>
+											<Text style={style.requiredActionHeader}>Ok</Text>
+										</TouchableOpacity>
+									</View>
+								</View>
+							</View>
+						</View>
+					</Modal>
+				)}
+
+				{showMenurequired && (
+					<Modal transparent={true}>
+						<View style={style.requiredBoxContainer}>
+							<View style={style.requiredBox}>
+								<View style={style.requiredContainer}>
+									<Text style={style.requiredHeader}>
+										You need to add some 
+										{locationType == "restaurant" ? 
+											" food "
+											:
+											" products / services "
+										}
+										to your menu to list your location publicly
+									</Text>
+
+									<View style={style.requiredActions}>
+										<TouchableOpacity style={style.requiredAction} onPress={() => setShowmenurequired(false)}>
+											<Text style={style.requiredActionHeader}>Close</Text>
+										</TouchableOpacity>
+										<TouchableOpacity style={style.requiredAction} onPress={() => {
+											setShowmenurequired(false)
+											props.navigation.navigate("menu", { menuid: '', name: '', refetch: () => getTheInfo() })
+										}}>
+											<Text style={style.requiredActionHeader}>Ok</Text>
 										</TouchableOpacity>
 									</View>
 								</View>
@@ -713,20 +848,20 @@ const style = StyleSheet.create({
 	main: { backgroundColor: 'white' },
 	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 
-	headers: { alignItems: 'center', flexDirection: 'column', height: 150, justifyContent: 'space-between', paddingVertical: 5 },
-	storeIconHolder: { borderRadius: 35, height: 70, overflow: 'hidden', width: 70 },
-	image: { height: 70, width: 70 },
-	locationName: { fontSize: 15, fontWeight: 'bold', paddingHorizontal: 10, textAlign: 'center' },
-	locationAddress: { fontSize: 15, fontWeight: 'bold', paddingHorizontal: 10, textAlign: 'center' },
+	headers: { alignItems: 'center', flexDirection: 'column', height: 100, justifyContent: 'space-between', paddingVertical: 5 },
+	storeIconHolder: { borderRadius: 25, height: 50, overflow: 'hidden', width: 50 },
+	image: { height: 50, width: 50 },
+	locationName: { fontSize: 13, fontWeight: 'bold', paddingHorizontal: 10, textAlign: 'center' },
+	locationAddress: { fontSize: 13, fontWeight: 'bold', paddingHorizontal: 10, textAlign: 'center' },
 
-	navs: { alignItems: 'center', height: 30 },
-	nav: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: 13, marginHorizontal: 2, marginVertical: 3, padding: 2, width: 112 },
+	navs: { alignItems: 'center', height: 45 },
+	nav: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: 13, marginHorizontal: 2, marginVertical: 3, padding: 2, width: (width / 3) - 10 },
 	navHeader: { color: 'black', fontSize: 13 },
-	navSelected: { alignItems: 'center', backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: 13, marginHorizontal: 2, marginVertical: 3, padding: 2, width: 112 },
+	navSelected: { alignItems: 'center', backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: 13, marginHorizontal: 2, marginVertical: 3, padding: 2, width: (width / 3) - 10 },
 	navHeaderSelected: { color: 'white', fontSize: 13 },
 
 	// body
-	body: { height: screenHeight - 190 },
+	body: { height: screenHeight - 140 },
 
 	// client appointment requests
 	request: { borderRadius: 5, backgroundColor: 'white', marginHorizontal: 5, marginVertical: 2.5 },
@@ -746,6 +881,15 @@ const style = StyleSheet.create({
 	scheduleActionDisabled: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, height: 27, marginTop: 3, opacity: 0.5, padding: 5, width: 120 },
 	scheduleActionHeader: { fontSize: 10, textAlign: 'center' },
 	scheduleNumOrders: { fontWeight: 'bold', padding: 8 },
+
+	cartorderer: { backgroundColor: 'white', borderRadius: 5, flexDirection: 'row', justifyContent: 'space-between', margin: 10, padding: 5 },
+	cartordererImageHolder: { borderRadius: 25, height: 50, overflow: 'hidden', width: 50 },
+	cartordererImage: { height: 50, width: 50 },
+	cartordererInfo: { alignItems: 'center', width: width - 81 },
+	cartordererUsername: { fontWeight: 'bold', marginBottom: 10 },
+	cartordererOrderNumber: { fontSize: 20, paddingVertical: 5 },
+	cartordererSeeOrders: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5 },
+	cartordererSeeOrdersHeader: { textAlign: 'center' },
 
 	bodyResult: { alignItems: 'center', flexDirection: 'column', height: screenHeight - 220, justifyContent: 'space-around' },
 	bodyResultHeader: { fontWeight: 'bold' },
@@ -770,12 +914,13 @@ const style = StyleSheet.create({
 	acceptRequestTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 5, width: 100 },
 	acceptRequestTouchHeader: { textAlign: 'center' },
 
-	bankaccountRequiredBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
-	bankaccountRequiredContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },
-	bankaccountRequiredHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
-	bankaccountRequiredActions: { flexDirection: 'row', justifyContent: 'space-around' },
-	bankaccountRequiredAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
-	bankaccountRequiredActionHeader: { },
+	requiredBoxContainer: { backgroundColor: 'rgba(0, 0, 0, 0.7)' },
+	requiredBox: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', paddingVertical: offsetPadding, width: '100%' },
+	requiredContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },
+	requiredHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
+	requiredActions: { flexDirection: 'row', justifyContent: 'space-around' },
+	requiredAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
+	requiredActionHeader: { },
 
 	errorMsg: { color: 'red', fontWeight: 'bold', marginVertical: 30, textAlign: 'center' },
 })
