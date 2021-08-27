@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { AsyncStorage, ActivityIndicator, Dimensions, ScrollView, View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import { AsyncStorage, ActivityIndicator, Dimensions, ScrollView, View, Text, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet, Modal } from 'react-native';
 import Constants from 'expo-constants';
 import { getLocationHours } from '../apis/locations'
 import { getReservationInfo, rescheduleReservation } from '../apis/schedules'
@@ -20,7 +20,7 @@ export default function booktime(props) {
 	const [closeTime, setClosetime] = useState(0)
 	const [loaded, setLoaded] = useState(false)
 
-	const [confirm, setConfirm] = useState({ show: false, service: "", timeheader: "", time: "", tablenum: "", errorMsg: "", requested: false })
+	const [confirm, setConfirm] = useState({ show: false, service: "", timeheader: "", time: "", tablenum: "", requested: false, errorMsg: "" })
 
 	const getTheReservationInfo = async() => {
 		getReservationInfo(reservationid)
@@ -142,7 +142,7 @@ export default function booktime(props) {
 			
 			{confirm.show && (
 				<Modal transparent={true}>
-					<View style={{ paddingVertical: offsetPadding }}>
+					<TouchableWithoutFeedback style={{ paddingVertical: offsetPadding }} onPress={() => Keyboard.dismiss()}>
 						<View style={style.confirmBox}>
 							<View style={style.confirmContainer}>
 								{!confirm.requested ? 
@@ -156,13 +156,13 @@ export default function booktime(props) {
 										<Text style={style.acceptRequestHeader}>Tell the diner the table #?</Text>
 
 										<TextInput placeholder="What table will be available" style={style.acceptRequestInput} onChangeText={(tablenum) => {
-											setAcceptrequestinfo({
-												...acceptRequestInfo,
+											setConfirm({
+												...confirm,
 												tablenum
 											})
 										}} autoCorrect={false}/>
 
-										{acceptRequestInfo.errorMsg ? <Text style={style.errorMsg}>{acceptRequestInfo.errorMsg}</Text> : null}
+										{confirm.errorMsg ? <Text style={style.errorMsg}>{confirm.errorMsg}</Text> : null}
 
 										<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
 											<View style={style.confirmOptions}>
@@ -191,7 +191,7 @@ export default function booktime(props) {
 								}
 							</View>
 						</View>
-					</View>
+					</TouchableWithoutFeedback>
 				</Modal>
 			)}
 		</View>

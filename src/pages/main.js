@@ -51,6 +51,7 @@ export default function main(props) {
 	const [acceptRequestInfo, setAcceptrequestinfo] = useState({ show: false, type: "", requestid: "", tablenum: "", errorMsg: "" })
 	const [showBankaccountrequired, setShowbankaccountrequired] = useState({ show: false, index: 0, type: "" })
 	const [showMenurequired, setShowmenurequired] = useState(false)
+	const [showPaymentconfirm, setShowpaymentconfirm] = useState(false)
 
 	const fetchTheNumRequests = async() => {
 		const locationid = await AsyncStorage.getItem("locationid")
@@ -142,10 +143,10 @@ export default function main(props) {
 						fetchTheNumReservations()
 					}
 
-					if (locationType == 'salon') {
-						getAllAppointments()
-					} else {
+					if (locationType == 'restaurant') {
 						getAllReservations()
+					} else {
+						getAllAppointments()
 					}
 				}
 			})
@@ -173,7 +174,7 @@ export default function main(props) {
 
 								break;
 							case "bankaccountrequired":
-								setShowbankaccountrequired({ show: true, index, "type": "listlocation" })
+								setShowbankaccountrequired({ show: true, index: 0, "type": "listlocation" })
 
 								break
 							default:
@@ -332,7 +333,11 @@ export default function main(props) {
 						setNumappointments(numAppointments + 1)
 						setAcceptrequestinfo({ show: false, tablenum: "" })
 
-						getAllReservations()
+						if (locationType == 'restaurant') {
+							getAllReservations()
+						} else {
+							getAllAppointments()
+						}
 					}
 				})
 		} else {
@@ -361,7 +366,11 @@ export default function main(props) {
 								setNumappointments(numAppointments + 1)
 								setAcceptrequestinfo({ show: false, tablenum: "" })
 
-								getAllReservations()
+								if (locationType == 'restaurant') {
+									getAllReservations()
+								} else {
+									getAllAppointments()
+								}
 							}
 						})
 				} else {
@@ -413,6 +422,8 @@ export default function main(props) {
 					newAppointments.splice(index, 1)
 
 					setAppointments(newAppointments)
+
+					showPaymentconfirm(true)
 				}
 			})
 			.catch((err) => {
@@ -760,42 +771,15 @@ export default function main(props) {
 							<View style={style.requiredBox}>
 								<View style={style.requiredContainer}>
 									<Text style={style.requiredHeader}>
-										You need to provide a bank account to
-
-										{bankaccountrequired.type == "doneservice" ? 
-											' receive your payment'
-											:
-											' list your location for customers to see'
-										}
+										You need to provide a bank account to 
+										list your location for customers to see
 									</Text>
 
 									<View style={style.requiredActions}>
-										<TouchableOpacity style={style.requiredAction} onPress={() => {
-											if (bankaccountrequired.type == "doneservice") {
-												const newAppointments = [...appointments]
-												const { index } = showBankaccountrequired
-
-												newAppointments[index].gettingPayment = false
-
-												setAppointments(newAppointments)
-											}
-												
-
-											setShowbankaccountrequired({ show: false, index: 0, type: "" })
-										}}>
+										<TouchableOpacity style={style.requiredAction} onPress={() => setShowbankaccountrequired({ show: false, index: 0, type: "" })}>
 											<Text style={style.requiredActionHeader}>Close</Text>
 										</TouchableOpacity>
 										<TouchableOpacity style={style.requiredAction} onPress={() => {
-											if (bankaccountrequired.type == "doneservice") {
-												const { index } = showBankaccountrequired
-												const newAppointments = [...appointments]
-
-												newAppointments[index].gettingPayment = false
-
-												setAppointments(newAppointments)
-											}
-												
-
 											setShowbankaccountrequired({ show: false, index: 0, type: "" })
 											props.navigation.navigate("settings", { required: "bankaccount" })
 										}}>
@@ -832,6 +816,26 @@ export default function main(props) {
 											props.navigation.navigate("menu", { menuid: '', name: '', refetch: () => getTheInfo() })
 										}}>
 											<Text style={style.requiredActionHeader}>Ok</Text>
+										</TouchableOpacity>
+									</View>
+								</View>
+							</View>
+						</View>
+					</Modal>
+				)}
+
+				{showPaymentconfirm && (
+					<Modal transparent={true}>
+						<View style={style.confirmBoxContainer}>
+							<View style={style.confirmBox}>
+								<View style={style.confirmContainer}>
+									<Text style={style.confirmHeader}>
+										Yay. Congrats on your service and payment reception. Good job
+									</Text>
+
+									<View style={style.confirmActions}>
+										<TouchableOpacity style={style.confirmAction} onPress={() => showPaymentconfirm(false)}>
+											<Text style={style.confirmActionHeader}>Ok</Text>
 										</TouchableOpacity>
 									</View>
 								</View>
@@ -910,6 +914,7 @@ const style = StyleSheet.create({
 	acceptRequestBox: { backgroundColor: 'white', width: '80%' },
 	acceptRequestHeader: { fontFamily: 'appFont', fontSize: 20, margin: 30, textAlign: 'center' },
 	acceptRequestInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: 20, margin: '5%', padding: 10, width: '90%' },
+	errorMsg: { color: 'red', fontWeight: 'bold', marginVertical: 30, textAlign: 'center' },
 	acceptRequestActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	acceptRequestTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 5, width: 100 },
 	acceptRequestTouchHeader: { textAlign: 'center' },
@@ -922,5 +927,11 @@ const style = StyleSheet.create({
 	requiredAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
 	requiredActionHeader: { },
 
-	errorMsg: { color: 'red', fontWeight: 'bold', marginVertical: 30, textAlign: 'center' },
+	confirmBoxContainer: { backgroundColor: 'rgba(0, 0, 0, 0.7)' },
+	confirmBox: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', paddingVertical: offsetPadding, width: '100%' },
+	confirmContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },
+	confirmHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
+	confirmActions: { flexDirection: 'row', justifyContent: 'space-around' },
+	confirmAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
+	confirmActionHeader: { },
 })

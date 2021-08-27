@@ -18,14 +18,14 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.geottuse.serviceapp.services",
+      "bundleIdentifier": "com.geottuse.serviceapp.business",
       "buildNumber": "0",
       "infoPlist": {
         "NSCameraUsageDescription": "EasyGO (Services) uses camera to allow you to capture a photo of your location/menu/product/service"
       }
     },
     "android": {
-      "package": "com.geottuse.serviceapp.services"
+      "package": "com.geottuse.serviceapp.business"
     },
     "notification": {
       "icon": "./assets/notification.png"

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { AsyncStorage, Dimensions, View, FlatList, Text, TextInput, Image, TouchableOpacity, StyleSheet, Modal } from 'react-native'
+import { AsyncStorage, Dimensions, View, FlatList, Text, TextInput, Image, TouchableOpacity, Keyboard, ScrollView, StyleSheet, Modal } from 'react-native'
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import * as FileSystem from 'expo-file-system'
@@ -420,24 +420,26 @@ export default function menu(props) {
 				
 				<View style={{ height: (menuName || menuInfo) ? screenHeight - 195 : screenHeight - 145 }}>
 					{showMenus && (
-						<FlatList
-							data={menus}
-							renderItem={({ item, index }) => 
-								<TouchableOpacity key={item.key} style={style.menu} onPress={() => props.navigation.push("menu", { menuid: item.id, name: item.name, refetch: () => getTheInfo() })}>
-									<View style={{ flexDirection: 'row' }}>
-										<Text style={style.menuHeader}>{item.name}</Text>
-										<Image source={{ uri: logo_url + item.image }} style={style.menuImage}/>
-										<TouchableOpacity style={style.menuAction} onPress={() => removeTheMenu(item.id)}>
-											<Text style={style.menuActionHeader}>Remove</Text>
-										</TouchableOpacity>
-										<TouchableOpacity style={style.menuAction} onPress={() => editTheMenu(item.id, index)}>
-											<Text style={style.menuActionHeader}>Edit</Text>
-										</TouchableOpacity>
-									</View>
-									<Text style={style.menuInfo}>{item.info}</Text>
-								</TouchableOpacity>
-							}
-						/>
+						<View>
+							<FlatList
+								data={menus}
+								renderItem={({ item, index }) => 
+									<TouchableOpacity key={item.key} style={style.menu} onPress={() => props.navigation.push("menu", { menuid: item.id, name: item.name, refetch: () => getTheInfo() })}>
+										<View style={{ flexDirection: 'row' }}>
+											<Text style={style.menuHeader}>{item.name}</Text>
+											<Image source={{ uri: logo_url + item.image }} style={style.menuImage}/>
+											<TouchableOpacity style={style.menuAction} onPress={() => removeTheMenu(item.id)}>
+												<Text style={style.menuActionHeader}>Remove</Text>
+											</TouchableOpacity>
+											<TouchableOpacity style={style.menuAction} onPress={() => editTheMenu(item.id, index)}>
+												<Text style={style.menuActionHeader}>Edit</Text>
+											</TouchableOpacity>
+										</View>
+										<Text style={style.menuInfo}>{item.info}</Text>
+									</TouchableOpacity>
+								}
+							/>
+						</View>
 					)}
 
 					{showProducts && (
@@ -544,7 +546,7 @@ export default function menu(props) {
 								<Text style={style.addHeader}>Enter menu info</Text>
 
 								<TextInput style={style.addInput} placeholder="Menu name" placeholderTextColor="rgba(127, 127, 127, 0.5)" onChangeText={(name) => setMenuform({...menuForm, name: name })} value={menuForm.name} autoCorrect={false}/>
-								<TextInput style={style.infoInput} multiline={true} placeholder="Anything you want to say about this menu" placeholderTextColor="rgba(127, 127, 127, 0.5)" onChangeText={(info) => setMenuform({...menuForm, info: info })} value={menuForm.info} autoCorrect={false} autoCompleteType="off"/>
+								<TextInput style={style.infoInput} onSubmitEditing={() => Keyboard.dismiss()} multiline={true} placeholder="Anything you want to say about this menu" placeholderTextColor="rgba(127, 127, 127, 0.5)" onChangeText={(info) => setMenuform({...menuForm, info: info })} value={menuForm.info} autoCorrect={false} autoCompleteType="off"/>
 							</View>
 
 							<View style={style.cameraContainer}>

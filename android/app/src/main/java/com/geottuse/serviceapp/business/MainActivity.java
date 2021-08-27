@@ -1,4 +1,4 @@
-package com.geottuse.serviceapp.services;
+package com.geottuse.serviceapp.business;
 import android.content.res.Configuration;
 import android.content.Intent;
 

@@ -229,7 +229,7 @@ const style = StyleSheet.create({
 	itemName: { fontSize: 20, marginBottom: 10 },
 	itemInfo: { fontSize: 15 },
 	header: { fontSize: 15 },
-	note: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 5, padding: 5 },
+	note: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 5, marginVertical: 10, padding: 5 },
 	noteHeader: { textAlign: 'center' },
 	orderersEdit: { flexDirection: 'row' },
 	orderersEditHeader: { fontWeight: 'bold', marginRight: 10, marginTop: 7, textAlign: 'center' },

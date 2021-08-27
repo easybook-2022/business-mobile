@@ -75,7 +75,7 @@ export default function addproduct(props) {
 
 		for (let k = 0; k < sizes.length; k++) {
 			if (!sizes[k].name) {
-				setErrormsg("One of the size is not named")
+				setErrormsg("One of the size is not selected")
 
 				return
 			}
@@ -547,7 +547,7 @@ export default function addproduct(props) {
 									}}>
 										<FontAwesome name="close" size={20}/>
 									</TouchableOpacity>
-									<TextInput style={style.sizeInput} placeholder="eg. 4.99" value={size.price.toString()} onChangeText={(price) => {
+									<TextInput style={style.sizeInput} placeholderTextColor="rgba(0, 0, 0, 0.5)" placeholder="4.99" value={size.price.toString()} onChangeText={(price) => {
 										let newSizes = [...sizes]
 
 										newSizes[index].price = price.toString()
@@ -581,7 +581,7 @@ export default function addproduct(props) {
 						{sizes.length == 0 && (
 							<View style={style.priceBox}>
 								<Text style={style.priceHeader}>Product price</Text>
-								<TextInput style={style.priceInput} placeholder="4.99" onChangeText={(price) => setPrice(price.toString())} value={price.toString()} autoCorrect={false}/>
+								<TextInput style={style.priceInput} placeholderTextColor="rgba(0, 0, 0, 0.5)" placeholder="4.99" onChangeText={(price) => setPrice(price.toString())} value={price.toString()} autoCorrect={false}/>
 							</View>
 						)}
 

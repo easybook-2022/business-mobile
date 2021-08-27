@@ -1097,7 +1097,7 @@ export default function settings(props) {
 
 const style = StyleSheet.create({
 	box: { alignItems: 'center', height: '100%', width: '100%' },
-	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, height: 34, margin: 20, padding: 5, width: 100 },
+	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, height: 30, margin: 20, padding: 5, width: 100 },
 	backHeader: { fontFamily: 'appFont', fontSize: 20 },
 	boxHeader: { fontFamily: 'appFont', fontSize: 50, textAlign: 'center' },
 	header: { fontFamily: 'appFont', fontSize: 20, marginTop: 20, textAlign: 'center' },

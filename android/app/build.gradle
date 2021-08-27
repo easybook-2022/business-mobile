@@ -132,7 +132,7 @@ android {
     }
 
     defaultConfig {
-        applicationId 'com.geottuse.serviceapp.services'
+        applicationId 'com.geottuse.serviceapp.business'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

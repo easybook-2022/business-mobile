@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { AsyncStorage, Dimensions, ScrollView, View, Text, TextInput, Image, TouchableOpacity, StyleSheet } from 'react-native'
+import { AsyncStorage, Dimensions, ScrollView, View, Text, TextInput, Image, Keyboard, TouchableOpacity, StyleSheet } from 'react-native'
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import * as FileSystem from 'expo-file-system'
@@ -217,7 +217,7 @@ export default function addservice(props) {
 						<Text style={style.addHeader}>Enter service info</Text>
 						
 						<TextInput style={style.addInput} placeholder="Service name" placeholderTextColor="rgba(127, 127, 127, 0.5)" onChangeText={(name) => setName(name)} value={name}/>
-						<TextInput style={style.infoInput} multiline={true} placeholder="Anything you want to say about this service (optional)" placeholderTextColor="rgba(127, 127, 127, 0.5)" onChangeText={(info) => setInfo(info)} value={info}/>
+						<TextInput style={style.infoInput} multiline={true} onSubmitEditing={() => Keyboard.dismiss()} placeholder="Anything you want to say about this service (optional)" placeholderTextColor="rgba(127, 127, 127, 0.5)" onChangeText={(info) => setInfo(info)} value={info}/>
 
 						<View style={style.cameraContainer}>
 							<Text style={style.cameraHeader}>Service photo</Text>
@@ -243,12 +243,12 @@ export default function addservice(props) {
 
 						<View style={style.inputBox}>
 							<Text style={style.inputHeader}>Service price</Text>
-							<TextInput style={style.inputValue} placeholder="4.99" onChangeText={(price) => setPrice(price.toString())} value={price}/>
+							<TextInput style={style.inputValue} placeholderTextColor="rgba(0, 0, 0, 0.5)" placeholder="4.99" onChangeText={(price) => setPrice(price.toString())} value={price}/>
 						</View>
 
 						<View style={style.inputBox}>
 							<Text style={style.inputHeader}>Service duration</Text>
-							<TextInput style={style.inputValue} placeholder="4 hours" onChangeText={(duration) => setDuration(duration)} value={duration}/>
+							<TextInput style={style.inputValue} placeholderTextColor="rgba(0, 0, 0, 0.5)" placeholder="4 hours" onChangeText={(duration) => setDuration(duration)} value={duration}/>
 						</View>
 
 						<Text style={style.errorMsg}>{errorMsg}</Text>
