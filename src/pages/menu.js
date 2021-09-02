@@ -435,7 +435,7 @@ export default function menu(props) {
 												<Text style={style.menuActionHeader}>Edit</Text>
 											</TouchableOpacity>
 										</View>
-										<Text style={style.menuInfo}>{item.info}</Text>
+										{item.info ? <Text style={style.menuInfo}>{item.info}</Text> : null}
 									</TouchableOpacity>
 								}
 							/>
@@ -730,8 +730,8 @@ const style = StyleSheet.create({
 	body: {  },
 	row: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
 
-	menu: { padding: 20 },
-	menuHeader: { fontSize: 20, fontWeight: 'bold', paddingVertical: 10 },
+	menu: { marginHorizontal: 20, marginBottom: 15 },
+	menuHeader: { fontSize: 15, fontWeight: 'bold', paddingVertical: 15 },
 	menuImage: { backgroundColor: 'black', borderRadius: 25, height: 50, marginLeft: 10, width: 50 },
 	menuAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, height: 27, marginHorizontal: 2, marginVertical: 12, padding: 5, width: 60 },
 	menuActionHeader: { fontSize: 10, textAlign: 'center' },
@@ -739,14 +739,14 @@ const style = StyleSheet.create({
 
 	product: { alignItems: 'center', padding: 20, width: (width / 3) - 10 },
 	productEmpty: { padding: 20, width: (width / 3) - 10 },
-	productHeader: { fontSize: 20, fontWeight: 'bold', paddingVertical: 10, textAlign: 'center' },
+	productHeader: { fontSize: 15, fontWeight: 'bold', paddingVertical: 10, textAlign: 'center' },
 	productImage: { backgroundColor: 'black', borderRadius: 25, height: 50, marginBottom: 5, width: 50 },
 	productPrice: { fontWeight: 'bold' },
 	productAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginBottom: 2, marginHorizontal: 8, padding: 5, width: 60 },
 	productActionHeader: { fontSize: 10, textAlign: 'center' },
 
 	service: { backgroundColor: 'white', marginHorizontal: 10, marginTop: 10, padding: 20 },
-	serviceHeader: { fontSize: 20, fontWeight: 'bold', paddingVertical: 10 },
+	serviceHeader: { fontSize: 15, fontWeight: 'bold', paddingVertical: 10 },
 	serviceImage: { backgroundColor: 'black', borderRadius: 25, height: 50, marginLeft: 10, width: 50 },
 	serviceInfo: { fontWeight: 'bold', marginRight: 10 },
 	serviceActions: { flexDirection: 'row', justifyContent: 'space-between', width: 180 },

@@ -2,7 +2,7 @@
   "expo": {
     "name": "easygo-business",
     "slug": "easygo-business",
-    "version": "1.0.0",
+    "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "splash": {
@@ -21,7 +21,8 @@
       "bundleIdentifier": "com.geottuse.serviceapp.business",
       "buildNumber": "0",
       "infoPlist": {
-        "NSCameraUsageDescription": "EasyGO (Services) uses camera to allow you to capture a photo of your location/menu/product/service"
+        "NSCameraUsageDescription": "EasyGO (Business) uses camera to allow you to capture a photo of your location/menu/product/service",
+        "NSMicrophoneUsageDescription": ""
       }
     },
     "android": {

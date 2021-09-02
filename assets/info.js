@@ -30,7 +30,9 @@ const { storeName, storeType, phonenumber, addressOne, addressTwo, city, provinc
 const { accountNumber, countryCode, currency, routingNumber, accountHolderName } = bankAccount[0]
 
 export const local_api_url = "http://localhost:5000"
-export const wifi_api_url = "http://192.168.0.14:5000"
+export const wifi_api_url = "http://192.168.0.16:5000"
+export const server_api_url = "https://www.easygo.tk"
+export const url = wifi_api_url
 export const userInfo = {
 	cellnumber: phonenumber,
 	password: "password",
@@ -44,4 +46,4 @@ export const userInfo = {
 }
 export const stripe_key = "sk_test_lft1B76yZfF2oEtD5rI3y8dz"
 
-export const logo_url = wifi_api_url + "/static/"
+export const logo_url = url + "/static/"

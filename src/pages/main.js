@@ -636,7 +636,11 @@ export default function main(props) {
 													{''} for {'\n'}
 
 													<Text style={{ fontFamily: 'Arial', fontWeight: 'bold' }}>
-														{item.diners} {item.diners > 1 ? 'people' : 'person'}
+														{item.diners > 0 ? 
+															item.diners + " " + (item.diners > 1 ? 'people' : 'person') 
+															: 
+															" 1 person"
+														}
 													</Text>
 
 													{'\n'}for table: <Text style={{ fontFamily: 'Arial', fontWeight: 'bold' }}>#{item.table}</Text>
@@ -645,7 +649,7 @@ export default function main(props) {
 
 											<View style={{ alignItems: 'center', marginVertical: 10 }}>
 												<View style={{ flexDirection: 'row', marginBottom: 10 }}>
-													<TouchableOpacity style={style.scheduleAction} onPress={() => props.navigation.navigate("orders", { scheduleid: item.id, refetch: () => getAllReservations() })}>
+													<TouchableOpacity style={style.scheduleAction} onPress={() => props.navigation.navigate("diningorders", { scheduleid: item.id, refetch: () => getAllReservations() })}>
 														<Text style={style.scheduleActionHeader}>Customers' Orders</Text>
 													</TouchableOpacity>
 													<Text style={style.scheduleNumOrders}>{item.numMakings > 0 && '(' + item.numMakings + ')'}</Text>
@@ -743,7 +747,7 @@ export default function main(props) {
 										...acceptRequestInfo,
 										tablenum
 									})
-								}} autoCorrect={false}/>
+								}} autoCorrect={false} autoComplete="none"/>
 
 								{acceptRequestInfo.errorMsg ? <Text style={style.errorMsg}>{acceptRequestInfo.errorMsg}</Text> : null}
 
@@ -913,7 +917,7 @@ const style = StyleSheet.create({
 	acceptRequestContainer: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	acceptRequestBox: { backgroundColor: 'white', width: '80%' },
 	acceptRequestHeader: { fontFamily: 'appFont', fontSize: 20, margin: 30, textAlign: 'center' },
-	acceptRequestInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: 20, margin: '5%', padding: 10, width: '90%' },
+	acceptRequestInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: 13, margin: '5%', padding: 10, width: '90%' },
 	errorMsg: { color: 'red', fontWeight: 'bold', marginVertical: 30, textAlign: 'center' },
 	acceptRequestActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	acceptRequestTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 5, width: 100 },

@@ -1,15 +1,15 @@
 import axios from 'axios'
-import { local_api_url, wifi_api_url } from '../../assets/info'
+import { url } from '../../assets/info'
 
 export const getProducts = data => {
 	return axios.post(
-		`${wifi_api_url}/products/get_products`,
+		`${url}/products/get_products`,
 		data
 	)
 }
 
 export const getProductInfo = id => {
-	return axios.get(`${wifi_api_url}/products/get_product_info/${id}`)
+	return axios.get(`${url}/products/get_product_info/${id}`)
 }
 
 export const addNewProduct = data => {
@@ -27,7 +27,7 @@ export const addNewProduct = data => {
 	form.append("price", data.price)
 
 	return axios.post(
-		`${wifi_api_url}/products/add_product`,
+		`${url}/products/add_product`,
 		form,
 		{ headers: {
 			'Content-Type': 'multipart/form-data'
@@ -51,7 +51,7 @@ export const updateProduct = data => {
 	form.append("price", data.price)
 
 	return axios.post(
-		`${wifi_api_url}/products/update_product`,
+		`${url}/products/update_product`,
 		form,
 		{ headers: {
 			'Content-Type': 'multipart/form-data'
@@ -60,5 +60,5 @@ export const updateProduct = data => {
 }
 
 export const removeProduct = (id) => {
-	return axios.post(`${wifi_api_url}/products/remove_product/${id}`)
+	return axios.post(`${url}/products/remove_product/${id}`)
 }

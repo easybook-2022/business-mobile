@@ -1,16 +1,16 @@
 import axios from 'axios'
-import { local_api_url, wifi_api_url } from '../../assets/info'
+import { url } from '../../assets/info'
 
 export const registerLocation = data => {
 	return axios.post(
-		`${wifi_api_url}/locations/register_location`, 
+		`${url}/locations/register_location`, 
 		data
 	)
 }
 
 export const loginLocation = data => {
 	return axios.post(
-		`${wifi_api_url}/locations/login_location`,
+		`${url}/locations/login_location`,
 		data
 	)
 }
@@ -33,7 +33,7 @@ export const setupLocation = data => {
 	form.append("ipAddress", data.ipAddress)
 
 	return axios.post(
-		`${wifi_api_url}/locations/setup_location`, 
+		`${url}/locations/setup_location`, 
 		form, 
 		{ headers: { 
 			'Content-Type': 'multipart/form-data' 
@@ -59,7 +59,7 @@ export const updateLocation = data => {
 	form.append("ipAddress", data.ipAddress)
 
 	return axios.post(
-		`${wifi_api_url}/locations/update_location`,
+		`${url}/locations/update_location`,
 		form,
 		{ headers: {
 			'Content-Type': 'multipart/form-data'
@@ -68,60 +68,60 @@ export const updateLocation = data => {
 }
 
 export const fetchNumRequests = id => {
-	return axios.get(`${wifi_api_url}/locations/fetch_num_requests/${id}`)
+	return axios.get(`${url}/locations/fetch_num_requests/${id}`)
 }
 
 export const fetchNumAppointments = id => {
-	return axios.get(`${wifi_api_url}/locations/fetch_num_appointments/${id}`)
+	return axios.get(`${url}/locations/fetch_num_appointments/${id}`)
 }
 
 export const fetchNumCartOrderers = id => {
-	return axios.get(`${wifi_api_url}/locations/fetch_num_cartorderers/${id}`)
+	return axios.get(`${url}/locations/fetch_num_cartorderers/${id}`)
 }
 
 export const fetchNumReservations = id => {
-	return axios.get(`${wifi_api_url}/locations/fetch_num_reservations/${id}`)
+	return axios.get(`${url}/locations/fetch_num_reservations/${id}`)
 }
 
 export const fetchNumorders = id => {
-	return axios.get(`${wifi_api_url}/locations/fetch_num_orders/${id}`)
+	return axios.get(`${url}/locations/fetch_num_orders/${id}`)
 }
 
 export const setLocationType = data => {
 	return axios.post(
-		`${wifi_api_url}/locations/set_type`,
+		`${url}/locations/set_type`,
 		data
 	)
 }
 
 export const setLocationHours = data => {
 	return axios.post(
-		`${wifi_api_url}/locations/set_hours`,
+		`${url}/locations/set_hours`,
 		data
 	)
 }
 
 export const getInfo = data => {
 	return axios.post(
-		`${wifi_api_url}/locations/get_info`,
+		`${url}/locations/get_info`,
 		data
 	)
 }
 
 export const changeLocationState = id => {
-	return axios.get(`${wifi_api_url}/locations/change_location_state/${id}`)
+	return axios.get(`${url}/locations/change_location_state/${id}`)
 }
 
 export const getLocationHours = data => {
 	return axios.post(
-		`${wifi_api_url}/locations/get_hours`,
+		`${url}/locations/get_hours`,
 		data
 	)
 }
 
 export const getLocationProfile = data => {
 	return axios.post(
-		`${wifi_api_url}/locations/get_location_profile`,
+		`${url}/locations/get_location_profile`,
 		data
 	)
 }
