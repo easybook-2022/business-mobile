@@ -1,6 +1,8 @@
 const stores = [
-	{ id: 0, storeName: "I Love Pho 2", storeType: "restaurant", phonenumber: "9055668898", addressOne: "1248 Dundas St E", addressTwo: "", city: "Mississauga", province: "ON", postalcode: "L4Y 2C5" },
-	{ id: 1, storeName: "Hung Hair Salon", storeType: "hair", phonenumber: "4164621484", addressOne: "642 Gerrard St E", addressTwo: "", city: "Toronto", province: "ON", postalcode: "M4M 1Y3" },
+//1: 9055668898
+//2: 4164621484
+	{ id: 0, storeName: "I Love Pho 2", storeType: "restaurant", phonenumber: "5675675678", addressOne: "1248 Dundas St E", addressTwo: "", city: "Mississauga", province: "ON", postalcode: "L4Y 2C5" },
+	{ id: 1, storeName: "Hung Hair Salon", storeType: "hair", phonenumber: "9000000000", addressOne: "642 Gerrard St E", addressTwo: "", city: "Toronto", province: "ON", postalcode: "M4M 1Y3" },
 	{ id: 2, storeName: "TopCut", storeType: "hair", phonenumber: "4162037200", addressOne: "9 King St E", addressTwo: "", city: "Toronto", province: "ON", postalcode: "M5C 3C5" },
 	{ id: 3, storeName: "Pho House", storeType: "restaurant", phonenumber: "4167787888", addressOne: "625 Gerrard St E", addressTwo: "", city: "Toronto", province: "ON", postalcode: "M4M 1Y2" },
 	{ id: 4, storeName: "Headlines Salon", storeType: "hair", phonenumber: "9056420336", addressOne: "6328 Main St", addressTwo: "", city: "Whitchurch-Stouffville", province: "ON", postalcode: "L4A 1G9" },

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AsyncStorage, Dimensions, View, Text, TextInput, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { AsyncStorage, Dimensions, View, Text, TextInput, Image, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet } from 'react-native';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import { registerUser } from '../apis/owners'
@@ -45,57 +45,59 @@ export default function register({ navigation }) {
 	return (
 		<View style={style.register}>
 			<View style={{ paddingTop: offsetPadding }}>
-				<View style={style.box}>
-					<Text style={style.boxHeader}>Sign-Up</Text>
+				<TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+					<View style={style.box}>
+						<Text style={style.boxHeader}>Sign-Up</Text>
 
-					<View style={style.inputsBox}>
-						<View style={style.inputContainer}>
-							<Text style={style.inputHeader}>Phone number:</Text>
-							<TextInput style={style.input} onChangeText={(phonenumber) => setPhonenumber(phonenumber)} value={phonenumber} keyboardType="numeric" autoCorrect={false}/>
+						<View style={style.inputsBox}>
+							<View style={style.inputContainer}>
+								<Text style={style.inputHeader}>Phone number:</Text>
+								<TextInput style={style.input} onChangeText={(phonenumber) => setPhonenumber(phonenumber)} value={phonenumber} keyboardType="numeric" autoCorrect={false}/>
+							</View>
+
+							<View style={style.inputContainer}>
+								<Text style={style.inputHeader}>Password:</Text>
+								<TextInput style={style.input} secureTextEntry={true} onChangeText={(password) => setPassword(password)} value={password} autoCorrect={false}/>
+							</View>
+
+							<View style={style.inputContainer}>
+								<Text style={style.inputHeader}>Confirm Password:</Text>
+								<TextInput style={style.input} secureTextEntry={true} onChangeText={(password) => setConfirmpassword(password)} value={confirmPassword} autoCorrect={false}/>
+							</View>
+
+							<Text style={style.errorMsg}>{errorMsg}</Text>
 						</View>
 
-						<View style={style.inputContainer}>
-							<Text style={style.inputHeader}>Password:</Text>
-							<TextInput style={style.input} secureTextEntry={true} onChangeText={(password) => setPassword(password)} value={password} autoCorrect={false}/>
+						<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+							<View style={style.options}>
+								<TouchableOpacity style={style.option} onPress={() => {
+									navigation.dispatch(
+										CommonActions.reset({
+											index: 1,
+											routes: [{ name: 'login' }]
+										})
+									);
+								}}>
+									<Text style={style.optionHeader}>Already a member ? Log in</Text>
+								</TouchableOpacity>
+								<TouchableOpacity style={style.option} onPress={() => {
+									navigation.dispatch(
+										CommonActions.reset({
+											index: 1,
+											routes: [{ name: 'forgotpassword' }]
+										})
+									)
+								}}>
+									<Text style={style.optionHeader}>Forgot your password ? Reset here</Text>
+								</TouchableOpacity>
+							</View>
 						</View>
 
-						<View style={style.inputContainer}>
-							<Text style={style.inputHeader}>Confirm Password:</Text>
-							<TextInput style={style.input} secureTextEntry={true} onChangeText={(password) => setConfirmpassword(password)} value={confirmPassword} autoCorrect={false}/>
-						</View>
-
-						<Text style={style.errorMsg}>{errorMsg}</Text>
+						<TouchableOpacity style={style.submit} onPress={register}>
+							<Text style={style.submitHeader}>Register</Text>
+						</TouchableOpacity>
 					</View>
-
-					<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-						<View style={style.options}>
-							<TouchableOpacity style={style.option} onPress={() => {
-								navigation.dispatch(
-									CommonActions.reset({
-										index: 1,
-										routes: [{ name: 'login' }]
-									})
-								);
-							}}>
-								<Text style={style.optionHeader}>Already a member ? Log in</Text>
-							</TouchableOpacity>
-							<TouchableOpacity style={style.option} onPress={() => {
-								navigation.dispatch(
-									CommonActions.reset({
-										index: 1,
-										routes: [{ name: 'forgotpassword' }]
-									})
-								)
-							}}>
-								<Text style={style.optionHeader}>Forgot your password ? Reset here</Text>
-							</TouchableOpacity>
-						</View>
-					</View>
-
-					<TouchableOpacity style={style.submit} onPress={register}>
-						<Text style={style.submitHeader}>Register</Text>
-					</TouchableOpacity>
-				</View>
+				</TouchableWithoutFeedback>
 			</View>
 		</View>
 	);

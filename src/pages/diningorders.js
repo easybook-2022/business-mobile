@@ -132,10 +132,10 @@ export default function diningorders(props) {
 												))}
 
 												{order.sizes.map(size => (
-													other.selected ? 
+													size.selected ? 
 														<Text key={size.key} style={style.itemInfo}>
-															<Text style={{ fontWeight: 'bold' }}>{other.name}: </Text> 
-															<Text>{other.input}</Text>
+															<Text style={{ fontWeight: 'bold' }}>{size.name}: </Text> 
+															<Text>{size.input}</Text>
 														</Text>
 													: null
 												))}

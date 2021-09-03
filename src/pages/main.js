@@ -522,7 +522,7 @@ export default function main(props) {
 															<>
 																<Text><Text style={{ fontWeight: 'bold' }}>{item.username}</Text> is booking a reservation</Text>
 																<Text style={{ fontWeight: 'bold' }}>{'\n'}at {displayTimestr(item.time)}</Text>
-																<Text style={{ fontWeight: 'bold' }}>{item.diners > 0 ? ' for ' + item.diners + ' ' + (item.diners == 1 ? 'person' : 'people') : ' for 1 person'}</Text>
+																<Text style={{ fontWeight: 'bold' }}>{(item.diners + 1) > 0 ? ' for ' + (item.diners + 1) + ' ' + ((item.diners + 1) == 1 ? 'person' : 'people') : ' for 1 person'}</Text>
 															</>
 														}
 													</Text>
@@ -636,8 +636,8 @@ export default function main(props) {
 													{''} for {'\n'}
 
 													<Text style={{ fontFamily: 'Arial', fontWeight: 'bold' }}>
-														{item.diners > 0 ? 
-															item.diners + " " + (item.diners > 1 ? 'people' : 'person') 
+														{(item.diners + 1) > 0 ? 
+															(item.diners + 1) + " " + ((item.diners + 1) > 1 ? 'people' : 'person') 
 															: 
 															" 1 person"
 														}
@@ -884,7 +884,7 @@ const style = StyleSheet.create({
 	schedule: { alignItems: 'center', borderRadius: 5, backgroundColor: 'white', marginHorizontal: 5, marginVertical: 2.5 },
 	scheduleRow: { flexDirection: 'row', justifyContent: 'space-between' },
 	imageHolder: { borderRadius: 25, height: 50, margin: 5, overflow: 'hidden', width: 50 },
-	scheduleHeader: { fontFamily: 'appFont', fontSize: 13, padding: 10, textAlign: 'center', width: width - 100 },
+	scheduleHeader: { fontFamily: 'appFont', fontSize: 20, padding: 10, textAlign: 'center', width: width - 100 },
 	scheduleAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, height: 27, marginTop: 3, padding: 5, width: 120 },
 	scheduleActionDisabled: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, height: 27, marginTop: 3, opacity: 0.5, padding: 5, width: 120 },
 	scheduleActionHeader: { fontSize: 10, textAlign: 'center' },

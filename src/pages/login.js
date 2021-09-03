@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AsyncStorage, Dimensions, View, Text, TextInput, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { AsyncStorage, Dimensions, View, Text, TextInput, Image, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet } from 'react-native';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import { loginUser } from '../apis/owners'
@@ -52,52 +52,54 @@ export default function login({ navigation }) {
 	return (
 		<View style={style.login}>
 			<View style={{ paddingVertical: offsetPadding }}>
-				<View style={style.box}>
-					<Text style={style.boxHeader}>Log-In</Text>
+				<TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+					<View style={style.box}>
+						<Text style={style.boxHeader}>Log-In</Text>
 
-					<View style={style.inputsBox}>
-						<View style={style.inputContainer}>
-							<Text style={style.inputHeader}>Phone number:</Text>
-							<TextInput style={style.input} onChangeText={(phonenumber) => setPhonenumber(phonenumber)} value={phonenumber} keyboardType="numeric" autoCorrect={false}/>
+						<View style={style.inputsBox}>
+							<View style={style.inputContainer}>
+								<Text style={style.inputHeader}>Phone number:</Text>
+								<TextInput style={style.input} onChangeText={(phonenumber) => setPhonenumber(phonenumber)} value={phonenumber} keyboardType="numeric" autoCorrect={false}/>
+							</View>
+
+							<View style={style.inputContainer}>
+								<Text style={style.inputHeader}>Password:</Text>
+								<TextInput style={style.input} secureEntry={true} onChangeText={(password) => setPassword(password)} secureTextEntry={true} value={password} autoCorrect={false}/>
+							</View>
+
+							<Text style={style.errorMsg}>{errorMsg}</Text>
 						</View>
 
-						<View style={style.inputContainer}>
-							<Text style={style.inputHeader}>Password:</Text>
-							<TextInput style={style.input} secureEntry={true} onChangeText={(password) => setPassword(password)} secureTextEntry={true} value={password} autoCorrect={false}/>
+						<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+							<View style={style.options}>
+								<TouchableOpacity style={style.option} onPress={() => {
+									navigation.dispatch(
+										CommonActions.reset({
+											index: 1,
+											routes: [{ name: 'register' }]
+										})
+									);
+								}}>
+									<Text style={style.optionHeader}>Don't have an account ? Sign up</Text>
+								</TouchableOpacity>
+								<TouchableOpacity style={style.option} onPress={() => {
+									navigation.dispatch(
+										CommonActions.reset({
+											index: 1,
+											routes: [{ name: 'forgotpassword' }]
+										})
+									)
+								}}>
+									<Text style={style.optionHeader}>Forgot your password ? Reset here</Text>
+								</TouchableOpacity>
+							</View>
 						</View>
 
-						<Text style={style.errorMsg}>{errorMsg}</Text>
+						<TouchableOpacity style={style.submit} onPress={login}>
+							<Text style={style.submitHeader}>Sign-In</Text>
+						</TouchableOpacity>
 					</View>
-
-					<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-						<View style={style.options}>
-							<TouchableOpacity style={style.option} onPress={() => {
-								navigation.dispatch(
-									CommonActions.reset({
-										index: 1,
-										routes: [{ name: 'register' }]
-									})
-								);
-							}}>
-								<Text style={style.optionHeader}>Don't have an account ? Sign up</Text>
-							</TouchableOpacity>
-							<TouchableOpacity style={style.option} onPress={() => {
-								navigation.dispatch(
-									CommonActions.reset({
-										index: 1,
-										routes: [{ name: 'forgotpassword' }]
-									})
-								)
-							}}>
-								<Text style={style.optionHeader}>Forgot your password ? Reset here</Text>
-							</TouchableOpacity>
-						</View>
-					</View>
-
-					<TouchableOpacity style={style.submit} onPress={login}>
-						<Text style={style.submitHeader}>Sign-In</Text>
-					</TouchableOpacity>
-				</View>
+				</TouchableWithoutFeedback>
 			</View>
 		</View>
 	);
@@ -113,7 +115,7 @@ const style = StyleSheet.create({
 	inputContainer: { marginVertical: 5 },
 	inputHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold' },
 	input: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: 20, padding: 10 },
-	errorMsg: { color: 'red', fontWeight: 'bold', marginVertical: 20, textAlign: 'center' },
+	errorMsg: { color: 'darkred', fontWeight: 'bold', marginVertical: 20, textAlign: 'center' },
 	
 	options: {  },
 	option: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, marginVertical: 5, padding: 5 },

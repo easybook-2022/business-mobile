@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { AsyncStorage, ActivityIndicator, Dimensions, ScrollView, View, Text, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet, Modal } from 'react-native';
+import { AsyncStorage, ActivityIndicator, Dimensions, ScrollView, View, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet, Modal } from 'react-native';
 import Constants from 'expo-constants';
 import { getLocationHours } from '../apis/locations'
 import { getReservationInfo, rescheduleReservation } from '../apis/schedules'
@@ -118,7 +118,7 @@ export default function booktime(props) {
 					<Text style={style.backHeader}>Back</Text>
 				</TouchableOpacity>
 
-				<Text style={style.boxHeader}>Request another time for {diners > 0 ? '\n' + diners + ' ' + (diners == 1 ? 'person' : 'people') : "1 person"}</Text>
+				<Text style={style.boxHeader}>Request another time for {(diners + 1) > 0 ? '\n' + (diners + 1) + ' ' + ((diners + 1) == 1 ? 'person' : 'people') : "1 person"}</Text>
 
 				{!loaded ? 
 					<ActivityIndicator size="small"/>
@@ -148,19 +148,21 @@ export default function booktime(props) {
 								{!confirm.requested ? 
 									<>
 										<Text style={style.confirmHeader}>
-											<Text style={{ fontFamily: 'appFont' }}>Request a different time for {diners > 0 ? '\n' + diners + ' ' + (diners == 1 ? 'person' : 'people') : '1 person'}</Text>
+											<Text style={{ fontFamily: 'appFont' }}>Request a different time for {(diners + 1) > 0 ? '\n' + (diners + 1) + ' ' + ((diners + 1) == 1 ? 'person' : 'people') : '1 person'}</Text>
 											{'\n at ' + confirm.service}
 											{'\n at ' + confirm.timeheader}
 										</Text>
 
-										<Text style={style.acceptRequestHeader}>Tell the diner the table #?</Text>
+										<View style={{ alignItems: 'center' }}>
+											<Text style={style.confirmHeader}>Tell the diner the table #?</Text>
 
-										<TextInput placeholder="What table will be available" style={style.acceptRequestInput} onChangeText={(tablenum) => {
-											setConfirm({
-												...confirm,
-												tablenum
-											})
-										}} autoCorrect={false}/>
+											<TextInput placeholder="What table will be available" style={style.confirmInput} onChangeText={(tablenum) => {
+												setConfirm({
+													...confirm,
+													tablenum
+												})
+											}} autoCorrect={false}/>
+										</View>
 
 										{confirm.errorMsg ? <Text style={style.errorMsg}>{confirm.errorMsg}</Text> : null}
 
@@ -213,8 +215,9 @@ const style = StyleSheet.create({
 
 	// confirm & requested box
 	confirmBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
-	confirmContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },
+	confirmContainer: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },
 	confirmHeader: { fontSize: 20, fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
+	confirmInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: (width * 0.8) - 50 },
 	confirmOptions: { flexDirection: 'row' },
 	confirmOption: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
 	confirmOptionHeader: { },
