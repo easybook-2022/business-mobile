@@ -8,7 +8,7 @@ import * as ImageManipulator from 'expo-image-manipulator'
 import * as Location from 'expo-location';
 import { CommonActions } from '@react-navigation/native';
 import { setupLocation } from '../apis/locations'
-import { userInfo } from '../../assets/info'
+import { registerInfo } from '../../assets/info'
 
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5'
 import AntDesign from 'react-native-vector-icons/AntDesign'
@@ -22,13 +22,13 @@ export default function setup({ navigation }) {
 	const [permission, setPermission] = useState(null);
 	const [camComp, setCamcomp] = useState(null)
 	const [camType, setCamtype] = useState(Camera.Constants.Type.back);
-	const [storeName, setStorename] = useState(userInfo.storeName)
-	const [phonenumber, setPhonenumber] = useState(userInfo.phonenumber)
-	const [addressOne, setAddressone] = useState(userInfo.addressOne)
-	const [addressTwo, setAddresstwo] = useState(userInfo.addressTwo)
-	const [city, setCity] = useState(userInfo.city)
-	const [province, setProvice] = useState(userInfo.province)
-	const [postalcode, setPostalcode] = useState(userInfo.postalcode)
+	const [storeName, setStorename] = useState(registerInfo.storeName)
+	const [phonenumber, setPhonenumber] = useState(registerInfo.phonenumber)
+	const [addressOne, setAddressone] = useState(registerInfo.addressOne)
+	const [addressTwo, setAddresstwo] = useState(registerInfo.addressTwo)
+	const [city, setCity] = useState(registerInfo.city)
+	const [province, setProvice] = useState(registerInfo.province)
+	const [postalcode, setPostalcode] = useState(registerInfo.postalcode)
 	const [logo, setLogo] = useState({ uri: '', name: '' })
 	const [loading, setLoading] = useState(false)
 	const [errorMsg, setErrormsg] = useState('')
@@ -281,7 +281,7 @@ const style = StyleSheet.create({
 	inputContainer: { marginVertical: 30 },
 	inputHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold' },
 	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: 20, padding: 5 },
-	cameraContainer: { alignItems: 'center', marginBottom: 50, width: '100%' },
+	cameraContainer: { alignItems: 'center', marginBottom: 10, width: '100%' },
 	cameraHeader: { fontFamily: 'appFont', fontWeight: 'bold', paddingVertical: 5 },
 	camera: { height: width * 0.8, width: width * 0.8 },
 	cameraAction: { margin: 10 },

@@ -119,19 +119,21 @@ export default function booktime(props) {
 					<ActivityIndicator size="small"/>
 					:
 					<ScrollView>
-						<View style={style.times}>
-							{times.map(info => (
-								<TouchableOpacity style={info.booked ? style.selected : style.unselect} disabled={info.booked} key={info.key} onPress={() => {
-									if (!info.booked) setConfirm({ ...confirm, show: true, service: name, timeheader: info.header, time: info.time })
-								}}>
-									<Text style={{ color: info.booked ? 'white' : 'black', fontSize: 20 }}>{info.header}</Text>
-								</TouchableOpacity>
-							))}
+						<View style={{ alignItems: 'center', flexDirection: 'row', justifyContent: 'space-around', marginBottom: 50, width: '100%' }}>
+							<View style={style.times}>
+								{times.map(info => (
+									<TouchableOpacity style={info.booked ? style.selected : style.unselect} disabled={info.booked} key={info.key} onPress={() => {
+										if (!info.booked) setConfirm({ ...confirm, show: true, service: name, timeheader: info.header, time: info.time })
+									}}>
+										<Text style={{ color: info.booked ? 'white' : 'black', fontSize: 15 }}>{info.header}</Text>
+									</TouchableOpacity>
+								))}
+							</View>
 						</View>
 					</ScrollView>
 				}
 			</View>
-
+			
 			{confirm.show && (
 				<Modal transparent={true}>
 					<View style={{ paddingVertical: offsetPadding }}>
@@ -141,7 +143,7 @@ export default function booktime(props) {
 									<>
 										<Text style={style.confirmHeader}>
 											<Text style={{ fontFamily: 'appFont' }}>Select this time for client</Text>
-											{'\n'} at {' ' + confirm.timeheader + '\n for \n'}
+											{'\n'} at {confirm.timeheader + '\n for \n'}
 											<Text style={{ fontFamily: 'appFont', fontSize: 30 }}>{confirm.service}</Text>
 										</Text>
 
@@ -161,7 +163,7 @@ export default function booktime(props) {
 										<View style={style.requestedHeaders}>
 											<Text style={style.requestedHeader}>Time requested {'\n'}</Text>
 											<Text style={style.requestedHeaderInfo}>at {confirm.timeheader} {'\n'}</Text>
-											<Text style={style.requestedHeaderInfo}>You will get notified by the client</Text>
+											<Text style={style.requestedHeaderInfo}>You will get notify by the client</Text>
 
 											<TouchableOpacity style={style.requestedClose} onPress={() => {
 												setConfirm({ ...confirm, show: false, requested: false, errormsg: "" })
@@ -184,15 +186,15 @@ export default function booktime(props) {
 
 const style = StyleSheet.create({
 	box: { backgroundColor: '#EAEAEA', height: '100%', width: '100%' },
-	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, height: 30, margin: 20, padding: 5, width: 100 },
+	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, height: 30, marginTop: 20, marginHorizontal: 20, padding: 5, width: 100 },
 	backHeader: { fontFamily: 'appFont', fontSize: 20 },
 
 	boxHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', textAlign: 'center' },
 	serviceHeader: { fontSize: 25, textAlign: 'center', marginBottom: 50 },
 
-	times: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', width: '100%' },
-	unselect: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5 },
-	selected: { alignItems: 'center', backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5 },
+	times: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', width: 282 },
+	unselect: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, padding: 5, width: 90 },
+	selected: { alignItems: 'center', backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, padding: 5, width: 90 },
 
 	// confirm & requested box
 	confirmBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },

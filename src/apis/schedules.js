@@ -68,16 +68,13 @@ export const getDiningOrders = id => {
 	return axios.get(`${url}/schedules/get_dining_orders/${id}`)
 }
 
+export const getDinersOrders = id => {
+	return axios.get(`${url}/schedules/get_diners_orders/${id}`)
+}
+
 export const seeUserOrders = data => {
 	return axios.post(
 		`${url}/schedules/see_user_orders`,
-		data
-	)
-}
-
-export const receivePayment = data => {
-	return axios.post(
-		`${url}/schedules/receive_payment`,
 		data
 	)
 }
@@ -91,6 +88,13 @@ export const deliverRound = data => {
 
 export const doneDining = id => {
 	return axios.get(`${url}/schedules/done_dining/${id}`)
+}
+
+export const getDinersPayments = data => {
+	return axios.post(
+		`${url}/schedules/get_diners_payments`,
+		data
+	)
 }
 
 export const doneService = id => {

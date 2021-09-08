@@ -60,12 +60,12 @@ export default function resetpassword(props) {
 					<View style={style.inputsBox}>
 						<View style={style.inputContainer}>
 							<Text style={style.inputHeader}>New password:</Text>
-							<TextInput style={style.input} secureTextEntry={true} onChangeText={(password) => setNewpassword(password)} value={newPassword} keyboardType="numeric" autoCorrect={false}/>
+							<TextInput style={style.input} secureTextEntry={true} onChangeText={(password) => setNewpassword(password)} value={newPassword} autoCorrect={false}/>
 						</View>
 
 						<View style={style.inputContainer}>
 							<Text style={style.inputHeader}>Confirm password:</Text>
-							<TextInput style={style.input} secureTextEntry={true} onChangeText={(password) => setConfirmpassword(password)} value={confirmPassword} keyboardType="numeric" autoCorrect={false}/>
+							<TextInput style={style.input} secureTextEntry={true} onChangeText={(password) => setConfirmpassword(password)} value={confirmPassword} autoCorrect={false}/>
 						</View>
 
 						<Text style={style.errorMsg}>{errorMsg}</Text>

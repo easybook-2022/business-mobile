@@ -15,6 +15,7 @@ export default function diningorders(props) {
 	const [table, setTable] = useState('')
 	const [timeStr, setTimestr] = useState('')
 	const [rounds, setRounds] = useState([])
+	const [loaded, setLoaded] = useState(false)
 
 	const getTheScheduleInfo = () => {
 		getScheduleInfo(scheduleid)
@@ -51,6 +52,7 @@ export default function diningorders(props) {
 			.then((res) => {
 				if (res) {
 					setRounds(res.rounds)
+					setLoaded(true)
 				}
 			})
 	}
@@ -95,64 +97,68 @@ export default function diningorders(props) {
 
 				<Text style={style.boxHeader}>Order(s)</Text>
 
-				{rounds.length > 0 ? 
-					<ScrollView style={{ height: screenHeight - 86 }}>
-						{rounds.map(round => (
-							<View style={style.round} key={round.key}>
-								<View style={{ alignItems: 'center' }}>
-									<TouchableOpacity style={style.roundDeliver} onPress={() => deliverTheRound(round.id)}>
-										<Text style={style.roundDeliverHeader}>Ready to serve</Text>
-									</TouchableOpacity>
-								</View>
+				{loaded ?
+					rounds.length > 0 ? 
+						<ScrollView style={{ height: screenHeight - 86 }}>
+							{rounds.map(round => (
+								<View style={style.round} key={round.key}>
+									<View style={{ alignItems: 'center' }}>
+										<TouchableOpacity style={style.roundDeliver} onPress={() => deliverTheRound(round.id)}>
+											<Text style={style.roundDeliverHeader}>Ready to serve</Text>
+										</TouchableOpacity>
+									</View>
 
-								{round.round.map(orders => (
-									orders.orders.map(order => (
-										<View style={style.order} key={order.key}>
-											<View style={style.orderItem} key={order.key}>
-												<View style={style.orderItemImageHolder}>
-													<Image source={{ uri: logo_url + order.image }} style={style.orderItemImage}/>
+									{round.round.map(orders => (
+										orders.orders.map(order => (
+											<View style={style.order} key={order.key}>
+												<View style={{ alignItems: 'center' }}>
+													<View style={style.orderItem} key={order.key}>
+														<View style={style.orderItemImageHolder}>
+															<Image source={{ uri: logo_url + order.image }} style={style.orderItemImage}/>
+														</View>
+														<Text style={style.orderItemName}>{order.name}</Text>
+
+														{order.options.map(option => (
+															<Text key={option.key} style={style.itemInfo}>
+																<Text style={{ fontWeight: 'bold' }}>{option.header}: </Text> 
+																{option.selected}
+																{option.type == 'percentage' && '%'}
+															</Text>
+														))}
+
+														{order.others.map(other => (
+															other.selected ? 
+																<Text key={other.key} style={style.itemInfo}>
+																	<Text style={{ fontWeight: 'bold' }}>{other.name}: </Text> 
+																	<Text>{other.input}</Text>
+																</Text>
+															: null
+														))}
+
+														{order.sizes.map(size => (
+															size.selected ? 
+																<Text key={size.key} style={style.itemInfo}>
+																	<Text style={{ fontWeight: 'bold' }}>{size.name}: </Text> 
+																	<Text>{size.input}</Text>
+																</Text>
+															: null
+														))}
+
+														<Text style={style.orderItemQuantity}>Quantity: {order.callfor == 0 ? order.quantity : order.callfor}</Text>
+													</View>
 												</View>
-												<Text style={style.orderItemName}>{order.name}</Text>
-
-												{order.options.map(option => (
-													<Text key={option.key} style={style.itemInfo}>
-														<Text style={{ fontWeight: 'bold' }}>{option.header}: </Text> 
-														{option.selected}
-														{option.type == 'percentage' && '%'}
-													</Text>
-												))}
-
-												{order.others.map(other => (
-													other.selected ? 
-														<Text key={other.key} style={style.itemInfo}>
-															<Text style={{ fontWeight: 'bold' }}>{other.name}: </Text> 
-															<Text>{other.input}</Text>
-														</Text>
-													: null
-												))}
-
-												{order.sizes.map(size => (
-													size.selected ? 
-														<Text key={size.key} style={style.itemInfo}>
-															<Text style={{ fontWeight: 'bold' }}>{size.name}: </Text> 
-															<Text>{size.input}</Text>
-														</Text>
-													: null
-												))}
-
-												<Text style={style.orderItemQuantity}>Quantity: {order.quantity}</Text>
-												<Text style={style.orderItemPrice}>Cost: $ {(order.price).toFixed(2)}</Text>
 											</View>
-										</View>
-									))
-								))}
-							</View>
-						))}
-					</ScrollView>
+										))
+									))}
+								</View>
+							))}
+						</ScrollView>
+						:
+						<View style={{ alignItems: 'center', flexDirection: 'column', height: screenHeight - 86, justifyContent: 'space-around' }}>
+							<Text style={{ fontWeight: 'bold' }}>No Order(s) Yet</Text>
+						</View>
 					:
-					<View style={{ alignItems: 'center', flexDirection: 'column', height: screenHeight - 86, justifyContent: 'space-around' }}>
-						<Text style={{ fontWeight: 'bold' }}>No Order(s) Yet</Text>
-					</View>
+					<ActivityIndicator size="large" marginTop={'50%'}/>
 				}
 			</View>
 		</View>
@@ -161,7 +167,7 @@ export default function diningorders(props) {
 
 const style = StyleSheet.create({
 	box: { height: '100%', width: '100%' },
-	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, height: 30, margin: 20, padding: 5, width: 100 },
+	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, height: 30, marginTop: 20, marginHorizontal: 20, padding: 5, width: 100 },
 	backHeader: { fontFamily: 'appFont', fontSize: 20 },
 	boxHeader: { fontSize: 15, marginHorizontal: 20, textAlign: 'center' },
 

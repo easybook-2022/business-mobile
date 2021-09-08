@@ -20,7 +20,7 @@ export default function addservice(props) {
 	const params = props.route.params
 	const { menuid, refetch } = params
 	const serviceid = params.id ? params.id : ""
-
+	
 	const [permission, setPermission] = useState(null);
 	const [camComp, setCamcomp] = useState(null)
 	const [camType, setCamtype] = useState(Camera.Constants.Type.back);

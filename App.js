@@ -21,6 +21,7 @@ import Setuphours from './src/pages/setuphours'
 import Main from './src/pages/main'
 import Cartorders from './src/pages/cartorders'
 import Diningorders from './src/pages/diningorders'
+import Dinersorders from './src/pages/dinersorders'
 
 // restaurants
 import Makereservation from './src/pages/makereservation'
@@ -75,6 +76,7 @@ export default function App() {
                         <Stack.Screen name="main" component={Main} options={{ headerShown: false }}/>
                         <Stack.Screen name="cartorders" component={Cartorders} options={{ headerShown: false }}/>
                         <Stack.Screen name="diningorders" component={Diningorders} options={{ headerShown: false }}/>
+                        <Stack.Screen name="dinersorders" component={Dinersorders} options={{ headerShown: false }}/>
                         <Stack.Screen name="makereservation" component={Makereservation} options={{ headerShown: false }}/>
                         <Stack.Screen name="booktime" component={Booktime} options={{ headerShown: false }}/>
                         <Stack.Screen name="services" component={Services} options={({ navigation, route }) => ({

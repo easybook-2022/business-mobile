@@ -208,7 +208,7 @@ export default function services(props) {
 		openCamera()
 		getTheInfo()
 	}, [])
-
+	
 	return (
 		<View style={{ paddingVertical: offsetPadding }}>
 			<View style={style.box}>

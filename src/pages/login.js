@@ -3,15 +3,15 @@ import { AsyncStorage, Dimensions, View, Text, TextInput, Image, TouchableOpacit
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import { loginUser } from '../apis/owners'
-import { userInfo } from '../../assets/info'
+import { loginInfo } from '../../assets/info'
 
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - (offsetPadding * 2)
 
 export default function login({ navigation }) {
-	const [phonenumber, setPhonenumber] = useState(userInfo.cellnumber)
-	const [password, setPassword] = useState(userInfo.password)
+	const [phonenumber, setPhonenumber] = useState(loginInfo.cellnumber)
+	const [password, setPassword] = useState(loginInfo.password)
 	const [errorMsg, setErrormsg] = useState('')
 
 	const login = () => {
@@ -48,7 +48,7 @@ export default function login({ navigation }) {
 			})
 			.catch((error) => console.log(error))
 	}
-
+	
 	return (
 		<View style={style.login}>
 			<View style={{ paddingVertical: offsetPadding }}>

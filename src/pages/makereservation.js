@@ -119,13 +119,13 @@ export default function booktime(props) {
 				</TouchableOpacity>
 
 				<Text style={style.boxHeader}>Request another time for {(diners + 1) > 0 ? '\n' + (diners + 1) + ' ' + ((diners + 1) == 1 ? 'person' : 'people') : "1 person"}</Text>
-
+				
 				{!loaded ? 
 					<ActivityIndicator size="small"/>
 					:
 					<ScrollView>
 						<Text style={style.timesHeader}>Availabilities</Text>
-						<View style={{ flexDirection: 'row', justifyContent: 'space-around', marginBottom: 50, width: '100%' }}>
+						<View style={{ alignItems: 'center', flexDirection: 'row', justifyContent: 'space-around', marginBottom: 50, width: '100%' }}>
 							<View style={style.times}>
 								{times.map(info => (
 									<TouchableOpacity style={info.booked ? style.selected : style.unselect} disabled={info.booked} key={info.key} onPress={() => {
@@ -139,7 +139,7 @@ export default function booktime(props) {
 					</ScrollView>
 				}
 			</View>
-			
+
 			{confirm.show && (
 				<Modal transparent={true}>
 					<TouchableWithoutFeedback style={{ paddingVertical: offsetPadding }} onPress={() => Keyboard.dismiss()}>
@@ -182,7 +182,7 @@ export default function booktime(props) {
 										<Text style={style.requestedHeader}>Reservation requested at {'\n'}</Text>
 										<Text style={style.requestedHeaderInfo}>{confirm.service} {'\n'}</Text>
 										<Text style={style.requestedHeaderInfo}>at {confirm.timeheader} {'\n'}</Text>
-										<Text style={style.requestedHeaderInfo}>You will get notified by the diners</Text>
+										<Text style={style.requestedHeaderInfo}>You will get notify by the diners</Text>
 										<TouchableOpacity style={style.requestedClose} onPress={() => {
 											setConfirm({ ...confirm, show: false, requested: false })
 											props.navigation.goBack()
@@ -202,14 +202,14 @@ export default function booktime(props) {
 
 const style = StyleSheet.create({
 	box: { backgroundColor: '#EAEAEA', height: '100%', width: '100%' },
-	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, height: 30, margin: 20, padding: 5, width: 100 },
+	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, height: 30, marginTop: 20, marginHorizontal: 20, padding: 5, width: 100 },
 	backHeader: { fontFamily: 'appFont', fontSize: 20 },
 
 	boxHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', marginBottom: 50, textAlign: 'center' },
 	serviceHeader: { fontSize: 25, fontWeight: 'bold', textAlign: 'center', marginBottom: 50 },
 
 	timesHeader: { fontFamily: 'appFont', fontSize: 30, fontWeight: 'bold', textAlign: 'center' },
-	times: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', width: 300 },
+	times: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', width: 282 },
 	unselect: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, padding: 5, width: 90 },
 	selected: { alignItems: 'center', backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, padding: 5, width: 90 },
 
@@ -224,6 +224,6 @@ const style = StyleSheet.create({
 	requestedHeaders: { alignItems: 'center', paddingHorizontal: 10 },
 	requestedClose: { borderRadius: 5, borderStyle: 'solid', borderWidth: 1, marginVertical: 10, padding: 5, width: 100 },
 	requestedCloseHeader: { fontFamily: 'appFont', fontSize: 20, textAlign: 'center' },
-	requestedHeader: { fontFamily: 'appFont', fontSize: 25 },
+	requestedHeader: { fontFamily: 'appFont', fontSize: 25, textAlign: 'center' },
 	requestedHeaderInfo: { fontSize: 20, textAlign: 'center' },
 })

@@ -3,7 +3,7 @@ import { AsyncStorage, ActivityIndicator, Dimensions, View, FlatList, Text, Imag
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import { setLocationType } from '../apis/locations'
-import { userInfo } from '../../assets/info'
+import { registerInfo } from '../../assets/info'
 
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
@@ -11,7 +11,7 @@ const screenHeight = height - offsetPadding
 const iconSize = (width / 2) - 90
 
 export default function typesetup({ navigation }) {
-	const [type, setType] = useState(userInfo.storeType)
+	const [type, setType] = useState(registerInfo.storeType)
 	const [loading, setLoading] = useState(false)
 	const [errorMsg, setErrormsg] = useState('')
 	

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { AsyncStorage, ActivityIndicator, Dimensions, ScrollView, View, Image, Text, TextInput, TouchableOpacity, StyleSheet, Modal } from 'react-native'
+import { AsyncStorage, ActivityIndicator, Dimensions, ScrollView, View, Image, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet, Modal } from 'react-native'
 import { NetworkInfo } from 'react-native-network-info';
 import Constants from 'expo-constants';
 import * as FileSystem from 'expo-file-system'
@@ -12,10 +12,10 @@ import {
 	setBankaccountDefault, getBankaccountInfo, deleteTheBankAccount
 } from '../apis/owners'
 import { getLocationProfile, updateLocation, setLocationHours } from '../apis/locations'
-import { userInfo, stripe_key } from '../../assets/info'
+import { loginInfo, stripe_key } from '../../assets/info'
 
 // bank account
-const { accountNumber, countryCode, currency, routingNumber, accountHolderName } = userInfo
+const { accountNumber, countryCode, currency, routingNumber, accountHolderName } = loginInfo
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import Entypo from 'react-native-vector-icons/Entypo'
@@ -34,13 +34,13 @@ export default function settings(props) {
 	const [editType, setEdittype] = useState('')
 
 	// location information
-	const [storeName, setStorename] = useState(userInfo.storeName)
-	const [phonenumber, setPhonenumber] = useState(userInfo.phonenumber)
-	const [addressOne, setAddressone] = useState(userInfo.addressOne)
-	const [addressTwo, setAddresstwo] = useState(userInfo.addressTwo)
-	const [city, setCity] = useState(userInfo.city)
-	const [province, setProvince] = useState(userInfo.province)
-	const [postalcode, setPostalcode] = useState(userInfo.postalcode)
+	const [storeName, setStorename] = useState(loginInfo.storeName)
+	const [phonenumber, setPhonenumber] = useState(loginInfo.phonenumber)
+	const [addressOne, setAddressone] = useState(loginInfo.addressOne)
+	const [addressTwo, setAddresstwo] = useState(loginInfo.addressTwo)
+	const [city, setCity] = useState(loginInfo.city)
+	const [province, setProvince] = useState(loginInfo.province)
+	const [postalcode, setPostalcode] = useState(loginInfo.postalcode)
 	const [logo, setLogo] = useState({ uri: '', name: '' })
 
 	// location hours
@@ -921,9 +921,6 @@ export default function settings(props) {
 											<View key={info.key} style={style.bankaccount}>
 												<View style={style.bankaccountRow}>
 													<Text style={style.bankaccountHeader}>#{index + 1}:</Text>
-													<View style={style.bankaccountImageHolder}>
-														<Image source={require("../../assets/rbc.png")} style={style.bankaccountImage}/>
-													</View>
 													<View style={style.bankaccountNumberHolder}>
 														<Text style={style.bankaccountNumberHeader}>{info.number}</Text>
 													</View>
@@ -932,7 +929,7 @@ export default function settings(props) {
 													<TouchableOpacity style={info.default ? style.bankaccountActionDisabled : style.bankaccountAction} disabled={info.default} onPress={() => useBankAccount(info.bankid)}>
 														<Text style={info.default ? style.bankaccountActionHeaderDisabled : style.bankaccountActionHeader}>Set default</Text>
 													</TouchableOpacity>
-													<TouchableOpacity style={style.bankaccountAction} disabled={info.default} onPress={() => editBankAccount(info.bankid, index)}>
+													<TouchableOpacity style={style.bankaccountAction} onPress={() => editBankAccount(info.bankid, index)}>
 														<Text style={style.bankaccountActionHeader}>Edit</Text>
 													</TouchableOpacity>
 													<TouchableOpacity style={info.default ? style.bankaccountActionDisabled : style.bankaccountAction} disabled={info.default} onPress={() => deleteBankAccount(info.bankid, index)}>
@@ -956,7 +953,7 @@ export default function settings(props) {
 
 				{accountForm.show && (
 					<Modal transparent={true}>
-						<View style={{ paddingVertical: offsetPadding }}>
+						<TouchableWithoutFeedback style={{ paddingVertical: offsetPadding }} onPress={() => Keyboard.dismiss()}>
 							<View style={style.form}>
 								<View style={style.formContainer}>
 									<View style={{ alignItems: 'center', marginVertical: 10 }}>
@@ -1012,13 +1009,13 @@ export default function settings(props) {
 									</View>
 								</View>
 							</View>
-						</View>
+						</TouchableWithoutFeedback>
 					</Modal>
 				)}
-				
+
 				{bankAccountForm.show && (
 					<Modal transparent={true}>
-						<View style={{ paddingVertical: offsetPadding }}>
+						<TouchableWithoutFeedback style={{ paddingVertical: offsetPadding }} onPress={() => Keyboard.dismiss()}>
 							<View style={style.form}>
 								<View style={style.formContainer}>
 									<View style={{ alignItems: 'center', marginVertical: 10 }}>
@@ -1089,7 +1086,7 @@ export default function settings(props) {
 									</View>
 								</View>
 							</View>
-						</View>
+						</TouchableWithoutFeedback>
 					</Modal>
 				)}
 			</View>
@@ -1098,9 +1095,9 @@ export default function settings(props) {
 }
 
 const style = StyleSheet.create({
-	settings: { backgroundColor: 'blue', height: '100%', width: '100%' },
+	settings: { backgroundColor: 'white', height: '100%', width: '100%' },
 	box: { alignItems: 'center', height: '100%', width: '100%' },
-	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, height: 30, margin: 20, padding: 5, width: 100 },
+	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, height: 30, marginTop: 20, marginHorizontal: 20, padding: 5, width: 100 },
 	backHeader: { fontFamily: 'appFont', fontSize: 20 },
 	boxHeader: { fontFamily: 'appFont', fontSize: 50, textAlign: 'center' },
 	header: { fontFamily: 'appFont', fontSize: 20, marginTop: 20, textAlign: 'center' },
@@ -1139,10 +1136,8 @@ const style = StyleSheet.create({
 	bankaccount: { marginVertical: 30 },
 	bankaccountRow: { flexDirection: 'row', justifyContent: 'space-between' },
 	bankaccountHeader: { fontSize: 20, fontWeight: 'bold', padding: 5 },
-	bankaccountImageHolder: { height: 40, margin: 2, width: 40 },
-	bankaccountImage: { height: 40, width: 40 },
-	bankaccountNumberHolder: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 5, flexDirection: 'row', justifyContent: 'space-between', padding: 5, width: '70%' },
-	bankaccountNumberHeader: { fontSize: 20, paddingVertical: 4, textAlign: 'center', width: '50%' },
+	bankaccountNumberHolder: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 5, padding: 5, width: '70%' },
+	bankaccountNumberHeader: { fontSize: 20, paddingVertical: 4, textAlign: 'center', width: '100%' },
 	bankaccountActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	bankaccountAction: { borderRadius: 2, borderStyle: 'solid', borderWidth: 2, marginTop: 5, padding: 5, width: 80 },
 	bankaccountActionHeader: { fontSize: 10, textAlign: 'center' },

@@ -52,6 +52,7 @@ export default function main(props) {
 	const [showBankaccountrequired, setShowbankaccountrequired] = useState({ show: false, index: 0, type: "" })
 	const [showMenurequired, setShowmenurequired] = useState(false)
 	const [showPaymentconfirm, setShowpaymentconfirm] = useState(false)
+	const [showUnservedorders, setShowunservedorders] = useState(false)
 
 	const fetchTheNumRequests = async() => {
 		const locationid = await AsyncStorage.getItem("locationid")
@@ -396,9 +397,32 @@ export default function main(props) {
 				if (res) {
 					const newReservations = [...reservations]
 
-					newReservations.splice(index, 1)
+					newReservations[index].gettingPayment = false
 
 					setReservations(newReservations)
+
+					props.navigation.navigate("dinersorders", { scheduleid: id, refetch: () => getAllReservations() })
+				}
+			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					if (err.response.data.status) {
+						const status = err.response.data.status
+
+						switch (status) {
+							case "unserved":
+								const newReservations = [...reservations]
+
+								newReservations[index].gettingPayment = false
+
+								setReservations(newReservations)
+
+								setShowunservedorders(true)
+
+								break;
+							default:
+						}
+					}
 				}
 			})
 	}
@@ -412,7 +436,9 @@ export default function main(props) {
 		doneService(id)
 			.then((res) => {
 				if (res.status == 200) {
-					return res.data
+					if (!res.data.errormsg) {
+						return res.data
+					}
 				}
 			})
 			.then((res) => {
@@ -423,7 +449,7 @@ export default function main(props) {
 
 					setAppointments(newAppointments)
 
-					showPaymentconfirm(true)
+					setShowpaymentconfirm(true)
 				}
 			})
 			.catch((err) => {
@@ -526,6 +552,7 @@ export default function main(props) {
 															</>
 														}
 													</Text>
+													{item.note ? <Text style={{ fontWeight: 'bold', marginTop: 20 }}>Client's note: {item.note}</Text> : null}
 												</View>
 											</View>
 
@@ -630,11 +657,7 @@ export default function main(props) {
 												</View>
 												<Text style={style.scheduleHeader}>
 													<Text style={{ fontFamily: 'Arial', fontWeight: 'bold' }}>{item.username}{'\n'}</Text> 
-													made a reservation
-													{'\n'} at {''}
-													<Text style={{ fontFamily: 'Arial', fontWeight: 'bold' }}>{displayTimestr(item.time)}</Text>
-													{''} for {'\n'}
-
+													made a reservation for {'\n'}
 													<Text style={{ fontFamily: 'Arial', fontWeight: 'bold' }}>
 														{(item.diners + 1) > 0 ? 
 															(item.diners + 1) + " " + ((item.diners + 1) > 1 ? 'people' : 'person') 
@@ -642,7 +665,8 @@ export default function main(props) {
 															" 1 person"
 														}
 													</Text>
-
+													{'\n'} at {''}
+													<Text style={{ fontFamily: 'Arial', fontWeight: 'bold' }}>{displayTimestr(item.time)}</Text>
 													{'\n'}for table: <Text style={{ fontFamily: 'Arial', fontWeight: 'bold' }}>#{item.table}</Text>
 												</Text>
 											</View>
@@ -838,7 +862,29 @@ export default function main(props) {
 									</Text>
 
 									<View style={style.confirmActions}>
-										<TouchableOpacity style={style.confirmAction} onPress={() => showPaymentconfirm(false)}>
+										<TouchableOpacity style={style.confirmAction} onPress={() => setShowpaymentconfirm(false)}>
+											<Text style={style.confirmActionHeader}>Ok</Text>
+										</TouchableOpacity>
+									</View>
+								</View>
+							</View>
+						</View>
+					</Modal>
+				)}
+
+				{showUnservedorders && (
+					<Modal transparent={true}>
+						<View style={style.confirmBoxContainer}>
+							<View style={style.confirmBox}>
+								<View style={style.confirmContainer}>
+									<Text style={style.confirmHeader}>
+										There is one or more unserved orders from the customers.
+										{'\n'}
+										Please finish the serve
+									</Text>
+
+									<View style={style.confirmActions}>
+										<TouchableOpacity style={style.confirmAction} onPress={() => setShowunservedorders(false)}>
 											<Text style={style.confirmActionHeader}>Ok</Text>
 										</TouchableOpacity>
 									</View>

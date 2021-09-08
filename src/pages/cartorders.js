@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react'
 import { AsyncStorage, ActivityIndicator, Dimensions, ScrollView, View, FlatList, Text, Image, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import Constants from 'expo-constants';
 import { logo_url } from '../../assets/info'
-import { seeUserOrders, receivePayment } from '../apis/schedules'
+import { seeUserOrders } from '../apis/schedules'
+import { receivePayment } from '../apis/carts'
 
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
@@ -12,7 +13,7 @@ export default function cartorders(props) {
 	const { userid, ordernumber, refetch } = props.route.params
 
 	const [orders, setOrders] = useState([])
-	const [totalCost, setTotalcost] = useState('')
+	const [totalCost, setTotalcost] = useState(0.00)
 	const [loading, setLoading] = useState(false)
 	const [showBankaccountrequired, setShowbankaccountrequired] = useState(false)
 	const [showPaymentconfirm, setShowpaymentconfirm] = useState(false)
@@ -77,7 +78,7 @@ export default function cartorders(props) {
 		<View style={style.cartorders}>
 			<View style={{ paddingVertical: offsetPadding }}>
 				<View style={[style.box, { opacity: loading ? 0.5 : 1 }]}>
-					<TouchableOpacity style={style.back} onPress={() => {
+					<TouchableOpacity style={style.back} disabled={loading} onPress={() => {
 						refetch()
 						props.navigation.goBack()
 					}}>
@@ -155,7 +156,7 @@ export default function cartorders(props) {
 						{loading && <ActivityIndicator size="small"/>}
 						<Text>Order is delivered ?</Text>
 						<TouchableOpacity style={style.receivePayment} disabled={loading} onPress={() => receiveThePayment()}>
-							<Text style={style.receivePaymentHeader}>Receive payment of $ {totalCost}</Text>
+							<Text style={style.receivePaymentHeader}>Receive payment of $ {totalCost.toFixed(2)}</Text>
 						</TouchableOpacity>
 					</View>
 				</View>
@@ -193,7 +194,9 @@ export default function cartorders(props) {
 							<View style={style.confirmBox}>
 								<View style={style.confirmContainer}>
 									<Text style={style.confirmHeader}>
-										Yay. Congrats on your delivery and payment reception. Good job
+										You have received a total payment of $ {totalCost.toFixed(2)}
+										{'\n\n\n'}
+										Good Job
 									</Text>
 
 									<View style={style.confirmActions}>

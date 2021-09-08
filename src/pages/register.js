@@ -3,16 +3,16 @@ import { AsyncStorage, Dimensions, View, Text, TextInput, Image, TouchableOpacit
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import { registerUser } from '../apis/owners'
-import { userInfo } from '../../assets/info'
+import { registerInfo } from '../../assets/info'
 
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - offsetPadding
 
 export default function register({ navigation }) {
-	const [phonenumber, setPhonenumber] = useState(userInfo.cellnumber)
-	const [password, setPassword] = useState(userInfo.password)
-	const [confirmPassword, setConfirmpassword] = useState(userInfo.password)
+	const [phonenumber, setPhonenumber] = useState(registerInfo.cellnumber)
+	const [password, setPassword] = useState(registerInfo.password)
+	const [confirmPassword, setConfirmpassword] = useState(registerInfo.password)
 	const [errorMsg, setErrormsg] = useState('')
 
 	const register = () => {

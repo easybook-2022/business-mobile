@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
-import { AsyncStorage, Dimensions, View, Text, TextInput, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { AsyncStorage, Dimensions, View, Text, TextInput, Image, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet } from 'react-native';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import { getCode } from '../apis/owners'
-import { userInfo } from '../../assets/info'
+import { loginInfo } from '../../assets/info'
 
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - (offsetPadding * 2)
 
 export default function forgotpassword({ navigation }) {
-	const [info, setInfo] = useState({ phonenumber: userInfo.cellnumber, resetcode: '', sent: false })
+	const [info, setInfo] = useState({ phonenumber: loginInfo.cellnumber, resetcode: '', sent: false })
 	const [code, setCode] = useState('')
 	const [errorMsg, setErrormsg] = useState('')
 
@@ -49,7 +49,7 @@ export default function forgotpassword({ navigation }) {
 
 	return (
 		<View style={style.forgotpassword}>
-			<View style={{ paddingVertical: offsetPadding }}>
+			<TouchableWithoutFeedback style={{ paddingVertical: offsetPadding }} onPress={() => Keyboard.dismiss()}>
 				<View style={style.box}>
 					<Text style={style.boxHeader}>Forgot Password</Text>
 
@@ -108,7 +108,7 @@ export default function forgotpassword({ navigation }) {
 						</TouchableOpacity>
 					}
 				</View>
-			</View>
+			</TouchableWithoutFeedback>
 		</View>
 	);
 }

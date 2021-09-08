@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { AsyncStorage, Dimensions, View, FlatList, Text, TextInput, Image, TouchableOpacity, Keyboard, ScrollView, StyleSheet, Modal } from 'react-native'
+import { AsyncStorage, Dimensions, View, FlatList, Text, TextInput, Image, TouchableOpacity, TouchableWithoutFeedback, Keyboard, ScrollView, StyleSheet, Modal } from 'react-native'
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import * as FileSystem from 'expo-file-system'
@@ -441,7 +441,7 @@ export default function menu(props) {
 							/>
 						</View>
 					)}
-
+					
 					{showProducts && (
 						<FlatList
 							data={products}
@@ -541,7 +541,7 @@ export default function menu(props) {
 
 				{menuForm.show && (
 					<Modal transparent={true}>
-						<View style={style.addBox}>
+						<TouchableWithoutFeedback style={style.addBox} onPress={() => Keyboard.dismiss()}>
 							<View style={{ alignItems: 'center', width: '100%' }}>
 								<Text style={style.addHeader}>Enter menu info</Text>
 
@@ -587,7 +587,7 @@ export default function menu(props) {
 									<Text>Done</Text>
 								</TouchableOpacity>
 							</View>
-						</View>
+						</TouchableWithoutFeedback>
 					</Modal>
 				)}
 

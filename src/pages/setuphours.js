@@ -242,7 +242,7 @@ const style = StyleSheet.create({
 	dayHeader: { fontSize: 20, marginHorizontal: 10, textAlign: 'center' },
 	timeSelectionContainer: { flexDirection: 'row' },
 	timeSelection: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, flexDirection: 'row', marginHorizontal: 5 },
-	timeSelectionHeader: { fontWeight: 'bold', paddingVertical: 40 },
+	timeSelectionHeader: { fontSize: 20, fontWeight: 'bold', paddingVertical: 38 },
 	selection: { alignItems: 'center', margin: 5 },
 	selectionHeader: { fontSize: 20, textAlign: 'center' },
 	selectionDiv: { fontSize: 25, marginVertical: 27 },
