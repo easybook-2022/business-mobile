@@ -2,27 +2,25 @@ import React, { useState } from 'react';
 import { AsyncStorage, ActivityIndicator, Dimensions, View, Text, TextInput, Image, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet } from 'react-native';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
-import { registerUser } from '../apis/owners'
+import { verifyUser } from '../apis/owners'
 import { registerInfo } from '../../assets/info'
 
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - offsetPadding
 
-export default function register(props) {
-	const cellnumber = props.route.params.cellnumber
-	const [password, setPassword] = useState(registerInfo.password)
-	const [confirmPassword, setConfirmpassword] = useState(registerInfo.password)
+export default function verifyowner({ navigation }) {
+	const [cellnumber, setCellnumber] = useState(registerInfo.cellnumber)
+	const [verifyCode, setVerifycode] = useState('')
+	const [userCode, setUsercode] = useState('')
 
 	const [loading, setLoading] = useState(false)
 	const [errorMsg, setErrormsg] = useState('')
 
-	const register = () => {
-		const data = { cellnumber, password, confirmPassword }
-
+	const verify = () => {
 		setLoading(true)
 
-		registerUser(data)
+		verifyUser(cellnumber)
 			.then((res) => {
 				if (res.status == 200) {
 					if (!res.data.errormsg) {
@@ -37,16 +35,14 @@ export default function register(props) {
 			})
 			.then((res) => {
 				if (res) {
-					const { id } = res
+					const { verifycode } = res
 
-					AsyncStorage.setItem("ownerid", id.toString())
-					AsyncStorage.setItem("phase", "setup")
-
-					props.navigation.navigate("setup")
+					setVerifycode(verifycode)
+					setLoading(false)
 				}
 			})
 	}
-
+	
 	return (
 		<View style={style.register}>
 			<View style={{ paddingTop: offsetPadding }}>
@@ -56,20 +52,41 @@ export default function register(props) {
 
 						<View style={style.inputsBox}>
 							<View style={style.inputContainer}>
-								<Text style={style.inputHeader}>Password:</Text>
-								<TextInput style={style.input} secureTextEntry={true} onChangeText={(password) => setPassword(password)} value={password} autoCorrect={false}/>
-							</View>
-
-							<View style={style.inputContainer}>
-								<Text style={style.inputHeader}>Confirm Password:</Text>
-								<TextInput style={style.input} secureTextEntry={true} onChangeText={(password) => setConfirmpassword(password)} value={confirmPassword} autoCorrect={false}/>
+								{!verifyCode ?
+									<>
+										<Text style={style.inputHeader}>Cell number:</Text>
+										<TextInput style={style.input} onChangeText={(cellnumber) => setCellnumber(cellnumber)} value={cellnumber} keyboardType="numeric" autoCorrect={false}/>
+									</>
+									:
+									<>
+										<Text style={style.inputHeader}>Enter verify code from your message:</Text>
+										<TextInput style={style.input} onChangeText={(usercode) => setUsercode(usercode)} value={userCode} keyboardType="numeric" autoCorrect={false}/>
+									</>
+								}
 							</View>
 
 							<Text style={style.errorMsg}>{errorMsg}</Text>
 
-							<TouchableOpacity style={style.submit} onPress={register}>
-								<Text style={style.submitHeader}>Register</Text>
-							</TouchableOpacity>
+							{!verifyCode ?
+								<TouchableOpacity style={style.submit} onPress={verify}>
+									<Text style={style.submitHeader}>Register</Text>
+								</TouchableOpacity>
+								:
+								<View style={{ flexDirection: 'row', justifyContent: 'space-between', width: 210 }}>
+									<TouchableOpacity style={style.submit} onPress={() => setVerifycode('')}>
+										<Text style={style.submitHeader}>Back</Text>
+									</TouchableOpacity>
+									<TouchableOpacity style={style.submit} onPress={() => {
+										if (verifyCode == userCode) {
+											navigation.navigate("register", { cellnumber })
+										} else {
+											setErrormsg("The verify code is wrong")
+										}
+									}}>
+										<Text style={style.submitHeader}>Verify</Text>
+									</TouchableOpacity>
+								</View>
+							}
 						</View>
 
 						{loading ? <ActivityIndicator color="black" size="small"/> : null}
@@ -77,7 +94,7 @@ export default function register(props) {
 						<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
 							<View style={style.options}>
 								<TouchableOpacity style={style.option} onPress={() => {
-									props.navigation.dispatch(
+									navigation.dispatch(
 										CommonActions.reset({
 											index: 1,
 											routes: [{ name: 'login' }]
@@ -87,7 +104,7 @@ export default function register(props) {
 									<Text style={style.optionHeader}>Already a member ? Log in</Text>
 								</TouchableOpacity>
 								<TouchableOpacity style={style.option} onPress={() => {
-									props.navigation.dispatch(
+									navigation.dispatch(
 										CommonActions.reset({
 											index: 1,
 											routes: [{ name: 'forgotpassword' }]
@@ -121,5 +138,6 @@ const style = StyleSheet.create({
 
 	options: {  },
 	option: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, marginVertical: 5, padding: 5 },
-	optionHeader: {  }
+	optionHeader: {  },
+	
 })

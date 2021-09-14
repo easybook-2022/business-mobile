@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { AsyncStorage, Dimensions, View, FlatList, Text, TextInput, Image, TouchableOpacity, TouchableWithoutFeedback, Keyboard, ScrollView, StyleSheet, Modal } from 'react-native'
+import { AsyncStorage, Dimensions, View, FlatList, Text, TextInput, Image, TouchableOpacity, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, ScrollView, StyleSheet, Modal } from 'react-native'
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import * as FileSystem from 'expo-file-system'
@@ -23,6 +23,7 @@ export default function menu(props) {
 
 	const [menuName, setMenuname] = useState('')
 	const [menuInfo, setMenuinfo] = useState('')
+	const [locationType, setLocationtype] = useState('')
 
 	const [permission, setPermission] = useState(null);
 	const [camComp, setCamcomp] = useState(null)
@@ -74,10 +75,11 @@ export default function menu(props) {
 			})
 			.then((res) => {
 				if (res) {
-					const { msg, menuName, menuInfo } = res
+					const { msg, menuName, menuInfo, locationType } = res
 
 					setMenuname(menuName)
 					setMenuinfo(menuInfo)
+					setLocationtype(locationType)
 
 					if (msg == "menus") {
 						getAllMenus()
@@ -403,7 +405,7 @@ export default function menu(props) {
 							</TouchableOpacity>
 						)}
 
-						{(numMenus == 0 && numProducts == 0) && (
+						{(numMenus == 0 && numProducts == 0 && locationType != "restaurant") && (
 							<TouchableOpacity style={style.action} onPress={() => props.navigation.navigate("addservice", { menuid: menuid, refetch: () => getAllServices() })}>
 								<Text style={style.actionHeader}>Add Service</Text>
 							</TouchableOpacity>
@@ -541,51 +543,53 @@ export default function menu(props) {
 
 				{menuForm.show && (
 					<Modal transparent={true}>
-						<TouchableWithoutFeedback style={style.addBox} onPress={() => Keyboard.dismiss()}>
-							<View style={{ alignItems: 'center', width: '100%' }}>
-								<Text style={style.addHeader}>Enter menu info</Text>
+						<TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+							<View style={style.addBox}>
+								<View style={{ alignItems: 'center', width: '100%' }}>
+									<Text style={style.addHeader}>Enter menu info</Text>
 
-								<TextInput style={style.addInput} placeholder="Menu name" placeholderTextColor="rgba(127, 127, 127, 0.5)" onChangeText={(name) => setMenuform({...menuForm, name: name })} value={menuForm.name} autoCorrect={false}/>
-								<TextInput style={style.infoInput} onSubmitEditing={() => Keyboard.dismiss()} multiline={true} placeholder="Anything you want to say about this menu" placeholderTextColor="rgba(127, 127, 127, 0.5)" onChangeText={(info) => setMenuform({...menuForm, info: info })} value={menuForm.info} autoCorrect={false} autoCompleteType="off"/>
-							</View>
+									<TextInput style={style.addInput} placeholder="Menu name" placeholderTextColor="rgba(127, 127, 127, 0.5)" onChangeText={(name) => setMenuform({...menuForm, name: name })} value={menuForm.name} autoCorrect={false}/>
+									<TextInput style={style.infoInput} onSubmitEditing={() => Keyboard.dismiss()} multiline={true} placeholder="Anything you want to say about this menu" placeholderTextColor="rgba(127, 127, 127, 0.5)" onChangeText={(info) => setMenuform({...menuForm, info: info })} value={menuForm.info} autoCorrect={false} autoCompleteType="off"/>
+								</View>
 
-							<View style={style.cameraContainer}>
-								<Text style={style.cameraHeader}>Menu photo</Text>
+								<View style={style.cameraContainer}>
+									<Text style={style.cameraHeader}>Menu photo</Text>
 
-								{menuForm.image.uri ? (
-									<>
-										<Image style={{ height: width * 0.6, width: width * 0.6 }} source={{ uri: menuForm.image.uri }}/>
+									{menuForm.image.uri ? (
+										<>
+											<Image style={{ height: width * 0.6, width: width * 0.6 }} source={{ uri: menuForm.image.uri }}/>
 
-										<TouchableOpacity style={style.cameraAction} onPress={() => setMenuform({...menuForm, image: { uri: '', name: '' }})}>
-											<AntDesign name="closecircleo" size={30}/>
-										</TouchableOpacity>
-									</>
-								) : (
-									<>
-										<Camera style={style.camera} type={camType} ref={r => { setCamcomp(r) }}/>
+											<TouchableOpacity style={style.cameraAction} onPress={() => setMenuform({...menuForm, image: { uri: '', name: '' }})}>
+												<AntDesign name="closecircleo" size={30}/>
+											</TouchableOpacity>
+										</>
+									) : (
+										<>
+											<Camera style={style.camera} type={camType} ref={r => { setCamcomp(r) }}/>
 
-										<TouchableOpacity style={style.cameraAction} onPress={snapPhoto.bind(this)}>
-											<Entypo name="camera" size={30}/>
-										</TouchableOpacity>
-									</>
-								)}
-							</View>
+											<TouchableOpacity style={style.cameraAction} onPress={snapPhoto.bind(this)}>
+												<Entypo name="camera" size={30}/>
+											</TouchableOpacity>
+										</>
+									)}
+								</View>
 
-							<Text style={style.errorMsg}>{menuForm.errormsg}</Text>
+								<Text style={style.errorMsg}>{menuForm.errormsg}</Text>
 
-							<View style={style.addActions}>
-								<TouchableOpacity style={style.addAction} onPress={() => setMenuform({ ...menuForm, show: false, name: '', info: '', image: { uri: '', name: ''} })}>
-									<Text>Cancel</Text>
-								</TouchableOpacity>
-								<TouchableOpacity style={style.addAction} onPress={() => {
-									if (menuForm.type == 'add') {
-										addTheNewMenu()
-									} else {
-										saveTheMenu()
-									}
-								}}>
-									<Text>Done</Text>
-								</TouchableOpacity>
+								<View style={style.addActions}>
+									<TouchableOpacity style={style.addAction} onPress={() => setMenuform({ ...menuForm, show: false, name: '', info: '', image: { uri: '', name: ''} })}>
+										<Text>Cancel</Text>
+									</TouchableOpacity>
+									<TouchableOpacity style={style.addAction} onPress={() => {
+										if (menuForm.type == 'add') {
+											addTheNewMenu()
+										} else {
+											saveTheMenu()
+										}
+									}}>
+										<Text>Done</Text>
+									</TouchableOpacity>
+								</View>
 							</View>
 						</TouchableWithoutFeedback>
 					</Modal>

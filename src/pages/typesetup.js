@@ -64,7 +64,7 @@ export default function typesetup({ navigation }) {
 							<Image source={require("../../assets/food.png")} style={style.selectionIcon}/>
 						</TouchableOpacity>
 					</View>
-
+					
 					{loading && <ActivityIndicator size="large"/>}
 
 					<TouchableOpacity style={style.done} disabled={loading} onPress={() => done()}>

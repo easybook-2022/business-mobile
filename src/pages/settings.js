@@ -12,7 +12,7 @@ import {
 	setBankaccountDefault, getBankaccountInfo, deleteTheBankAccount
 } from '../apis/owners'
 import { getLocationProfile, updateLocation, setLocationHours } from '../apis/locations'
-import { loginInfo, stripe_key } from '../../assets/info'
+import { loginInfo, ownerInfo, stripe_key } from '../../assets/info'
 
 // bank account
 const { accountNumber, countryCode, currency, routingNumber, accountHolderName } = loginInfo
@@ -25,6 +25,7 @@ const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - (offsetPadding * 2)
 
 export default function settings(props) {
+	const { refetch } = props.route.params
 	const required = props.route.params ? props.route.params.required : ""
 
 	const [ownerid, setOwnerid] = useState('')
@@ -65,7 +66,7 @@ export default function settings(props) {
 	const [accountForm, setAccountform] = useState({
 		show: false,
 		type: '',
-		cellnumber: '', password: '', confirmPassword: '',
+		cellnumber: ownerInfo.phonenumber, password: ownerInfo.password, confirmPassword: ownerInfo.password,
 
 		loading: false,
 		errorMsg: ''
@@ -530,6 +531,8 @@ export default function settings(props) {
 
 		data['banktoken'] = json.id
 
+		setBankaccountform({ ...bankAccountForm, loading: true })
+
 		updateBankaccount(data)
 			.then((res) => {
 				if (res.status == 200) {
@@ -543,8 +546,10 @@ export default function settings(props) {
 					...bankAccountForm,
 					show: false,
 					id: '',
-					accountHolderName: '', accountNumber: '', transitNumber: '', routingNumber: ''
+					accountHolderName: '', accountNumber: '', transitNumber: '', routingNumber: '',
+					loading: false
 				})
+				getAllBankaccounts()
 			})
 	}
 	const deleteBankAccount = async(bankid, index) => {
@@ -699,7 +704,10 @@ export default function settings(props) {
 	return (
 		<View style={style.settings}>
 			<View style={{ backgroundColor: '#EAEAEA', paddingVertical: offsetPadding }}>
-				<TouchableOpacity style={style.back} onPress={() => props.navigation.goBack()}>
+				<TouchableOpacity style={style.back} onPress={() => {
+					refetch()
+					props.navigation.goBack()
+				}}>
 					<Text style={style.backHeader}>Back</Text>
 				</TouchableOpacity>
 
@@ -969,28 +977,30 @@ export default function settings(props) {
 
 									<Text style={style.formHeader}>{accountForm.type == 'add' ? 'Add' : 'Editing'} login user</Text>
 
-									<View style={style.formInputField}>
-										<Text style={style.formInputHeader}>Cell number:</Text>
-										<TextInput style={style.formInputInput} onChangeText={(number) => setAccountform({
-											...accountForm,
-											cellnumber: number
-										})} value={accountForm.cellnumber} autoCorrect={false}/>
-									</View>
+									<View>
+										<View style={style.formInputField}>
+											<Text style={style.formInputHeader}>Cell number:</Text>
+											<TextInput style={style.formInputInput} onChangeText={(number) => setAccountform({
+												...accountForm,
+												cellnumber: number
+											})} value={accountForm.cellnumber} autoCorrect={false}/>
+										</View>
 
-									<View style={style.formInputField}>
-										<Text style={style.formInputHeader}>Password:</Text>
-										<TextInput style={style.formInputInput} secureTextEntry={true} onChangeText={(password) => setAccountform({
-											...accountForm,
-											password: password
-										})} value={accountForm.password} autoCorrect={false}/>
-									</View>
+										<View style={style.formInputField}>
+											<Text style={style.formInputHeader}>Password:</Text>
+											<TextInput style={style.formInputInput} secureTextEntry={true} onChangeText={(password) => setAccountform({
+												...accountForm,
+												password: password
+											})} value={accountForm.password} autoCorrect={false}/>
+										</View>
 
-									<View style={style.formInputField}>
-										<Text style={style.formInputHeader}>Confirm password:</Text>
-										<TextInput style={style.formInputInput} secureTextEntry={true} onChangeText={(password) => setAccountform({
-											...accountForm,
-											confirmPassword: password
-										})} value={accountForm.confirmPassword} autoCorrect={false}/>
+										<View style={style.formInputField}>
+											<Text style={style.formInputHeader}>Confirm password:</Text>
+											<TextInput style={style.formInputInput} secureTextEntry={true} onChangeText={(password) => setAccountform({
+												...accountForm,
+												confirmPassword: password
+											})} value={accountForm.confirmPassword} autoCorrect={false}/>
+										</View>
 									</View>
 
 									{accountForm.errorMsg ? <Text style={style.errorMsg}>{accountForm.errorMsg}</Text> : null}
@@ -1003,6 +1013,8 @@ export default function settings(props) {
 											} else {
 												updateTheOwner()
 											}
+
+											getAllAccounts()
 										}}>
 											<Text style={style.formSubmitHeader}>{accountForm.type == 'add' ? 'Add' : 'Save'} Account</Text>
 										</TouchableOpacity>
@@ -1149,8 +1161,8 @@ const style = StyleSheet.create({
 
 	// form
 	form: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
-	formContainer: { backgroundColor: 'white', flexDirection: 'column', height: '90%', justifyContent: 'space-between', paddingVertical: 10, width: '90%' },
-	formHeader: { fontWeight: 'bold', marginVertical: 10, textAlign: 'center' },
+	formContainer: { backgroundColor: 'white', height: '90%', paddingVertical: 10, width: '90%' },
+	formHeader: { fontSize: 20, fontWeight: 'bold', marginVertical: 50, textAlign: 'center' },
 	formInputField: { marginBottom: 20, marginHorizontal: '10%', width: '80%' },
 	formInputHeader: { fontSize: 20, fontWeight: 'bold' },
 	formInputInput: { borderRadius: 2, borderStyle: 'solid', borderWidth: 3, padding: 5, width: '100%' },

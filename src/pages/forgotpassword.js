@@ -70,7 +70,7 @@ export default function forgotpassword({ navigation }) {
 
 						<Text style={style.errorMsg}>{errorMsg}</Text>
 					</View>
-
+					
 					<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
 						<View style={style.options}>
 							<TouchableOpacity style={style.option} onPress={() => {

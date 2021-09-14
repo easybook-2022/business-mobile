@@ -15,6 +15,7 @@ export default function booktime(props) {
 
 	const [name, setName] = useState(name)
 	const [diners, setDiners] = useState(0)
+	const [table, setTable] = useState('')
 	const [times, setTimes] = useState([])
 	const [openTime, setOpentime] = useState(0)
 	const [closeTime, setClosetime] = useState(0)
@@ -31,10 +32,11 @@ export default function booktime(props) {
 			})
 			.then((res) => {
 				if (res) {
-					const { locationId, name, diners } = res.reservationInfo
+					const { locationId, name, diners, table } = res.reservationInfo
 
 					setName(name)
 					setDiners(diners)
+					setTable(table)
 					getTheLocationHours(locationId)
 				}
 			})
@@ -52,6 +54,7 @@ export default function booktime(props) {
 			.then((res) => {
 				if (res) {
 					const { openTime, closeTime, scheduled } = res
+
 					let openHour = openTime.hour, openMinute = openTime.minute, openPeriod = openTime.period
 					let closeHour = closeTime.hour, closeMinute = closeTime.minute, closePeriod = closeTime.period
 
@@ -63,23 +66,29 @@ export default function booktime(props) {
 					let openStr = currTime[0] + " " + currTime[1] + " " + currTime[2] + " " + currTime[3] + " " + openHour + ":" + openMinute
 					let closeStr = currTime[0] + " " + currTime[1] + " " + currTime[2] + " " + currTime[3] + " " + closeHour + ":" + closeMinute
 					let openDateStr = Date.parse(openStr), closeDateStr = Date.parse(closeStr)
-					let k = 1, newTimes = []
+					let newTimes = [], currenttime = Date.now(), currDateStr = openDateStr, pushtime = 1000 * (60 * 5)
 
-					while (openDateStr < (closeDateStr - ((1000 * (60 * 10))))) {
-						openDateStr += (1000 * (60 * 10)) // push every 10 minutes
+					while (currDateStr < (closeDateStr - pushtime)) {
+						currDateStr += pushtime
 
-						let timestr = new Date(openDateStr).toString().split(" ")[4]
+						let timestr = new Date(currDateStr).toString().split(" ")[4]
 						let time = timestr.split(":")
 						let hour = parseInt(time[0])
 						let minute = time[1]
 						let period = hour > 11 ? "pm" : "am"
 
 						let currtime = parseInt(hour.toString() + "" + minute)
-
 						let timedisplay = (hour > 12 ? hour - 12 : hour) + ":" + minute + " " + period
+						let timepassed = currenttime > currDateStr
+						let timetaken = scheduled.indexOf(currDateStr) > -1
 
-						k++
-						newTimes.push({ key: (k - 1).toString(), header: timedisplay, time: openDateStr, booked: scheduled.indexOf(openDateStr) > -1 ? true : false })
+						if (!timepassed) {
+							newTimes.push({ 
+								key: newTimes.length, header: timedisplay, 
+								time: currDateStr, 
+								available: !timetaken,
+							})
+						}
 					}
 
 					setTimes(newTimes)
@@ -89,8 +98,8 @@ export default function booktime(props) {
 	}
 	const rescheduleTheReservation = async() => {
 		const userid = await AsyncStorage.getItem("userid")
-		const { time } = confirm
-		const data = { reservationid, time }
+		const { time, tablenum } = confirm
+		const data = { reservationid, time, table: tablenum ? tablenum : table }
 
 		rescheduleReservation(data)
 			.then((res) => {
@@ -128,10 +137,10 @@ export default function booktime(props) {
 						<View style={{ alignItems: 'center', flexDirection: 'row', justifyContent: 'space-around', marginBottom: 50, width: '100%' }}>
 							<View style={style.times}>
 								{times.map(info => (
-									<TouchableOpacity style={info.booked ? style.selected : style.unselect} disabled={info.booked} key={info.key} onPress={() => {
-										if (!info.booked) setConfirm({ ...confirm, show: true, service: name, timeheader: info.header, time: info.time })
+									<TouchableOpacity style={!info.available ? style.selected : style.unselect} disabled={!info.available} key={info.key} onPress={() => {
+										if (info.available) setConfirm({ ...confirm, show: true, service: name, timeheader: info.header, time: info.time })
 									}}>
-										<Text style={{ color: info.booked ? 'white' : 'black', fontSize: 15 }}>{info.header}</Text>
+										<Text style={{ color: !info.available ? 'white' : 'black', fontSize: 15 }}>{info.header}</Text>
 									</TouchableOpacity>
 								))}
 							</View>
@@ -156,7 +165,7 @@ export default function booktime(props) {
 										<View style={{ alignItems: 'center' }}>
 											<Text style={style.confirmHeader}>Tell the diner the table #?</Text>
 
-											<TextInput placeholder="What table will be available" style={style.confirmInput} onChangeText={(tablenum) => {
+											<TextInput placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder={table ? table + "? If not, please re-enter" : 'What table will be available'} style={style.confirmInput} onChangeText={(tablenum) => {
 												setConfirm({
 													...confirm,
 													tablenum

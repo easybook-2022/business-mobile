@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { AsyncStorage, Dimensions, View, FlatList, Image, Text, TextInput, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import { AsyncStorage, Dimensions, View, FlatList, Image, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet, Modal } from 'react-native';
 import Constants from 'expo-constants';
 import * as FileSystem from 'expo-file-system'
 import { Camera } from 'expo-camera';
@@ -208,7 +208,7 @@ export default function services(props) {
 		openCamera()
 		getTheInfo()
 	}, [])
-	
+
 	return (
 		<View style={{ paddingVertical: offsetPadding }}>
 			<View style={style.box}>
@@ -268,16 +268,16 @@ export default function services(props) {
 					/>
 				)}
 			</View>
-			
+
 			{addMenu.show && (
 				<Modal transparent={true}>
 					<View style={style.hiddenBox}>
 						{addMenu.show && (
-							<View style={style.addBox}>
+							<TouchableWithoutFeedback style={style.addBox} onPress={() => Keyboard.dismiss()}>
 								<Text style={style.addHeader}>Enter menu name</Text>
 
-								<TextInput style={style.addInput} placeholder="Menu name" placeholderTextColor="rgba(127, 127, 127, 0.5)" onChangeText={(name) => setAddmenu({...addMenu, name: name })} value={addMenu.name}/>
-								<TextInput style={style.infoInput} multiline={true} placeholder="Anything you want to say about this menu" placeholderTextColor="rgba(127, 127, 127, 0.5)" onChangeText={(info) => setAddmenu({...addMenu, info: info })} value={addMenu.info}/>
+								<TextInput style={style.addInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Menu name" onChangeText={(name) => setAddmenu({...addMenu, name: name })} value={addMenu.name}/>
+								<TextInput style={style.infoInput} multiline={true} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Anything you want to say about this menu" onChangeText={(info) => setAddmenu({...addMenu, info: info })} value={addMenu.info}/>
 
 								<View style={style.cameraContainer}>
 									<Text style={style.cameraHeader}>Menu photo</Text>
@@ -303,7 +303,7 @@ export default function services(props) {
 										<Text>Done</Text>
 									</TouchableOpacity>
 								</View>
-							</View>
+							</TouchableWithoutFeedback>
 						)}
 					</View>
 				</Modal>

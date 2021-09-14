@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { AsyncStorage, Dimensions, ScrollView, View, Text, TextInput, Image, TouchableOpacity, StyleSheet } from 'react-native'
+import { AsyncStorage, Dimensions, ScrollView, View, Text, TextInput, Image, TouchableOpacity, KeyboardAvoidingView, StyleSheet } from 'react-native'
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import * as FileSystem from 'expo-file-system'
@@ -208,7 +208,7 @@ export default function addproduct(props) {
 			}
 		}
 
-		if (name && image.uri && (sizes.length > 0 || price)) {
+		if (name && image.uri && (sizes.length > 0 || (price && !isNaN(price)))) {
 			options.forEach(function (option) {
 				delete option['key']
 			})
@@ -254,6 +254,10 @@ export default function addproduct(props) {
 
 			if (sizes.length == 0 && !price) {
 				setErrormsg("Please enter the price of the product")
+
+				return
+			} else if (isNaN(price)) {
+				setErrormsg("The price you entered is invalid")
 
 				return
 			}
@@ -375,236 +379,238 @@ export default function addproduct(props) {
 	return (
 		<View style={style.addproduct}>
 			<View style={{ paddingBottom: offsetPadding }}>
-				<ScrollView style={{ backgroundColor: '#EAEAEA' }} showsVerticalScrollIndicator={false}>
-					<View style={style.box}>
-						<Text style={style.addHeader}>Enter product info</Text>
+				<KeyboardAvoidingView behavior="padding">
+					<ScrollView style={{ backgroundColor: '#EAEAEA' }} showsVerticalScrollIndicator={false}>
+						<View style={style.box}>
+							<Text style={style.addHeader}>Enter product info</Text>
 
-						<TextInput style={style.addInput} placeholder="Product name" placeholderTextColor="rgba(127, 127, 127, 0.5)" onChangeText={(name) => setName(name)} value={name} autoCorrect={false}/>
-						<TextInput style={style.infoInput} multiline={true} placeholder="Anything you want to say about this product (optional)" placeholderTextColor="rgba(127, 127, 127, 0.5)" onChangeText={(info) => setInfo(info)} value={info} autoCorrect={false}/>
+							<TextInput style={style.addInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Product name" onChangeText={(name) => setName(name)} value={name} autoCorrect={false}/>
+							<TextInput style={style.infoInput} multiline={true} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Anything you want to say about this product (optional)" onChangeText={(info) => setInfo(info)} value={info} autoCorrect={false}/>
 
-						<View style={style.cameraContainer}>
-							<Text style={style.cameraHeader}>Product photo</Text>
+							<View style={style.cameraContainer}>
+								<Text style={style.cameraHeader}>Product photo</Text>
 
-							{image.uri ? (
-								<>
-									<Image style={style.camera} source={{ uri: image.uri }}/>
+								{image.uri ? (
+									<>
+										<Image style={style.camera} source={{ uri: image.uri }}/>
 
-									<TouchableOpacity style={style.cameraAction} onPress={() => setImage({ uri: '', name: '' })}>
-										<AntDesign name="closecircleo" size={30}/>
-									</TouchableOpacity>
-								</>
-							) : (
-								<>
-									<Camera style={style.camera} type={camType} ref={r => {setCamcomp(r)}}/>
+										<TouchableOpacity style={style.cameraAction} onPress={() => setImage({ uri: '', name: '' })}>
+											<AntDesign name="closecircleo" size={30}/>
+										</TouchableOpacity>
+									</>
+								) : (
+									<>
+										<Camera style={style.camera} type={camType} ref={r => {setCamcomp(r)}}/>
 
-									<TouchableOpacity style={style.cameraAction} onPress={snapPhoto.bind(this)}>
-										<Entypo name="camera" size={30}/>
-									</TouchableOpacity>
-								</>
-							)}	
-						</View>
+										<TouchableOpacity style={style.cameraAction} onPress={snapPhoto.bind(this)}>
+											<Entypo name="camera" size={30}/>
+										</TouchableOpacity>
+									</>
+								)}	
+							</View>
 
-						<TouchableOpacity style={style.addOption} onPress={() => {
-							let new_key
+							<TouchableOpacity style={style.addOption} onPress={() => {
+								let new_key
 
-							if (options.length > 0) {
-								let last_option = options[options.length - 1]
+								if (options.length > 0) {
+									let last_option = options[options.length - 1]
 
-								new_key = parseInt(last_option.key.split("-")[1]) + 1
-							} else {
-								new_key = 0
-							}
+									new_key = parseInt(last_option.key.split("-")[1]) + 1
+								} else {
+									new_key = 0
+								}
 
-							setOptions([...options, { key: "option-" + new_key.toString(), text: '', option: '' }])
-						}}>
-							<Text style={style.addOptionHeader}>Add percentage/amount option</Text>
-						</TouchableOpacity>
+								setOptions([...options, { key: "option-" + new_key.toString(), text: '', option: '' }])
+							}}>
+								<Text style={style.addOptionHeader}>Add percentage/amount option</Text>
+							</TouchableOpacity>
 
-						<View style={style.options}>
-							{options.map((option, index) => (
-								<View key={option.key} style={style.option}>
-									<TouchableOpacity style={style.optionRemove} onPress={() => {
-										let newOptions = [...options]
+							<View style={style.options}>
+								{options.map((option, index) => (
+									<View key={option.key} style={style.option}>
+										<TouchableOpacity style={style.optionRemove} onPress={() => {
+											let newOptions = [...options]
 
-										newOptions.splice(index, 1)
+											newOptions.splice(index, 1)
 
-										setOptions(newOptions)
-									}}>
-										<FontAwesome name="close" size={20}/>
-									</TouchableOpacity>
-									<TextInput style={style.optionInput} placeholder="eg. Sugar" value={option.text} onChangeText={(text) => {
-										let newOptions = [...options]
+											setOptions(newOptions)
+										}}>
+											<FontAwesome name="close" size={20}/>
+										</TouchableOpacity>
+										<TextInput style={style.optionInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="eg. Sugar" value={option.text} onChangeText={(text) => {
+											let newOptions = [...options]
 
-										newOptions[index].text = text
+											newOptions[index].text = text
 
-										setOptions(newOptions)
-									}} autoCorrect={false}/>
-									<View style={style.optionTypesBox}>
-										<Text style={style.optionTypesHeader}>Type:</Text>
-										<View style={style.optionTypes}>
-											<TouchableOpacity style={option.option == 'percentage' ? style.optionTypeSelected : style.optionType} onPress={() => {
-												let newOptions = [...options]
+											setOptions(newOptions)
+										}} autoCorrect={false}/>
+										<View style={style.optionTypesBox}>
+											<Text style={style.optionTypesHeader}>Type:</Text>
+											<View style={style.optionTypes}>
+												<TouchableOpacity style={option.option == 'percentage' ? style.optionTypeSelected : style.optionType} onPress={() => {
+													let newOptions = [...options]
 
-												newOptions[index].option = 'percentage'
+													newOptions[index].option = 'percentage'
 
-												setOptions(newOptions)
-											}}>
-												<Text style={option.option == 'percentage' ? style.optionTypeHeaderSelected : style.optionTypeHeader}>Percentage</Text>
-											</TouchableOpacity>
-											<TouchableOpacity style={option.option == 'amount' ? style.optionTypeSelected : style.optionType} onPress={() => {
-												let newOptions = [...options]
-												
-												newOptions[index].option = 'amount'
+													setOptions(newOptions)
+												}}>
+													<Text style={option.option == 'percentage' ? style.optionTypeHeaderSelected : style.optionTypeHeader}>Percentage</Text>
+												</TouchableOpacity>
+												<TouchableOpacity style={option.option == 'amount' ? style.optionTypeSelected : style.optionType} onPress={() => {
+													let newOptions = [...options]
+													
+													newOptions[index].option = 'amount'
 
-												setOptions(newOptions)
-											}}>
-												<Text style={option.option == 'amount' ? style.optionTypeHeaderSelected : style.optionTypeHeader}>Amount</Text>
-											</TouchableOpacity>
+													setOptions(newOptions)
+												}}>
+													<Text style={option.option == 'amount' ? style.optionTypeHeaderSelected : style.optionTypeHeader}>Amount</Text>
+												</TouchableOpacity>
+											</View>
 										</View>
 									</View>
-								</View>
-							))}
-						</View>
+								))}
+							</View>
 
-						<TouchableOpacity style={style.addOption} onPress={() => {
-							let new_key
+							<TouchableOpacity style={style.addOption} onPress={() => {
+								let new_key
 
-							if (others.length > 0) {
-								let last_other = others[others.length - 1]
+								if (others.length > 0) {
+									let last_other = others[others.length - 1]
 
-								new_key = parseInt(last_other.key.split("-")[1]) + 1
-							} else {
-								new_key = 0
-							}
+									new_key = parseInt(last_other.key.split("-")[1]) + 1
+								} else {
+									new_key = 0
+								}
 
-							setOthers([...others, { key: "other-" + new_key.toString(), name: '', input: '', price: "0.00" }])
-						}}>
-							<Text style={style.addOptionHeader}>Add Text Option</Text>
-						</TouchableOpacity>
+								setOthers([...others, { key: "other-" + new_key.toString(), name: '', input: '', price: "0.00" }])
+							}}>
+								<Text style={style.addOptionHeader}>Add Text Option</Text>
+							</TouchableOpacity>
 
-						<View style={style.options}>
-							{others.map((other, index) => (
-								<View key={other.key} style={style.other}>
-									<TouchableOpacity style={style.otherRemove} onPress={() => {
-										let newOthers = [...others]
+							<View style={style.options}>
+								{others.map((other, index) => (
+									<View key={other.key} style={style.other}>
+										<TouchableOpacity style={style.otherRemove} onPress={() => {
+											let newOthers = [...others]
 
-										newOthers.splice(index, 1)
+											newOthers.splice(index, 1)
 
-										setOthers(newOthers)
-									}}>
-										<FontAwesome name="close" size={20}/>
-									</TouchableOpacity>
-									<TextInput style={style.otherName} placeholder="eg. Topping" value={other.name.toString()} onChangeText={(name) => {
-										let newOthers = [...others]
+											setOthers(newOthers)
+										}}>
+											<FontAwesome name="close" size={20}/>
+										</TouchableOpacity>
+										<TextInput style={style.otherName} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="eg. Topping" value={other.name.toString()} onChangeText={(name) => {
+											let newOthers = [...others]
 
-										newOthers[index].name = name.toString()
+											newOthers[index].name = name.toString()
 
-										setOthers(newOthers)
-									}} autoCorrect={false}/>
-									<TextInput style={style.otherInput} placeholder="eg. Tapioca" value={other.input.toString()} onChangeText={(input) => {
-										let newOthers = [...others]
+											setOthers(newOthers)
+										}} autoCorrect={false}/>
+										<TextInput style={style.otherInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="eg. Tapioca" value={other.input.toString()} onChangeText={(input) => {
+											let newOthers = [...others]
 
-										newOthers[index].input = input.toString()
+											newOthers[index].input = input.toString()
 
-										setOthers(newOthers)
-									}} autoCorrect={false}/>
-									<TextInput style={style.otherPrice} placeholder="eg. 0.50" value={other.price.toString()} onChangeText={(price) => {
-										let newOthers = [...others]
+											setOthers(newOthers)
+										}} autoCorrect={false}/>
+										<TextInput style={style.otherPrice} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="eg. 0.50" value={other.price.toString()} onChangeText={(price) => {
+											let newOthers = [...others]
 
-										newOthers[index].price = price.toString()
+											newOthers[index].price = price.toString()
 
-										setOthers(newOthers)
-									}} autoCorrect={false}/>
-								</View>
-							))}
-						</View>
+											setOthers(newOthers)
+										}} autoCorrect={false}/>
+									</View>
+								))}
+							</View>
 
-						<TouchableOpacity style={style.addOption} onPress={() => {
-							let new_key
+							<TouchableOpacity style={style.addOption} onPress={() => {
+								let new_key
 
-							if (sizes.length > 0) {
-								let last_size = sizes[sizes.length - 1]
+								if (sizes.length > 0) {
+									let last_size = sizes[sizes.length - 1]
 
-								new_key = parseInt(last_size.key.split("-")[1]) + 1
-							} else {
-								new_key = 0
-							}
+									new_key = parseInt(last_size.key.split("-")[1]) + 1
+								} else {
+									new_key = 0
+								}
 
-							setSizes([...sizes, { key: "size-" + new_key.toString(), name: '', price: "0.00" }])
-						}}>
-							<Text style={style.addOptionHeader}>Add Size</Text>
-						</TouchableOpacity>
+								setSizes([...sizes, { key: "size-" + new_key.toString(), name: '', price: "0.00" }])
+							}}>
+								<Text style={style.addOptionHeader}>Add Size</Text>
+							</TouchableOpacity>
 
-						<View style={style.options}>
-							{sizes.map((size, index) => (
-								<View key={size.key} style={style.size}>
-									<TouchableOpacity style={style.sizeRemove} onPress={() => {
-										let newSizes = [...sizes]
+							<View style={style.options}>
+								{sizes.map((size, index) => (
+									<View key={size.key} style={style.size}>
+										<TouchableOpacity style={style.sizeRemove} onPress={() => {
+											let newSizes = [...sizes]
 
-										newSizes.splice(index, 1)
+											newSizes.splice(index, 1)
 
-										setSizes(newSizes)
-									}}>
-										<FontAwesome name="close" size={20}/>
-									</TouchableOpacity>
-									<TextInput style={style.sizeInput} placeholderTextColor="rgba(0, 0, 0, 0.5)" placeholder="4.99" value={size.price.toString()} onChangeText={(price) => {
-										let newSizes = [...sizes]
+											setSizes(newSizes)
+										}}>
+											<FontAwesome name="close" size={20}/>
+										</TouchableOpacity>
+										<TextInput style={style.sizeInput} placeholderTextColor="rgba(0, 0, 0, 0.5)" placeholder="4.99" value={size.price.toString()} onChangeText={(price) => {
+											let newSizes = [...sizes]
 
-										newSizes[index].price = price.toString()
+											newSizes[index].price = price.toString()
 
-										setSizes(newSizes)
-									}} autoCorrect={false}/>
-									<View style={style.sizeTypesBox}>
-										<Text style={style.sizeTypesHeader}>Size:</Text>
-										<View style={style.sizeTypes}>
-											{[["Small", "Medium"], ["Large", "Extra large"]].map((row, rowindex) => (
-												<View key={rowindex.toString()} style={style.sizeTypesRow}>
-													{row.map((sizeopt, sizeindex) => (
-														<TouchableOpacity key={sizeindex.toString()} style={size.name == sizeopt.toLowerCase() ? style.sizeTypeSelected : style.sizeType} onPress={() => {
-															let newSizes = [...sizes]
+											setSizes(newSizes)
+										}} autoCorrect={false}/>
+										<View style={style.sizeTypesBox}>
+											<Text style={style.sizeTypesHeader}>Size:</Text>
+											<View style={style.sizeTypes}>
+												{[["Small", "Medium"], ["Large", "Extra large"]].map((row, rowindex) => (
+													<View key={rowindex.toString()} style={style.sizeTypesRow}>
+														{row.map((sizeopt, sizeindex) => (
+															<TouchableOpacity key={sizeindex.toString()} style={size.name == sizeopt.toLowerCase() ? style.sizeTypeSelected : style.sizeType} onPress={() => {
+																let newSizes = [...sizes]
 
-															newSizes[index].name = sizeopt.toLowerCase()
+																newSizes[index].name = sizeopt.toLowerCase()
 
-															setSizes(newSizes)
-														}}>
-															<Text style={size.name == sizeopt.toLowerCase() ? style.sizeTypeHeaderSelected : style.sizeTypeHeader}>{sizeopt}</Text>
-														</TouchableOpacity>
-													))}
-												</View>
-											))}
+																setSizes(newSizes)
+															}}>
+																<Text style={size.name == sizeopt.toLowerCase() ? style.sizeTypeHeaderSelected : style.sizeTypeHeader}>{sizeopt}</Text>
+															</TouchableOpacity>
+														))}
+													</View>
+												))}
+											</View>
 										</View>
 									</View>
+								))}
+							</View>
+
+							{sizes.length == 0 && (
+								<View style={style.priceBox}>
+									<Text style={style.priceHeader}>Product price</Text>
+									<TextInput style={style.priceInput} placeholderTextColor="rgba(0, 0, 0, 0.5)" placeholder="4.99" onChangeText={(price) => setPrice(price.toString())} value={price.toString()} autoCorrect={false}/>
 								</View>
-							))}
-						</View>
+							)}
 
-						{sizes.length == 0 && (
-							<View style={style.priceBox}>
-								<Text style={style.priceHeader}>Product price</Text>
-								<TextInput style={style.priceInput} placeholderTextColor="rgba(0, 0, 0, 0.5)" placeholder="4.99" onChangeText={(price) => setPrice(price.toString())} value={price.toString()} autoCorrect={false}/>
-							</View>
-						)}
+							<Text style={style.errorMsg}>{errorMsg}</Text>
 
-						<Text style={style.errorMsg}>{errorMsg}</Text>
-
-						<View style={{ flexDirection: 'row' }}>
-							<View style={style.addActions}>
-								<TouchableOpacity style={style.addAction} onPress={() => props.navigation.goBack()}>
-									<Text>Cancel</Text>
-								</TouchableOpacity>
-								<TouchableOpacity style={style.addAction} onPress={() => {
-									if (!productid) {
-										addTheNewProduct()
-									} else {
-										updateTheProduct()
-									}
-								}}>
-									<Text>{!productid ? "Done" : "Save"}</Text>
-								</TouchableOpacity>
+							<View style={{ flexDirection: 'row' }}>
+								<View style={style.addActions}>
+									<TouchableOpacity style={style.addAction} onPress={() => props.navigation.goBack()}>
+										<Text>Cancel</Text>
+									</TouchableOpacity>
+									<TouchableOpacity style={style.addAction} onPress={() => {
+										if (!productid) {
+											addTheNewProduct()
+										} else {
+											updateTheProduct()
+										}
+									}}>
+										<Text>{!productid ? "Done" : "Save"}</Text>
+									</TouchableOpacity>
+								</View>
 							</View>
 						</View>
-					</View>
-				</ScrollView>
+					</ScrollView>
+				</KeyboardAvoidingView>
 			</View>
 		</View>
 	)

@@ -104,7 +104,7 @@ export default function booktime(props) {
 	useEffect(() => {
 		getTheAppointmentInfo()
 	}, [])
-
+	
 	return (
 		<View style={{ paddingVertical: offsetPadding }}>
 			<View style={style.box}>

@@ -3,7 +3,7 @@ import { AsyncStorage, ActivityIndicator, Dimensions, ScrollView, View, FlatList
 import Constants from 'expo-constants';
 import { logo_url } from '../../assets/info'
 import { seeUserOrders } from '../apis/schedules'
-import { receivePayment } from '../apis/carts'
+import { orderReady, receivePayment } from '../apis/carts'
 
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
@@ -14,6 +14,7 @@ export default function cartorders(props) {
 
 	const [orders, setOrders] = useState([])
 	const [totalCost, setTotalcost] = useState(0.00)
+	const [ready, setReady] = useState(false)
 	const [loading, setLoading] = useState(false)
 	const [showBankaccountrequired, setShowbankaccountrequired] = useState(false)
 	const [showPaymentconfirm, setShowpaymentconfirm] = useState(false)
@@ -32,6 +33,23 @@ export default function cartorders(props) {
 				if (res) {
 					setOrders(res.orders)
 					setTotalcost(res.totalcost)
+					setReady(res.ready)
+				}
+			})
+	}
+	const orderIsReady = async() => {
+		const locationid = await AsyncStorage.getItem("locationid")
+		const data = { userid, locationid, ordernumber }
+
+		orderReady(data)
+			.then((res) => {
+				if (res.status == 200) {
+					return res.data
+				}
+			})
+			.then((res) => {
+				if (res) {
+					setReady(true)
 				}
 			})
 	}
@@ -65,6 +83,8 @@ export default function cartorders(props) {
 								break
 							default:
 						}
+
+						setLoading(false)
 					}
 				}
 			})
@@ -154,10 +174,15 @@ export default function cartorders(props) {
 
 					<View style={{ alignItems: 'center' }}>
 						{loading && <ActivityIndicator size="small"/>}
-						<Text>Order is delivered ?</Text>
-						<TouchableOpacity style={style.receivePayment} disabled={loading} onPress={() => receiveThePayment()}>
-							<Text style={style.receivePaymentHeader}>Receive payment of $ {totalCost.toFixed(2)}</Text>
-						</TouchableOpacity>
+						{!ready ? 
+							<TouchableOpacity style={style.receivePayment} disabled={loading} onPress={() => orderIsReady()}>
+								<Text style={style.receivePaymentHeader}>Order is ready</Text>
+							</TouchableOpacity>
+							:
+							<TouchableOpacity style={style.receivePayment} disabled={loading} onPress={() => receiveThePayment()}>
+								<Text style={style.receivePaymentHeader}>Receive payment of $ {totalCost.toFixed(2)}</Text>
+							</TouchableOpacity>
+						}
 					</View>
 				</View>
 

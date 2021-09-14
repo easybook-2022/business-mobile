@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { AsyncStorage, ScrollView, ActivityIndicator, Dimensions, View, FlatList, Image, Text, TextInput, TouchableOpacity, StyleSheet, Modal } from 'react-native'
+import { AsyncStorage, ScrollView, ActivityIndicator, Dimensions, View, FlatList, Image, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet, Modal } from 'react-native'
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import * as FileSystem from 'expo-file-system'
@@ -8,7 +8,7 @@ import * as ImageManipulator from 'expo-image-manipulator'
 import { logo_url } from '../../assets/info'
 import { fetchNumRequests, fetchNumAppointments, fetchNumCartOrderers, fetchNumReservations, fetchNumorders, getInfo, changeLocationState } from '../apis/locations'
 import { getMenus, removeMenu, addNewMenu } from '../apis/menus'
-import { getRequests, acceptRequest, cancelRequest, doneDining, doneService, getAppointments, getCartOrderers, getReservations } from '../apis/schedules'
+import { getRequests, acceptRequest, cancelRequest, cancelService, doneDining, doneService, getAppointments, getCartOrderers, getReservations } from '../apis/schedules'
 import { getProducts, getServices, removeProduct } from '../apis/products'
 
 import FontAwesome from 'react-native-vector-icons/FontAwesome'
@@ -47,11 +47,12 @@ export default function main(props) {
 	const [numReservations, setNumreservations] = useState(0)
 
 	const [viewType, setViewtype] = useState('')
-	const [cancelRequestInfo, setCancelrequestinfo] = useState({ show: false, reason: "", id: 0, index: 0 })
+	const [cancelRequestInfo, setCancelrequestinfo] = useState({ show: false, type: "", reason: "", id: 0, index: 0 })
 	const [acceptRequestInfo, setAcceptrequestinfo] = useState({ show: false, type: "", requestid: "", tablenum: "", errorMsg: "" })
 	const [showBankaccountrequired, setShowbankaccountrequired] = useState({ show: false, index: 0, type: "" })
+	const [showPaymentunsent, setShowpaymentunsent] = useState(false)
 	const [showMenurequired, setShowmenurequired] = useState(false)
-	const [showPaymentconfirm, setShowpaymentconfirm] = useState(false)
+	const [showPaymentconfirm, setShowpaymentconfirm] = useState({ show: false, info: {} })
 	const [showUnservedorders, setShowunservedorders] = useState(false)
 
 	const fetchTheNumRequests = async() => {
@@ -115,7 +116,6 @@ export default function main(props) {
 		}
 	}
 	const getTheInfo = async() => {
-		const userid = await AsyncStorage.getItem("userid")
 		const locationid = await AsyncStorage.getItem("locationid")
 		const data = { locationid, menuid: '' }
 
@@ -210,11 +210,9 @@ export default function main(props) {
 		return timestr
 	}
 	const getAllRequests = async() => {
-		const ownerid = await AsyncStorage.getItem("ownerid")
 		const locationid = await AsyncStorage.getItem("locationid")
-		const data = { ownerid, locationid }
 
-		getRequests(data)
+		getRequests(locationid)
 			.then((res) => {
 				if (res.status == 200) {
 					return res.data
@@ -280,11 +278,11 @@ export default function main(props) {
 				}
 			})
 	}
-	const cancelTheRequest = (requestid, index) => {
+	const cancelTheRequest = (requestid, index, type) => {
 		if (!cancelRequestInfo.show) {
 			setCancelrequestinfo({
 				...cancelRequestInfo,
-				show: true,
+				show: true, type,
 				id: requestid,
 				index: index
 			})
@@ -306,16 +304,17 @@ export default function main(props) {
 
 						setRequests(newRequests)
 						setNumrequests(numRequests - 1)
-						setCancelrequestinfo({ ...cancelRequestInfo, show: false, reason: "", requestid: 0, index: 0 })
+						setCancelrequestinfo({ ...cancelRequestInfo, show: false, type: "", reason: "", requestid: 0, index: 0 })
 					}
 				})
 		}
 	}
-	const acceptTheRequest = (requestid, index) => {
-		const { type } = requestid ? requests[index] : acceptRequestInfo
+	const acceptTheRequest = async(requestid, index) => {
+		const ownerid = await AsyncStorage.getItem("ownerid")
+		const { type, tablenum } = requestid ? requests[index] : acceptRequestInfo
 
 		if (type != "restaurant") {
-			const data = { requestid, tablenum: "" }
+			const data = { requestid, tablenum }
 
 			acceptRequest(data)
 				.then((res) => {
@@ -343,7 +342,7 @@ export default function main(props) {
 				})
 		} else {
 			if (!acceptRequestInfo.show) {
-				setAcceptrequestinfo({ ...acceptRequestInfo, show: true, type, requestid })
+				setAcceptrequestinfo({ ...acceptRequestInfo, show: true, type, requestid, tablenum })
 			} else {
 				const { requestid, tablenum } = acceptRequestInfo
 
@@ -365,7 +364,7 @@ export default function main(props) {
 								setRequests(newRequests)
 								setNumrequests(numRequests - 1)
 								setNumappointments(numAppointments + 1)
-								setAcceptrequestinfo({ show: false, tablenum: "" })
+								setAcceptrequestinfo({ show: false, tablenum })
 
 								if (locationType == 'restaurant') {
 									getAllReservations()
@@ -379,6 +378,29 @@ export default function main(props) {
 				}
 			}
 		}
+	}
+	const cancelTheService = (index, scheduleid) => {
+		const newAppointments = [...appointments]
+		const data = { scheduleid, type: "salon" }
+
+		cancelService(data)
+			.then((res) => {
+				if (res.status == 200) {
+					return res.data
+				}
+			})
+			.then((res) => {
+				if (res) {
+					if (res.delete) {
+						newAppointments.splice(index, 1)
+
+						setAppointments(newAppointments)
+					}
+				}
+			})
+			.catch((err) => {
+
+			})
 	}
 	const doneTheDining = (index, id) => {
 		const newReservations = [...reservations]
@@ -443,21 +465,31 @@ export default function main(props) {
 			})
 			.then((res) => {
 				if (res) {
+					const { clientName, name, price } = res
 					const newAppointments = [...appointments]
 
 					newAppointments.splice(index, 1)
 
 					setAppointments(newAppointments)
 
-					setShowpaymentconfirm(true)
+					setShowpaymentconfirm({ show: true, info: { clientName, name, price } })
 				}
 			})
 			.catch((err) => {
 				if (err.response.status == 400) {
 					if (err.response.data.status) {
 						const status = err.response.data.status
+						const newAppointments = [...appointments]
+
+						newAppointments[index].gettingPayment = false
+
+						setAppointments(newAppointments)
 
 						switch (status) {
+							case "paymentunsent":
+								setShowpaymentunsent(true)
+
+								break;
 							case "bankaccountrequired":
 								setShowbankaccountrequired({ show: true, index, "type": "doneservice" })
 
@@ -472,10 +504,10 @@ export default function main(props) {
 	useEffect(() => {
 		getTheInfo()
 
-		updateNumrequests = setInterval(() => fetchTheNumRequests(), 1000)
-		updateNumappointments = setInterval(() => fetchTheNumAppointments(), 1000)
-		updateNumcartorderers = setInterval(() => fetchTheNumCartOrderers(), 1000)
-		updateNumreservations = setInterval(() => fetchTheNumReservations(), 1000)
+		updateNumrequests = setInterval(() => fetchTheNumRequests(), 5000)
+		updateNumappointments = setInterval(() => fetchTheNumAppointments(), 5000)
+		updateNumcartorderers = setInterval(() => fetchTheNumCartOrderers(), 5000)
+		updateNumreservations = setInterval(() => fetchTheNumReservations(), 5000)
 
 		return () => {
 			clearInterval(updateNumrequests)
@@ -512,10 +544,12 @@ export default function main(props) {
 									</TouchableOpacity>
 								)}
 
-								<TouchableOpacity style={viewType == "cartorderers" ? style.navSelected : style.nav} onPress={() => getAllCartOrderers()}>
-									<Text style={viewType == "cartorderers" ? style.navHeaderSelected : style.navHeader}>{numCartorderers}</Text>
-									<Text style={viewType == "cartorderers" ? style.navHeaderSelected : style.navHeader}>Orderer(s)</Text>
-								</TouchableOpacity>
+								{locationType == 'restaurant' && (
+									<TouchableOpacity style={viewType == "cartorderers" ? style.navSelected : style.nav} onPress={() => getAllCartOrderers()}>
+										<Text style={viewType == "cartorderers" ? style.navHeaderSelected : style.navHeader}>{numCartorderers}</Text>
+										<Text style={viewType == "cartorderers" ? style.navHeaderSelected : style.navHeader}>Orderer(s)</Text>
+									</TouchableOpacity>
+								)}
 
 								{locationType == 'restaurant' && (
 									<TouchableOpacity style={viewType == "reservations" ? style.navSelected : style.nav} onPress={() => getAllReservations()}>
@@ -552,7 +586,7 @@ export default function main(props) {
 															</>
 														}
 													</Text>
-													{item.note ? <Text style={{ fontWeight: 'bold', marginTop: 20 }}>Client's note: {item.note}</Text> : null}
+													{item.note ? <Text style={{ fontWeight: 'bold', marginTop: 20 }}>Customer's note: {item.note}</Text> : null}
 												</View>
 											</View>
 
@@ -570,7 +604,7 @@ export default function main(props) {
 													}}>
 														<Text style={style.requestActionHeader}>Another time</Text>
 													</TouchableOpacity>
-													<TouchableOpacity style={style.requestAction} onPress={() => cancelTheRequest(item.id, index)}>
+													<TouchableOpacity style={style.requestAction} onPress={() => cancelTheRequest(item.id, index, item.type)}>
 														<Text style={style.requestActionHeader}>Cancel</Text>
 													</TouchableOpacity>
 													<TouchableOpacity style={style.requestAction} onPress={() => acceptTheRequest(item.id, index)}>
@@ -605,6 +639,9 @@ export default function main(props) {
 											</Text>
 
 											<View style={{ flexDirection: 'row', marginBottom: 10 }}>
+												<TouchableOpacity style={style.scheduleAction} onPress={() => cancelTheService(index, item.id)}>
+													<Text style={style.scheduleActionHeader}>Cancel Service</Text>
+												</TouchableOpacity>
 												<Text style={{ padding: 8 }}>Service is done ?</Text>
 												<TouchableOpacity style={item.gettingPayment ? style.scheduleActionDisabled : style.scheduleAction} disabled={item.gettingPayment} onPress={() => doneTheService(index, item.id)}>
 													<Text style={style.scheduleActionHeader}>Receive payment</Text>
@@ -703,7 +740,7 @@ export default function main(props) {
 								clearInterval(updateNumappointments)
 								clearInterval(updateNumreservations)
 
-								props.navigation.navigate("settings")
+								props.navigation.navigate("settings", { refetch: () => getTheInfo() })
 							}}>
 								<AntDesign name="setting" size={30}/>
 							</TouchableOpacity>
@@ -734,11 +771,11 @@ export default function main(props) {
 
 				{cancelRequestInfo.show && (
 					<Modal transparent={true}>
-						<View style={{ paddingVertical: offsetPadding }}>
+						<TouchableWithoutFeedback style={{ paddingVertical: offsetPadding }} onPress={() => Keyboard.dismiss()}>
 							<View style={style.cancelRequestBox}>
-								<Text style={style.cancelRequestHeader}>Tell the diner the reason for this cancellation ?</Text>
+								<Text style={style.cancelRequestHeader}>Tell the {cancelRequestInfo.type == "restaurant" ? "diners" : "customer"} the reason for this cancellation ? (optional)</Text>
 
-								<TextInput placeholder="Write your reason" multiline={true} style={style.cancelRequestInput} onChangeText={(reason) => {
+								<TextInput placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Write your reason" multiline={true} style={style.cancelRequestInput} onChangeText={(reason) => {
 									setCancelrequestinfo({
 										...cancelRequestInfo,
 										reason: reason
@@ -747,7 +784,7 @@ export default function main(props) {
 
 								<View style={{ alignItems: 'center' }}>
 									<View style={style.cancelRequestActions}>
-										<TouchableOpacity style={style.cancelRequestTouch} onPress={() => setCancelrequestinfo({ ...cancelRequestInfo, show: false, id: 0, index: 0, reason: "" })}>
+										<TouchableOpacity style={style.cancelRequestTouch} onPress={() => setCancelrequestinfo({ ...cancelRequestInfo, show: false, type: "", id: 0, index: 0, reason: "" })}>
 											<Text style={style.cancelRequestTouchHeader}>Close</Text>
 										</TouchableOpacity>
 										<TouchableOpacity style={style.cancelRequestTouch} onPress={() => cancelTheRequest()}>
@@ -756,40 +793,42 @@ export default function main(props) {
 									</View>
 								</View>
 							</View>
-						</View>
+						</TouchableWithoutFeedback>
 					</Modal>
 				)}
 
 				{acceptRequestInfo.show && (
 					<Modal transparent={true}>
-						<View style={style.acceptRequestContainer}>
-							<View style={style.acceptRequestBox}>
-								<Text style={style.acceptRequestHeader}>Tell the diner the table #?</Text>
+						<TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+							<View style={style.acceptRequestContainer} onPress={() => Keyboard.dismiss()}>
+								<View style={style.acceptRequestBox}>
+									<Text style={style.acceptRequestHeader}>Tell the diner the table #?</Text>
 
-								<TextInput placeholder="What table will be available" style={style.acceptRequestInput} onChangeText={(tablenum) => {
-									setAcceptrequestinfo({
-										...acceptRequestInfo,
-										tablenum
-									})
-								}} autoCorrect={false} autoComplete="none"/>
+									<TextInput placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder='What table will be available' style={style.acceptRequestInput} onChangeText={(tablenum) => {
+										setAcceptrequestinfo({
+											...acceptRequestInfo,
+											tablenum
+										})
+									}} value={acceptRequestInfo.tablenum} autoCorrect={false} autoComplete="none"/>
 
-								{acceptRequestInfo.errorMsg ? <Text style={style.errorMsg}>{acceptRequestInfo.errorMsg}</Text> : null}
+									{acceptRequestInfo.errorMsg ? <Text style={style.errorMsg}>{acceptRequestInfo.errorMsg}</Text> : null}
 
-								<View style={{ alignItems: 'center' }}>
-									<View style={style.acceptRequestActions}>
-										<TouchableOpacity style={style.acceptRequestTouch} onPress={() => {
-											getAllRequests()
-											setAcceptrequestinfo({ ...acceptRequestInfo, show: false, tablenum: "" })
-										}}>
-											<Text style={style.acceptRequestTouchHeader}>Close</Text>
-										</TouchableOpacity>
-										<TouchableOpacity style={style.acceptRequestTouch} onPress={() => acceptTheRequest()}>
-											<Text style={style.acceptRequestTouchHeader}>Done</Text>
-										</TouchableOpacity>
+									<View style={{ alignItems: 'center' }}>
+										<View style={style.acceptRequestActions}>
+											<TouchableOpacity style={style.acceptRequestTouch} onPress={() => {
+												getAllRequests()
+												setAcceptrequestinfo({ ...acceptRequestInfo, show: false, tablenum: "" })
+											}}>
+												<Text style={style.acceptRequestTouchHeader}>Close</Text>
+											</TouchableOpacity>
+											<TouchableOpacity style={style.acceptRequestTouch} onPress={() => acceptTheRequest()}>
+												<Text style={style.acceptRequestTouchHeader}>Done</Text>
+											</TouchableOpacity>
+										</View>
 									</View>
 								</View>
 							</View>
-						</View>
+						</TouchableWithoutFeedback>
 					</Modal>
 				)}
 				
@@ -811,6 +850,30 @@ export default function main(props) {
 											setShowbankaccountrequired({ show: false, index: 0, type: "" })
 											props.navigation.navigate("settings", { required: "bankaccount" })
 										}}>
+											<Text style={style.requiredActionHeader}>Ok</Text>
+										</TouchableOpacity>
+									</View>
+								</View>
+							</View>
+						</View>
+					</Modal>
+				)}
+
+				{showPaymentunsent && (
+					<Modal transparent={true}>
+						<View style={style.requiredBoxContainer}>
+							<View style={style.requiredBox}>
+								<View style={style.requiredContainer}>
+									<Text style={style.requiredHeader}>
+										The customer hasn't sent their payment yet.
+										{'\n\n'}
+										When your service with the customer is done, 
+										tell him/her to send their payment in their 
+										notification
+									</Text>
+
+									<View style={style.requiredActions}>
+										<TouchableOpacity style={style.requiredAction} onPress={() => setShowpaymentunsent(false)}>
 											<Text style={style.requiredActionHeader}>Ok</Text>
 										</TouchableOpacity>
 									</View>
@@ -852,17 +915,25 @@ export default function main(props) {
 					</Modal>
 				)}
 
-				{showPaymentconfirm && (
+				{showPaymentconfirm.show && (
 					<Modal transparent={true}>
 						<View style={style.confirmBoxContainer}>
 							<View style={style.confirmBox}>
 								<View style={style.confirmContainer}>
 									<Text style={style.confirmHeader}>
-										Yay. Congrats on your service and payment reception. Good job
+										<Text>Congrats on your service of</Text>
+										{'\n'}
+										<Text style={{ fontFamily: 'Arial', fontWeight: 'bold' }}>{showPaymentconfirm.info.name}</Text>
+										{'\n'}
+										<Text>for {showPaymentconfirm.info.clientName}</Text>
+										{'\n\n'}
+										<Text>You earned ${showPaymentconfirm.info.price}</Text>
+										{'\n\n'}
+										<Text>Good job! :)</Text>
 									</Text>
 
 									<View style={style.confirmActions}>
-										<TouchableOpacity style={style.confirmAction} onPress={() => setShowpaymentconfirm(false)}>
+										<TouchableOpacity style={style.confirmAction} onPress={() => setShowpaymentconfirm({ show: false, info: {} })}>
 											<Text style={style.confirmActionHeader}>Ok</Text>
 										</TouchableOpacity>
 									</View>
@@ -954,15 +1025,15 @@ const style = StyleSheet.create({
 	bottomNavHeader: { fontWeight: 'bold', paddingVertical: 5 },
 
 	cancelRequestBox: { backgroundColor: 'white', height: '100%', width: '100%' },
-	cancelRequestHeader: { fontFamily: 'appFont', fontSize: 20, margin: 30, textAlign: 'center' },
+	cancelRequestHeader: { fontFamily: 'appFont', fontSize: 20, marginHorizontal: 30, marginTop: 50, textAlign: 'center' },
 	cancelRequestInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: 20, height: 200, margin: '5%', padding: 10, width: '90%' },
 	cancelRequestActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	cancelRequestTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 5, width: 100 },
 	cancelRequestTouchHeader: { textAlign: 'center' },
 
-	acceptRequestContainer: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
-	acceptRequestBox: { backgroundColor: 'white', width: '80%' },
-	acceptRequestHeader: { fontFamily: 'appFont', fontSize: 20, margin: 30, textAlign: 'center' },
+	acceptRequestContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
+	acceptRequestBox: { backgroundColor: 'white', paddingVertical: 10, width: '80%' },
+	acceptRequestHeader: { fontFamily: 'appFont', fontSize: 20, marginHorizontal: 30, textAlign: 'center' },
 	acceptRequestInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: 13, margin: '5%', padding: 10, width: '90%' },
 	errorMsg: { color: 'red', fontWeight: 'bold', marginVertical: 30, textAlign: 'center' },
 	acceptRequestActions: { flexDirection: 'row', justifyContent: 'space-around' },

@@ -300,7 +300,7 @@ PODS:
     - React-jsi (= 0.63.4)
   - RNGestureHandler (1.10.3):
     - React-Core
-  - RNReanimated (2.2.0):
+  - RNReanimated (2.2.1):
     - DoubleConversion
     - FBLazyVector
     - FBReactNativeSpec
@@ -334,7 +334,7 @@ PODS:
     - React-RCTImage
   - UMAppLoader (2.2.0)
   - UMCore (7.1.2)
-  - UMReactNativeAdapter (6.3.6):
+  - UMReactNativeAdapter (6.3.7):
     - ExpoModulesCore
     - React-Core
     - UMCore
@@ -547,14 +547,14 @@ SPEC CHECKSUMS:
   React-RCTVibration: ae4f914cfe8de7d4de95ae1ea6cc8f6315d73d9d
   ReactCommon: 73d79c7039f473b76db6ff7c6b159c478acbbb3b
   RNGestureHandler: a479ebd5ed4221a810967000735517df0d2db211
-  RNReanimated: d9da990fc90123f4ffbfdda93d00fc15174863a8
+  RNReanimated: ad9db9ab64944d631e13a723a63f1704bddebeaf
   RNScreens: 21b73c94c9117e1110a79ee0ee80c93ccefed8ce
   UMAppLoader: 21af63390e55c82e037fb9752d93114a80ecf16e
   UMCore: ce3a4faa010239063b8343895b29a6d97b01069d
-  UMReactNativeAdapter: d2baae589629b1b330dcd0376114bd91e7b46970
+  UMReactNativeAdapter: bb7922210cf6fdb5768f78685f3c3a2060299119
   UMTaskManagerInterface: 2be431101b73604e64fbfffcf759336f9d8fccbb
   Yoga: 4bd86afe9883422a7c4028c00e34790f560923d6
 
 PODFILE CHECKSUM: 8918fba048c1bbb3646308efd83968824052da59
 
-COCOAPODS: 1.10.2
+COCOAPODS: 1.10.1

@@ -205,7 +205,7 @@ export default function setuphours({ navigation }) {
 						</View>
 
 						{loading && <ActivityIndicator size="large"/>}
-
+						
 						<TouchableOpacity style={style.done} disabled={loading} onPress={() => done()}>
 							<Text style={style.doneHeader}>Done</Text>
 						</TouchableOpacity>

@@ -48,7 +48,7 @@ export default function login({ navigation }) {
 			})
 			.catch((error) => console.log(error))
 	}
-	
+
 	return (
 		<View style={style.login}>
 			<View style={{ paddingVertical: offsetPadding }}>
@@ -76,7 +76,7 @@ export default function login({ navigation }) {
 									navigation.dispatch(
 										CommonActions.reset({
 											index: 1,
-											routes: [{ name: 'register' }]
+											routes: [{ name: 'verifyowner' }]
 										})
 									);
 								}}>
