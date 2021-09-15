@@ -32,7 +32,7 @@ export default function addproduct(props) {
 	const [sizes, setSizes] = useState([])
 	const [price, setPrice] = useState('')
 	const [errorMsg, setErrormsg] = useState('')
-	
+
 	const addTheNewProduct = async() => {
 		const locationid = await AsyncStorage.getItem("locationid")
 		const sizenames = { "small": false, "medium": false, "large": false, "extra large": false }
@@ -84,6 +84,10 @@ export default function addproduct(props) {
 				setErrormsg("One of the size's price is not provided")
 
 				return
+			} else if (isNaN(sizes[k].price)) {
+				setErrormsg("One of the size's price is invalid")
+
+				return
 			}
 
 			if (!sizenames[sizes[k].name]) {
@@ -95,7 +99,7 @@ export default function addproduct(props) {
 			}
 		}
 
-		if (name && image.uri && (sizes.length > 0 || price)) {
+		if (name && image.uri && (sizes.length > 0 || (price && !isNaN(price)))) {
 			options.forEach(function (option) {
 				delete option['key']
 			})
@@ -141,6 +145,10 @@ export default function addproduct(props) {
 
 			if (sizes.length == 0 && !price) {
 				setErrormsg("Please enter the price of the product")
+
+				return
+			} else if (isNaN(price)) {
+				setErrormsg("The price you entered is invalid")
 
 				return
 			}
@@ -195,6 +203,10 @@ export default function addproduct(props) {
 
 			if (!sizes[k].price) {
 				setErrormsg("One of the size's price is not provided")
+
+				return
+			} else if (isNaN(sizes[k].price)) {
+				setErrormsg("One of the size's price is invalid")
 
 				return
 			}

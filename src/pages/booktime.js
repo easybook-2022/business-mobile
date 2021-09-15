@@ -47,7 +47,8 @@ export default function booktime(props) {
 			})
 			.then((res) => {
 				if (res) {
-					const { openTime, closeTime } = res
+					const { openTime, closeTime, scheduled } = res
+
 					let openHour = openTime.hour, openMinute = openTime.minute, openPeriod = openTime.period
 					let closeHour = closeTime.hour, closeMinute = closeTime.minute, closePeriod = closeTime.period
 
@@ -59,23 +60,29 @@ export default function booktime(props) {
 					let openStr = currTime[0] + " " + currTime[1] + " " + currTime[2] + " " + currTime[3] + " " + openHour + ":" + openMinute
 					let closeStr = currTime[0] + " " + currTime[1] + " " + currTime[2] + " " + currTime[3] + " " + closeHour + ":" + closeMinute
 					let openDateStr = Date.parse(openStr), closeDateStr = Date.parse(closeStr)
-					let k = 1, newTimes = []
+					let newTimes = [], currenttime = Date.now(), currDateStr = openDateStr, pushtime = 1000 * (60 * 5)
 
-					while (openDateStr < (closeDateStr - ((1000 * (60 * 10))))) {
-						openDateStr += (1000 * (60 * 10)) // push every 10 minutes
+					while (currDateStr < (closeDateStr - pushtime)) {
+						currDateStr += pushtime
 
-						let timestr = new Date(openDateStr).toString().split(" ")[4]
+						let timestr = new Date(currDateStr).toString().split(" ")[4]
 						let time = timestr.split(":")
 						let hour = parseInt(time[0])
 						let minute = time[1]
 						let period = hour > 11 ? "pm" : "am"
 
 						let currtime = parseInt(hour.toString() + "" + minute)
-
 						let timedisplay = (hour > 12 ? hour - 12 : hour) + ":" + minute + " " + period
-
-						k++
-						newTimes.push({ key: (k - 1).toString(), header: timedisplay, time: openDateStr, booked: false })
+						let timepassed = currenttime > currDateStr
+						let timetaken = scheduled.indexOf(currDateStr) > -1
+						
+						if (!timepassed) {
+							newTimes.push({ 
+								key: newTimes.length, header: timedisplay, 
+								time: currDateStr, 
+								available: !timetaken
+							})
+						}
 					}
 
 					setTimes(newTimes)

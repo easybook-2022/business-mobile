@@ -705,7 +705,10 @@ export default function settings(props) {
 		<View style={style.settings}>
 			<View style={{ backgroundColor: '#EAEAEA', paddingVertical: offsetPadding }}>
 				<TouchableOpacity style={style.back} onPress={() => {
-					refetch()
+					if (refetch) {
+						refetch()
+					}
+					
 					props.navigation.goBack()
 				}}>
 					<Text style={style.backHeader}>Back</Text>

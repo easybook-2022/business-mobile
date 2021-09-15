@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { AsyncStorage, Dimensions, View, FlatList, Text, TextInput, Image, TouchableOpacity, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, ScrollView, StyleSheet, Modal } from 'react-native'
+import { AsyncStorage, ActivityIndicator, Dimensions, View, FlatList, Text, TextInput, Image, TouchableOpacity, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, ScrollView, StyleSheet, Modal } from 'react-native'
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import * as FileSystem from 'expo-file-system'
@@ -40,6 +40,8 @@ export default function menu(props) {
 	const [showServices, setShowservices] = useState(false)
 	const [services, setServices] = useState([])
 	const [numServices, setNumservices] = useState(0)
+
+	const [loaded, setLoaded] = useState(false)
 
 	const [menuForm, setMenuform] = useState({ 
 		show: false, type: '', id: '', 
@@ -88,6 +90,8 @@ export default function menu(props) {
 					} else if (msg == "products") {
 						getAllProducts()
 					}
+
+					setLoaded(true)
 				}
 			})
 	}
@@ -390,331 +394,334 @@ export default function menu(props) {
 
 	return (
 		<View style={style.boxContainer}>
-			<View style={style.box}>
-				<View style={style.menuBox}>
-					<View style={style.actions}>
-						{(numProducts == 0 && numServices == 0) && (
-							<TouchableOpacity style={style.action} onPress={() => setMenuform({ ...menuForm, show: true, type: 'add' })}>
-								<Text style={style.actionHeader}>Add Menu</Text>
-							</TouchableOpacity>
-						)}
-							
-						{(numMenus == 0 && numServices == 0) && (
-							<TouchableOpacity style={style.action} onPress={() => props.navigation.navigate("addproduct", { menuid: menuid, refetch: () => getAllProducts() })}>
-								<Text style={style.actionHeader}>Add Product</Text>
-							</TouchableOpacity>
-						)}
+			{loaded ?
+				<View style={style.box}>
+					<View style={style.menuBox}>
+						<View style={style.actions}>
+							{(numProducts == 0 && numServices == 0) && (
+								<TouchableOpacity style={style.action} onPress={() => setMenuform({ ...menuForm, show: true, type: 'add' })}>
+									<Text style={style.actionHeader}>Add Menu</Text>
+								</TouchableOpacity>
+							)}
+								
+							{(numMenus == 0 && numServices == 0) && (
+								<TouchableOpacity style={style.action} onPress={() => props.navigation.navigate("addproduct", { menuid: menuid, refetch: () => getAllProducts() })}>
+									<Text style={style.actionHeader}>Add Product</Text>
+								</TouchableOpacity>
+							)}
 
-						{(numMenus == 0 && numProducts == 0 && locationType != "restaurant") && (
-							<TouchableOpacity style={style.action} onPress={() => props.navigation.navigate("addservice", { menuid: menuid, refetch: () => getAllServices() })}>
-								<Text style={style.actionHeader}>Add Service</Text>
-							</TouchableOpacity>
-						)}
+							{(numMenus == 0 && numProducts == 0 && locationType != "restaurant") && (
+								<TouchableOpacity style={style.action} onPress={() => props.navigation.navigate("addservice", { menuid: menuid, refetch: () => getAllServices() })}>
+									<Text style={style.actionHeader}>Add Service</Text>
+								</TouchableOpacity>
+							)}
+						</View>
+
+						{(menuName || menuInfo) ? 
+							<View style={style.headers}>
+								<Text style={[style.header, { fontFamily: 'appFont' }]}>{menuName}</Text>
+								<Text style={style.header}>{menuInfo}</Text>
+							</View>
+						: null }
 					</View>
-
-					{(menuName || menuInfo) ? 
-						<View style={style.headers}>
-							<Text style={[style.header, { fontFamily: 'appFont' }]}>{menuName}</Text>
-							<Text style={style.header}>{menuInfo}</Text>
-						</View>
-					: null }
-				</View>
-				
-				<View style={{ height: (menuName || menuInfo) ? screenHeight - 195 : screenHeight - 145 }}>
-					{showMenus && (
-						<View>
-							<FlatList
-								data={menus}
-								renderItem={({ item, index }) => 
-									<TouchableOpacity key={item.key} style={style.menu} onPress={() => props.navigation.push("menu", { menuid: item.id, name: item.name, refetch: () => getTheInfo() })}>
-										<View style={{ flexDirection: 'row' }}>
-											<Text style={style.menuHeader}>{item.name}</Text>
-											<Image source={{ uri: logo_url + item.image }} style={style.menuImage}/>
-											<TouchableOpacity style={style.menuAction} onPress={() => removeTheMenu(item.id)}>
-												<Text style={style.menuActionHeader}>Remove</Text>
-											</TouchableOpacity>
-											<TouchableOpacity style={style.menuAction} onPress={() => editTheMenu(item.id, index)}>
-												<Text style={style.menuActionHeader}>Edit</Text>
-											</TouchableOpacity>
-										</View>
-										{item.info ? <Text style={style.menuInfo}>{item.info}</Text> : null}
-									</TouchableOpacity>
-								}
-							/>
-						</View>
-					)}
 					
-					{showProducts && (
-						<FlatList
-							data={products}
-							renderItem={({ item, index }) => 
-								<View key={item.key} style={style.row}>
-									{item.row.map((info, infoindex) => (
-										info.name ? 
-											<View key={info.key} style={style.product}>
-												<Text style={style.productHeader}>{info.name}</Text>
-												<Image source={{ uri: logo_url + info.image }} style={style.productImage}/>
-												{info.price ? 
-													<Text style={style.productPrice}>$ {info.price}</Text>
-													:
-													<Text style={style.productPrice}>{info.sizes} size{info.sizes == 1 ? '' : 's'}</Text>
-												}
-												<TouchableOpacity style={style.productAction} onPress={() => removeTheProduct(info.id)}>
-													<Text style={style.productActionHeader}>Remove</Text>
+					<View style={{ height: (menuName || menuInfo) ? screenHeight - 195 : screenHeight - 145 }}>
+						{showMenus && (
+							<View>
+								<FlatList
+									data={menus}
+									renderItem={({ item, index }) => 
+										<TouchableOpacity key={item.key} style={style.menu} onPress={() => props.navigation.push("menu", { menuid: item.id, name: item.name, refetch: () => getTheInfo() })}>
+											<View style={{ flexDirection: 'row' }}>
+												<Text style={style.menuHeader}>{item.name}</Text>
+												<Image source={{ uri: logo_url + item.image }} style={style.menuImage}/>
+												<TouchableOpacity style={style.menuAction} onPress={() => removeTheMenu(item.id)}>
+													<Text style={style.menuActionHeader}>Remove</Text>
 												</TouchableOpacity>
-												<TouchableOpacity style={style.productAction} onPress={() => props.navigation.navigate("addproduct", { menuid, id: info.id, refetch: () => getAllProducts() })}>
-													<Text style={style.productActionHeader}>Edit</Text>
+												<TouchableOpacity style={style.menuAction} onPress={() => editTheMenu(item.id, index)}>
+													<Text style={style.menuActionHeader}>Edit</Text>
 												</TouchableOpacity>
 											</View>
-											:
-											<View key={info.key} style={style.productEmpty}></View>
-									))}
-								</View>
-							}
-						/>
-					)}
-
-					{showServices && (
-						<FlatList
-							data={services}
-							style={{ height: height }}
-							renderItem={({ item, index }) => 
-								<View key={item.key} style={style.service}>
-									<View style={{ flexDirection: 'row', marginBottom: 10 }}>
-										<Text style={style.serviceHeader}>{item.name}</Text>
-										<Image source={{ uri: logo_url + item.image }} style={style.serviceImage}/>
-									
+											{item.info ? <Text style={style.menuInfo}>{item.info}</Text> : null}
+										</TouchableOpacity>
+									}
+								/>
+							</View>
+						)}
+						
+						{showProducts && (
+							<FlatList
+								data={products}
+								renderItem={({ item, index }) => 
+									<View key={item.key} style={style.row}>
+										{item.row.map((info, infoindex) => (
+											info.name ? 
+												<View key={info.key} style={style.product}>
+													<Text style={style.productHeader}>{info.name}</Text>
+													<Image source={{ uri: logo_url + info.image }} style={style.productImage}/>
+													{info.price ? 
+														<Text style={style.productPrice}>$ {info.price}</Text>
+														:
+														<Text style={style.productPrice}>{info.sizes} size{info.sizes == 1 ? '' : 's'}</Text>
+													}
+													<TouchableOpacity style={style.productAction} onPress={() => removeTheProduct(info.id)}>
+														<Text style={style.productActionHeader}>Remove</Text>
+													</TouchableOpacity>
+													<TouchableOpacity style={style.productAction} onPress={() => props.navigation.navigate("addproduct", { menuid, id: info.id, refetch: () => getAllProducts() })}>
+														<Text style={style.productActionHeader}>Edit</Text>
+													</TouchableOpacity>
+												</View>
+												:
+												<View key={info.key} style={style.productEmpty}></View>
+										))}
 									</View>
+								}
+							/>
+						)}
 
-									<View style={{ flexDirection: 'row', marginBottom: 10 }}>
-										<Text style={style.serviceInfo}>Price: <Text style={{ fontWeight: '400' }}>$ {item.price}</Text></Text>
-										<Text style={style.serviceInfo}>Time: <Text style={{ fontWeight: '400' }}>{item.duration}</Text></Text>
-									</View>
+						{showServices && (
+							<FlatList
+								data={services}
+								style={{ height: height }}
+								renderItem={({ item, index }) => 
+									<View key={item.key} style={style.service}>
+										<View style={{ flexDirection: 'row', marginBottom: 10 }}>
+											<Text style={style.serviceHeader}>{item.name}</Text>
+											<Image source={{ uri: logo_url + item.image }} style={style.serviceImage}/>
+										
+										</View>
 
-									{item.info ? <Text style={style.serviceInfo}>Information: <Text style={{ fontWeight: '400' }}>{'\n' + item.info}</Text></Text> : null}
+										<View style={{ flexDirection: 'row', marginBottom: 10 }}>
+											<Text style={style.serviceInfo}>Price: <Text style={{ fontWeight: '400' }}>$ {item.price}</Text></Text>
+											<Text style={style.serviceInfo}>Time: <Text style={{ fontWeight: '400' }}>{item.duration}</Text></Text>
+										</View>
 
-									<View style={{ alignItems: 'center' }}>
-										<View style={style.serviceActions}>
-											<TouchableOpacity style={style.serviceAction} onPress={() => removeTheService(item.id)}>
-												<Text style={style.serviceActionHeader}>Remove</Text>
-											</TouchableOpacity>
-											<TouchableOpacity style={style.serviceAction} onPress={() => props.navigation.navigate("addservice", { menuid, id: item.id, refetch: () => getAllServices() })}>
-												<Text style={style.serviceActionHeader}>Edit</Text>
-											</TouchableOpacity>
+										{item.info ? <Text style={style.serviceInfo}>Information: <Text style={{ fontWeight: '400' }}>{'\n' + item.info}</Text></Text> : null}
+
+										<View style={{ alignItems: 'center' }}>
+											<View style={style.serviceActions}>
+												<TouchableOpacity style={style.serviceAction} onPress={() => removeTheService(item.id)}>
+													<Text style={style.serviceActionHeader}>Remove</Text>
+												</TouchableOpacity>
+												<TouchableOpacity style={style.serviceAction} onPress={() => props.navigation.navigate("addservice", { menuid, id: item.id, refetch: () => getAllServices() })}>
+													<Text style={style.serviceActionHeader}>Edit</Text>
+												</TouchableOpacity>
+											</View>
 										</View>
 									</View>
+								}
+							/>
+						)}
+					</View>
+
+					<View style={style.bottomNavs}>
+						<View style={{ flexDirection: 'row' }}>
+							<TouchableOpacity style={style.bottomNav} onPress={() => props.navigation.navigate("settings")}>
+								<AntDesign name="setting" size={30}/>
+							</TouchableOpacity>
+
+							<TouchableOpacity style={style.bottomNav} onPress={() => {
+								props.navigation.dispatch(
+									CommonActions.reset({
+										index: 1,
+										routes: [{ name: 'main' }]
+									})
+								);
+							}}>
+								<Entypo name="home" size={30}/>
+							</TouchableOpacity>
+
+							<TouchableOpacity style={style.bottomNav} onPress={() => {
+								AsyncStorage.clear()
+
+								props.navigation.dispatch(
+									CommonActions.reset({
+										index: 1,
+										routes: [{ name: 'login' }]
+									})
+								);
+							}}>
+								<Text style={style.bottomNavHeader}>Log-Out</Text>
+							</TouchableOpacity>
+						</View>
+					</View>
+
+					{menuForm.show && (
+						<Modal transparent={true}>
+							<TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+								<View style={style.addBox}>
+									<View style={{ alignItems: 'center', width: '100%' }}>
+										<Text style={style.addHeader}>Enter menu info</Text>
+
+										<TextInput style={style.addInput} placeholder="Menu name" placeholderTextColor="rgba(127, 127, 127, 0.5)" onChangeText={(name) => setMenuform({...menuForm, name: name })} value={menuForm.name} autoCorrect={false}/>
+										<TextInput style={style.infoInput} onSubmitEditing={() => Keyboard.dismiss()} multiline={true} placeholder="Anything you want to say about this menu" placeholderTextColor="rgba(127, 127, 127, 0.5)" onChangeText={(info) => setMenuform({...menuForm, info: info })} value={menuForm.info} autoCorrect={false} autoCompleteType="off"/>
+									</View>
+
+									<View style={style.cameraContainer}>
+										<Text style={style.cameraHeader}>Menu photo</Text>
+
+										{menuForm.image.uri ? (
+											<>
+												<Image style={{ height: width * 0.6, width: width * 0.6 }} source={{ uri: menuForm.image.uri }}/>
+
+												<TouchableOpacity style={style.cameraAction} onPress={() => setMenuform({...menuForm, image: { uri: '', name: '' }})}>
+													<AntDesign name="closecircleo" size={30}/>
+												</TouchableOpacity>
+											</>
+										) : (
+											<>
+												<Camera style={style.camera} type={camType} ref={r => { setCamcomp(r) }}/>
+
+												<TouchableOpacity style={style.cameraAction} onPress={snapPhoto.bind(this)}>
+													<Entypo name="camera" size={30}/>
+												</TouchableOpacity>
+											</>
+										)}
+									</View>
+
+									<Text style={style.errorMsg}>{menuForm.errormsg}</Text>
+
+									<View style={style.addActions}>
+										<TouchableOpacity style={style.addAction} onPress={() => setMenuform({ ...menuForm, show: false, name: '', info: '', image: { uri: '', name: ''} })}>
+											<Text>Cancel</Text>
+										</TouchableOpacity>
+										<TouchableOpacity style={style.addAction} onPress={() => {
+											if (menuForm.type == 'add') {
+												addTheNewMenu()
+											} else {
+												saveTheMenu()
+											}
+										}}>
+											<Text>Done</Text>
+										</TouchableOpacity>
+									</View>
 								</View>
-							}
-						/>
+							</TouchableWithoutFeedback>
+						</Modal>
+					)}
+
+					{removeMenuinfo.show && (
+						<Modal transparent={true}>
+							<View style={style.menuInfoContainer}>
+								<View style={style.menuInfoBox}>
+									<Text style={style.menuInfoBoxHeader}>Delete menu confirmation</Text>
+
+									<View style={{ alignItems: 'center' }}>
+										<View style={style.menuInfoImageHolder}>
+											<Image source={{ uri: logo_url + removeMenuinfo.image }} style={style.menuInfoImage}/>
+										</View>
+										<Text style={style.menuInfoName}>{removeMenuinfo.name}</Text>
+										<Text style={style.menuInfoInfo}>{removeMenuinfo.info}</Text>
+									</View>
+
+									<Text style={style.menuInfoHeader}>Are you sure you want to delete this menu and its categories</Text>
+
+									<View style={style.menuInfoActions}>
+										<TouchableOpacity style={style.menuInfoAction} onPress={() => setRemovemenuinfo({ ...removeMenuinfo, show: false })}>
+											<Text style={style.menuInfoActionHeader}>Cancel</Text>
+										</TouchableOpacity>
+										<TouchableOpacity style={style.menuInfoAction} onPress={() => removeTheMenu(removeMenuinfo.id)}>
+											<Text style={style.menuInfoActionHeader}>Yes</Text>
+										</TouchableOpacity>
+									</View>
+								</View>
+							</View>
+						</Modal>
+					)}
+
+					{removeProductinfo.show && (
+						<Modal transparent={true}>
+							<View style={style.productInfoContainer}>
+								<View style={style.productInfoBox}>
+									<Text style={style.productInfoBoxHeader}>Delete product confirmation</Text>
+
+									<View style={style.productInfoImageHolder}>
+										<Image source={{ uri: logo_url + removeProductinfo.image }} style={style.productInfoImage}/>
+									</View>
+									<Text style={style.productInfoName}>{removeProductinfo.name}</Text>
+
+									<View>
+										{removeProductinfo.options.map((option, infoindex) => (
+											<Text key={option.key} style={style.itemInfo}>
+												<Text style={{ fontWeight: 'bold' }}>{option.header}: </Text> 
+												{option.type == 'percentage' && '%'}
+											</Text>
+										))}
+
+										{removeProductinfo.others.map((other, otherindex) => (
+											<Text key={other.key} style={style.itemInfo}>
+												<Text style={{ fontWeight: 'bold' }}>{other.name}: </Text>
+												<Text>{other.input}</Text>
+												<Text> ($ {other.price.toFixed(2)})</Text>
+											</Text>
+										))}
+
+										{removeProductinfo.sizes.map((size, sizeindex) => (
+											<Text key={size.key} style={style.itemInfo}>
+												<Text style={{ fontWeight: 'bold' }}>Size #{sizeindex + 1}: </Text>
+												<Text>{size.name} ($ {size.price.toFixed(2)})</Text>
+											</Text>
+										))}
+									</View>
+
+									{removeProductinfo.price ? 
+										<Text style={style.productInfoPrice}><Text style={{ fontWeight: 'bold' }}>Price: </Text>$ {(removeProductinfo.price).toFixed(2)}</Text>
+									: null }
+
+									{removeProductinfo.numorderers > 0 && (
+										<View>
+											<Text style={style.productInfoOrderers}>Calling for {removeProductinfo.numorderers} {removeProductinfo.numorderers == 1 ? 'person' : 'people'}</Text>
+										</View>
+									)}
+
+									<Text style={style.productInfoHeader}>Are you sure you want to delete this product</Text>
+
+									<View style={style.productInfoActions}>
+										<TouchableOpacity style={style.productInfoAction} onPress={() => setRemoveproductinfo({ ...removeProductinfo, show: false })}>
+											<Text style={style.productInfoActionHeader}>Cancel</Text>
+										</TouchableOpacity>
+										<TouchableOpacity style={style.productInfoAction} onPress={() => removeTheProduct(removeProductinfo.id)}>
+											<Text style={style.productInfoActionHeader}>Yes</Text>
+										</TouchableOpacity>
+									</View>
+								</View>
+							</View>
+						</Modal>
+					)}
+
+					{removeServiceinfo.show && (
+						<Modal transparent={true}>
+							<View style={style.serviceInfoContainer}>
+								<View style={style.serviceInfoBox}>
+									<Text style={style.serviceInfoBoxHeader}>Delete service confirmation</Text>
+
+									<View style={style.serviceInfoImageHolder}>
+										<Image source={{ uri: logo_url + removeServiceinfo.image }} style={style.serviceInfoImage}/>
+									</View>
+									<Text style={style.serviceInfoName}>{removeServiceinfo.name}</Text>
+
+									<View>
+										<Text style={style.serviceInfoPrice}><Text style={{ fontWeight: 'bold' }}>Price: </Text>$ {(removeServiceinfo.price).toFixed(2)}</Text>
+									</View>
+
+									<Text style={style.serviceInfoHeader}>Are you sure you want to delete this service</Text>
+
+									<View style={style.serviceInfoActions}>
+										<TouchableOpacity style={style.serviceInfoAction} onPress={() => setRemoveserviceinfo({ ...removeServiceinfo, show: false })}>
+											<Text style={style.serviceInfoActionHeader}>Cancel</Text>
+										</TouchableOpacity>
+										<TouchableOpacity style={style.serviceInfoAction} onPress={() => removeTheService(removeServiceinfo.id)}>
+											<Text style={style.serviceInfoActionHeader}>Yes</Text>
+										</TouchableOpacity>
+									</View>
+								</View>
+							</View>
+						</Modal>
 					)}
 				</View>
-
-				<View style={style.bottomNavs}>
-					<View style={{ flexDirection: 'row' }}>
-						<TouchableOpacity style={style.bottomNav} onPress={() => props.navigation.navigate("settings")}>
-							<AntDesign name="setting" size={30}/>
-						</TouchableOpacity>
-
-						<TouchableOpacity style={style.bottomNav} onPress={() => {
-							props.navigation.dispatch(
-								CommonActions.reset({
-									index: 1,
-									routes: [{ name: 'main' }]
-								})
-							);
-						}}>
-							<Entypo name="home" size={30}/>
-						</TouchableOpacity>
-
-						<TouchableOpacity style={style.bottomNav} onPress={() => {
-							AsyncStorage.clear()
-
-							props.navigation.dispatch(
-								CommonActions.reset({
-									index: 1,
-									routes: [{ name: 'login' }]
-								})
-							);
-						}}>
-							<Text style={style.bottomNavHeader}>Log-Out</Text>
-						</TouchableOpacity>
-					</View>
-				</View>
-
-				{menuForm.show && (
-					<Modal transparent={true}>
-						<TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
-							<View style={style.addBox}>
-								<View style={{ alignItems: 'center', width: '100%' }}>
-									<Text style={style.addHeader}>Enter menu info</Text>
-
-									<TextInput style={style.addInput} placeholder="Menu name" placeholderTextColor="rgba(127, 127, 127, 0.5)" onChangeText={(name) => setMenuform({...menuForm, name: name })} value={menuForm.name} autoCorrect={false}/>
-									<TextInput style={style.infoInput} onSubmitEditing={() => Keyboard.dismiss()} multiline={true} placeholder="Anything you want to say about this menu" placeholderTextColor="rgba(127, 127, 127, 0.5)" onChangeText={(info) => setMenuform({...menuForm, info: info })} value={menuForm.info} autoCorrect={false} autoCompleteType="off"/>
-								</View>
-
-								<View style={style.cameraContainer}>
-									<Text style={style.cameraHeader}>Menu photo</Text>
-
-									{menuForm.image.uri ? (
-										<>
-											<Image style={{ height: width * 0.6, width: width * 0.6 }} source={{ uri: menuForm.image.uri }}/>
-
-											<TouchableOpacity style={style.cameraAction} onPress={() => setMenuform({...menuForm, image: { uri: '', name: '' }})}>
-												<AntDesign name="closecircleo" size={30}/>
-											</TouchableOpacity>
-										</>
-									) : (
-										<>
-											<Camera style={style.camera} type={camType} ref={r => { setCamcomp(r) }}/>
-
-											<TouchableOpacity style={style.cameraAction} onPress={snapPhoto.bind(this)}>
-												<Entypo name="camera" size={30}/>
-											</TouchableOpacity>
-										</>
-									)}
-								</View>
-
-								<Text style={style.errorMsg}>{menuForm.errormsg}</Text>
-
-								<View style={style.addActions}>
-									<TouchableOpacity style={style.addAction} onPress={() => setMenuform({ ...menuForm, show: false, name: '', info: '', image: { uri: '', name: ''} })}>
-										<Text>Cancel</Text>
-									</TouchableOpacity>
-									<TouchableOpacity style={style.addAction} onPress={() => {
-										if (menuForm.type == 'add') {
-											addTheNewMenu()
-										} else {
-											saveTheMenu()
-										}
-									}}>
-										<Text>Done</Text>
-									</TouchableOpacity>
-								</View>
-							</View>
-						</TouchableWithoutFeedback>
-					</Modal>
-				)}
-
-				{removeMenuinfo.show && (
-					<Modal transparent={true}>
-						<View style={style.menuInfoContainer}>
-							<View style={style.menuInfoBox}>
-								<Text style={style.menuInfoBoxHeader}>Delete menu confirmation</Text>
-
-								<View style={{ alignItems: 'center' }}>
-									<View style={style.menuInfoImageHolder}>
-										<Image source={{ uri: logo_url + removeMenuinfo.image }} style={style.menuInfoImage}/>
-									</View>
-									<Text style={style.menuInfoName}>{removeMenuinfo.name}</Text>
-									<Text style={style.menuInfoInfo}>{removeMenuinfo.info}</Text>
-								</View>
-
-								<Text style={style.menuInfoHeader}>Are you sure you want to delete this menu and its categories</Text>
-
-								<View style={style.menuInfoActions}>
-									<TouchableOpacity style={style.menuInfoAction} onPress={() => setRemovemenuinfo({ ...removeMenuinfo, show: false })}>
-										<Text style={style.menuInfoActionHeader}>Cancel</Text>
-									</TouchableOpacity>
-									<TouchableOpacity style={style.menuInfoAction} onPress={() => removeTheMenu(removeMenuinfo.id)}>
-										<Text style={style.menuInfoActionHeader}>Yes</Text>
-									</TouchableOpacity>
-								</View>
-							</View>
-						</View>
-					</Modal>
-				)}
-
-				{removeProductinfo.show && (
-					<Modal transparent={true}>
-						<View style={style.productInfoContainer}>
-							<View style={style.productInfoBox}>
-								<Text style={style.productInfoBoxHeader}>Delete product confirmation</Text>
-
-								<View style={style.productInfoImageHolder}>
-									<Image source={{ uri: logo_url + removeProductinfo.image }} style={style.productInfoImage}/>
-								</View>
-								<Text style={style.productInfoName}>{removeProductinfo.name}</Text>
-
-								<View>
-									{removeProductinfo.options.map((option, infoindex) => (
-										<Text key={option.key} style={style.itemInfo}>
-											<Text style={{ fontWeight: 'bold' }}>{option.header}: </Text> 
-											{option.selected}
-											{option.type == 'percentage' && '%'}
-										</Text>
-									))}
-
-									{removeProductinfo.others.map((other, otherindex) => (
-										<Text key={other.key} style={style.itemInfo}>
-											<Text style={{ fontWeight: 'bold' }}>{other.name}: </Text>
-											<Text>{other.input}</Text>
-											<Text> ($ {other.price.toFixed(2)})</Text>
-										</Text>
-									))}
-
-									{removeProductinfo.sizes.map((size, sizeindex) => (
-										<Text key={size.key} style={style.itemInfo}>
-											<Text style={{ fontWeight: 'bold' }}>Size #{sizeindex + 1}: </Text>
-											<Text>{size.name} ($ {size.price.toFixed(2)})</Text>
-										</Text>
-									))}
-								</View>
-
-								{removeProductinfo.price ? 
-									<Text style={style.productInfoPrice}><Text style={{ fontWeight: 'bold' }}>Price: </Text>$ {(removeProductinfo.price).toFixed(2)}</Text>
-								: null }
-
-								{removeProductinfo.numorderers > 0 && (
-									<View>
-										<Text style={style.productInfoOrderers}>Calling for {removeProductinfo.numorderers} {removeProductinfo.numorderers == 1 ? 'person' : 'people'}</Text>
-									</View>
-								)}
-
-								<Text style={style.productInfoHeader}>Are you sure you want to delete this product</Text>
-
-								<View style={style.productInfoActions}>
-									<TouchableOpacity style={style.productInfoAction} onPress={() => setRemoveproductinfo({ ...removeProductinfo, show: false })}>
-										<Text style={style.productInfoActionHeader}>Cancel</Text>
-									</TouchableOpacity>
-									<TouchableOpacity style={style.productInfoAction} onPress={() => removeTheProduct(removeProductinfo.id)}>
-										<Text style={style.productInfoActionHeader}>Yes</Text>
-									</TouchableOpacity>
-								</View>
-							</View>
-						</View>
-					</Modal>
-				)}
-
-				{removeServiceinfo.show && (
-					<Modal transparent={true}>
-						<View style={style.serviceInfoContainer}>
-							<View style={style.serviceInfoBox}>
-								<Text style={style.serviceInfoBoxHeader}>Delete service confirmation</Text>
-
-								<View style={style.serviceInfoImageHolder}>
-									<Image source={{ uri: logo_url + removeServiceinfo.image }} style={style.serviceInfoImage}/>
-								</View>
-								<Text style={style.serviceInfoName}>{removeServiceinfo.name}</Text>
-
-								<View>
-									<Text style={style.serviceInfoPrice}><Text style={{ fontWeight: 'bold' }}>Price: </Text>$ {(removeServiceinfo.price).toFixed(2)}</Text>
-								</View>
-
-								<Text style={style.serviceInfoHeader}>Are you sure you want to delete this service</Text>
-
-								<View style={style.serviceInfoActions}>
-									<TouchableOpacity style={style.serviceInfoAction} onPress={() => setRemoveserviceinfo({ ...removeServiceinfo, show: false })}>
-										<Text style={style.serviceInfoActionHeader}>Cancel</Text>
-									</TouchableOpacity>
-									<TouchableOpacity style={style.serviceInfoAction} onPress={() => removeTheService(removeServiceinfo.id)}>
-										<Text style={style.serviceInfoActionHeader}>Yes</Text>
-									</TouchableOpacity>
-								</View>
-							</View>
-						</View>
-					</Modal>
-				)}
-			</View>
+				:
+				<ActivityIndicator size="large"/>
+			}
 		</View>
 	)
 }

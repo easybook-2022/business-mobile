@@ -34,7 +34,7 @@ export default function addservice(props) {
 	const addTheNewService = async() => {
 		const locationid = await AsyncStorage.getItem("locationid")
 
-		if (name && image.uri && price && duration) {
+		if (name && image.uri && (price && !isNaN(price)) && duration) {
 			const data = { locationid, menuid, name, info, image, price, duration }
 
 			addNewService(data)
@@ -68,6 +68,10 @@ export default function addservice(props) {
 
 			if (!price) {
 				setErrormsg("Please enter the price of the service")
+
+				return
+			} else if (isNaN(price)) {
+				setErrormsg("The price you entered is invalid")
 
 				return
 			}

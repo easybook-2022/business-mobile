@@ -131,7 +131,7 @@ export default function setuphours({ navigation }) {
 				<ScrollView style={{ backgroundColor: '#EAEAEA', height: screenHeight - 40, width: '100%' }}>
 					<View style={[style.box, { opacity: loading ? 0.6 : 1 }]}>
 						<Text style={style.boxHeader}>Setup</Text>
-						<Text style={style.boxMiniheader}>Set your hours</Text>
+						<Text style={style.boxMiniheader}>Please set your opening hours</Text>
 
 						<View style={style.days}>
 							{days.map((day, index) => (
