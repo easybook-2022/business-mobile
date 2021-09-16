@@ -500,6 +500,12 @@ export default function main(props) {
 				}
 			})
 	}
+	const startInterval = () => {
+		updateNumrequests = setInterval(() => fetchTheNumRequests(), 5000)
+		updateNumappointments = setInterval(() => fetchTheNumAppointments(), 5000)
+		updateNumcartorderers = setInterval(() => fetchTheNumCartOrderers(), 5000)
+		updateNumreservations = setInterval(() => fetchTheNumReservations(), 5000)
+	}
 
 	useEffect(() => {
 		getTheInfo()
@@ -740,7 +746,7 @@ export default function main(props) {
 								clearInterval(updateNumappointments)
 								clearInterval(updateNumreservations)
 
-								props.navigation.navigate("settings", { refetch: () => getTheInfo() })
+								props.navigation.navigate("settings", { refetch: () => getTheInfo(), startInterval: () => startInterval() })
 							}}>
 								<AntDesign name="setting" size={30}/>
 							</TouchableOpacity>

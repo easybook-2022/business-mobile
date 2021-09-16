@@ -172,7 +172,7 @@ export default function setup({ navigation }) {
 			setPermission(status === 'granted')
 		}
 	}
-
+	
 	useEffect(() => {
 		(async() => openCamera())()
 	}, [])

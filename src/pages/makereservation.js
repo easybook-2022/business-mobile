@@ -188,9 +188,10 @@ export default function booktime(props) {
 									</>
 									:
 									<View style={style.requestedHeaders}>
-										<Text style={style.requestedHeader}>Reservation requested at {'\n'}</Text>
-										<Text style={style.requestedHeaderInfo}>{confirm.service} {'\n'}</Text>
-										<Text style={style.requestedHeaderInfo}>at {confirm.timeheader} {'\n'}</Text>
+										<Text style={style.requestedHeader}>Reservation requested at</Text>
+										<Text style={style.requestedHeaderInfo}>{confirm.service}</Text>
+										<Text style={style.requestedHeaderInfo}>at {confirm.timeheader}</Text>
+										<Text style={style.requestedHeaderInfo}>for {diners + 1} diner{(diners + 1) > 1 ? "s" : ""}{'\n'}</Text>
 										<Text style={style.requestedHeaderInfo}>You will get notify by the diners</Text>
 										<TouchableOpacity style={style.requestedClose} onPress={() => {
 											setConfirm({ ...confirm, show: false, requested: false })

@@ -76,8 +76,8 @@ export const deleteTheBankAccount = data => {
 	)
 }
 
-export const getCode = phonenumber => {
-	return axios.get(`${url}/owners/get_reset_code/${phonenumber}`)
+export const getCode = cellnumber => {
+	return axios.get(`${url}/owners/get_reset_code/${cellnumber}`)
 }
 
 export const resetPassword = data => {

@@ -44,7 +44,7 @@ export default function verifyowner({ navigation }) {
 				}
 			})
 	}
-	
+
 	return (
 		<View style={style.register}>
 			<View style={{ paddingTop: offsetPadding }}>
@@ -139,7 +139,6 @@ const style = StyleSheet.create({
 	submitHeader: { fontWeight: 'bold', textAlign: 'center' },
 
 	options: {  },
-	option: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, marginVertical: 5, padding: 5 },
+	option: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, marginVertical: 10, padding: 5 },
 	optionHeader: {  },
-	
 })

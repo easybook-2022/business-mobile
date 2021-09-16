@@ -186,7 +186,7 @@ export default function addservice(props) {
 			setPermission(status === 'granted')
 		}
 	}
-
+	
 	const getTheServiceInfo = async() => {
 		getServiceInfo(serviceid)
 			.then((res) => {

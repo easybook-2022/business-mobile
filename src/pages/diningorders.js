@@ -138,13 +138,16 @@ export default function diningorders(props) {
 														{order.sizes.map(size => (
 															size.selected ? 
 																<Text key={size.key} style={style.itemInfo}>
-																	<Text style={{ fontWeight: 'bold' }}>{size.name}: </Text> 
-																	<Text>{size.input}</Text>
+																	<Text style={{ fontWeight: 'bold' }}>Size: </Text> 
+																	<Text>{size.name}</Text>
 																</Text>
 															: null
 														))}
 
-														<Text style={style.orderItemQuantity}>Quantity: {order.callfor == 0 ? order.quantity : order.callfor}</Text>
+														<Text style={style.orderItemQuantity}>
+															<Text style={{ fontWeight: 'bold' }}>Quantity: </Text>
+															{order.callfor == 0 ? order.quantity : order.callfor}
+														</Text>
 													</View>
 												</View>
 											</View>
@@ -178,7 +181,7 @@ const style = StyleSheet.create({
 	roundDeliverHeader: { textAlign: 'center' },
 	order: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.1)', borderRadius: 5, margin: 5 },
 	orderItems: { flexDirection: 'row', justifyContent: 'space-around', marginTop: 10, overflow: 'hidden' },
-	orderItem: { alignItems: 'center', marginVertical: 20, width: 100 },
+	orderItem: { alignItems: 'center', marginVertical: 20, width: 200 },
 	orderItemImageHolder: { borderRadius: 40, height: 80, overflow: 'hidden', width: 80 },
 	orderItemImage: { height: 80, width: 80 },
 	orderItemName: { fontWeight: 'bold' },

@@ -25,7 +25,7 @@ const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - (offsetPadding * 2)
 
 export default function settings(props) {
-	const { refetch } = props.route.params
+	const { refetch, startInterval } = props.route.params
 	const required = props.route.params ? props.route.params.required : ""
 
 	const [ownerid, setOwnerid] = useState('')
@@ -66,7 +66,7 @@ export default function settings(props) {
 	const [accountForm, setAccountform] = useState({
 		show: false,
 		type: '',
-		cellnumber: ownerInfo.phonenumber, password: ownerInfo.password, confirmPassword: ownerInfo.password,
+		cellnumber: ownerInfo.cellnumber, password: ownerInfo.password, confirmPassword: ownerInfo.password,
 
 		loading: false,
 		errorMsg: ''
@@ -707,6 +707,10 @@ export default function settings(props) {
 				<TouchableOpacity style={style.back} onPress={() => {
 					if (refetch) {
 						refetch()
+					}
+
+					if (startInterval) {
+						startInterval()
 					}
 					
 					props.navigation.goBack()

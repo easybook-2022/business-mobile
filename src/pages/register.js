@@ -16,7 +16,7 @@ export default function register(props) {
 
 	const [loading, setLoading] = useState(false)
 	const [errorMsg, setErrormsg] = useState('')
-
+	
 	const register = () => {
 		const data = { cellnumber, password, confirmPassword }
 
@@ -120,6 +120,6 @@ const style = StyleSheet.create({
 	submitHeader: { fontWeight: 'bold', textAlign: 'center' },
 
 	options: {  },
-	option: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, marginVertical: 5, padding: 5 },
+	option: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, marginVertical: 10, padding: 5 },
 	optionHeader: {  }
 })
