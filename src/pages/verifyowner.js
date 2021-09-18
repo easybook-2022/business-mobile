@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AsyncStorage, ActivityIndicator, Dimensions, View, Text, TextInput, Image, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet } from 'react-native';
+import { AsyncStorage, ActivityIndicator, Dimensions, View, ImageBackground, Text, TextInput, Image, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet } from 'react-native';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import { verifyUser } from '../apis/owners'
@@ -47,7 +47,7 @@ export default function verifyowner({ navigation }) {
 
 	return (
 		<View style={style.register}>
-			<View style={{ paddingTop: offsetPadding }}>
+			<ImageBackground style={{ paddingVertical: offsetPadding }} source={require("../../assets/background.jpg")} resizeMode="stretch">
 				<TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
 					<View style={style.box}>
 						<Text style={style.boxHeader}>Sign-Up</Text>
@@ -119,16 +119,16 @@ export default function verifyowner({ navigation }) {
 						</View>
 					</View>
 				</TouchableWithoutFeedback>
-			</View>
+			</ImageBackground>
 		</View>
 	);
 }
 
 const style = StyleSheet.create({
-	register: { backgroundColor: '#0288FF', height: '100%', width: '100%' },
+	register: { height: '100%', width: '100%' },
 	box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-between', paddingVertical: 20, width: '100%' },
 	background: { height: '100%', position: 'absolute', width: '100%' },
-	boxHeader: { color: 'white', fontFamily: 'appFont', fontSize: 50, fontWeight: 'bold', paddingVertical: 30 },
+	boxHeader: { color: 'black', fontFamily: 'appFont', fontSize: 50, fontWeight: 'bold', paddingVertical: 30 },
 
 	inputsBox: { alignItems: 'center', backgroundColor: 'rgba(2, 136, 255, 0.1)', paddingHorizontal: 20, width: '80%' },
 	inputContainer: { marginVertical: 5 },

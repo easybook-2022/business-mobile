@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AsyncStorage, Dimensions, View, Text, TextInput, Image, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet } from 'react-native';
+import { AsyncStorage, Dimensions, View, ImageBackground, Text, TextInput, Image, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet } from 'react-native';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import { resetPassword } from '../apis/owners'
@@ -53,7 +53,7 @@ export default function resetpassword(props) {
 	
 	return (
 		<View style={style.resetpassword}>
-			<View style={{ paddingVertical: offsetPadding }}>
+			<ImageBackground style={{ paddingVertical: offsetPadding }} source={require("../../assets/background.jpg")} resizeMode="stretch">
 				<TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
 					<View style={style.box}>
 						<Text style={style.boxHeader}>Reset Password</Text>
@@ -104,16 +104,16 @@ export default function resetpassword(props) {
 						</View>
 					</View>
 				</TouchableWithoutFeedback>
-			</View>
+			</ImageBackground>
 		</View>
 	);
 }
 
 const style = StyleSheet.create({
-	resetpassword: { backgroundColor: '#0288FF', height: '100%', width: '100%' },
+	resetpassword: { height: '100%', width: '100%' },
 	box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 	background: { height: '100%', position: 'absolute', width: '100%' },
-	boxHeader: { color: 'white', fontFamily: 'appFont', fontSize: 30, fontWeight: 'bold', paddingVertical: 30 },
+	boxHeader: { color: 'black', fontFamily: 'appFont', fontSize: 30, fontWeight: 'bold', paddingVertical: 30 },
 	
 	inputsBox: { alignItems: 'center', backgroundColor: 'rgba(2, 136, 255, 0.1)', paddingHorizontal: 20, width: '80%' },
 	inputContainer: { marginVertical: 5 },

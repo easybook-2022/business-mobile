@@ -708,10 +708,6 @@ export default function settings(props) {
 					if (refetch) {
 						refetch()
 					}
-
-					if (startInterval) {
-						startInterval()
-					}
 					
 					props.navigation.goBack()
 				}}>

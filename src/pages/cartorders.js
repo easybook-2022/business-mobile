@@ -11,7 +11,7 @@ const screenHeight = height - (offsetPadding * 2)
 
 export default function cartorders(props) {
 	const { userid, ordernumber, refetch } = props.route.params
-	
+
 	const [orders, setOrders] = useState([])
 	const [totalCost, setTotalcost] = useState(0.00)
 	const [ready, setReady] = useState(false)

@@ -19,6 +19,7 @@ import Entypo from 'react-native-vector-icons/Entypo'
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - (offsetPadding * 2)
+const imageSize = 80
 
 let updateNumrequests, updateNumappointments, updateNumcartorderers, updateNumreservations
 
@@ -423,7 +424,12 @@ export default function main(props) {
 
 					setReservations(newReservations)
 
-					props.navigation.navigate("dinersorders", { scheduleid: id, refetch: () => getAllReservations() })
+					clearAllInterval()
+
+					props.navigation.navigate("dinersorders", { scheduleid: id, refetch: () => {
+						getAllReservations()
+						startAllInterval()
+					}})
 				}
 			})
 			.catch((err) => {
@@ -455,7 +461,9 @@ export default function main(props) {
 
 		setAppointments(newAppointments)
 
-		doneService(id)
+		const data = { scheduleid: id, time: Date.now() }
+
+		doneService(data)
 			.then((res) => {
 				if (res.status == 200) {
 					if (!res.data.errormsg) {
@@ -500,27 +508,22 @@ export default function main(props) {
 				}
 			})
 	}
-	const startInterval = () => {
-		updateNumrequests = setInterval(() => fetchTheNumRequests(), 5000)
-		updateNumappointments = setInterval(() => fetchTheNumAppointments(), 5000)
-		updateNumcartorderers = setInterval(() => fetchTheNumCartOrderers(), 5000)
-		updateNumreservations = setInterval(() => fetchTheNumReservations(), 5000)
+	const startAllInterval = () => {
+		updateNumrequests = setInterval(() => fetchTheNumRequests(), 2000)
+		updateNumappointments = setInterval(() => fetchTheNumAppointments(), 2000)
+		updateNumcartorderers = setInterval(() => fetchTheNumCartOrderers(), 2000)
+		updateNumreservations = setInterval(() => fetchTheNumReservations(), 2000)
+	}
+	const clearAllInterval = () => {
+		clearInterval(updateNumrequests)
+		clearInterval(updateNumappointments)
+		clearInterval(updateNumcartorderers)
+		clearInterval(updateNumreservations)
 	}
 
 	useEffect(() => {
 		getTheInfo()
-
-		updateNumrequests = setInterval(() => fetchTheNumRequests(), 5000)
-		updateNumappointments = setInterval(() => fetchTheNumAppointments(), 5000)
-		updateNumcartorderers = setInterval(() => fetchTheNumCartOrderers(), 5000)
-		updateNumreservations = setInterval(() => fetchTheNumReservations(), 5000)
-
-		return () => {
-			clearInterval(updateNumrequests)
-			clearInterval(updateNumappointments)
-			clearInterval(updateNumcartorderers)
-			clearInterval(updateNumreservations)
-		}
+		startAllInterval()
 	}, [])
 	
 	return (
@@ -573,8 +576,8 @@ export default function main(props) {
 									renderItem={({ item, index }) => 
 										<View key={item.key} style={style.request}>
 											<View style={{ flexDirection: 'row' }}>
-												<View style={style.imageHolder}>
-													<Image source={{ uri: logo_url + item.image }} style={{ height: 50, width: 50 }}/>
+												<View style={style.requestImageHolder}>
+													<Image style={style.requestImage} source={{ uri: logo_url + item.image }}/>
 												</View>
 												<View style={style.requestInfo}>
 													<Text>
@@ -599,12 +602,17 @@ export default function main(props) {
 											<View style={style.requestActions}>
 												<View style={{ flexDirection: 'row' }}>
 													<TouchableOpacity style={style.requestAction} onPress={() => {
+														clearAllInterval()
+
 														if (locationType == 'salon') {
-															props.navigation.navigate("booktime", { appointmentid: item.id, refetch: () => getAllRequests() })
+															props.navigation.navigate("booktime", { appointmentid: item.id, refetch: () => {
+																getAllRequests()
+																startAllInterval()
+															}})
 														} else {
 															props.navigation.navigate("makereservation", { userid: item.userId, reservationid: item.id, refetch: () => {
-																fetchTheNumRequests()
 																getAllRequests()
+																startAllInterval()
 															}})
 														}
 													}}>
@@ -633,8 +641,8 @@ export default function main(props) {
 									data={appointments}
 									renderItem={({ item, index }) => 
 										<View key={item.key} style={style.schedule}>
-											<View style={style.imageHolder}>
-												<Image source={{ uri: logo_url + item.image }} style={{ height: 80, width: 80 }}/>
+											<View style={style.scheduleImageHolder}>
+												<Image style={style.scheduleImage} source={{ uri: logo_url + item.image }}/>
 											</View>
 											<Text style={style.scheduleHeader}>
 												<Text style={{ fontFamily: 'Arial', fontWeight: 'bold' }}>{item.username} </Text> 
@@ -675,7 +683,14 @@ export default function main(props) {
 											<View style={style.cartordererInfo}>
 												<Text style={style.cartordererUsername}>{item.username}</Text>
 												<Text style={style.cartordererOrderNumber}>Order #{item.orderNumber}</Text>
-												<TouchableOpacity style={style.cartordererSeeOrders} onPress={() => props.navigation.navigate("cartorders", { userid: item.id, ordernumber: item.orderNumber, refetch: () => getAllCartOrderers() })}>
+												<TouchableOpacity style={style.cartordererSeeOrders} onPress={() => {
+													clearAllInterval()
+
+													props.navigation.navigate("cartorders", { userid: item.id, ordernumber: item.orderNumber, refetch: () => {
+														getAllCartOrderers()
+														startAllInterval()
+													}})
+												}}>
 													<Text style={style.cartordererSeeOrdersHeader}>See Order(s) ({item.numOrders})</Text>
 												</TouchableOpacity>
 											</View>
@@ -695,8 +710,8 @@ export default function main(props) {
 									renderItem={({ item, index }) => 
 										<View key={item.key} style={style.schedule}>
 											<View style={style.scheduleRow}>
-												<View style={style.imageHolder}>
-													<Image source={{ uri: logo_url + item.image }} style={{ height: 80, width: 80 }}/>
+												<View style={style.scheduleImageHolder}>
+													<Image style={style.scheduleImage} source={{ uri: logo_url + item.image }}/>
 												</View>
 												<Text style={style.scheduleHeader}>
 													<Text style={{ fontFamily: 'Arial', fontWeight: 'bold' }}>{item.username}{'\n'}</Text> 
@@ -716,7 +731,14 @@ export default function main(props) {
 
 											<View style={{ alignItems: 'center', marginVertical: 10 }}>
 												<View style={{ flexDirection: 'row', marginBottom: 10 }}>
-													<TouchableOpacity style={style.scheduleAction} onPress={() => props.navigation.navigate("diningorders", { scheduleid: item.id, refetch: () => getAllReservations() })}>
+													<TouchableOpacity style={style.scheduleAction} onPress={() => {
+														clearAllInterval()
+
+														props.navigation.navigate("diningorders", { scheduleid: item.id, refetch: () => {
+															getAllReservations()
+															startAllInterval()
+														}})
+													}}>
 														<Text style={style.scheduleActionHeader}>Customers' Orders</Text>
 													</TouchableOpacity>
 													<Text style={style.scheduleNumOrders}>{item.numMakings > 0 && '(' + item.numMakings + ')'}</Text>
@@ -742,16 +764,24 @@ export default function main(props) {
 					<View style={style.bottomNavs}>
 						<View style={{ flexDirection: 'row' }}>
 							<TouchableOpacity style={style.bottomNav} onPress={() => {
-								clearInterval(updateNumrequests)
-								clearInterval(updateNumappointments)
-								clearInterval(updateNumreservations)
+								clearAllInterval()
 
-								props.navigation.navigate("settings", { refetch: () => getTheInfo(), startInterval: () => startInterval() })
+								props.navigation.navigate("settings", { refetch: () => {
+									getTheInfo()
+									startAllInterval()
+								}})
 							}}>
 								<AntDesign name="setting" size={30}/>
 							</TouchableOpacity>
 
-							<TouchableOpacity style={style.bottomNavButton} onPress={() => props.navigation.navigate("menu", { menuid: '', name: '', refetch: () => getTheInfo() })}>
+							<TouchableOpacity style={style.bottomNavButton} onPress={() => {
+								clearAllInterval()
+
+								props.navigation.navigate("menu", { menuid: '', name: '', refetch: () => {
+									getTheInfo()
+									startAllInterval()
+								}})
+							}}>
 								<Text style={style.bottomNavHeader}>Edit Menu</Text>
 							</TouchableOpacity>
 
@@ -854,7 +884,8 @@ export default function main(props) {
 										</TouchableOpacity>
 										<TouchableOpacity style={style.requiredAction} onPress={() => {
 											setShowbankaccountrequired({ show: false, index: 0, type: "" })
-											props.navigation.navigate("settings", { required: "bankaccount" })
+											clearAllInterval()
+											props.navigation.navigate("settings", { required: "bankaccount", refetch: () => startAllInterval() })
 										}}>
 											<Text style={style.requiredActionHeader}>Ok</Text>
 										</TouchableOpacity>
@@ -910,7 +941,12 @@ export default function main(props) {
 										</TouchableOpacity>
 										<TouchableOpacity style={style.requiredAction} onPress={() => {
 											setShowmenurequired(false)
-											props.navigation.navigate("menu", { menuid: '', name: '', refetch: () => getTheInfo() })
+											clearAllInterval()
+
+											props.navigation.navigate("menu", { menuid: '', name: '', refetch: () => {
+												getTheInfo()
+												clearAllInterval()
+											}})
 										}}>
 											<Text style={style.requiredActionHeader}>Ok</Text>
 										</TouchableOpacity>
@@ -997,7 +1033,8 @@ const style = StyleSheet.create({
 	// client appointment requests
 	request: { borderRadius: 5, backgroundColor: 'white', marginHorizontal: 5, marginVertical: 2.5 },
 	requestRow: { flexDirection: 'row', justifyContent: 'space-between' },
-	imageHolder: { borderRadius: 40, height: 80, margin: 5, overflow: 'hidden', width: 80 },
+	requestImageHolder: { borderRadius: imageSize / 2, height: imageSize, margin: 5, overflow: 'hidden', width: imageSize },
+	requestImage: { height: imageSize, width: imageSize },
 	requestInfo: { fontFamily: 'appFont', fontSize: 20, padding: 10, width: width - 100 },
 	requestActions: { flexDirection: 'row', justifyContent: 'space-around', marginVertical: 10 },
 	requestAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 5, width: 80 },
@@ -1006,7 +1043,8 @@ const style = StyleSheet.create({
 	// client's schedule
 	schedule: { alignItems: 'center', borderRadius: 5, backgroundColor: 'white', marginHorizontal: 5, marginVertical: 2.5 },
 	scheduleRow: { flexDirection: 'row', justifyContent: 'space-between' },
-	imageHolder: { borderRadius: 25, height: 50, margin: 5, overflow: 'hidden', width: 50 },
+	scheduleImageHolder: { borderRadius: imageSize / 2, height: imageSize, margin: 5, overflow: 'hidden', width: imageSize },
+	scheduleImage: { height: imageSize, width: imageSize },
 	scheduleHeader: { fontFamily: 'appFont', fontSize: 20, padding: 10, textAlign: 'center', width: width - 100 },
 	scheduleAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, height: 27, marginTop: 3, padding: 5, width: 120 },
 	scheduleActionDisabled: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, height: 27, marginTop: 3, opacity: 0.5, padding: 5, width: 120 },
@@ -1014,8 +1052,8 @@ const style = StyleSheet.create({
 	scheduleNumOrders: { fontWeight: 'bold', padding: 8 },
 
 	cartorderer: { backgroundColor: 'white', borderRadius: 5, flexDirection: 'row', justifyContent: 'space-between', margin: 10, padding: 5 },
-	cartordererImageHolder: { borderRadius: 25, height: 50, overflow: 'hidden', width: 50 },
-	cartordererImage: { height: 50, width: 50 },
+	cartordererImageHolder: { borderRadius: imageSize / 2, height: imageSize, overflow: 'hidden', width: imageSize },
+	cartordererImage: { height: imageSize, width: imageSize },
 	cartordererInfo: { alignItems: 'center', width: width - 81 },
 	cartordererUsername: { fontWeight: 'bold', marginBottom: 10 },
 	cartordererOrderNumber: { fontSize: 20, paddingVertical: 5 },

@@ -115,7 +115,10 @@ export default function booktime(props) {
 	return (
 		<View style={{ paddingVertical: offsetPadding }}>
 			<View style={style.box}>
-				<TouchableOpacity style={style.back} onPress={() => props.navigation.goBack()}>
+				<TouchableOpacity style={style.back} onPress={() => {
+					refetch()
+					props.navigation.goBack()
+				}}>
 					<Text style={style.backHeader}>Back</Text>
 				</TouchableOpacity>
 

@@ -105,6 +105,9 @@ export const getDinersPayments = data => {
 	)
 }
 
-export const doneService = id => {
-	return axios.get(`${url}/schedules/done_service/${id}`)
+export const doneService = data => {
+	return axios.post(
+		`${url}/schedules/done_service`,
+		data
+	)
 }

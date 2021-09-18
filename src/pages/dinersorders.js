@@ -44,13 +44,14 @@ export default function dinersorders(props) {
 
 		let k = 0, newDiners = [...diners]
 		let data, allpaid = true
+		let time = Date.now()
 
 		while (k < newDiners.length) {
 			if (!newDiners[k].paid) {
 				newDiners[k].paying = true
 				setDiners(newDiners)
 
-				data = { scheduleid, userid: newDiners[k].userId }
+				data = { scheduleid, userid: newDiners[k].userId, time }
 
 				try {
 					let res = await getDinersPayments(data)
