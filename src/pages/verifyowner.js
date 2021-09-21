@@ -16,7 +16,7 @@ export default function verifyowner({ navigation }) {
 
 	const [loading, setLoading] = useState(false)
 	const [errorMsg, setErrormsg] = useState('')
-
+	
 	const verify = () => {
 		setLoading(true)
 
@@ -36,8 +36,6 @@ export default function verifyowner({ navigation }) {
 			.then((res) => {
 				if (res) {
 					const { verifycode } = res
-
-					console.log(verifycode)
 
 					setVerifycode(verifycode)
 					setLoading(false)

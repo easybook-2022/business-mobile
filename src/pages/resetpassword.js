@@ -11,7 +11,7 @@ const screenHeight = height - (offsetPadding * 2)
 
 export default function resetpassword(props) {
 	const { cellnumber } = props.route.params
-
+	
 	const [newPassword, setNewpassword] = useState('')
 	const [confirmPassword, setConfirmpassword] = useState('')
 	const [errorMsg, setErrormsg] = useState('')

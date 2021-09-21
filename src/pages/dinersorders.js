@@ -16,7 +16,7 @@ let interval
 
 export default function dinersorders(props) {
 	const { scheduleid, refetch } = props.route.params
-
+	
 	const [diners, setDiners] = useState([])
 	const [totalPayment, setTotalpayment] = useState(0.00)
 	const [paymentConfirm, setPaymentconfirm] = useState(false)

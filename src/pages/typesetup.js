@@ -21,7 +21,7 @@ export default function typesetup({ navigation }) {
 		const data = { ownerid, locationid, type }
 
 		setLoading(true)
-
+		
 		setLocationType(data)
 			.then((res) => {
 				if (res.status == 200) {

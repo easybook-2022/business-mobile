@@ -18,7 +18,7 @@ export default function booktime(props) {
 	const [loaded, setLoaded] = useState(false)
 
 	const [confirm, setConfirm] = useState({ show: false, time: "", requested: false })
-
+	
 	const getTheAppointmentInfo = async() => {
 		getAppointmentInfo(appointmentid)
 			.then((res) => {
@@ -76,13 +76,10 @@ export default function booktime(props) {
 						let timepassed = currenttime > currDateStr
 						let timetaken = scheduled.indexOf(currDateStr) > -1
 						
-						if (!timepassed) {
-							newTimes.push({ 
-								key: newTimes.length, header: timedisplay, 
-								time: currDateStr, 
-								available: !timetaken
-							})
-						}
+						newTimes.push({ 
+							key: newTimes.length, header: timedisplay, 
+							time: currDateStr, timetaken, timepassed
+						})
 					}
 
 					setTimes(newTimes)
@@ -132,11 +129,22 @@ export default function booktime(props) {
 						<View style={{ alignItems: 'center', flexDirection: 'row', justifyContent: 'space-around', marginBottom: 50, width: '100%' }}>
 							<View style={style.times}>
 								{times.map(info => (
-									<TouchableOpacity style={info.booked ? style.selected : style.unselect} disabled={info.booked} key={info.key} onPress={() => {
-										if (!info.booked) setConfirm({ ...confirm, show: true, service: name, timeheader: info.header, time: info.time })
-									}}>
-										<Text style={{ color: info.booked ? 'white' : 'black', fontSize: 15 }}>{info.header}</Text>
-									</TouchableOpacity>
+									<>
+										{!info.timetaken && !info.timepassed ? 
+											<TouchableOpacity style={style.unselect} key={info.key} onPress={() => setConfirm({ ...confirm, show: true, service: name, timeheader: info.header, time: info.time })}>
+												<Text style={{ color: 'black', fontSize: 15 }}>{info.header}</Text>
+											</TouchableOpacity>
+											:
+											info.timetaken ? 
+												<TouchableOpacity style={style.selected} disabled={true} key={info.key} onPress={() => {}}>
+													<Text style={{ color: 'white', fontSize: 15 }}>{info.header}</Text>
+												</TouchableOpacity>
+												:
+												<TouchableOpacity style={style.selectedPassed} disabled={true} key={info.key} onPress={() => {}}>
+													<Text style={{ color: 'black', fontSize: 15 }}>{info.header}</Text>
+												</TouchableOpacity>
+										}
+									</>
 								))}
 							</View>
 						</View>
@@ -205,6 +213,7 @@ const style = StyleSheet.create({
 	times: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', width: 282 },
 	unselect: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, padding: 5, width: 90 },
 	selected: { alignItems: 'center', backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, padding: 5, width: 90 },
+	selectedPassed: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, opacity: 0.3, padding: 5, width: 90 },
 
 	// confirm & requested box
 	confirmBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },

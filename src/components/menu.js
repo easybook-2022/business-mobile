@@ -20,7 +20,7 @@ const screenHeight = height - (offsetPadding * 2)
 
 export default function menu(props) {
 	const { menuid, refetch } = props.route.params
-
+	
 	const [menuName, setMenuname] = useState('')
 	const [menuInfo, setMenuinfo] = useState('')
 	const [locationType, setLocationtype] = useState('')

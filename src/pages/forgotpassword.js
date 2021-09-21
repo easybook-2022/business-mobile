@@ -13,7 +13,7 @@ export default function forgotpassword({ navigation }) {
 	const [info, setInfo] = useState({ cellnumber: loginInfo.cellnumber, resetcode: '111111', sent: false })
 	const [code, setCode] = useState('')
 	const [errorMsg, setErrormsg] = useState('')
-
+	
 	const getTheCode = () => {
 		getCode(info.cellnumber)
 			.then((res) => {

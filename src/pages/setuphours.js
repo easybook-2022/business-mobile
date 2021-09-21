@@ -22,7 +22,7 @@ export default function setuphours({ navigation }) {
 		{ key: "6", header: "Saturday", opentime: { hour: "00", minute: "00", period: "AM" }, closetime: { hour: "00", minute: "00", period: "AM" }}
 	])
 	const [loading, setLoading] = useState(false)
-
+	
 	const updateTime = (index, timetype, dir, open) => {
 		const newDays = [...days]
 		let value, period

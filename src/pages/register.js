@@ -21,7 +21,7 @@ export default function register(props) {
 		const data = { cellnumber, password, confirmPassword }
 
 		setLoading(true)
-
+		
 		registerUser(data)
 			.then((res) => {
 				if (res.status == 200) {

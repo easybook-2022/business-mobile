@@ -16,7 +16,7 @@ export default function login({ navigation }) {
 
 	const login = () => {
 		const data = { cellnumber: phonenumber, password: password }
-
+		
 		loginUser(data)
 			.then((res) => {
 				if (res.status == 200) {

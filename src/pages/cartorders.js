@@ -18,7 +18,7 @@ export default function cartorders(props) {
 	const [loading, setLoading] = useState(false)
 	const [showBankaccountrequired, setShowbankaccountrequired] = useState(false)
 	const [showPaymentconfirm, setShowpaymentconfirm] = useState(false)
-
+	
 	const getTheOrders = async() => {
 		const locationid = await AsyncStorage.getItem("locationid")
 		const data = { userid, locationid, ordernumber }

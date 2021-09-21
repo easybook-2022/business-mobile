@@ -35,7 +35,7 @@ import Services from './src/components/salons/services'
 import Addproduct from './src/components/addproduct'
 import Addservice from './src/components/addservice'
 
-import Menu from './src/pages/menu'
+import Menu from './src/components/menu'
 
 import Settings from './src/pages/settings'
 

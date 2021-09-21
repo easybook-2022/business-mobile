@@ -16,7 +16,7 @@ export default function diningorders(props) {
 	const [timeStr, setTimestr] = useState('')
 	const [rounds, setRounds] = useState([])
 	const [loaded, setLoaded] = useState(false)
-
+	
 	const getTheScheduleInfo = () => {
 		getScheduleInfo(scheduleid)
 			.then((res) => {

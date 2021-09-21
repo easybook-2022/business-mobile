@@ -16,7 +16,7 @@ const screenHeight = height - (offsetPadding * 2)
 
 export default function services(props) {
 	const { menuid, name, map, refetch } = props.route.params
-
+	
 	const [permission, setPermission] = useState(null);
 	const [camComp, setCamcomp] = useState(null)
 	const [camType, setCamtype] = useState(Camera.Constants.Type.back);
