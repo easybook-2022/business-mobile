@@ -45,14 +45,13 @@ const bankAccount = [
 ]
 const { accountNumber, countryCode, currency, routingNumber, accountHolderName } = bankAccount[Math.floor(Math.random() * 2) + 0]
 
-let login = stores[0]
+let login = stores[1]
 export const loginInfo = { 
 	cellnumber: login.cellnumber,  password: "password", storeName: login.storeName, 
 	storeType: login.storeType, phonenumber: login.phonenumber, addressOne: login.addressOne, 
 	addressTwo: login.addressTwo, city: login.city, province: login.province, 
 	postalcode: login.postalcode, accountNumber, countryCode, currency, routingNumber, accountHolderName
 }
-
 export const ownerInfo = {
 	cellnumber: "1232343456",
 	password: "password"
@@ -65,9 +64,64 @@ export const registerInfo = {
 	addressTwo: register.addressTwo, city: register.city, province: register.province, 
 	postalcode: register.postalcode, accountNumber, countryCode, currency, routingNumber, accountHolderName
 }
-
 export const wifi_api_url = "http://192.168.0.172:5000/flask"
 export const server_api_url = "https://www.easygo.tk/flask"
 export const url = wifi_api_url
 export const stripe_key = "sk_test_lft1B76yZfF2oEtD5rI3y8dz"
 export const logo_url = url + "/static/"
+export const displayTime = unixtime => {
+	const months = ['January', 'February', 'March', 'April', 'May', 'Jun', 'July', 'August', 'September', 'October', 'November', 'December']
+	const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+	const currTime = new Date(Date.now())
+	const currentDate = Date.parse(months[currTime.getMonth()] + " " + currTime.getDate() + ", " + currTime.getFullYear() + " 23:59")
+	const selectedDate = new Date(unixtime)
+	let hour = selectedDate.getHours(), minute = selectedDate.getMinutes(), period
+	let timeStr = "", timeheader = "", diff
+
+	minute = minute < 10 ? '0' + minute : minute
+	period = hour > 12 ? 'pm' : 'am'
+	hour = hour > 12 ? hour - 12 : hour
+
+	timeheader = hour + ":" + minute + " " + period
+
+	if (unixtime < currentDate) {
+		timeStr = "today at " + timeheader
+	} else if (unixtime > currentDate) {
+		if (unixtime - currentDate > 86400000) {
+			diff = unixtime - currentDate
+
+			if (diff <= 604800000) { // this week
+				let sDay = new Date(unixtime)
+				let eDay = new Date(currentDate)
+
+				if (sDay.getDay() == eDay.getDay()) {
+					timeStr = " next " + days[sDay.getDay()] + " at " + timeheader
+				} else {
+					timeStr = " this " + days[sDay.getDay()] + " at " + timeheader
+				}
+			} else if (diff > 604800000 && diff <= 1210000000) { // next week
+				let sDay = new Date(unixtime)
+				let eDay = new Date(currentDate)
+
+				if (sDay.getDay() != eDay.getDay()) {
+					timeStr = " next " + days[sDay.getDay()] + " at " + timeheader
+				} else {
+					timeStr = " this " + days[sDay.getDay()] + ", " + months[sDay.getMonth()] + " " + date + " at " + timeheader
+				}
+			} else {
+				let sDay = new Date(unixtime)
+				let eDay = new Date(currentDate)
+
+				if (sDay.getMonth() != eDay.getMonth()) {
+					timeStr = " this " + days[sDay.getDay()] + ", " + months[sDay.getMonth()] + " " + date + " at " + timeheader
+				} else {
+					timeStr = " this " + days[sDay.getDay()] + ", " + date + " at " + timeheader
+				}
+			}
+		} else {
+			timeStr = "tomorrow at " + timeheader
+		}
+	}
+
+	return timeStr
+}

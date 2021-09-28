@@ -26,9 +26,16 @@ export const addOwner = data => {
 	)
 }
 
-export const updateOwner = data => {
+export const update = data => {
 	return axios.post(
-		`${url}/owners/update_owner`,
+		`${url}/owners/update`,
+		data
+	)
+}
+
+export const updateNotificationToken = data => {
+	return axios.post(
+		`${url}/owners/update_notification_token`,
 		data
 	)
 }

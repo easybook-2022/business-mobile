@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from 'react'
 import { AsyncStorage, ScrollView, ActivityIndicator, Dimensions, View, FlatList, Image, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet, Modal } from 'react-native'
 import Constants from 'expo-constants';
+import * as Notifications from 'expo-notifications';
 import { CommonActions } from '@react-navigation/native';
 import * as FileSystem from 'expo-file-system'
 import { Camera } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator'
-import { logo_url } from '../../assets/info'
+import { logo_url, displayTime } from '../../assets/info'
+import { updateNotificationToken } from '../apis/owners'
 import { fetchNumRequests, fetchNumAppointments, fetchNumCartOrderers, fetchNumReservations, fetchNumorders, getInfo, changeLocationState } from '../apis/locations'
 import { getMenus, removeMenu, addNewMenu } from '../apis/menus'
-import { getRequests, acceptRequest, cancelRequest, cancelService, doneDining, doneService, getAppointments, getCartOrderers, getReservations } from '../apis/schedules'
+import { getRequests, acceptRequest, cancelRequest, doneDining, doneService, getAppointments, getCartOrderers, getReservations } from '../apis/schedules'
 import { getProducts, getServices, removeProduct } from '../apis/products'
 
 import FontAwesome from 'react-native-vector-icons/FontAwesome'
@@ -19,9 +21,9 @@ import Entypo from 'react-native-vector-icons/Entypo'
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - (offsetPadding * 2)
-const imageSize = 80
+const imageSize = 50
 
-let updateNumrequests, updateNumappointments, updateNumcartorderers, updateNumreservations
+let updates
 
 export default function main(props) {
 	const [permission, setPermission] = useState(null);
@@ -56,7 +58,67 @@ export default function main(props) {
 	const [showPaymentconfirm, setShowpaymentconfirm] = useState({ show: false, info: {} })
 	const [showUnservedorders, setShowunservedorders] = useState(false)
 
-	const fetchTheNumRequests = async() => {
+	/*const getNotificationPermission = async() => {
+		const ownerid = await AsyncStorage.getItem("ownerid")
+		const { status } = await Notifications.getPermissionsAsync()
+
+		if (status == "granted") {
+			setNotificationpermission(true)
+
+			const { data } = await Notifications.getExpoPushTokenAsync({
+				experienceId: "@robogram/easygo-business"
+			})
+
+			if (ownerid != null) {
+				updateNotificationToken({ ownerid, token: data })
+					.then((res) => {
+						if (res.status == 200) {
+							return res.data
+						}
+					})
+					.then((res) => {
+						if (res) {
+
+						}
+					})
+					.catch((err) => {
+						if (err.response.status == 400) {
+
+						}
+					})
+			}
+		} else {
+			const info = await Notifications.requestPermissionsAsync()
+
+			if (info.status == "granted") {
+				setNotificationpermission(true)
+
+				const { data } = await Notifications.getExpoPushTokenAsync({
+					experienceId: "@robogram/easygo-business"
+				})
+
+				if (userid != null) {
+					updateNotificationToken({ userid, token: data })
+						.then((res) => {
+							if (res.status == 200) {
+								return res.data
+							}
+						})
+						.then((res) => {
+							if (res) {
+
+							}
+						})
+						.catch((err) => {
+							if (err.response.status == 400) {
+								
+							}
+						})
+				}
+			}
+		}
+	}*/
+	const fetchUpdates = async() => {
 		const locationid = await AsyncStorage.getItem("locationid")
 
 		if (locationid != null) {
@@ -69,27 +131,29 @@ export default function main(props) {
 				.then((res) => {
 					if (res) setNumrequests(res.numRequests)
 				})
-		}
-	}
-	const fetchTheNumAppointments = async() => {
-		const locationid = await AsyncStorage.getItem("locationid")
 
-		if (locationid != null) {
-			fetchNumAppointments(locationid)
-				.then((res) => {
-					if (res.status == 200) {
-						return res.data
-					}
-				})
-				.then((res) => {
-					if (res) setNumappointments(res.numAppointments)
-				})
-		}
-	}
-	const fetchTheNumCartOrderers = async() => {
-		const locationid = await AsyncStorage.getItem("locationid")
+			if (locationType == 'salon') {
+				fetchNumAppointments(locationid)
+					.then((res) => {
+						if (res.status == 200) {
+							return res.data
+						}
+					})
+					.then((res) => {
+						if (res) setNumappointments(res.numAppointments)
+					})
+			} else {
+				fetchNumReservations(locationid)
+					.then((res) => {
+						if (res.status == 200) {
+							return res.data
+						}
+					})
+					.then((res) => {
+						if (res) setNumreservations(res.numReservations)
+					})
+			}
 
-		if (locationid != null) {
 			fetchNumCartOrderers(locationid)
 				.then((res) => {
 					if (res.status == 200) {
@@ -101,21 +165,7 @@ export default function main(props) {
 				})
 		}
 	}
-	const fetchTheNumReservations = async() => {
-		const locationid = await AsyncStorage.getItem("locationid")
 
-		if (locationid != null) {
-			fetchNumReservations(locationid)
-				.then((res) => {
-					if (res.status == 200) {
-						return res.data
-					}
-				})
-				.then((res) => {
-					if (res) setNumreservations(res.numReservations)
-				})
-		}
-	}
 	const getTheInfo = async() => {
 		const locationid = await AsyncStorage.getItem("locationid")
 		const data = { locationid, menuid: '' }
@@ -136,14 +186,6 @@ export default function main(props) {
 					setStoreicon(storeLogo)
 					setLocationtype(locationType)
 					setLocationstate(locationState)
-
-					fetchTheNumRequests()
-
-					if (locationType == 'salon') {
-						fetchTheNumAppointments()
-					} else if (locationType == 'restaurant') {
-						fetchTheNumReservations()
-					}
 
 					if (locationType == 'restaurant') {
 						getAllReservations()
@@ -184,31 +226,6 @@ export default function main(props) {
 					}
 				}
 			})
-	}
-	const displayTimestr = (unixtime) => {
-		let weekdays = { "Mon": "Monday", "Tue": "Tuesday", "Wed": "Wednesday", "Thu": "Thursday", "Fri": "Friday", "Sat": "Saturday", "Sun": "Sunday" }
-		let months = { 
-			"Jan": "January", "Feb": "February", "Mar": "March", "Apr": "April", "May": "May", "Jun": "June", 
-			"Jul": "July", "Aug": "August", "Sep": "September", "Oct": "October", "Nov": "November", "Dec": "December" 
-		}
-		let d = new Date(unixtime).toString().split(" ")
-		let day = weekdays[d[0]]
-		let month = months[d[1]]
-		let date = d[2]
-		let year = d[3]
-
-		let time = d[4].split(":")
-		let hour = parseInt(time[0])
-		let minute = time[1]
-		let period = hour > 11 ? "pm" : "am"
-
-		hour = hour > 12 ? hour - 12 : hour
-
-		//day + ", " + month + " " + date + ", " + year + " at " + 
-
-		let timestr = hour + ":" + minute + " " + period;
-
-		return timestr
 	}
 	const getAllRequests = async() => {
 		const locationid = await AsyncStorage.getItem("locationid")
@@ -380,29 +397,6 @@ export default function main(props) {
 			}
 		}
 	}
-	const cancelTheService = (index, scheduleid) => {
-		const newAppointments = [...appointments]
-		const data = { scheduleid, type: "salon" }
-
-		cancelService(data)
-			.then((res) => {
-				if (res.status == 200) {
-					return res.data
-				}
-			})
-			.then((res) => {
-				if (res) {
-					if (res.delete) {
-						newAppointments.splice(index, 1)
-
-						setAppointments(newAppointments)
-					}
-				}
-			})
-			.catch((err) => {
-
-			})
-	}
 	const doneTheDining = (index, id) => {
 		const newReservations = [...reservations]
 
@@ -509,16 +503,11 @@ export default function main(props) {
 			})
 	}
 	const startAllInterval = () => {
-		updateNumrequests = setInterval(() => fetchTheNumRequests(), 2000)
-		updateNumappointments = setInterval(() => fetchTheNumAppointments(), 2000)
-		updateNumcartorderers = setInterval(() => fetchTheNumCartOrderers(), 2000)
-		updateNumreservations = setInterval(() => fetchTheNumReservations(), 2000)
+		//getNotificationPermission()
+		updates = setInterval(() => fetchUpdates(), 2000)
 	}
 	const clearAllInterval = () => {
-		clearInterval(updateNumrequests)
-		clearInterval(updateNumappointments)
-		clearInterval(updateNumcartorderers)
-		clearInterval(updateNumreservations)
+		clearInterval(updates)
 	}
 
 	useEffect(() => {
@@ -583,14 +572,13 @@ export default function main(props) {
 													<Text>
 														{locationType == 'salon' ? 
 															<>
-																<Text style={{ fontWeight: 'bold' }}>{item.username + ' requested'}</Text> 
-																<Text style={{ fontWeight: 'bold' }}>{' ' + item.name}</Text> at 
-																<Text style={{ fontWeight: 'bold' }}>{' ' + displayTimestr(item.time)}</Text>
+																<Text style={{ fontWeight: 'bold' }}>{item.username + ' requested' + (item.status == 'change' ? ' a time change for ' : ' ')}</Text> 
+																<Text style={{ fontWeight: 'bold' }}>{item.name + ' ' + displayTime(item.time)}</Text>
 															</>
 															:
 															<>
 																<Text><Text style={{ fontWeight: 'bold' }}>{item.username}</Text> is booking a reservation</Text>
-																<Text style={{ fontWeight: 'bold' }}>{'\n'}at {displayTimestr(item.time)}</Text>
+																<Text style={{ fontWeight: 'bold' }}>{'\n' + displayTime(item.time)}</Text>
 																<Text style={{ fontWeight: 'bold' }}>{(item.diners + 1) > 0 ? ' for ' + (item.diners + 1) + ' ' + ((item.diners + 1) == 1 ? 'person' : 'people') : ' for 1 person'}</Text>
 															</>
 														}
@@ -648,14 +636,11 @@ export default function main(props) {
 												<Text style={{ fontFamily: 'Arial', fontWeight: 'bold' }}>{item.username} </Text> 
 												has an appointment for
 												<Text style={{ fontFamily: 'Arial', fontWeight: 'bold' }}> {item.name}</Text>
-												{'\n'} at {''}
-												<Text style={{ fontFamily: 'Arial', fontWeight: 'bold' }}>{displayTimestr(item.time)}</Text>
+												{'\n'}
+												<Text style={{ fontFamily: 'Arial', fontWeight: 'bold' }}>{displayTime(item.time)}</Text>
 											</Text>
 
 											<View style={{ flexDirection: 'row', marginBottom: 10 }}>
-												<TouchableOpacity style={style.scheduleAction} onPress={() => cancelTheService(index, item.id)}>
-													<Text style={style.scheduleActionHeader}>Cancel Service</Text>
-												</TouchableOpacity>
 												<Text style={{ padding: 8 }}>Service is done ?</Text>
 												<TouchableOpacity style={item.gettingPayment ? style.scheduleActionDisabled : style.scheduleAction} disabled={item.gettingPayment} onPress={() => doneTheService(index, item.id)}>
 													<Text style={style.scheduleActionHeader}>Receive payment</Text>
@@ -723,8 +708,8 @@ export default function main(props) {
 															" 1 person"
 														}
 													</Text>
-													{'\n'} at {''}
-													<Text style={{ fontFamily: 'Arial', fontWeight: 'bold' }}>{displayTimestr(item.time)}</Text>
+													{'\n'}
+													<Text style={{ fontFamily: 'Arial', fontWeight: 'bold' }}>{displayTime(item.time)}</Text>
 													{'\n'}for table: <Text style={{ fontFamily: 'Arial', fontWeight: 'bold' }}>#{item.table}</Text>
 												</Text>
 											</View>
@@ -1045,7 +1030,7 @@ const style = StyleSheet.create({
 	scheduleRow: { flexDirection: 'row', justifyContent: 'space-between' },
 	scheduleImageHolder: { borderRadius: imageSize / 2, height: imageSize, margin: 5, overflow: 'hidden', width: imageSize },
 	scheduleImage: { height: imageSize, width: imageSize },
-	scheduleHeader: { fontFamily: 'appFont', fontSize: 20, padding: 10, textAlign: 'center', width: width - 100 },
+	scheduleHeader: { fontFamily: 'appFont', fontSize: 15, padding: 10, textAlign: 'center', width: width - 100 },
 	scheduleAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, height: 27, marginTop: 3, padding: 5, width: 120 },
 	scheduleActionDisabled: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, height: 27, marginTop: 3, opacity: 0.5, padding: 5, width: 120 },
 	scheduleActionHeader: { fontSize: 10, textAlign: 'center' },
