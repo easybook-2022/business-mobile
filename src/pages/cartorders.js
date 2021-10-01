@@ -36,6 +36,11 @@ export default function cartorders(props) {
 					setReady(res.ready)
 				}
 			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
+				}
+			})
 	}
 	const orderIsReady = async() => {
 		const locationid = await AsyncStorage.getItem("locationid")
@@ -50,6 +55,11 @@ export default function cartorders(props) {
 			.then((res) => {
 				if (res) {
 					setReady(true)
+				}
+			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
 				}
 			})
 	}
@@ -86,6 +96,11 @@ export default function cartorders(props) {
 
 						setLoading(false)
 					}
+				}
+			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
 				}
 			})
 	}

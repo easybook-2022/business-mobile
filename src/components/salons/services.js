@@ -50,6 +50,11 @@ export default function services(props) {
 					}
 				}
 			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
+				}
+			})
 	}
 	const getAllMenus = async() => {
 		const ownerid = await AsyncStorage.getItem("ownerid")
@@ -67,6 +72,11 @@ export default function services(props) {
 					setMenus(res.menus)
 				}
 			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
+				}
+			})
 	}
 	const getAllProducts = async() => {
 		const ownerid = await AsyncStorage.getItem("ownerid")
@@ -82,6 +92,11 @@ export default function services(props) {
 			.then((res) => {
 				if (res) {
 					setProducts(res.products)
+				}
+			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
 				}
 			})
 	}
@@ -114,6 +129,11 @@ export default function services(props) {
 
 					map.push(name)
 					props.navigation.push("services", { name: name, map })
+				}
+			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
 				}
 			})
 	}
@@ -187,6 +207,11 @@ export default function services(props) {
 					getTheInfo()
 				}
 			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
+				}
+			})
 	}
 	const removeTheProduct = (id, index) => {
 		const data = { id }
@@ -200,6 +225,11 @@ export default function services(props) {
 			.then((res) => {
 				if (res) {
 					if (res) getTheInfo()
+				}
+			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
 				}
 			})
 	}

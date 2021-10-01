@@ -10,7 +10,7 @@ import { logo_url, displayTime } from '../../assets/info'
 import { updateNotificationToken } from '../apis/owners'
 import { fetchNumRequests, fetchNumAppointments, fetchNumCartOrderers, fetchNumReservations, fetchNumorders, getInfo, changeLocationState } from '../apis/locations'
 import { getMenus, removeMenu, addNewMenu } from '../apis/menus'
-import { getRequests, acceptRequest, cancelRequest, doneDining, doneService, getAppointments, getCartOrderers, getReservations } from '../apis/schedules'
+import { getRequests, acceptRequest, cancelRequest, doneDining, doneService, canServeDiners, getAppointments, getCartOrderers, getReservations } from '../apis/schedules'
 import { getProducts, getServices, removeProduct } from '../apis/products'
 
 import FontAwesome from 'react-native-vector-icons/FontAwesome'
@@ -57,8 +57,9 @@ export default function main(props) {
 	const [showMenurequired, setShowmenurequired] = useState(false)
 	const [showPaymentconfirm, setShowpaymentconfirm] = useState({ show: false, info: {} })
 	const [showUnservedorders, setShowunservedorders] = useState(false)
+	const [showWrongworker, setShowwrongworker] = useState(false)
 
-	/*const getNotificationPermission = async() => {
+	const getNotificationPermission = async() => {
 		const ownerid = await AsyncStorage.getItem("ownerid")
 		const { status } = await Notifications.getPermissionsAsync()
 
@@ -117,7 +118,7 @@ export default function main(props) {
 				}
 			}
 		}
-	}*/
+	}
 	const fetchUpdates = async() => {
 		const locationid = await AsyncStorage.getItem("locationid")
 
@@ -192,6 +193,11 @@ export default function main(props) {
 					} else {
 						getAllAppointments()
 					}
+				}
+			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
 				}
 			})
 	}
@@ -295,6 +301,11 @@ export default function main(props) {
 					setViewtype('reservations')
 				}
 			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
+				}
+			})
 	}
 	const cancelTheRequest = (requestid, index, type) => {
 		if (!cancelRequestInfo.show) {
@@ -323,6 +334,11 @@ export default function main(props) {
 						setRequests(newRequests)
 						setNumrequests(numRequests - 1)
 						setCancelrequestinfo({ ...cancelRequestInfo, show: false, type: "", reason: "", requestid: 0, index: 0 })
+					}
+				})
+				.catch((err) => {
+					if (err.response.status == 400) {
+						
 					}
 				})
 		}
@@ -358,6 +374,11 @@ export default function main(props) {
 						}
 					}
 				})
+				.catch((err) => {
+					if (err.response.status == 400) {
+						
+					}
+				})
 		} else {
 			if (!acceptRequestInfo.show) {
 				setAcceptrequestinfo({ ...acceptRequestInfo, show: true, type, requestid, tablenum })
@@ -389,6 +410,11 @@ export default function main(props) {
 								} else {
 									getAllAppointments()
 								}
+							}
+						})
+						.catch((err) => {
+							if (err.response.status == 400) {
+								
 							}
 						})
 				} else {
@@ -428,34 +454,55 @@ export default function main(props) {
 			})
 			.catch((err) => {
 				if (err.response.status == 400) {
-					if (err.response.data.status) {
-						const status = err.response.data.status
+					const status = err.response.data.status
 
-						switch (status) {
-							case "unserved":
-								const newReservations = [...reservations]
+					switch (status) {
+						case "unserved":
+							const newReservations = [...reservations]
 
-								newReservations[index].gettingPayment = false
+							newReservations[index].gettingPayment = false
 
-								setReservations(newReservations)
+							setReservations(newReservations)
 
-								setShowunservedorders(true)
+							setShowunservedorders(true)
 
-								break;
-							default:
-						}
+							break;
+						default:
 					}
 				}
 			})
 	}
-	const doneTheService = (index, id) => {
+	const canServeTheDiners = (index, id) => {
+		const newReservations = [...reservations]
+
+		canServeDiners(id)
+			.then((res) => {
+				if (res.status == 200) {
+					return res.data
+				}
+			})
+			.then((res) => {
+				if (res) {
+					newReservations[index].seated = true
+
+					setReservations(newReservations)
+				}
+			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
+				}
+			})
+	}
+	const doneTheService = async(index, id) => {
+		const ownerid = await AsyncStorage.getItem("ownerid")
 		const newAppointments = [...appointments]
 
 		newAppointments[index].gettingPayment = true
 
 		setAppointments(newAppointments)
 
-		const data = { scheduleid: id, time: Date.now() }
+		const data = { scheduleid: id, time: Date.now(), ownerid }
 
 		doneService(data)
 			.then((res) => {
@@ -479,32 +526,34 @@ export default function main(props) {
 			})
 			.catch((err) => {
 				if (err.response.status == 400) {
-					if (err.response.data.status) {
-						const status = err.response.data.status
-						const newAppointments = [...appointments]
+					const status = err.response.data.status
+					const newAppointments = [...appointments]
 
-						newAppointments[index].gettingPayment = false
+					newAppointments[index].gettingPayment = false
 
-						setAppointments(newAppointments)
+					setAppointments(newAppointments)
 
-						switch (status) {
-							case "paymentunsent":
-								setShowpaymentunsent(true)
+					switch (status) {
+						case "paymentunsent":
+							setShowpaymentunsent(true)
 
-								break;
-							case "bankaccountrequired":
-								setShowbankaccountrequired({ show: true, index, "type": "doneservice" })
+							break;
+						case "wrongworker":
+							setShowwrongworker(true)
 
-								break;
-							default:
-						}
+							break
+						case "bankaccountrequired":
+							setShowbankaccountrequired({ show: true, index, "type": "doneservice" })
+
+							break;
+						default:
 					}
 				}
 			})
 	}
 	const startAllInterval = () => {
 		//getNotificationPermission()
-		updates = setInterval(() => fetchUpdates(), 2000)
+		updates = setInterval(() => fetchUpdates(), 5000)
 	}
 	const clearAllInterval = () => {
 		clearInterval(updates)
@@ -577,7 +626,7 @@ export default function main(props) {
 															</>
 															:
 															<>
-																<Text><Text style={{ fontWeight: 'bold' }}>{item.username}</Text> is booking a reservation</Text>
+																<Text><Text style={{ fontWeight: 'bold' }}>{item.username}</Text> is {item.status == 'change' ? 're-' : ''}booking a reservation</Text>
 																<Text style={{ fontWeight: 'bold' }}>{'\n' + displayTime(item.time)}</Text>
 																<Text style={{ fontWeight: 'bold' }}>{(item.diners + 1) > 0 ? ' for ' + (item.diners + 1) + ' ' + ((item.diners + 1) == 1 ? 'person' : 'people') : ' for 1 person'}</Text>
 															</>
@@ -714,28 +763,37 @@ export default function main(props) {
 												</Text>
 											</View>
 
-											<View style={{ alignItems: 'center', marginVertical: 10 }}>
-												<View style={{ flexDirection: 'row', marginBottom: 10 }}>
-													<TouchableOpacity style={style.scheduleAction} onPress={() => {
-														clearAllInterval()
+											{item.seated ? 
+												<View style={{ alignItems: 'center', marginVertical: 10 }}>
+													<View style={{ flexDirection: 'row', marginBottom: 10 }}>
+														<TouchableOpacity style={style.scheduleAction} onPress={() => {
+															clearAllInterval()
 
-														props.navigation.navigate("diningorders", { scheduleid: item.id, refetch: () => {
-															getAllReservations()
-															startAllInterval()
-														}})
-													}}>
-														<Text style={style.scheduleActionHeader}>Customers' Orders</Text>
-													</TouchableOpacity>
-													<Text style={style.scheduleNumOrders}>{item.numMakings > 0 && '(' + item.numMakings + ')'}</Text>
+															props.navigation.navigate("diningorders", { scheduleid: item.id, refetch: () => {
+																getAllReservations()
+																startAllInterval()
+															}})
+														}}>
+															<Text style={style.scheduleActionHeader}>Customers' Orders</Text>
+														</TouchableOpacity>
+														<Text style={style.scheduleNumOrders}>{item.numMakings > 0 && '(' + item.numMakings + ')'}</Text>
+													</View>
+													<View style={{ flexDirection: 'row' }}>
+														<Text style={{ padding: 8 }}>Diners are done ?</Text>
+														<TouchableOpacity style={item.gettingPayment ? style.scheduleActionDisabled : style.scheduleAction} disabled={item.gettingPayment} onPress={() => doneTheDining(index, item.id)}>
+															<Text style={style.scheduleActionHeader}>Receive payment</Text>
+															{item.gettingPayment && <ActivityIndicator marginBottom={-5} marginTop={-15} size="small"/>}
+														</TouchableOpacity>
+													</View>
 												</View>
-												<View style={{ flexDirection: 'row' }}>
-													<Text style={{ padding: 8 }}>Diners are done ?</Text>
-													<TouchableOpacity style={item.gettingPayment ? style.scheduleActionDisabled : style.scheduleAction} disabled={item.gettingPayment} onPress={() => doneTheDining(index, item.id)}>
-														<Text style={style.scheduleActionHeader}>Receive payment</Text>
-														{item.gettingPayment && <ActivityIndicator marginBottom={-5} marginTop={-15} size="small"/>}
+												:
+												<View style={{ alignItems: 'center', marginVertical: 10 }}>
+													<Text style={style.scheduleHeader}>Diner(s) are seated at their table and ready to be serve</Text>
+													<TouchableOpacity style={style.scheduleAction} onPress={() => canServeTheDiners(index, item.id)}>
+														<Text style={style.scheduleActionHeader}>Yes</Text>
 													</TouchableOpacity>
 												</View>
-											</View>									
+											}
 										</View>
 									}
 								/>
@@ -983,6 +1041,24 @@ export default function main(props) {
 
 									<View style={style.confirmActions}>
 										<TouchableOpacity style={style.confirmAction} onPress={() => setShowunservedorders(false)}>
+											<Text style={style.confirmActionHeader}>Ok</Text>
+										</TouchableOpacity>
+									</View>
+								</View>
+							</View>
+						</View>
+					</Modal>
+				)}
+
+				{showWrongworker && (
+					<Modal transparent={true}>
+						<View style={style.confirmBoxContainer}>
+							<View style={style.confirmBox}>
+								<View style={style.confirmContainer}>
+									<Text style={style.confirmHeader}>Only the worker of this client can receive the payment</Text>
+
+									<View style={style.confirmActions}>
+										<TouchableOpacity style={style.confirmAction} onPress={() => setShowwrongworker(false)}>
 											<Text style={style.confirmActionHeader}>Ok</Text>
 										</TouchableOpacity>
 									</View>

@@ -94,6 +94,11 @@ export default function menu(props) {
 					setLoaded(true)
 				}
 			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
+				}
+			})
 	}
 
 	// menus
@@ -112,6 +117,11 @@ export default function menu(props) {
 					setMenus(res.menus)
 					setNummenus(res.nummenus)
 					setShowmenus(true)
+				}
+			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
 				}
 			})
 	}
@@ -144,6 +154,11 @@ export default function menu(props) {
 					getTheInfo()
 				}
 			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
+				}
+			})
 	}
 	const removeTheMenu = (id) => {
 		if (!removeMenuinfo.show) {
@@ -160,6 +175,11 @@ export default function menu(props) {
 						setRemovemenuinfo({ show: true, id, name, info, image })
 					}
 				})
+				.catch((err) => {
+					if (err.response.status == 400) {
+						
+					}
+				})
 		} else {
 			removeMenu(id)
 				.then((res) => {
@@ -171,6 +191,11 @@ export default function menu(props) {
 					if (res) {
 						setRemovemenuinfo({ show: false, id: "", name: "", info: "", image: "" })
 						getTheInfo()
+					}
+				})
+				.catch((err) => {
+					if (err.response.status == 400) {
+						
 					}
 				})
 		}
@@ -194,6 +219,11 @@ export default function menu(props) {
 							name: image
 						}
 					})
+				}
+			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
 				}
 			})
 	}
@@ -223,7 +253,12 @@ export default function menu(props) {
 					
 					setMenus(newMenus)
 				}
-			})	
+			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
+				}
+			})
 	}
 
 	// products
@@ -244,6 +279,11 @@ export default function menu(props) {
 					setShowproducts(true)
 				}
 			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
+				}
+			})
 	}
 	const removeTheProduct = (id) => {
 		if (!removeProductinfo.show) {
@@ -260,6 +300,11 @@ export default function menu(props) {
 						setRemoveproductinfo({ show: true, id, name, info, image, sizes, others, options, price })
 					}
 				})
+				.catch((err) => {
+					if (err.response.status == 400) {
+						
+					}
+				})
 		} else {
 			removeProduct(id)
 				.then((res) => {
@@ -273,6 +318,11 @@ export default function menu(props) {
 				})
 				.then((res) => {
 					if (res) getTheInfo()
+				})
+				.catch((err) => {
+					if (err.response.status == 400) {
+						
+					}
 				})
 		}
 	}
@@ -295,6 +345,11 @@ export default function menu(props) {
 					setShowservices(true)
 				}
 			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
+				}
+			})
 	}
 	const removeTheService = (id) => {
 		if (!removeServiceinfo.show) {
@@ -309,6 +364,11 @@ export default function menu(props) {
 						const { name, info, price, image, duration } = res.serviceInfo
 
 						setRemoveserviceinfo({ show: true, id, name, info, price, image, duration })
+					}
+				})
+				.catch((err) => {
+					if (err.response.status == 400) {
+						
 					}
 				})
 		} else {
@@ -326,6 +386,11 @@ export default function menu(props) {
 					if (res) {
 						getTheInfo()
 						setRemoveserviceinfo({ show: false, id: "", name: "", info: "", price: 0, image: "", duration: "" })
+					}
+				})
+				.catch((err) => {
+					if (err.response.status == 400) {
+						
 					}
 				})
 		}

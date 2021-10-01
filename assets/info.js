@@ -14,16 +14,18 @@ stores = [
 	{ id: 1, storeName: "Hair salon", storeType: "hair", cellnumber: "9000000001", phonenumber: "9000000000", addressOne: "642 Gerrard St E", addressTwo: "", city: "Toronto", province: "ON", postalcode: "M4M 1Y3" },
 	{ id: 2, storeName: "Nail salon", storeType: "nail", cellnumber: "1000000001", phonenumber: "1000000000", addressOne: "9 King St E", addressTwo: "", city: "Toronto", province: "ON", postalcode: "M5C 3C5" },
 	{ id: 3, storeName: "Restaurant place 1", storeType: "restaurant", cellnumber: "4167707700", phonenumber: "2000000000", addressOne: "625 Gerrard St E", addressTwo: "", city: "Toronto", province: "ON", postalcode: "M4M 1Y2" },
-	{ id: 4, storeName: "Hair salon 1", storeType: "hair", cellnumber: "9050000000", phonenumber: "3000000000", addressOne: "6328 Main St", addressTwo: "", city: "Whitchurch-Stouffville", province: "ON", postalcode: "L4A 1G9" }
+	{ id: 4, storeName: "Hair salon 1", storeType: "hair", cellnumber: "9050000000", phonenumber: "3000000000", addressOne: "6328 Main St", addressTwo: "", city: "Whitchurch-Stouffville", province: "ON", postalcode: "L4A 1G9" },
+	{ id: 5, storeName: "Nail salon 2", storeType: "nail", cellnumber: "9050000001", phonenumber: "9059875678", addressOne: "5000 Hwy 7", addressTwo: "", city: "Markham", province: "ON", postalcode: "L3R 4M9" },
 ]
 const owners = [
 	{
-		id: 0,
-		phonenumber: "0110110101", password: "password"
+		id: 0, username: 'owner1', cellnumber: "0110110101", password: "password"
 	},
 	{
-		id: 1,
-		phonenumber: "0220220202", password: "password"
+		id: 1, username: 'owner2', cellnumber: "0220220202", password: "password"
+	},
+	{
+		id: 2, username: 'owner03', cellnumber: "1231231111", password: "password"
 	}
 ]
 const bankAccount = [
@@ -45,19 +47,22 @@ const bankAccount = [
 ]
 const { accountNumber, countryCode, currency, routingNumber, accountHolderName } = bankAccount[Math.floor(Math.random() * 2) + 0]
 
-let login = stores[1]
+let login = stores[0]
 export const loginInfo = { 
 	cellnumber: login.cellnumber,  password: "password", storeName: login.storeName, 
 	storeType: login.storeType, phonenumber: login.phonenumber, addressOne: login.addressOne, 
 	addressTwo: login.addressTwo, city: login.city, province: login.province, 
 	postalcode: login.postalcode, accountNumber, countryCode, currency, routingNumber, accountHolderName
 }
+
+let owner = owners[1]
 export const ownerInfo = {
-	cellnumber: "1232343456",
-	password: "password"
+	username: owner.username,
+	cellnumber: owner.cellnumber,
+	password: owner.password
 }
 
-let register = stores[3]
+let register = stores[5]
 export const registerInfo = {
 	phonenumber: register.phonenumber, password: "password", storeName: register.storeName, 
 	storeType: register.storeType, phonenumber: register.phonenumber, addressOne: register.addressOne,

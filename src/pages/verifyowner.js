@@ -3,14 +3,14 @@ import { AsyncStorage, ActivityIndicator, Dimensions, View, ImageBackground, Tex
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import { verifyUser } from '../apis/owners'
-import { registerInfo } from '../../assets/info'
+import { ownerInfo, registerInfo } from '../../assets/info'
 
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - offsetPadding
 
 export default function verifyowner({ navigation }) {
-	const [cellnumber, setCellnumber] = useState(registerInfo.cellnumber)
+	const [cellnumber, setCellnumber] = useState(ownerInfo.cellnumber)
 	const [verifyCode, setVerifycode] = useState('')
 	const [userCode, setUsercode] = useState('111111')
 
@@ -39,6 +39,11 @@ export default function verifyowner({ navigation }) {
 
 					setVerifycode(verifycode)
 					setLoading(false)
+				}
+			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
 				}
 			})
 	}

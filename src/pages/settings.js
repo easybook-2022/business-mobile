@@ -8,7 +8,7 @@ import * as ImageManipulator from 'expo-image-manipulator'
 import * as Location from 'expo-location';
 import { logo_url } from '../../assets/info'
 import { 
-	addOwner, updateOwner, addBankaccount, updateBankaccount, getAccounts, getBankaccounts, 
+	addOwner, update, addBankaccount, updateBankaccount, getAccounts, getBankaccounts, 
 	setBankaccountDefault, getBankaccountInfo, deleteTheBankAccount
 } from '../apis/owners'
 import { getLocationProfile, updateLocation, setLocationHours } from '../apis/locations'
@@ -66,7 +66,11 @@ export default function settings(props) {
 	const [accountForm, setAccountform] = useState({
 		show: false,
 		type: '',
-		cellnumber: ownerInfo.cellnumber, password: ownerInfo.password, confirmPassword: ownerInfo.password,
+		username: ownerInfo.username,
+		cellnumber: ownerInfo.cellnumber, 
+		password: ownerInfo.password, 
+		confirmPassword: ownerInfo.password,
+		profile: { uri: '', name: '' },
 
 		loading: false,
 		errorMsg: ''
@@ -122,6 +126,11 @@ export default function settings(props) {
 
 						setEdittype('')
 						setLoading(false)
+					}
+				})
+				.catch((err) => {
+					if (err.response.status == 400) {
+						
 					}
 				})
 		} else {
@@ -260,13 +269,20 @@ export default function settings(props) {
 					setLoading(false)
 				}
 			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
+				}
+			})
 	}
 
 	const addNewOwner = async() => {
-		const { cellnumber, password, confirmPassword } = accountForm
-		const data = { ownerid, cellnumber, password, confirmPassword }
+		const { cellnumber, username, password, confirmPassword, profile } = accountForm
+		const data = { ownerid, cellnumber, username, password, confirmPassword, profile }
 
 		setAccountform({ ...accountForm, loading: true })
+
+		console.log(data)
 
 		addOwner(data)
 			.then((res) => {
@@ -281,6 +297,7 @@ export default function settings(props) {
 					setAccountform({
 						show: false,
 						type: '',
+						username: '',
 						cellnumber: '',
 						password: '',
 						confirmPassword: '',
@@ -289,12 +306,17 @@ export default function settings(props) {
 					getAllAccounts()
 				}
 			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
+				}
+			})
 	}
 	const updateTheOwner = async() => {
-		const { cellnumber, password, confirmPassword } = accountForm
-		const data = { ownerid, cellnumber, password, confirmPassword }
+		const { cellnumber, username, password, confirmPassword, profile } = accountForm
+		const data = { ownerid, cellnumber, username, password, confirmPassword, profile }
 
-		updateOwner(data)
+		update(data)
 			.then((res) => {
 				if (res.status == 200) {
 					return res.data
@@ -307,11 +329,17 @@ export default function settings(props) {
 					setAccountform({
 						show: false,
 						type: '',
+						username: '',
 						cellnumber: '',
 						password: '',
 						confirmPassword: ''
 					})
 					getAllAccounts()
+				}
+			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
 				}
 			})
 	}
@@ -393,6 +421,11 @@ export default function settings(props) {
 						getAllBankaccounts()
 					}
 				})
+				.catch((err) => {
+					if (err.response.status == 400) {
+						
+					}
+				})
 		} else {
 			if (!accountNumber) {
 				setBankaccountform({
@@ -466,6 +499,11 @@ export default function settings(props) {
 					setBankAccounts(newBankaccounts)
 				}
 			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
+				}
+			})
 	}
 	const editBankAccount = async(bankid, index) => {
 		const locationid = await AsyncStorage.getItem("locationid")
@@ -493,6 +531,11 @@ export default function settings(props) {
 						accountHolderName: account_holder_name, 
 						transitNumber: transit_number
 					})
+				}
+			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
 				}
 			})
 	}
@@ -551,6 +594,11 @@ export default function settings(props) {
 				})
 				getAllBankaccounts()
 			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
+				}
+			})
 	}
 	const deleteBankAccount = async(bankid, index) => {
 		const locationid = await AsyncStorage.getItem("locationid")
@@ -569,6 +617,11 @@ export default function settings(props) {
 					newBankaccounts.splice(index, 1)
 
 					setBankAccounts(newBankaccounts)
+				}
+			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
 				}
 			})
 	}
@@ -599,6 +652,11 @@ export default function settings(props) {
 					setDays(hours)
 				}
 			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
+				}
+			})
 	}
 	const getAllAccounts = async() => {
 		const locationid = await AsyncStorage.getItem("locationid")
@@ -616,6 +674,58 @@ export default function settings(props) {
 					setAccountHolders(res.accounts)
 				}
 			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
+				}
+			})
+	}
+	const snapProfile = async() => {
+		let letters = [
+			"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", 
+			"n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"
+		]
+		let photo_name_length = Math.floor(Math.random() * (15 - 10)) + 10
+		let char = "", captured, self = this
+
+		if (camComp) {
+			let options = { quality: 0 };
+			let photo = await camComp.takePictureAsync(options)
+			let photo_option = [{ resize: { width: width, height: width }}]
+			let photo_save_option = { format: ImageManipulator.SaveFormat.JPEG, base64: true }
+
+			if (camType == Camera.Constants.Type.front) {
+				photo_option.push({ flip: ImageManipulator.FlipType.Horizontal })
+			}
+
+			photo = await ImageManipulator.manipulateAsync(
+				photo.localUri || photo.uri,
+				photo_option,
+				photo_save_option
+			)
+
+			for (let k = 0; k <= photo_name_length - 1; k++) {
+				if (k % 2 == 0) {
+	                char += "" + letters[Math.floor(Math.random() * letters.length)].toUpperCase();
+	            } else {
+	                char += "" + (Math.floor(Math.random() * 9) + 0);
+	            }
+			}
+
+			FileSystem.moveAsync({
+				from: photo.uri,
+				to: `${FileSystem.documentDirectory}/${char}.jpg`
+			})
+			.then(() => {
+				setAccountform({
+					...accountForm,
+					profile: {
+						uri: `${FileSystem.documentDirectory}/${char}.jpg`,
+						name: `${char}.jpg`
+					}
+				})
+			})
+		}
 	}
 	const getAllBankaccounts = async() => {
 		const locationid = await AsyncStorage.getItem("locationid")
@@ -630,6 +740,11 @@ export default function settings(props) {
 				if (res) {
 					setBankAccounts(res.bankaccounts)
 					setLoaded(true)
+				}
+			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
 				}
 			})
 	}
@@ -883,8 +998,7 @@ export default function settings(props) {
 											setAccountform({
 												...accountForm,
 												show: true,
-												type: 'add',
-												cellnumber: '', password: '', confirmPassword: ''
+												type: 'add'
 											})
 										}}>
 											<Text>Add a Login User</Text>
@@ -902,9 +1016,11 @@ export default function settings(props) {
 																...accountForm,
 																show: true,
 																type: 'edit',
+																username: info.username,
 																cellnumber: info.cellnumber,
 																password: '',
-																confirmPassword: ''
+																confirmPassword: '',
+																profile: { uri: logo_url + info.profile, name: info.profile }
 															})
 														}}>
 															<Text>Change Info</Text>
@@ -964,53 +1080,82 @@ export default function settings(props) {
 
 				{accountForm.show && (
 					<Modal transparent={true}>
-						<TouchableWithoutFeedback style={{ paddingVertical: offsetPadding }} onPress={() => Keyboard.dismiss()}>
-							<View style={style.form}>
-								<View style={style.formContainer}>
+						<View style={style.accountform}>
+							<TouchableWithoutFeedback style={{ paddingVertical: offsetPadding }} onPress={() => Keyboard.dismiss()}>
+								<ScrollView>
 									<View style={{ alignItems: 'center', marginVertical: 10 }}>
 										<TouchableOpacity onPress={() => {
 											setAccountform({
+												...accountForm,
+
 												show: false,
-												cellnumber: '', password: '', confirmPassword: ''
+												username: '',
+												cellnumber: '', password: '', confirmPassword: '',
+												profile: { uri: '', name: '' }
 											})
 										}}>
 											<AntDesign name="closecircleo" size={30}/>
 										</TouchableOpacity>
 									</View>
 
-									<Text style={style.formHeader}>{accountForm.type == 'add' ? 'Add' : 'Editing'} login user</Text>
+									<Text style={style.accountformHeader}>{accountForm.type == 'add' ? 'Add' : 'Editing'} login user</Text>
 
-									<View>
-										<View style={style.formInputField}>
-											<Text style={style.formInputHeader}>Cell number:</Text>
-											<TextInput style={style.formInputInput} onChangeText={(number) => setAccountform({
-												...accountForm,
-												cellnumber: number
-											})} value={accountForm.cellnumber} autoCorrect={false}/>
-										</View>
+									<View style={style.accountformInputField}>
+										<Text style={style.accountformInputHeader}>Cell number:</Text>
+										<TextInput style={style.accountformInputInput} onChangeText={(number) => setAccountform({
+											...accountForm,
+											cellnumber: number
+										})} value={accountForm.cellnumber} autoCorrect={false}/>
+									</View>
 
-										<View style={style.formInputField}>
-											<Text style={style.formInputHeader}>Password:</Text>
-											<TextInput style={style.formInputInput} secureTextEntry={true} onChangeText={(password) => setAccountform({
-												...accountForm,
-												password: password
-											})} value={accountForm.password} autoCorrect={false}/>
-										</View>
+									<View style={style.accountformInputField}>
+										<Text style={style.accountformInputHeader}>Username:</Text>
+										<TextInput style={style.accountformInputInput} onChangeText={(username) => setAccountform({ ...accountForm, username })} value={accountForm.username} autoCorrect={false}/>
+									</View>
 
-										<View style={style.formInputField}>
-											<Text style={style.formInputHeader}>Confirm password:</Text>
-											<TextInput style={style.formInputInput} secureTextEntry={true} onChangeText={(password) => setAccountform({
-												...accountForm,
-												confirmPassword: password
-											})} value={accountForm.confirmPassword} autoCorrect={false}/>
-										</View>
+									<View style={style.cameraContainer}>
+										<Text style={style.cameraHeader}>Profile Picture</Text>
+
+										{accountForm.profile.uri ? 
+											<>
+												<Image style={style.camera} source={{ uri: accountForm.profile.uri }}/>
+
+												<TouchableOpacity style={style.cameraAction} onPress={() => setAccountform({ ...accountForm, profile: { uri: '', name: '' }})}>
+													<AntDesign name="closecircleo" size={30}/>
+												</TouchableOpacity>
+											</>
+											:
+											<>
+												<Camera style={style.camera} type={camType} ref={r => {setCamcomp(r)}}/>
+
+												<TouchableOpacity style={style.cameraAction} onPress={snapProfile.bind(this)}>
+													<Entypo name="camera" size={30}/>
+												</TouchableOpacity>
+											</>
+										}	
+									</View>
+
+									<View style={style.accountformInputField}>
+										<Text style={style.accountformInputHeader}>Password:</Text>
+										<TextInput style={style.accountformInputInput} secureTextEntry={true} onChangeText={(password) => setAccountform({
+											...accountForm,
+											password: password
+										})} value={accountForm.password} autoCorrect={false}/>
+									</View>
+
+									<View style={style.accountformInputField}>
+										<Text style={style.accountformInputHeader}>Confirm password:</Text>
+										<TextInput style={style.accountformInputInput} secureTextEntry={true} onChangeText={(password) => setAccountform({
+											...accountForm,
+											confirmPassword: password
+										})} value={accountForm.confirmPassword} autoCorrect={false}/>
 									</View>
 
 									{accountForm.errorMsg ? <Text style={style.errorMsg}>{accountForm.errorMsg}</Text> : null}
 									{accountForm.loading ? <ActivityIndicator marginBottom={10} size="small"/> : null}
 
 									<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-										<TouchableOpacity style={style.formSubmit} onPress={() => {
+										<TouchableOpacity style={style.accountformSubmit} onPress={() => {
 											if (accountForm.type == 'add') {
 												addNewOwner()
 											} else {
@@ -1019,20 +1164,20 @@ export default function settings(props) {
 
 											getAllAccounts()
 										}}>
-											<Text style={style.formSubmitHeader}>{accountForm.type == 'add' ? 'Add' : 'Save'} Account</Text>
+											<Text style={style.accountformSubmitHeader}>{accountForm.type == 'add' ? 'Add' : 'Save'} Account</Text>
 										</TouchableOpacity>
 									</View>
-								</View>
-							</View>
-						</TouchableWithoutFeedback>
+								</ScrollView>
+							</TouchableWithoutFeedback>
+						</View>
 					</Modal>
 				)}
 
 				{bankAccountForm.show && (
 					<Modal transparent={true}>
 						<TouchableWithoutFeedback style={{ paddingVertical: offsetPadding }} onPress={() => Keyboard.dismiss()}>
-							<View style={style.form}>
-								<View style={style.formContainer}>
+							<View style={style.bankaccountform}>
+								<View style={style.bankaccountformContainer}>
 									<View style={{ alignItems: 'center', marginVertical: 10 }}>
 										<TouchableOpacity onPress={() => {
 											setBankaccountform({
@@ -1054,32 +1199,32 @@ export default function settings(props) {
 										</TouchableOpacity>
 									</View>
 
-									<Text style={style.formHeader}>{bankAccountForm.type == 'add' ? 'Add' : 'Editing'} bank account</Text>
+									<Text style={style.bankaccountformHeader}>{bankAccountForm.type == 'add' ? 'Add' : 'Editing'} bank account</Text>
 
-									<View style={style.formInputField}>
-										<Text style={style.formInputHeader}>Account Holder</Text>
-										<TextInput style={style.formInputInput} onChangeText={(holder) => setBankaccountform({
+									<View style={style.bankaccountformInputField}>
+										<Text style={style.bankaccountformInputHeader}>Account Holder</Text>
+										<TextInput style={style.bankaccountformInputInput} onChangeText={(holder) => setBankaccountform({
 											...bankAccountForm,
 											accountHolderName: holder.toString()
 										})} value={bankAccountForm.accountHolderName} autoCorrect={false}/>
 									</View>
-									<View style={style.formInputField}>
-										<Text style={style.formInputHeader}>Account Number</Text>
-										<TextInput style={style.formInputInput} onChangeText={(number) => setBankaccountform({
+									<View style={style.bankaccountformInputField}>
+										<Text style={style.bankaccountformInputHeader}>Account Number</Text>
+										<TextInput style={style.bankaccountformInputInput} onChangeText={(number) => setBankaccountform({
 											...bankAccountForm,
 											accountNumber: number.toString()
 										})} value={bankAccountForm.accountNumber} placeholder={bankAccountForm.placeholder} autoCorrect={false}/>
 									</View>
-									<View style={style.formInputField}>
-										<Text style={style.formInputHeader}>Institution Number</Text>
-										<TextInput style={style.formInputInput} onChangeText={(number) => setBankaccountform({
+									<View style={style.bankaccountformInputField}>
+										<Text style={style.bankaccountformInputHeader}>Institution Number</Text>
+										<TextInput style={style.bankaccountformInputInput} onChangeText={(number) => setBankaccountform({
 											...bankAccountForm,
 											institutionNumber: number.toString()
 										})} value={bankAccountForm.institutionNumber} autoCorrect={false}/>
 									</View>
-									<View style={style.formInputField}>
-										<Text style={style.formInputHeader}>Transit Number</Text>
-										<TextInput style={style.formInputInput} onChangeText={(number) => setBankaccountform({
+									<View style={style.bankaccountformInputField}>
+										<Text style={style.bankaccountformInputHeader}>Transit Number</Text>
+										<TextInput style={style.bankaccountformInputInput} onChangeText={(number) => setBankaccountform({
 											...bankAccountForm,
 											transitNumber: number.toString()
 										})} value={bankAccountForm.transitNumber} autoCorrect={false}/>
@@ -1089,14 +1234,14 @@ export default function settings(props) {
 									{bankAccountForm.loading ? <ActivityIndicator marginBottom={10} size="small"/> : null}
 
 									<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-										<TouchableOpacity style={style.formSubmit} onPress={() => {
+										<TouchableOpacity style={style.bankaccountformSubmit} onPress={() => {
 											if (bankAccountForm.type == 'add') {
 												addNewBankAccount()
 											} else {
 												updateTheBankAccount()
 											}
 										}}>
-											<Text style={style.formSubmitHeader}>{bankAccountForm.type == 'add' ? 'Add' : 'Save'} Bank Account</Text>
+											<Text style={style.bankaccountformSubmitHeader}>{bankAccountForm.type == 'add' ? 'Add' : 'Save'} Bank Account</Text>
 										</TouchableOpacity>
 									</View>
 								</View>
@@ -1141,6 +1286,10 @@ const style = StyleSheet.create({
 	accountHoldersAdd: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 3, padding: 5 },
 	account: { flexDirection: 'row', justifyContent: 'space-between', marginVertical: 10 },
 	accountHeader: { fontSize: 20, fontWeight: 'bold', padding: 5 },
+	cameraContainer: { alignItems: 'center', marginBottom: 50, width: '100%' },
+	cameraHeader: { fontFamily: 'appFont', fontWeight: 'bold', paddingVertical: 5 },
+	camera: { height: width * 0.8, width: width * 0.8 },
+	cameraAction: { margin: 10 },
 	accountEdit: { backgroundColor: 'rgba(127, 127, 127, 0.3)', borderRadius: 4, flexDirection: 'row', justifyContent: 'space-between', width: '80%' },
 	accountEditHeader: { fontSize: 20, paddingVertical: 8, textAlign: 'center', width: '50%' },
 	accountEditTouch: { alignItems: 'center', borderRadius: 2, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5 },
@@ -1162,13 +1311,22 @@ const style = StyleSheet.create({
 	editButton: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 20, padding: 5, width: 300 },
 	editButtonHeader: { fontSize: 13, fontWeight: 'bold', textAlign: 'center' },
 
+	// account form
+	accountform: { backgroundColor: 'white', paddingVertical: 50 },
+	accountformHeader: { fontSize: 20, fontWeight: 'bold', marginVertical: 50, textAlign: 'center' },
+	accountformInputField: { marginBottom: 20, marginHorizontal: '10%', width: '80%' },
+	accountformInputHeader: { fontSize: 20, fontWeight: 'bold' },
+	accountformInputInput: { borderRadius: 2, borderStyle: 'solid', borderWidth: 3, padding: 5, width: '100%' },
+	accountformSubmit: { alignItems: 'center', borderRadius: 2, borderStyle: 'solid', borderWidth: 1, padding: 5 },
+	accountformSubmitHeader: {  },
+
 	// form
-	form: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
-	formContainer: { backgroundColor: 'white', height: '90%', paddingVertical: 10, width: '90%' },
-	formHeader: { fontSize: 20, fontWeight: 'bold', marginVertical: 50, textAlign: 'center' },
-	formInputField: { marginBottom: 20, marginHorizontal: '10%', width: '80%' },
-	formInputHeader: { fontSize: 20, fontWeight: 'bold' },
-	formInputInput: { borderRadius: 2, borderStyle: 'solid', borderWidth: 3, padding: 5, width: '100%' },
-	formSubmit: { alignItems: 'center', borderRadius: 2, borderStyle: 'solid', borderWidth: 1, padding: 5 },
-	formSubmitHeader: {  },
+	bankaccountform: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
+	bankaccountformContainer: { backgroundColor: 'white', height: '90%', paddingVertical: 10, width: '90%' },
+	bankaccountformHeader: { fontSize: 20, fontWeight: 'bold', marginVertical: 50, textAlign: 'center' },
+	bankaccountformInputField: { marginBottom: 20, marginHorizontal: '10%', width: '80%' },
+	bankaccountformInputHeader: { fontSize: 20, fontWeight: 'bold' },
+	bankaccountformInputInput: { borderRadius: 2, borderStyle: 'solid', borderWidth: 3, padding: 5, width: '100%' },
+	bankaccountformSubmit: { alignItems: 'center', borderRadius: 2, borderStyle: 'solid', borderWidth: 1, padding: 5 },
+	bankaccountformSubmitHeader: {  },
 })

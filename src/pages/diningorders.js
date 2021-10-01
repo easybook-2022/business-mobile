@@ -41,6 +41,11 @@ export default function diningorders(props) {
 					setTimestr(hour + ":" + minute + " " + period)
 				}
 			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
+				}
+			})
 	}
 	const getTheOrders = () => {
 		getDiningOrders(scheduleid)
@@ -53,6 +58,11 @@ export default function diningorders(props) {
 				if (res) {
 					setRounds(res.rounds)
 					setLoaded(true)
+				}
+			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
 				}
 			})
 	}
@@ -76,6 +86,11 @@ export default function diningorders(props) {
 					})
 
 					setRounds(newRounds)
+				}
+			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
 				}
 			})
 	}

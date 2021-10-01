@@ -130,6 +130,11 @@ export default function addproduct(props) {
 						props.navigation.goBack()
 					}
 				})
+				.catch((err) => {
+					if (err.response.status == 400) {
+						
+					}
+				})
 		} else {
 			if (!name) {
 				setErrormsg("Please enter the product name")
@@ -249,6 +254,11 @@ export default function addproduct(props) {
 					if (res) {
 						refetch()
 						props.navigation.goBack()
+					}
+				})
+				.catch((err) => {
+					if (err.response.status == 400) {
+						
 					}
 				})
 		} else {
@@ -374,6 +384,11 @@ export default function addproduct(props) {
 					setOptions(newOptions)
 					setOthers(newOthers)
 					setSizes(newSizes)
+				}
+			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
 				}
 			})
 	}

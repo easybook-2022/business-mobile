@@ -46,7 +46,11 @@ export default function login({ navigation }) {
 					)
 				}
 			})
-			.catch((error) => console.log(error))
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
+				}
+			})
 	}
 
 	return (

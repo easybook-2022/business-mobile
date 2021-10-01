@@ -114,6 +114,11 @@ export default function setuphours({ navigation }) {
 					)
 				}
 			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
+				}
+			})
 	}
 	const getLocationType = async() => {
 		const type = await AsyncStorage.getItem("locationtype")

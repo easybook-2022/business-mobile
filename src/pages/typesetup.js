@@ -45,6 +45,11 @@ export default function typesetup({ navigation }) {
 					)
 				}
 			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
+				}
+			})
 	}
 	return (
 		<View style={style.typesetup}>

@@ -53,6 +53,11 @@ export default function addservice(props) {
 						props.navigation.goBack()
 					}
 				})
+				.catch((err) => {
+					if (err.response.status == 400) {
+						
+					}
+				})
 		} else {
 			if (!name) {
 				setErrormsg("Please enter the service name")
@@ -101,6 +106,11 @@ export default function addservice(props) {
 					if (res) {
 						refetch()
 						props.navigation.goBack()
+					}
+				})
+				.catch((err) => {
+					if (err.response.status == 400) {
+						
 					}
 				})
 		} else {
@@ -203,6 +213,11 @@ export default function addservice(props) {
 					setImage({ uri: logo_url + serviceInfo.image, name: serviceInfo.image })
 					setPrice(serviceInfo.price.toString())
 					setDuration(serviceInfo.duration)
+				}
+			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
 				}
 			})
 	}

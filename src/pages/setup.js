@@ -73,6 +73,11 @@ export default function setup({ navigation }) {
 						)
 					}
 				})
+				.catch((err) => {
+					if (err.response.status == 400) {
+						
+					}
+				})
 		} else {
 			if (!storeName) {
 				setErrormsg("Please enter your store name")

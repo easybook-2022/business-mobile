@@ -38,6 +38,11 @@ export default function dinersorders(props) {
 					setLoaded(true)
 				}
 			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
+				}
+			})
 	}
 	const getTheDinersPayments = async() => {
 		setGettingpayment(true)
@@ -64,21 +69,19 @@ export default function dinersorders(props) {
 					}
 				} catch (err) {
 					if (err.response.status == 400) {
-						if (err.response.data.status) {
-							const status = err.response.data.status
+						const status = err.response.data.status
 
-							switch (status) {
-								case "paymentunconfirmed":
-									const username = err.response.data.username
+						switch (status) {
+							case "paymentunconfirmed":
+								const username = err.response.data.info["username"]
 
-									setShowpaymentunconfirmed({ show: true, username })
-									setGettingpayment(false)
-									newDiners[k].paying = false
-									allpaid = false
+								setShowpaymentunconfirmed({ show: true, username })
+								setGettingpayment(false)
+								newDiners[k].paying = false
+								allpaid = false
 
-									break
-								default:
-							}
+								break
+							default:
 						}
 					}
 				}

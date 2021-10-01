@@ -6,9 +6,23 @@ export const verifyUser = cellnumber => {
 }
 
 export const registerUser = data => {
+	const form = new FormData()
+
+	form.append("username", data.username)
+	form.append("cellnumber", data.cellnumber)
+	form.append("password", data.password)
+	form.append("confirmPassword", data.confirmPassword)
+
+	if (data.profile.uri) {
+		form.append("profile", { uri: data.profile.uri, name: data.profile.name })
+	}
+
 	return axios.post(
 		`${url}/owners/register`,
-		data
+		form,
+		{ headers: {
+			'Content-Type': 'multipart/form-data'
+		}}
 	)
 }
 
@@ -20,16 +34,46 @@ export const loginUser = data => {
 }
 
 export const addOwner = data => {
+	const form = new FormData()
+
+	form.append("ownerid", data.ownerid)
+	form.append("cellnumber", data.cellnumber)
+	form.append("username", data.username)
+	form.append("password", data.password)
+	form.append("confirmPassword", data.confirmPassword)
+
+	if (data.profile.uri) {
+		form.append("profile", { uri: data.profile.uri, name: data.profile.name })
+	}
+
 	return axios.post(
 		`${url}/owners/add_owner`,
-		data
+		form,
+		{ headers: {
+			'Content-Type': 'multipart/form-data'
+		}}
 	)
 }
 
 export const update = data => {
+	const form = new FormData()
+
+	form.append("ownerid", data.ownerid)
+	form.append("cellnumber", data.cellnumber)
+	form.append("username", data.username)
+	form.append("password", data.password)
+	form.append("confirmPassword", data.confirmPassword)
+
+	if (data.profile.uri) {
+		form.append("profile", { uri: data.profile.uri, name: data.profile.name })
+	}
+
 	return axios.post(
 		`${url}/owners/update`,
-		data
+		form,
+		{ headers: {
+			'Content-Type': 'multipart/form-data'
+		}}
 	)
 }
 

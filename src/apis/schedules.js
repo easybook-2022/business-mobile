@@ -111,3 +111,7 @@ export const doneService = data => {
 		data
 	)
 }
+
+export const canServeDiners = id => {
+	return axios.get(`${url}/schedules/can_serve_diners/${id}`)
+}

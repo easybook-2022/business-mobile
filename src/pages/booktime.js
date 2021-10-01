@@ -76,6 +76,11 @@ export default function booktime(props) {
 					getTheLocationHours(locationId)
 				}
 			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
+				}
+			})
 	}
 	const getTheLocationHours = async(locationid) => {
 		const day = new Date(Date.now()).toString().split(" ")[0]
@@ -135,14 +140,12 @@ export default function booktime(props) {
 					while (currDateStr < (closeDateStr - pushtime)) {
 						currDateStr += pushtime
 
-						let timestr = new Date(currDateStr).toString().split(" ")[4]
-						let time = timestr.split(":")
-						let hour = parseInt(time[0])
-						let minute = time[1]
-						let period = hour > 11 ? "pm" : "am"
+						let timestr = new Date(currDateStr)
+						let hour = timestr.getHours()
+						let minute = timestr.getMinutes()
+						let period = hour < 12 ? "am" : "pm"
 
-						let currtime = parseInt(hour.toString() + "" + minute)
-						let timedisplay = (hour > 12 ? hour - 12 : hour) + ":" + minute + " " + period
+						let timedisplay = (hour <= 12 ? (hour == 0 ? "12" : hour) : hour - 12) + ":" + (minute < 10 ? '0' + minute : minute) + " " + period
 						let timepassed = currenttime > currDateStr
 						let timetaken = scheduled.indexOf(currDateStr) > -1
 						
@@ -158,6 +161,11 @@ export default function booktime(props) {
 					setCalendar({ firstDay, numDays, data })
 					setTimes(newTimes)
 					setLoaded(true)
+				}
+			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
 				}
 			})
 	}
@@ -217,14 +225,12 @@ export default function booktime(props) {
 		while (currDateStr < (closeDateStr - pushtime)) {
 			currDateStr += pushtime
 
-			let timestr = new Date(currDateStr).toString().split(" ")[4]
-			let time = timestr.split(":")
-			let hour = parseInt(time[0])
-			let minute = time[1]
-			let period = hour > 11 ? "pm" : "am"
+			let timestr = new Date(currDateStr)
+			let hour = timestr.getHours()
+			let minute = timestr.getMinutes()
+			let period = hour < 12 ? "am" : "pm"
 
-			let currtime = parseInt(hour.toString() + "" + minute)
-			let timedisplay = (hour > 12 ? hour - 12 : hour) + ":" + minute + " " + period
+			let timedisplay = (hour <= 12 ? (hour == 0 ? "12" : hour) : hour - 12) + ":" + (minute < 10 ? '0' + minute : minute) + " " + period
 			let timepassed = currenttime > currDateStr
 
 			newTimes.push({ 
@@ -250,14 +256,12 @@ export default function booktime(props) {
 		while (currDateStr < (closeDateStr - pushtime)) {
 			currDateStr += pushtime
 
-			let timestr = new Date(currDateStr).toString().split(" ")[4]
-			let time = timestr.split(":")
-			let hour = parseInt(time[0])
-			let minute = time[1]
-			let period = hour > 11 ? "pm" : "am"
+			let timestr = new Date(currDateStr)
+			let hour = timestr.getHours()
+			let minute = timestr.getMinutes()
+			let period = hour < 12 ? "am" : "pm"
 
-			let currtime = parseInt(hour.toString() + "" + minute)
-			let timedisplay = (hour > 12 ? hour - 12 : hour) + ":" + minute + " " + period
+			let timedisplay = (hour <= 12 ? (hour == 0 ? "12" : hour) : hour - 12) + ":" + (minute < 10 ? '0' + minute : minute) + " " + period
 			let timepassed = currenttime > currDateStr
 
 			newTimes.push({ 
@@ -338,10 +342,16 @@ export default function booktime(props) {
 				}
 			})
 			.then((res) => {
-				if (res) setConfirm({ ...confirm, requested: true })
+				if (res) {
+					setConfirm({ ...confirm, requested: true })
+					refetch()
+					props.navigation.goBack()
+				}
 			})
-			.catch((error) => {
-				alert(error.message)
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
+				}
 			})
 	}
 	
