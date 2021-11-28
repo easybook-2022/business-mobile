@@ -7,22 +7,21 @@ export const verifyUser = cellnumber => {
 
 export const registerUser = data => {
 	const form = new FormData()
-
+	const { uri, name, type = "image/jpeg" } = data.profile
+	
 	form.append("username", data.username)
 	form.append("cellnumber", data.cellnumber)
 	form.append("password", data.password)
 	form.append("confirmPassword", data.confirmPassword)
+	form.append("permission", data.permission)
 
 	if (data.profile.uri) {
-		form.append("profile", { uri: data.profile.uri, name: data.profile.name })
+		form.append("profile", { uri, name, type })
 	}
 
 	return axios.post(
 		`${url}/owners/register`,
-		form,
-		{ headers: {
-			'Content-Type': 'multipart/form-data'
-		}}
+		form
 	)
 }
 
@@ -35,45 +34,43 @@ export const loginUser = data => {
 
 export const addOwner = data => {
 	const form = new FormData()
+	const { uri, name, type = "image/jpeg" } = data.profile
 
 	form.append("ownerid", data.ownerid)
 	form.append("cellnumber", data.cellnumber)
 	form.append("username", data.username)
 	form.append("password", data.password)
 	form.append("confirmPassword", data.confirmPassword)
+	form.append("permission", data.permission)
 
 	if (data.profile.uri) {
-		form.append("profile", { uri: data.profile.uri, name: data.profile.name })
+		form.append("profile", { uri, name, type })
 	}
 
 	return axios.post(
 		`${url}/owners/add_owner`,
-		form,
-		{ headers: {
-			'Content-Type': 'multipart/form-data'
-		}}
+		form
 	)
 }
 
-export const update = data => {
+export const updateOwner = data => {
 	const form = new FormData()
+	const { uri, name, type = "image/jpeg" } = data.profile
 
 	form.append("ownerid", data.ownerid)
 	form.append("cellnumber", data.cellnumber)
 	form.append("username", data.username)
 	form.append("password", data.password)
 	form.append("confirmPassword", data.confirmPassword)
+	form.append("permission", data.permission)
 
 	if (data.profile.uri) {
-		form.append("profile", { uri: data.profile.uri, name: data.profile.name })
+		form.append("profile", { uri, name, type })
 	}
 
 	return axios.post(
-		`${url}/owners/update`,
-		form,
-		{ headers: {
-			'Content-Type': 'multipart/form-data'
-		}}
+		`${url}/owners/update_owner`,
+		form
 	)
 }
 

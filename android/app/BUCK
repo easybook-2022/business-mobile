@@ -35,12 +35,12 @@ android_library(
 
 android_build_config(
     name = "build_config",
-    package = "com.geottuse.serviceapp.business",
+    package = "com.easygobusiness",
 )
 
 android_resource(
     name = "res",
-    package = "com.geottuse.serviceapp.business",
+    package = "com.easygobusiness",
     res = "src/main/res",
 )
 

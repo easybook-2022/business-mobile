@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react'
-import { AsyncStorage, Dimensions, View, FlatList, Image, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet, Modal } from 'react-native';
+import React, { useEffect, useState, useRef } from 'react'
+import { Dimensions, View, FlatList, Image, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet, Modal } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import * as FileSystem from 'expo-file-system'
 import { Camera } from 'expo-camera';
@@ -24,6 +25,9 @@ export default function services(props) {
 	const [menus, setMenus] = useState([])
 	const [products, setProducts] = useState([])
 	const [addMenu, setAddmenu] = useState({ show: false, name: '', info: '', image: { uri: '', name: '' }, errormsg: '' })
+
+	const isMounted = useRef(null)
+
 	const getTheInfo = async() => {
 		const ownerid = await AsyncStorage.getItem("ownerid")
 		const locationid = await AsyncStorage.getItem("locationid")
@@ -36,7 +40,7 @@ export default function services(props) {
 				}
 			})
 			.then((res) => {
-				if (res) {
+				if (res && isMounted.current == true) {
 					const { msg } = res
 
 					setShowedit(msg)
@@ -45,13 +49,11 @@ export default function services(props) {
 						getAllMenus()
 					} else if (msg == "products") {
 						getAllProducts()
-					} else if (msg == "services") {
-						getAllServices()
 					}
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -68,12 +70,12 @@ export default function services(props) {
 				}
 			})
 			.then((res) => {
-				if (res) {
+				if (res && isMounted.current == true) {
 					setMenus(res.menus)
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -90,12 +92,12 @@ export default function services(props) {
 				}
 			})
 			.then((res) => {
-				if (res) {
+				if (res && isMounted.current == true) {
 					setProducts(res.products)
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -109,14 +111,7 @@ export default function services(props) {
 		addNewMenu(data)
 			.then((res) => {
 				if (res.status == 200) {
-					if (!res.data.errormsg) {
-						return res.data
-					} else {
-						setAddmenu({
-							...addMenu,
-							errormsg: res.data.errormsg
-						})
-					}
+					return res.data
 				}
 			})
 			.then((res) => {
@@ -132,8 +127,13 @@ export default function services(props) {
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
-					
+				if (err.response && err.response.status == 400) {
+					const { errormsg, status } = err.response.data
+
+					setAddmenu({
+						...addMenu,
+						errormsg
+					})
 				}
 			})
 	}
@@ -208,7 +208,7 @@ export default function services(props) {
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -228,15 +228,19 @@ export default function services(props) {
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
 	}
 
 	useEffect(() => {
+		isMounted.current = true
+
 		openCamera()
 		getTheInfo()
+
+		return () => isMounted.current = false
 	}, [])
 
 	return (

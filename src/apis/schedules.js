@@ -105,9 +105,16 @@ export const getDinersPayments = data => {
 	)
 }
 
-export const doneService = data => {
+export const receiveEpayment = data => {
 	return axios.post(
-		`${url}/schedules/done_service`,
+		`${url}/schedules/receive_epayment`,
+		data
+	)
+}
+
+export const receiveInpersonpayment = data => {
+	return axios.post(
+		`${url}/schedules/receive_inpersonpayment`,
 		data
 	)
 }

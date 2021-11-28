@@ -2,8 +2,10 @@ import 'react-native-gesture-handler';
 import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { AsyncStorage, Text, View, TouchableOpacity, StyleSheet, LogBox } from 'react-native';
+import { Text, View, TouchableOpacity, StyleSheet, LogBox } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Font from 'expo-font';
+import { socket } from './assets/info'
 
 LogBox.ignoreLogs([
     'Non-serializable values were found in the navigation state',
@@ -36,7 +38,6 @@ import Addproduct from './src/components/addproduct'
 import Addservice from './src/components/addservice'
 
 import Menu from './src/components/menu'
-
 import Settings from './src/pages/settings'
 
 const Stack = createNativeStackNavigator();

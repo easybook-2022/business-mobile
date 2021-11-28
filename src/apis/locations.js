@@ -17,6 +17,7 @@ export const loginLocation = data => {
 
 export const setupLocation = data => {
 	const form = new FormData()
+	const { uri, name, type = "image/jpeg" } = data.logo
 
 	form.append("storeName", data.storeName)
 	form.append("phonenumber", data.phonenumber)
@@ -25,24 +26,27 @@ export const setupLocation = data => {
 	form.append("city", data.city)
 	form.append("province", data.province)
 	form.append("postalcode", data.postalcode)
-	form.append("logo", { uri: data.logo.uri, name: data.logo.name })
 	form.append("longitude", data.longitude)
 	form.append("latitude", data.latitude)
 	form.append("ownerid", data.ownerid)
 	form.append("time", data.time)
 	form.append("ipAddress", data.ipAddress)
+	form.append("permission", data.permission)
+	form.append("trialtime", data.trialtime)
+
+	if (data.logo.uri) {
+		form.append("logo", { uri, name, type })
+	}
 
 	return axios.post(
 		`${url}/locations/setup_location`, 
-		form, 
-		{ headers: { 
-			'Content-Type': 'multipart/form-data' 
-		}}
+		form
 	)
 }
 
 export const updateLocation = data => {
 	const form = new FormData()
+	const { uri, name, type = "image/jpeg" } = data.logo
 
 	form.append("storeName", data.storeName)
 	form.append("phonenumber", data.phonenumber)
@@ -51,19 +55,20 @@ export const updateLocation = data => {
 	form.append("city", data.city)
 	form.append("province", data.province)
 	form.append("postalcode", data.postalcode)
-	form.append("logo", { uri: data.logo.uri, name: data.logo.name })
 	form.append("longitude", data.longitude)
 	form.append("latitude", data.latitude)
 	form.append("ownerid", data.ownerid)
 	form.append("time", data.time)
 	form.append("ipAddress", data.ipAddress)
+	form.append("permission", data.permission)
+
+	if (data.logo.uri) {
+		form.append("logo", { uri, name, type })
+	}
 
 	return axios.post(
 		`${url}/locations/update_location`,
-		form,
-		{ headers: {
-			'Content-Type': 'multipart/form-data'
-		}}
+		form
 	)
 }
 
@@ -110,6 +115,10 @@ export const getInfo = data => {
 
 export const changeLocationState = id => {
 	return axios.get(`${url}/locations/change_location_state/${id}`)
+}
+
+export const setLocationPublic = id => {
+	return axios.get(`${url}/locations/set_location_public/${id}`)
 }
 
 export const getLocationHours = data => {

@@ -14,20 +14,22 @@ export const getRequests = () => {
 
 export const addNewMenu = (data) => {
 	const form = new FormData()
+	const { uri, name, type = "image/jpeg" } = data.image
 
 	form.append("ownerid", data.ownerid)
 	form.append("locationid", data.locationid)
 	form.append("parentmenuid", data.parentMenuid)
 	form.append("name", data.name)
 	form.append("info", data.info)
-	form.append("image", { uri: data.image.uri, name: data.image.name })
+	form.append("permission", data.permission)
+
+	if (data.image.uri) {
+		form.append("image", { uri, name, type })
+	}
 
 	return axios.post(
 		`${url}/menus/add_menu`,
-		form,
-		{ headers: {
-			'Content-Type': 'multipart/form-data'
-		}}
+		form
 	)
 }
 
@@ -41,17 +43,19 @@ export const getMenuInfo = id => {
 
 export const saveMenu = data => {
 	const form = new FormData()
+	const { uri, name, type = "image/jpeg" } = data.image
 
 	form.append("id", data.id)
 	form.append("name", data.name)
 	form.append("info", data.info)
-	form.append("image", { uri: data.image.uri, name: data.image.name })
+	form.append("permission", data.permission)
+
+	if (data.image.uri) {
+		form.append("image", { uri, name, type })
+	}
 
 	return axios.post(
 		`${url}/menus/save_menu`,
-		form,
-		{ headers: { 
-			'Content-Type': 'multipart/form-data' 
-		}}
+		form
 	)
 }

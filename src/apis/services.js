@@ -14,42 +14,46 @@ export const getServiceInfo = id => {
 
 export const addNewService = data => {
 	const form = new FormData()
+	const { uri, name, type = "image/jpeg" } = data.image
 
 	form.append("locationid", data.locationid)
 	form.append("menuid", data.menuid)
 	form.append("name", data.name)
 	form.append("info", data.info)
-	form.append("image", { uri: data.image.uri, name: data.image.name })
 	form.append("price", data.price)
 	form.append("duration", data.duration)
+	form.append("permission", data.permission)
+
+	if (data.image.uri) {
+		form.append("image", { uri, name, type })
+	}
 
 	return axios.post(
 		`${url}/services/add_service`,
-		form,
-		{ headers: {
-			'Content-Type': 'multipart/form-data'
-		}}
+		form
 	)
 }
 
 export const updateService = data => {
 	const form = new FormData()
+	const { uri, name, type = "image/jpeg" } = data.image
 
 	form.append("locationid", data.locationid)
 	form.append("menuid", data.menuid)
 	form.append("serviceid", data.serviceid)
 	form.append("name", data.name)
 	form.append("info", data.info)
-	form.append("image", { uri: data.image.uri, name: data.image.name })
 	form.append("price", data.price)
 	form.append("duration", data.duration)
+	form.append("permission", data.permission)
+
+	if (data.image.uri) {
+		form.append("image", { uri, name, type })
+	}
 
 	return axios.post(
 		`${url}/services/update_service`,
-		form,
-		{ headers: {
-			'Content-Type': 'multipart/form-data'
-		}}
+		form
 	)
 }
 

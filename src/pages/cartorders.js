@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react'
-import { AsyncStorage, ActivityIndicator, Dimensions, ScrollView, View, FlatList, Text, Image, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react'
+import { ActivityIndicator, Dimensions, ScrollView, View, FlatList, Text, Image, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
-import { logo_url } from '../../assets/info'
+import { socket, logo_url } from '../../assets/info'
 import { seeUserOrders } from '../apis/schedules'
 import { orderReady, receivePayment } from '../apis/carts'
 
@@ -12,14 +13,18 @@ const screenHeight = height - (offsetPadding * 2)
 export default function cartorders(props) {
 	const { userid, ordernumber, refetch } = props.route.params
 
+	const [ownerId, setOwnerid] = useState(null)
 	const [orders, setOrders] = useState([])
 	const [totalCost, setTotalcost] = useState(0.00)
 	const [ready, setReady] = useState(false)
 	const [loading, setLoading] = useState(false)
 	const [showBankaccountrequired, setShowbankaccountrequired] = useState(false)
 	const [showPaymentconfirm, setShowpaymentconfirm] = useState(false)
+
+	const isMounted = useRef(null)
 	
 	const getTheOrders = async() => {
+		const ownerid = await AsyncStorage.getItem("ownerid")
 		const locationid = await AsyncStorage.getItem("locationid")
 		const data = { userid, locationid, ordernumber }
 
@@ -30,21 +35,22 @@ export default function cartorders(props) {
 				}
 			})
 			.then((res) => {
-				if (res) {
+				if (res && isMounted.current == true) {
+					setOwnerid(ownerid)
 					setOrders(res.orders)
 					setTotalcost(res.totalcost)
 					setReady(res.ready)
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
 	}
 	const orderIsReady = async() => {
 		const locationid = await AsyncStorage.getItem("locationid")
-		const data = { userid, locationid, ordernumber }
+		let data = { userid, locationid, ordernumber, type: "orderReady", receiver: ["user" + userid] }
 
 		orderReady(data)
 			.then((res) => {
@@ -54,11 +60,11 @@ export default function cartorders(props) {
 			})
 			.then((res) => {
 				if (res) {
-					setReady(true)
+					socket.emit("socket/orderReady", data, () => setReady(true))
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -66,7 +72,7 @@ export default function cartorders(props) {
 	const receiveThePayment = async() => {
 		const time = Date.now()
 		const locationid = await AsyncStorage.getItem("locationid")
-		const data = { userid, ordernumber, locationid, time }
+		let data = { userid, ordernumber, locationid, time, type: "productPurchased", receiver: ["user" + userid] }
 
 		setLoading(true)
 
@@ -79,10 +85,12 @@ export default function cartorders(props) {
 				}
 			})
 			.then((res) => {
-				if (res) setShowpaymentconfirm(true)
+				if (res) {
+					socket.emit("socket/productPurchased", data, () => setShowpaymentconfirm(true))
+				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					if (err.response.data.status) {
 						const status = err.response.data.status
 
@@ -98,15 +106,14 @@ export default function cartorders(props) {
 					}
 				}
 			})
-			.catch((err) => {
-				if (err.response.status == 400) {
-					
-				}
-			})
 	}
 
 	useEffect(() => {
+		isMounted.current = true
+
 		getTheOrders()
+
+		return () => isMounted.current = false
 	}, [])
 
 	return (
@@ -190,9 +197,12 @@ export default function cartorders(props) {
 					<View style={{ alignItems: 'center' }}>
 						{loading && <ActivityIndicator size="small"/>}
 						{!ready ? 
-							<TouchableOpacity style={style.receivePayment} disabled={loading} onPress={() => orderIsReady()}>
-								<Text style={style.receivePaymentHeader}>Order is ready</Text>
-							</TouchableOpacity>
+							<>
+								<Text>Order is ready?</Text>
+								<TouchableOpacity style={style.receivePayment} disabled={loading} onPress={() => orderIsReady()}>
+									<Text style={style.receivePaymentHeader}>Alert customer(s)</Text>
+								</TouchableOpacity>
+							</>
 							:
 							<TouchableOpacity style={style.receivePayment} disabled={loading} onPress={() => receiveThePayment()}>
 								<Text style={style.receivePaymentHeader}>Receive payment of $ {totalCost.toFixed(2)}</Text>
@@ -241,7 +251,8 @@ export default function cartorders(props) {
 
 									<View style={style.confirmActions}>
 										<TouchableOpacity style={style.confirmAction} onPress={() => {
-											refetch()
+											if (refetch) refetch()
+
 											setShowpaymentconfirm(false)
 											props.navigation.goBack()
 										}}>
@@ -279,7 +290,7 @@ const style = StyleSheet.create({
 	orderersNumHolder: { backgroundColor: 'black', padding: 5 },
 	orderersNumHeader: { color: 'white', fontWeight: 'bold' },
 
-	receivePayment: { borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, marginVertical: 20, padding: 10 },
+	receivePayment: { borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, marginVertical: 10, padding: 10 },
 	receivePaymentHeader: { },
 
 	requiredBoxContainer: { backgroundColor: 'rgba(0, 0, 0, 0.7)' },

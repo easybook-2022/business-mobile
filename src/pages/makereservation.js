@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react'
-import { AsyncStorage, ActivityIndicator, Dimensions, ScrollView, View, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet, Modal } from 'react-native';
+import React, { useEffect, useState, useRef } from 'react'
+import { ActivityIndicator, Dimensions, ScrollView, View, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet, Modal } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
-import { displayTime } from '../../assets/info'
+import { socket, displayTime } from '../../assets/info'
 import { getLocationHours } from '../apis/locations'
 import { getReservationInfo, rescheduleReservation } from '../apis/schedules'
 
@@ -9,15 +10,17 @@ import AntDesign from 'react-native-vector-icons/AntDesign'
 import SimpleLineIcons from 'react-native-vector-icons/SimpleLineIcons'
 
 const { height, width } = Dimensions.get('window')
-const offsetPadding = Constants.statusBarHeight
-const screenHeight = height - (offsetPadding * 2)
-const months = ['January', 'February', 'March', 'April', 'May', 'Jun', 'July', 'August', 'September', 'October', 'November', 'December']
-const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-const pushtime = 1000 * (60 * 10)
 
 export default function booktime(props) {
-	let { userid, reservationid, refetch } = props.route.params
+	const offsetPadding = Constants.statusBarHeight
+	const screenHeight = height - (offsetPadding * 2)
+	const months = ['January', 'February', 'March', 'April', 'May', 'Jun', 'July', 'August', 'September', 'October', 'November', 'December']
+	const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+	const pushtime = 1000 * (60 * 10)
 
+	let { scheduleid, refetch } = props.route.params
+	
+	const [ownerId, setOwnerid] = useState(null)
 	const [name, setName] = useState(name)
 	const [diners, setDiners] = useState(0)
 	const [table, setTable] = useState('')
@@ -62,18 +65,23 @@ export default function booktime(props) {
 	const [loaded, setLoaded] = useState(false)
 
 	const [confirmRequest, setConfirmrequest] = useState({ show: false, service: "", oldtime: 0, time: 0, note: "", tablenum: "", requested: false, errorMsg: "" })
+
+	const isMounted = useRef(null)
 	
 	const getTheReservationInfo = async() => {
-		getReservationInfo(reservationid)
+		const ownerid = await AsyncStorage.getItem("ownerid")
+
+		getReservationInfo(scheduleid)
 			.then((res) => {
 				if (res.status == 200) {
 					return res.data
 				}
 			})
 			.then((res) => {
-				if (res) {
+				if (res && isMounted.current == true) {
 					const { locationId, name, diners, table } = res.reservationInfo
 
+					setOwnerid(ownerid)
 					setName(name)
 					setDiners(diners)
 					setTable(table)
@@ -81,7 +89,7 @@ export default function booktime(props) {
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -102,9 +110,6 @@ export default function booktime(props) {
 
 					let openHour = openTime.hour, openMinute = openTime.minute, openPeriod = openTime.period
 					let closeHour = closeTime.hour, closeMinute = closeTime.minute, closePeriod = closeTime.period
-
-					openHour = openPeriod == "PM" ? parseInt(openHour) + 12 : openHour
-					closeHour = closePeriod == "PM" ? parseInt(closeHour) + 12 : closeHour
 
 					const currTime = new Date(Date.now())
 					const currDay = days[currTime.getDay()]
@@ -169,7 +174,7 @@ export default function booktime(props) {
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -290,32 +295,44 @@ export default function booktime(props) {
 	}
 
 	const rescheduleTheReservation = async() => {
-		const userid = await AsyncStorage.getItem("userid")
 		const { time, tablenum } = confirmRequest
-		const data = { reservationid, time, table: tablenum ? tablenum : table }
 
-		rescheduleReservation(data)
-			.then((res) => {
-				if (res.status == 200) {
-					return res.data
-				}
-			})
-			.then((res) => {
-				if (res) {
-					setConfirmrequest({ ...confirmRequest, show: false, requested: false })
-					refetch()
-					props.navigation.goBack()
-				}
-			})
-			.catch((err) => {
-				if (err.response.status == 400) {
-					
-				}
-			})
+		if (table || tablenum) {
+			let data = { 
+				scheduleid, time, table: tablenum ? tablenum : table, 
+				type: "rescheduleReservation"
+			}
+
+			rescheduleReservation(data)
+				.then((res) => {
+					if (res.status == 200) {
+						return res.data
+					}
+				})
+				.then((res) => {
+					if (res) {
+						setConfirmrequest({ ...confirmRequest, requested: true })
+
+						data = { ...data, receiver: res.receiver }
+						socket.emit("socket/business/rescheduleReservation", data)
+					}
+				})
+				.catch((err) => {
+					if (err.response && err.response.status == 400) {
+						
+					}
+				})
+		} else {
+			setConfirmrequest({ ...confirmRequest, errorMsg: "Please enter a table # for the diner(s)" })
+		}
 	}
 
 	useEffect(() => {
+		isMounted.current = true
+
 		getTheReservationInfo()
+
+		return () => isMounted.current = false
 	}, [])
 
 	return (
@@ -328,7 +345,7 @@ export default function booktime(props) {
 					<Text style={style.backHeader}>Back</Text>
 				</TouchableOpacity>
 
-				<Text style={style.boxHeader}>Request another time for {(diners + 1) > 0 ? '\n' + (diners + 1) + ' ' + ((diners + 1) == 1 ? 'person' : 'people') : "1 person"}</Text>
+				<Text style={style.boxHeader}>Request another time for {diners > 0 ? '\n' + diners + ' ' + (diners == 1 ? 'person' : 'people') : "1 person"}</Text>
 				
 				{!loaded ? 
 					<ActivityIndicator size="small"/>
@@ -340,7 +357,7 @@ export default function booktime(props) {
 								<Text style={style.dateHeader}>{selectedDateInfo.month}, {selectedDateInfo.year}</Text>
 								<TouchableOpacity style={style.dateNav} onPress={() => dateNavigate('right')}><AntDesign name="right" size={25}/></TouchableOpacity>
 							</View>
-							
+
 							<View style={style.dateDays}>
 								<View style={style.dateDaysRow}>
 									{days.map((day, index) => (
@@ -378,20 +395,23 @@ export default function booktime(props) {
 							<View style={style.times}>
 								{times.map(info => (
 									<View key={info.key}>
-										{(!info.timetaken && !info.timepassed) ? 
-											<TouchableOpacity style={style.unselect} key={info.key} onPress={() => selectTime(name, info.header, info.time)}>
+										{(!info.timetaken && !info.timepassed) && (
+											<TouchableOpacity style={style.unselect} onPress={() => selectTime(name, info.header, info.time)}>
 												<Text style={{ color: 'black', fontSize: 15 }}>{info.header}</Text>
 											</TouchableOpacity>
-											:
-											info.timetaken ? 
-												<TouchableOpacity style={style.selected} disabled={true} key={info.key} onPress={() => {}}>
-													<Text style={{ color: 'white', fontSize: 15 }}>{info.header}</Text>
-												</TouchableOpacity>
-												:
-												<TouchableOpacity style={style.selectedPassed} disabled={true} key={info.key} onPress={() => {}}>
-													<Text style={{ color: 'black', fontSize: 15 }}>{info.header}</Text>
-												</TouchableOpacity>
-										}
+										)}
+
+										{(info.timetaken && !info.timepassed) && (
+											<TouchableOpacity style={style.selected} disabled={true} onPress={() => {}}>
+												<Text style={{ color: 'white', fontSize: 15 }}>{info.header}</Text>
+											</TouchableOpacity>
+										)}
+
+										{(!info.timetaken && info.timepassed) && (
+											<TouchableOpacity style={style.selectedPassed} disabled={true} onPress={() => {}}>
+												<Text style={{ color: 'black', fontSize: 15 }}>{info.header}</Text>
+											</TouchableOpacity>
+										)}
 									</View>
 								))}
 							</View>
@@ -408,7 +428,7 @@ export default function booktime(props) {
 								{!confirmRequest.requested ? 
 									<>
 										<Text style={style.confirmHeader}>
-											<Text style={{ fontFamily: 'appFont' }}>Request a different time for {(diners + 1) > 0 ? '\n' + (diners + 1) + ' ' + ((diners + 1) == 1 ? 'person' : 'people') : '1 person'}</Text>
+											<Text style={{ fontFamily: 'appFont' }}>Request a different time for {diners > 0 ? '\n' + diners + ' ' + (diners == 1 ? 'person' : 'people') : '1 person'}</Text>
 											{'\n at ' + confirmRequest.service}
 											{'\n' + displayTime(confirmRequest.time)}
 										</Text>
@@ -416,7 +436,7 @@ export default function booktime(props) {
 										<View style={{ alignItems: 'center' }}>
 											<Text style={style.confirmHeader}>Tell the diner the table #?</Text>
 
-											<TextInput placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder={table ? table + "? If not, please re-enter" : 'What table will be available'} style={style.confirmInput} onChangeText={(tablenum) => setConfirmrequest({ ...confirmRequest, tablenum })} autoCorrect={false}/>
+											<TextInput placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder={table ? table + "? If not, please re-enter" : 'What table will be available'} style={style.confirmInput} onChangeText={(tablenum) => setConfirmrequest({ ...confirmRequest, tablenum })} autoCorrect={false} autoCapitalize="none"/>
 										</View>
 
 										{confirmRequest.errorMsg ? <Text style={style.errorMsg}>{confirmRequest.errorMsg}</Text> : null}
@@ -437,10 +457,12 @@ export default function booktime(props) {
 										<Text style={style.requestedHeader}>Reservation requested at</Text>
 										<Text style={style.requestedHeaderInfo}>{confirmRequest.service}</Text>
 										<Text style={style.requestedHeaderInfo}>{displayTime(confirmRequest.time)}</Text>
-										<Text style={style.requestedHeaderInfo}>for {diners + 1} diner{(diners + 1) > 1 ? "s" : ""}{'\n'}</Text>
+										<Text style={style.requestedHeaderInfo}>for {diners} diner{diners > 1 ? "s" : ""}{'\n'}</Text>
 										<Text style={style.requestedHeaderInfo}>You will get notify by the diners</Text>
 										<TouchableOpacity style={style.requestedClose} onPress={() => {
 											setConfirmrequest({ ...confirmRequest, show: false, requested: false })
+
+											refetch()
 											props.navigation.goBack()
 										}}>
 											<Text style={style.requestedCloseHeader}>Ok</Text>
@@ -488,6 +510,7 @@ const style = StyleSheet.create({
 	confirmContainer: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },
 	confirmHeader: { fontSize: 20, fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
 	confirmInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: (width * 0.8) - 50 },
+	errorMsg: { color: 'red', fontWeight: 'bold' },
 	confirmOptions: { flexDirection: 'row' },
 	confirmOption: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
 	confirmOptionHeader: { },

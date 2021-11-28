@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from 'react'
-import { AsyncStorage, ActivityIndicator, Dimensions, View, FlatList, Text, Image, TouchableOpacity, StyleSheet, Modal } from 'react-native'
+import { ActivityIndicator, Dimensions, View, FlatList, Text, Image, TouchableOpacity, StyleSheet, Modal } from 'react-native'
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import { setLocationType } from '../apis/locations'
 import { registerInfo } from '../../assets/info'
 
 const { height, width } = Dimensions.get('window')
-const offsetPadding = Constants.statusBarHeight
-const screenHeight = height - offsetPadding
 const iconSize = (width / 2) - 90
 
 export default function typesetup({ navigation }) {
+	const offsetPadding = Constants.statusBarHeight
+	const screenHeight = height - offsetPadding
+
 	const [type, setType] = useState(registerInfo.storeType)
 	const [loading, setLoading] = useState(false)
 	const [errorMsg, setErrormsg] = useState('')
@@ -25,11 +27,7 @@ export default function typesetup({ navigation }) {
 		setLocationType(data)
 			.then((res) => {
 				if (res.status == 200) {
-					if (!res.data.errormsg) {
-						return res.data
-					} else {
-						setLoading(false)
-					}
+					return res.data
 				}
 			})
 			.then((res) => {
@@ -46,8 +44,8 @@ export default function typesetup({ navigation }) {
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
-					
+				if (err.response && err.response.status == 400) {
+					setLoading(false)
 				}
 			})
 	}
@@ -106,12 +104,12 @@ const style = StyleSheet.create({
 	boxHeader: { fontFamily: 'appFont', fontSize: 50, fontWeight: 'bold', paddingVertical: 30 },
 	boxMiniheader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold' },
 
-	selections: { flexDirection: 'column', height: '50%', justifyContent: 'space-around' },
-	selection: { backgroundColor: 'rgba(127, 127, 127, 0.05)', borderRadius: iconSize / 2, borderStyle: 'solid', borderWidth: 2, height: iconSize, padding: 20, width: iconSize },
-	selectionSelected: { backgroundColor: 'rgba(127, 127, 127, 0.8)', borderRadius: iconSize / 2, borderStyle: 'solid', borderWidth: 2, height: iconSize, padding: 20, width: iconSize },
+	selections: {  },
+	selection: { backgroundColor: 'rgba(127, 127, 127, 0.05)', borderRadius: iconSize / 2, borderStyle: 'solid', borderWidth: 2, height: iconSize, marginBottom: 5, padding: 20, width: iconSize },
+	selectionSelected: { backgroundColor: 'rgba(127, 127, 127, 0.8)', borderRadius: iconSize / 2, borderStyle: 'solid', borderWidth: 2, height: iconSize, marginBottom: 5, padding: 20, width: iconSize },
 	selectionIcon: { height: '100%', width: '100%' },
 
-	done: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: 100 },
+	done: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 20, padding: 10 },
 	doneHeader: { fontWeight: 'bold', textAlign: 'center' },
 
 	errorMsg: { color: 'red', fontWeight: 'bold', marginVertical: 10, textAlign: 'center' },

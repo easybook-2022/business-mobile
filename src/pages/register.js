@@ -1,50 +1,45 @@
 import React, { useState, useEffect } from 'react';
-import { AsyncStorage, ActivityIndicator, Dimensions, ScrollView, View, Text, TextInput, Image, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet } from 'react-native';
+import { ActivityIndicator, Dimensions, ScrollView, View, Text, TextInput, Image, TouchableOpacity, TouchableWithoutFeedback, Keyboard, PermissionsAndroid, StyleSheet } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import * as FileSystem from 'expo-file-system'
 import { Camera } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator'
 import { CommonActions } from '@react-navigation/native';
 import { registerUser } from '../apis/owners'
-import { ownerInfo, registerInfo } from '../../assets/info'
+import { ownerRegisterInfo, registerInfo } from '../../assets/info'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import Entypo from 'react-native-vector-icons/Entypo'
 
 const { height, width } = Dimensions.get('window')
-const offsetPadding = Constants.statusBarHeight
-const screenHeight = height - (offsetPadding * 2)
 
 export default function register(props) {
+	const offsetPadding = Constants.statusBarHeight
+	const screenHeight = height - (offsetPadding * 2)
+
 	const cellnumber = props.route.params.cellnumber
 	const [permission, setPermission] = useState(null);
 	const [camComp, setCamcomp] = useState(null)
 	const [camType, setCamtype] = useState(Camera.Constants.Type.back);
 	const [profile, setProfile] = useState({ uri: '', name: '' })
-	const [username, setUsername] = useState(ownerInfo.username)
-	const [password, setPassword] = useState(ownerInfo.password)
-	const [confirmPassword, setConfirmpassword] = useState(ownerInfo.password)
+	const [username, setUsername] = useState(ownerRegisterInfo.username)
+	const [password, setPassword] = useState(ownerRegisterInfo.password)
+	const [confirmPassword, setConfirmpassword] = useState(ownerRegisterInfo.password)
 
 	const [loading, setLoading] = useState(false)
 	const [errorMsg, setErrormsg] = useState('')
 
 	const register = () => {
-		const data = { cellnumber, username, password, confirmPassword, profile }
+		const data = { cellnumber, username, password, confirmPassword, profile, permission }
 
 		setLoading(true)
 		
 		registerUser(data)
 			.then((res) => {
 				if (res.status == 200) {
-					if (!res.data.errormsg) {
-						return res.data
-					} else {
-						setLoading(false)
-						setErrormsg(res.data.errormsg)
-					}
+					return res.data
 				}
-
-				return
 			})
 			.then((res) => {
 				if (res) {
@@ -57,8 +52,11 @@ export default function register(props) {
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
-					
+				if (err.response && err.response.status == 400) {
+					const { errormsg, status } = err.response.data
+
+					setLoading(false)
+					setErrormsg(errormsg)
 				}
 			})
 	}
@@ -107,12 +105,12 @@ export default function register(props) {
 		}
 	}
 	const openCamera = async() => {
-		const { status } = await Camera.getPermissionsAsync()
+		const { status } = await Camera.getCameraPermissionsAsync()
 
 		if (status == 'granted') {
 			setPermission(status === 'granted')
 		} else {
-			const { status } = await Camera.requestPermissionsAsync()
+			const { status } = await Camera.requestCameraPermissionsAsync()
 
 			setPermission(status === 'granted')
 		}
@@ -134,7 +132,7 @@ export default function register(props) {
 						<View style={style.inputsBox}>
 							<View style={style.inputContainer}>
 								<Text style={style.inputHeader}>Enter a username:</Text>
-								<TextInput style={style.input} onChangeText={(username) => setUsername(username)} value={username} autoCorrect={false}/>
+								<TextInput style={style.input} onChangeText={(username) => setUsername(username)} value={username} autoCorrect={false} autoCapitalize="none"/>
 							</View>
 
 							<View style={style.inputContainer}>
@@ -206,8 +204,8 @@ const style = StyleSheet.create({
 	box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 	boxHeader: { fontFamily: 'appFont', fontSize: 50, fontWeight: 'bold', paddingVertical: 30 },
 
-	inputsBox: { paddingHorizontal: 20, width: '80%' },
-	inputContainer: { marginVertical: 30 },
+	inputsBox: { width: '80%' },
+	inputContainer: { marginBottom: 50 },
 	inputHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold' },
 	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: 20, padding: 5 },
 	cameraContainer: { alignItems: 'center', marginBottom: 50, width: '100%' },
@@ -215,7 +213,7 @@ const style = StyleSheet.create({
 	camera: { height: width * 0.8, width: width * 0.8 },
 	cameraAction: { margin: 10 },
 	errorMsg: { color: 'darkred', fontWeight: 'bold', textAlign: 'center' },
-	submit: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 5, padding: 10 },
+	submit: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginBottom: 50, marginTop: 5, padding: 10 },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
 	bottomNav: { flexDirection: 'row', height: 30, marginVertical: 5, marginHorizontal: 20 },

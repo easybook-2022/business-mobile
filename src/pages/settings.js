@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react'
-import { AsyncStorage, ActivityIndicator, Dimensions, ScrollView, View, Image, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet, Modal } from 'react-native'
-import { NetworkInfo } from 'react-native-network-info';
+import React, { useState, useEffect, useRef } from 'react'
+import { ActivityIndicator, Dimensions, ScrollView, View, Image, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet, Modal } from 'react-native'
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import NetInfo from '@react-native-community/netinfo';
 import Constants from 'expo-constants';
 import * as FileSystem from 'expo-file-system'
 import { Camera } from 'expo-camera';
@@ -8,11 +9,11 @@ import * as ImageManipulator from 'expo-image-manipulator'
 import * as Location from 'expo-location';
 import { logo_url } from '../../assets/info'
 import { 
-	addOwner, update, addBankaccount, updateBankaccount, getAccounts, getBankaccounts, 
+	addOwner, updateOwner, addBankaccount, updateBankaccount, getAccounts, getBankaccounts, 
 	setBankaccountDefault, getBankaccountInfo, deleteTheBankAccount
 } from '../apis/owners'
 import { getLocationProfile, updateLocation, setLocationHours } from '../apis/locations'
-import { loginInfo, ownerInfo, stripe_key } from '../../assets/info'
+import { loginInfo, ownerRegisterInfo, stripe_key } from '../../assets/info'
 
 // bank account
 const { accountNumber, countryCode, currency, routingNumber, accountHolderName } = loginInfo
@@ -21,11 +22,12 @@ import AntDesign from 'react-native-vector-icons/AntDesign'
 import Entypo from 'react-native-vector-icons/Entypo'
 
 const { height, width } = Dimensions.get('window')
-const offsetPadding = Constants.statusBarHeight
-const screenHeight = height - (offsetPadding * 2)
 
 export default function settings(props) {
-	const { refetch, startInterval } = props.route.params
+	const offsetPadding = Constants.statusBarHeight
+	const screenHeight = height - (offsetPadding * 2)
+
+	const { refetch } = props.route.params
 	const required = props.route.params ? props.route.params.required : ""
 
 	const [ownerid, setOwnerid] = useState('')
@@ -43,33 +45,37 @@ export default function settings(props) {
 	const [province, setProvince] = useState(loginInfo.province)
 	const [postalcode, setPostalcode] = useState(loginInfo.postalcode)
 	const [logo, setLogo] = useState({ uri: '', name: '' })
+	const [infoLoading, setInfoloading] = useState(true)
 
 	// location hours
 	const [days, setDays] = useState([
-		{ key: "0", header: "Sunday", opentime: { hour: "00", minute: "00", period: "AM" }, closetime: { hour: "00", minute: "00", period: "AM" }},
-		{ key: "1", header: "Monday", opentime: { hour: "00", minute: "00", period: "AM" }, closetime: { hour: "00", minute: "00", period: "AM" }},
-		{ key: "2", header: "Tuesday", opentime: { hour: "00", minute: "00", period: "AM" }, closetime: { hour: "00", minute: "00", period: "AM" }},
-		{ key: "3", header: "Wednesday", opentime: { hour: "00", minute: "00", period: "AM" }, closetime: { hour: "00", minute: "00", period: "AM" }},
-		{ key: "4", header: "Thursday", opentime: { hour: "00", minute: "00", period: "AM" }, closetime: { hour: "00", minute: "00", period: "AM" }},
-		{ key: "5", header: "Friday", opentime: { hour: "00", minute: "00", period: "AM" }, closetime: { hour: "00", minute: "00", period: "AM" }},
-		{ key: "6", header: "Saturday", opentime: { hour: "00", minute: "00", period: "AM" }, closetime: { hour: "00", minute: "00", period: "AM" }}
+		{ key: "0", header: "Sunday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }},
+		{ key: "1", header: "Monday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }},
+		{ key: "2", header: "Tuesday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }},
+		{ key: "3", header: "Wednesday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }},
+		{ key: "4", header: "Thursday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }},
+		{ key: "5", header: "Friday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }},
+		{ key: "6", header: "Saturday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }}
 	])
+	const [daysLoading, setDaysloading] = useState(true)
 
 	// co-owners
 	const [accountHolders, setAccountHolders] = useState([])
+	const [accountHoldersloading, setAccountholdersloading] = useState(true)
 
 	// bank accounts
 	const [bankAccounts, setBankAccounts] = useState([])
+	const [bankAccountsloading, setBankaccountsloading] = useState(true)
+
 	const [errorMsg, setErrormsg] = useState('')
-	const [loaded, setLoaded] = useState(false)
 	const [loading, setLoading] = useState(false)
 	const [accountForm, setAccountform] = useState({
 		show: false,
 		type: '',
-		username: ownerInfo.username,
-		cellnumber: ownerInfo.cellnumber, 
-		password: ownerInfo.password, 
-		confirmPassword: ownerInfo.password,
+		username: ownerRegisterInfo.username,
+		cellnumber: ownerRegisterInfo.cellnumber, 
+		password: ownerRegisterInfo.password, 
+		confirmPassword: ownerRegisterInfo.password,
 		profile: { uri: '', name: '' },
 
 		loading: false,
@@ -95,11 +101,14 @@ export default function settings(props) {
 		errorMsg: ''
 	})
 
+	const isMounted = useRef(null)
+
 	const updateYourLocation = async() => {
 		const ownerid = await AsyncStorage.getItem("ownerid")
-		const ipAddress = await NetworkInfo.getIPAddress()
+		const { details } = await NetInfo.fetch()
+		const ipAddress = details.ipAddress
 
-		if (storeName && phonenumber && addressOne && city && province && postalcode && logo.name) {
+		if (storeName && phonenumber && addressOne && city && province && postalcode) {
 			const [{ latitude, longitude }] = await Location.geocodeAsync(`${addressOne} ${addressTwo}, ${city} ${province}, ${postalcode}`)
 			const time = (Date.now() / 1000).toString().split(".")[0]
 			const data = {
@@ -112,12 +121,7 @@ export default function settings(props) {
 			updateLocation(data)
 				.then((res) => {
 					if (res.status == 200) {
-						if (!res.data.errormsg) {
-							return res.data
-						} else {
-							setErrormsg(res.data.errormsg)
-							setLoading(false)
-						}
+						return res.data
 					}
 				})
 				.then((res) => {
@@ -129,8 +133,11 @@ export default function settings(props) {
 					}
 				})
 				.catch((err) => {
-					if (err.response.status == 400) {
-						
+					if (err.response && err.response.status == 400) {
+						const { errormsg, status } = err.response.data
+
+						setErrormsg(errormsg)
+						setLoading(false)
 					}
 				})
 		} else {
@@ -175,12 +182,6 @@ export default function settings(props) {
 
 				return
 			}
-
-			if (!logo.name) {
-				setErrormsg("Please take a good photo of your store")
-
-				return
-			}
 		}
 	}
 
@@ -188,11 +189,10 @@ export default function settings(props) {
 		const newDays = [...days]
 		let value, period
 
-		if (open) {
-			value = newDays[index].opentime[timetype]
-		} else {
-			value = newDays[index].closetime[timetype]
-		}
+		value = open ? 
+			newDays[index].opentime[timetype]
+			:
+			newDays[index].closetime[timetype]
 
 		switch (timetype) {
 			case "hour":
@@ -215,8 +215,8 @@ export default function settings(props) {
 				value = dir == "up" ? value + 1 : value - 1
 
 				if (value > 59) {
-					value = 1
-				} else if (value < 1) {
+					value = 0
+				} else if (value < 0) {
 					value = 59
 				}
 
@@ -248,7 +248,56 @@ export default function settings(props) {
 		setLoading(true)
 
 		days.forEach(function (day) {
-			hours[day.header.substr(0, 3)] = { opentime: day.opentime, closetime: day.closetime }
+			let { opentime, closetime } = day
+			let newOpentime = {...opentime}, newClosetime = {...closetime}
+			let openhour = parseInt(newOpentime.hour), closehour = parseInt(newClosetime.hour)
+			let openperiod = newOpentime.period, closeperiod = newClosetime.period
+
+			if (openperiod == "PM") {
+				if (openhour < 12) {
+					openhour += 12
+				}
+
+				openhour = openhour < 10 ? 
+					"0" + openhour
+					:
+					openhour.toString()
+			} else {
+				if (openhour == 12) {
+					openhour = "00"
+				} else if (openhour < 10) {
+					openhour = "0" + openhour
+				} else {
+					openhour = openhour.toString()
+				}
+			}
+
+			if (closeperiod == "PM") {
+				if (closehour < 12) {
+					closehour += 12
+				}
+
+				closehour = closehour < 10 ? 
+					"0" + closehour
+					:
+					closehour.toString()
+			} else {
+				if (closehour == 12) {
+					closehour = "00"
+				} else if (closehour < 10) {
+					closehour = "0" + closehour
+				} else {
+					closehour = closehour.toString()
+				}
+			}
+
+			newOpentime.hour = openhour
+			newClosetime.hour = closehour
+
+			delete newOpentime.period
+			delete newClosetime.period
+
+			hours[day.header.substr(0, 3)] = { opentime: newOpentime, closetime: newClosetime }
 		})
 
 		const data = { ownerid, locationid, hours }
@@ -256,11 +305,7 @@ export default function settings(props) {
 		setLocationHours(data)
 			.then((res) => {
 				if (res.status == 200) {
-					if (!res.data.errormsg) {
-						return res.data
-					} else {
-						setLoading(false)
-					}
+					return res.data
 				}
 			})
 			.then((res) => {
@@ -270,8 +315,8 @@ export default function settings(props) {
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
-					
+				if (err.response && err.response.status == 400) {
+					setLoading(false)
 				}
 			})
 	}
@@ -281,8 +326,6 @@ export default function settings(props) {
 		const data = { ownerid, cellnumber, username, password, confirmPassword, profile }
 
 		setAccountform({ ...accountForm, loading: true })
-
-		console.log(data)
 
 		addOwner(data)
 			.then((res) => {
@@ -295,20 +338,18 @@ export default function settings(props) {
 			.then((res) => {
 				if (res) {
 					setAccountform({
-						show: false,
-						type: '',
-						username: '',
-						cellnumber: '',
-						password: '',
-						confirmPassword: '',
+						...accountForm, show: false, type: '', username: '', cellnumber: '', 
+						password: '', confirmPassword: '', profile: { uri: '', name: '' }, 
 						loading: false
 					})
 					getAllAccounts()
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
-					
+				if (err.response && err.response.status == 400) {
+					const { errormsg, status } = err.response.data
+
+					setAccountform({ ...accountForm, errormsg })
 				}
 			})
 	}
@@ -316,7 +357,7 @@ export default function settings(props) {
 		const { cellnumber, username, password, confirmPassword, profile } = accountForm
 		const data = { ownerid, cellnumber, username, password, confirmPassword, profile }
 
-		update(data)
+		updateOwner(data)
 			.then((res) => {
 				if (res.status == 200) {
 					return res.data
@@ -327,18 +368,20 @@ export default function settings(props) {
 			.then((res) => {
 				if (res) {
 					setAccountform({
+						...accountForm,
 						show: false,
 						type: '',
 						username: '',
 						cellnumber: '',
 						password: '',
-						confirmPassword: ''
+						confirmPassword: '',
+						profile: { uri: '', name: '' },
 					})
 					getAllAccounts()
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -366,7 +409,7 @@ export default function settings(props) {
 	const addNewBankAccount = async() => {
 		const locationid = await AsyncStorage.getItem("locationid")
 		const { accountHolderName, accountNumber, transitNumber, routingNumber } = bankAccountForm
-		const data = { locationid }
+		let data = { locationid }
 		const bankaccountDetails = {
 			"bank_account[country]": countryCode,
 			"bank_account[currency]": currency,
@@ -397,7 +440,7 @@ export default function settings(props) {
 			});
 			const json = await resp.json()
 
-			data['banktoken'] = json.id
+			data = { ...data, banktoken: json.id }
 
 			setBankaccountform({ ...bankAccountForm, loading: true })
 
@@ -422,7 +465,7 @@ export default function settings(props) {
 					}
 				})
 				.catch((err) => {
-					if (err.response.status == 400) {
+					if (err.response && err.response.status == 400) {
 						
 					}
 				})
@@ -500,7 +543,7 @@ export default function settings(props) {
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -534,7 +577,7 @@ export default function settings(props) {
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -595,7 +638,7 @@ export default function settings(props) {
 				getAllBankaccounts()
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -620,7 +663,7 @@ export default function settings(props) {
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -637,7 +680,7 @@ export default function settings(props) {
 				}
 			})
 			.then((res) => {
-				if (res) {
+				if (res && isMounted.current == true) {
 					const { locationInfo, msg } = res
 					const { name, phonenumber, addressOne, addressTwo, city, province, postalcode, logo, hours } = locationInfo
 
@@ -649,11 +692,13 @@ export default function settings(props) {
 					setProvince(province)
 					setPostalcode(postalcode)
 					setLogo({ uri: logo_url + logo, name: logo })
+					setInfoloading(false)
 					setDays(hours)
+					setDaysloading(false)
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -669,13 +714,14 @@ export default function settings(props) {
 				}
 			})
 			.then((res) => {
-				if (res) {
+				if (res && isMounted.current == true) {
 					setOwnerid(ownerid)
 					setAccountHolders(res.accounts)
+					setAccountholdersloading(false)
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -737,13 +783,13 @@ export default function settings(props) {
 				}
 			})
 			.then((res) => {
-				if (res) {
+				if (res && isMounted.current == true) {
 					setBankAccounts(res.bankaccounts)
-					setLoaded(true)
+					setBankaccountsloading(false)
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -793,18 +839,20 @@ export default function settings(props) {
 		}
 	}
 	const openCamera = async() => {
-		const { status } = await Camera.getPermissionsAsync()
+		const { status } = await Camera.getCameraPermissionsAsync()
 
 		if (status == 'granted') {
 			setPermission(status === 'granted')
 		} else {
-			const { status } = await Camera.requestPermissionsAsync()
+			const { status } = await Camera.requestCameraPermissionsAsync()
 
 			setPermission(status === 'granted')
 		}
 	}
 
 	useEffect(() => {
+		isMounted.current = true
+
 		getTheLocationProfile()
 		getAllAccounts()
 		getAllBankaccounts()
@@ -814,6 +862,8 @@ export default function settings(props) {
 		if (required == "bankaccount") {
 			openBankAccountForm()
 		}
+
+		return () => isMounted.current = false
 	}, [])
 
 	return (
@@ -833,247 +883,253 @@ export default function settings(props) {
 					<View style={[style.box, { opacity: loading ? 0.6 : 1 }]}>
 						<Text style={style.boxHeader}>Setting(s)</Text>
 						
-						{loaded ? 
-							<>
-								{editType == 'information' ? 
-									<>
-										<Text style={style.header}>Edit Location Information</Text>
+						{!infoLoading ?
+							editType == 'information' ? 
+								<>
+									<Text style={style.header}>Edit Location Information</Text>
 
-										<View style={style.inputsBox}>
-											<View style={style.inputContainer}>
-												<Text style={style.inputHeader}>Store Name:</Text>
-												<TextInput style={style.input} onChangeText={(storeName) => setStorename(storeName)} value={storeName} autoCorrect={false}/>
-											</View>
-											<View style={style.inputContainer}>
-												<Text style={style.inputHeader}>Store Phone number:</Text>
-												<TextInput style={style.input} onChangeText={(phonenumber) => setPhonenumber(phonenumber)} value={phonenumber} keyboardType="numeric" autoCorrect={false}/>
-											</View>
-											<View style={style.inputContainer}>
-												<Text style={style.inputHeader}>Address #1:</Text>
-												<TextInput style={style.input} onChangeText={(addressOne) => setAddressone(addressOne)} value={addressOne} keyboardType="numeric" autoCorrect={false}/>
-											</View>
-											<View style={style.inputContainer}>
-												<Text style={style.inputHeader}>Address #2:</Text>
-												<TextInput style={style.input} onChangeText={(addressTwo) => setAddresstwo(addressTwo)} value={addressTwo} keyboardType="numeric" autoCorrect={false}/>
-											</View>
-											<View style={style.inputContainer}>
-												<Text style={style.inputHeader}>City:</Text>
-												<TextInput style={style.input} onChangeText={(city) => setCity(city)} value={city} keyboardType="numeric" autoCorrect={false}/>
-											</View>
-											<View style={style.inputContainer}>
-												<Text style={style.inputHeader}>Province:</Text>
-												<TextInput style={style.input} onChangeText={(province) => setProvince(province)} value={province} keyboardType="numeric" autoCorrect={false}/>
-											</View>
-											<View style={style.inputContainer}>
-												<Text style={style.inputHeader}>Postal Code:</Text>
-												<TextInput style={style.input} onChangeText={(postalcode) => setPostalcode(postalcode)} value={postalcode} keyboardType="numeric" autoCorrect={false}/>
-											</View>
-
-											<View style={style.cameraContainer}>
-												<Text style={style.inputHeader}>Store Logo</Text>
-
-												{logo.uri ? (
-													<>
-														<Image style={style.camera} source={{ uri: logo.uri }}/>
-
-														<TouchableOpacity style={style.cameraAction} onPress={() => setLogo({ uri: '', name: '' })}>
-															<AntDesign name="closecircleo" size={30}/>
-														</TouchableOpacity>
-													</>
-												) : (
-													<>
-														<Camera style={style.camera} type={camType} ref={r => {setCamcomp(r)}}/>
-
-														<TouchableOpacity style={style.cameraAction} onPress={snapPhoto.bind(this)}>
-															<Entypo name="camera" size={30}/>
-														</TouchableOpacity>
-													</>
-												)}	
-											</View>
-
-											{errorMsg ? <Text style={style.errorMsg}>{errorMsg}</Text> : null }
-
-											{loading && <ActivityIndicator size="large"/>}
+									<View style={style.inputsBox}>
+										<View style={style.inputContainer}>
+											<Text style={style.inputHeader}>Store Name:</Text>
+											<TextInput style={style.input} onChangeText={(storeName) => setStorename(storeName)} value={storeName} autoCorrect={false}/>
+										</View>
+										<View style={style.inputContainer}>
+											<Text style={style.inputHeader}>Store Phone number:</Text>
+											<TextInput style={style.input} onChangeText={(phonenumber) => setPhonenumber(phonenumber)} value={phonenumber} keyboardType="numeric" autoCorrect={false}/>
+										</View>
+										<View style={style.inputContainer}>
+											<Text style={style.inputHeader}>Address #1:</Text>
+											<TextInput style={style.input} onChangeText={(addressOne) => setAddressone(addressOne)} value={addressOne} keyboardType="numeric" autoCorrect={false}/>
+										</View>
+										<View style={style.inputContainer}>
+											<Text style={style.inputHeader}>Address #2:</Text>
+											<TextInput style={style.input} onChangeText={(addressTwo) => setAddresstwo(addressTwo)} value={addressTwo} keyboardType="numeric" autoCorrect={false}/>
+										</View>
+										<View style={style.inputContainer}>
+											<Text style={style.inputHeader}>City:</Text>
+											<TextInput style={style.input} onChangeText={(city) => setCity(city)} value={city} keyboardType="numeric" autoCorrect={false}/>
+										</View>
+										<View style={style.inputContainer}>
+											<Text style={style.inputHeader}>Province:</Text>
+											<TextInput style={style.input} onChangeText={(province) => setProvince(province)} value={province} keyboardType="numeric" autoCorrect={false}/>
+										</View>
+										<View style={style.inputContainer}>
+											<Text style={style.inputHeader}>Postal Code:</Text>
+											<TextInput style={style.input} onChangeText={(postalcode) => setPostalcode(postalcode)} value={postalcode} keyboardType="numeric" autoCorrect={false}/>
 										</View>
 
-										<TouchableOpacity style={style.updateButton} disabled={loading} onPress={() => updateYourLocation()}>
-											<Text>Save</Text>
-										</TouchableOpacity>
-									</>
-									:
-									<TouchableOpacity style={style.editButton} onPress={() => setEdittype('information')}>
-										<Text style={style.editButtonHeader}>Edit Your Location Address and Logo</Text>
-									</TouchableOpacity>
-								}
+										<View style={style.cameraContainer}>
+											<Text style={style.inputHeader}>Store Logo</Text>
 
-								{editType == 'hours' ? 
-									<>
-										<Text style={style.header}>Set your hours</Text>
+											{logo.uri ? (
+												<>
+													<Image style={style.camera} source={{ uri: logo.uri }}/>
 
-										<View style={style.days}>
-											{days.map((day, index) => (
-												<View key={index} style={{ marginVertical: 20 }}>
-													<Text style={style.dayHeader}>{day.header}</Text>
-													<View style={style.timeSelectionContainer}>
-														<View style={style.timeSelection}>
-															<View style={style.selection}>
-																<TouchableOpacity onPress={() => updateTime(index, "hour", "up", true)}>
-																	<AntDesign name="up" size={30}/>
-																</TouchableOpacity>
-																<Text style={style.selectionHeader}>{day.opentime.hour}</Text>
-																<TouchableOpacity onPress={() => updateTime(index, "hour", "down", true)}>
-																	<AntDesign name="down" size={30}/>
-																</TouchableOpacity>
-															</View>
-															<Text style={style.selectionDiv}>:</Text>
-															<View style={style.selection}>
-																<TouchableOpacity onPress={() => updateTime(index, "minute", "up", true)}>
-																	<AntDesign name="up" size={30}/>
-																</TouchableOpacity>
-																<Text style={style.selectionHeader}>{day.opentime.minute}</Text>
-																<TouchableOpacity onPress={() => updateTime(index, "minute", "down", true)}>
-																	<AntDesign name="down" size={30}/>
-																</TouchableOpacity>
-															</View>
-															<View style={style.selection}>
-																<TouchableOpacity onPress={() => updateTime(index, "period", "up", true)}>
-																	<AntDesign name="up" size={30}/>
-																</TouchableOpacity>
-																<Text style={style.selectionHeader}>{day.opentime.period}</Text>
-																<TouchableOpacity onPress={() => updateTime(index, "period", "down", true)}>
-																	<AntDesign name="down" size={30}/>
-																</TouchableOpacity>
-															</View>
-														</View>
-														<View style={style.timeSelection}>
-															<View style={style.selection}>
-																<TouchableOpacity onPress={() => updateTime(index, "hour", "up", false)}>
-																	<AntDesign name="up" size={30}/>
-																</TouchableOpacity>
-																<Text style={style.selectionHeader}>{day.closetime.hour}</Text>
-																<TouchableOpacity onPress={() => updateTime(index, "hour", "down", false)}>
-																	<AntDesign name="down" size={30}/>
-																</TouchableOpacity>
-															</View>
-															<Text style={style.selectionDiv}>:</Text>
-															<View style={style.selection}>
-																<TouchableOpacity onPress={() => updateTime(index, "minute", "up", false)}>
-																	<AntDesign name="up" size={30}/>
-																</TouchableOpacity>
-																<Text style={style.selectionHeader}>{day.closetime.minute}</Text>
-																<TouchableOpacity onPress={() => updateTime(index, "minute", "down", false)}>
-																	<AntDesign name="down" size={30}/>
-																</TouchableOpacity>
-															</View>
-															<View style={style.selection}>
-																<TouchableOpacity onPress={() => updateTime(index, "period", "up", false)}>
-																	<AntDesign name="up" size={30}/>
-																</TouchableOpacity>
-																<Text style={style.selectionHeader}>{day.closetime.period}</Text>
-																<TouchableOpacity onPress={() => updateTime(index, "period", "down", false)}>
-																	<AntDesign name="down" size={30}/>
-																</TouchableOpacity>
-															</View>
-														</View>
-													</View>
-												</View>
-											))}
+													<TouchableOpacity style={style.cameraAction} onPress={() => setLogo({ uri: '', name: '' })}>
+														<AntDesign name="closecircleo" size={30}/>
+													</TouchableOpacity>
+												</>
+											) : (
+												<>
+													<Camera style={style.camera} type={camType} ref={r => {setCamcomp(r)}}/>
+
+													<TouchableOpacity style={style.cameraAction} onPress={snapPhoto.bind(this)}>
+														<Entypo name="camera" size={30}/>
+													</TouchableOpacity>
+												</>
+											)}	
 										</View>
 
-										<TouchableOpacity style={style.updateButton} disabled={loading} onPress={() => updateYourHours()}>
-											<Text>Save</Text>
-										</TouchableOpacity>
-									</>
-									:
-									<TouchableOpacity style={style.editButton} onPress={() => setEdittype('hours')}>
-										<Text style={style.editButtonHeader}>Edit Your Hour(s)</Text>
-									</TouchableOpacity>
-								}
+										{errorMsg ? <Text style={style.errorMsg}>{errorMsg}</Text> : null }
 
-								{editType == 'users' ? 
-									<View style={style.accountHolders}>
-										<Text style={style.accountHoldersHeader}>Login User(s)</Text>
-
-										<TouchableOpacity style={style.accountHoldersAdd} onPress={() => {
-											setAccountform({
-												...accountForm,
-												show: true,
-												type: 'add'
-											})
-										}}>
-											<Text>Add a Login User</Text>
-										</TouchableOpacity>
-
-										{accountHolders.map((info, index) => (
-											<View key={info.key} style={style.account}>
-												<Text style={style.accountHeader}>#{index + 1}:</Text>
-
-												<View style={style.accountEdit}>
-													<Text style={style.accountEditHeader}>{info.cellnumber}</Text>
-													{info.id == ownerid && (
-														<TouchableOpacity style={style.accountEditTouch} onPress={() => {
-															setAccountform({
-																...accountForm,
-																show: true,
-																type: 'edit',
-																username: info.username,
-																cellnumber: info.cellnumber,
-																password: '',
-																confirmPassword: '',
-																profile: { uri: logo_url + info.profile, name: info.profile }
-															})
-														}}>
-															<Text>Change Info</Text>
-														</TouchableOpacity>
-													)}
-												</View>
-											</View>
-										))}
+										{loading && <ActivityIndicator size="large"/>}
 									</View>
-									:
-									<TouchableOpacity style={style.editButton} onPress={() => setEdittype('users')}>
-										<Text style={style.editButtonHeader}>Edit Co-Owners Information</Text>
+
+									<TouchableOpacity style={style.updateButton} disabled={loading} onPress={() => updateYourLocation()}>
+										<Text>Save</Text>
 									</TouchableOpacity>
-								}
-
-								{editType == 'bankaccounts' ? 
-									<View style={style.bankaccountHolders}>
-										<Text style={style.bankaccountHolderHeader}>Bank Account(s)</Text>
-
-										<TouchableOpacity style={style.bankaccountHolderAdd} onPress={() => openBankAccountForm()}>
-											<Text>Add a bank account</Text>
-										</TouchableOpacity>
-
-										{bankAccounts.map((info, index) => (
-											<View key={info.key} style={style.bankaccount}>
-												<View style={style.bankaccountRow}>
-													<Text style={style.bankaccountHeader}>#{index + 1}:</Text>
-													<View style={style.bankaccountNumberHolder}>
-														<Text style={style.bankaccountNumberHeader}>{info.number}</Text>
-													</View>
-												</View>
-												<View style={style.bankaccountActions}>
-													<TouchableOpacity style={info.default ? style.bankaccountActionDisabled : style.bankaccountAction} disabled={info.default} onPress={() => useBankAccount(info.bankid)}>
-														<Text style={info.default ? style.bankaccountActionHeaderDisabled : style.bankaccountActionHeader}>Set default</Text>
-													</TouchableOpacity>
-													<TouchableOpacity style={style.bankaccountAction} onPress={() => editBankAccount(info.bankid, index)}>
-														<Text style={style.bankaccountActionHeader}>Edit</Text>
-													</TouchableOpacity>
-													<TouchableOpacity style={info.default ? style.bankaccountActionDisabled : style.bankaccountAction} disabled={info.default} onPress={() => deleteBankAccount(info.bankid, index)}>
-														<Text style={info.default ? style.bankaccountActionHeaderDisabled : style.bankaccountActionHeader}>Remove</Text>
-													</TouchableOpacity>
-												</View>
-											</View>
-										))}
-									</View>
-									:
-									<TouchableOpacity style={style.editButton} onPress={() => setEdittype('bankaccounts')}>
-										<Text style={style.editButtonHeader}>Edit Bank account(s) information</Text>
-									</TouchableOpacity>
-								}
-							</>
+								</>
+								:
+								<TouchableOpacity style={style.editButton} onPress={() => setEdittype('information')}>
+									<Text style={style.editButtonHeader}>Edit Your Location Address and Logo</Text>
+								</TouchableOpacity>
 							:
-							<ActivityIndicator marginTop={'50%'} size="small"/>
+							<ActivityIndicator marginTop={'10%'} size="small"/>
+						}
+
+						{!daysLoading ?
+							editType == 'hours' ? 
+								<>
+									<Text style={style.header}>Set your hours</Text>
+
+									<View style={style.days}>
+										{days.map((day, index) => (
+											<View key={index} style={{ marginVertical: 20 }}>
+												<Text style={style.dayHeader}>{day.header}</Text>
+												<View style={style.timeSelectionContainer}>
+													<View style={style.timeSelection}>
+														<View style={style.selection}>
+															<TouchableOpacity onPress={() => updateTime(index, "hour", "up", true)}>
+																<AntDesign name="up" size={30}/>
+															</TouchableOpacity>
+															<Text style={style.selectionHeader}>{day.opentime.hour}</Text>
+															<TouchableOpacity onPress={() => updateTime(index, "hour", "down", true)}>
+																<AntDesign name="down" size={30}/>
+															</TouchableOpacity>
+														</View>
+														<Text style={style.selectionDiv}>:</Text>
+														<View style={style.selection}>
+															<TouchableOpacity onPress={() => updateTime(index, "minute", "up", true)}>
+																<AntDesign name="up" size={30}/>
+															</TouchableOpacity>
+															<Text style={style.selectionHeader}>{day.opentime.minute}</Text>
+															<TouchableOpacity onPress={() => updateTime(index, "minute", "down", true)}>
+																<AntDesign name="down" size={30}/>
+															</TouchableOpacity>
+														</View>
+														<View style={style.selection}>
+															<TouchableOpacity onPress={() => updateTime(index, "period", "up", true)}>
+																<AntDesign name="up" size={30}/>
+															</TouchableOpacity>
+															<Text style={style.selectionHeader}>{day.opentime.period}</Text>
+															<TouchableOpacity onPress={() => updateTime(index, "period", "down", true)}>
+																<AntDesign name="down" size={30}/>
+															</TouchableOpacity>
+														</View>
+													</View>
+													<View style={style.timeSelection}>
+														<View style={style.selection}>
+															<TouchableOpacity onPress={() => updateTime(index, "hour", "up", false)}>
+																<AntDesign name="up" size={30}/>
+															</TouchableOpacity>
+															<Text style={style.selectionHeader}>{day.closetime.hour}</Text>
+															<TouchableOpacity onPress={() => updateTime(index, "hour", "down", false)}>
+																<AntDesign name="down" size={30}/>
+															</TouchableOpacity>
+														</View>
+														<Text style={style.selectionDiv}>:</Text>
+														<View style={style.selection}>
+															<TouchableOpacity onPress={() => updateTime(index, "minute", "up", false)}>
+																<AntDesign name="up" size={30}/>
+															</TouchableOpacity>
+															<Text style={style.selectionHeader}>{day.closetime.minute}</Text>
+															<TouchableOpacity onPress={() => updateTime(index, "minute", "down", false)}>
+																<AntDesign name="down" size={30}/>
+															</TouchableOpacity>
+														</View>
+														<View style={style.selection}>
+															<TouchableOpacity onPress={() => updateTime(index, "period", "up", false)}>
+																<AntDesign name="up" size={30}/>
+															</TouchableOpacity>
+															<Text style={style.selectionHeader}>{day.closetime.period}</Text>
+															<TouchableOpacity onPress={() => updateTime(index, "period", "down", false)}>
+																<AntDesign name="down" size={30}/>
+															</TouchableOpacity>
+														</View>
+													</View>
+												</View>
+											</View>
+										))}
+									</View>
+
+									<TouchableOpacity style={style.updateButton} disabled={loading} onPress={() => updateYourHours()}>
+										<Text>Save</Text>
+									</TouchableOpacity>
+								</>
+								:
+								<TouchableOpacity style={style.editButton} onPress={() => setEdittype('hours')}>
+									<Text style={style.editButtonHeader}>Edit Your Hour(s)</Text>
+								</TouchableOpacity>
+							:
+							<ActivityIndicator marginTop={'10%'} size="small"/>
+						}
+
+						{!accountHoldersloading ?
+							editType == 'users' ? 
+								<View style={style.accountHolders}>
+									<Text style={style.accountHoldersHeader}>Login User(s)</Text>
+
+									<TouchableOpacity style={style.accountHoldersAdd} onPress={() => {
+										setAccountform({
+											...accountForm,
+											show: true,
+											type: 'add'
+										})
+									}}>
+										<Text>Add a Login User</Text>
+									</TouchableOpacity>
+
+									{accountHolders.map((info, index) => (
+										<View key={info.key} style={style.account}>
+											<Text style={style.accountHeader}>#{index + 1}:</Text>
+
+											<View style={style.accountEdit}>
+												<Text style={style.accountEditHeader}>{info.cellnumber}</Text>
+												{info.id == ownerid && (
+													<TouchableOpacity style={style.accountEditTouch} onPress={() => {
+														setAccountform({
+															...accountForm,
+															show: true,
+															type: 'edit',
+															username: info.username,
+															cellnumber: info.cellnumber,
+															password: '',
+															confirmPassword: '',
+															profile: { uri: logo_url + info.profile, name: info.profile }
+														})
+													}}>
+														<Text>Change Info</Text>
+													</TouchableOpacity>
+												)}
+											</View>
+										</View>
+									))}
+								</View>
+								:
+								<TouchableOpacity style={style.editButton} onPress={() => setEdittype('users')}>
+									<Text style={style.editButtonHeader}>Edit Co-Owners Information</Text>
+								</TouchableOpacity>
+							:
+							<ActivityIndicator marginTop={'10%'} size="small"/>
+						}
+
+						{!bankAccountsloading ?
+							editType == 'bankaccounts' ? 
+								<View style={style.bankaccountHolders}>
+									<Text style={style.bankaccountHolderHeader}>Bank Account(s)</Text>
+
+									<TouchableOpacity style={style.bankaccountHolderAdd} onPress={() => openBankAccountForm()}>
+										<Text>Add a bank account</Text>
+									</TouchableOpacity>
+
+									{bankAccounts.map((info, index) => (
+										<View key={info.key} style={style.bankaccount}>
+											<View style={style.bankaccountRow}>
+												<Text style={style.bankaccountHeader}>#{index + 1}:</Text>
+												<View style={style.bankaccountNumberHolder}>
+													<Text style={style.bankaccountNumberHeader}>{info.number}</Text>
+												</View>
+											</View>
+											<View style={style.bankaccountActions}>
+												<TouchableOpacity style={info.default ? style.bankaccountActionDisabled : style.bankaccountAction} disabled={info.default} onPress={() => useBankAccount(info.bankid)}>
+													<Text style={info.default ? style.bankaccountActionHeaderDisabled : style.bankaccountActionHeader}>Set default</Text>
+												</TouchableOpacity>
+												<TouchableOpacity style={style.bankaccountAction} onPress={() => editBankAccount(info.bankid, index)}>
+													<Text style={style.bankaccountActionHeader}>Edit</Text>
+												</TouchableOpacity>
+												<TouchableOpacity style={style.bankaccountAction} onPress={() => deleteBankAccount(info.bankid, index)}>
+													<Text style={style.bankaccountActionHeader}>Remove</Text>
+												</TouchableOpacity>
+											</View>
+										</View>
+									))}
+								</View>
+								:
+								<TouchableOpacity style={style.editButton} onPress={() => setEdittype('bankaccounts')}>
+									<Text style={style.editButtonHeader}>Edit Bank account(s) information</Text>
+								</TouchableOpacity>
+							:
+							<ActivityIndicator marginTop={'10%'} size="small"/>
 						}
 					</View>
 				</ScrollView>
@@ -1151,7 +1207,7 @@ export default function settings(props) {
 										})} value={accountForm.confirmPassword} autoCorrect={false}/>
 									</View>
 
-									{accountForm.errorMsg ? <Text style={style.errorMsg}>{accountForm.errorMsg}</Text> : null}
+									{accountForm.errormsg ? <Text style={style.errorMsg}>{accountForm.errormsg}</Text> : null}
 									{accountForm.loading ? <ActivityIndicator marginBottom={10} size="small"/> : null}
 
 									<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
@@ -1230,11 +1286,11 @@ export default function settings(props) {
 										})} value={bankAccountForm.transitNumber} autoCorrect={false}/>
 									</View>
 
-									{bankAccountForm.errorMsg ? <Text style={style.errorMsg}>{bankAccountForm.errorMsg}</Text> : null}
+									{bankAccountForm.errormsg ? <Text style={style.errorMsg}>{bankAccountForm.errormsg}</Text> : null}
 									{bankAccountForm.loading ? <ActivityIndicator marginBottom={10} size="small"/> : null}
 
 									<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-										<TouchableOpacity style={style.bankaccountformSubmit} onPress={() => {
+										<TouchableOpacity style={style.bankaccountformSubmit} disabled={bankAccountForm.loading} onPress={() => {
 											if (bankAccountForm.type == 'add') {
 												addNewBankAccount()
 											} else {
@@ -1257,7 +1313,7 @@ export default function settings(props) {
 const style = StyleSheet.create({
 	settings: { backgroundColor: 'white', height: '100%', width: '100%' },
 	box: { alignItems: 'center', height: '100%', width: '100%' },
-	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, height: 30, marginTop: 20, marginHorizontal: 20, padding: 5, width: 100 },
+	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, height: 30, marginVertical: 20, marginHorizontal: 20, padding: 5, width: 100 },
 	backHeader: { fontFamily: 'appFont', fontSize: 20 },
 	boxHeader: { fontFamily: 'appFont', fontSize: 50, textAlign: 'center' },
 	header: { fontFamily: 'appFont', fontSize: 20, marginTop: 20, textAlign: 'center' },

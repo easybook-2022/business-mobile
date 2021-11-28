@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react'
-import { AsyncStorage, Dimensions, ScrollView, View, Text, TextInput, Image, Keyboard, TouchableOpacity, KeyboardAvoidingView, StyleSheet } from 'react-native'
+import React, { useEffect, useState, useRef } from 'react'
+import { ActivityIndicator, Dimensions, ScrollView, View, Text, TextInput, Image, Keyboard, TouchableOpacity, KeyboardAvoidingView, StyleSheet } from 'react-native'
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import * as FileSystem from 'expo-file-system'
@@ -29,22 +30,22 @@ export default function addservice(props) {
 	const [image, setImage] = useState({ uri: '', name: '' })
 	const [price, setPrice] = useState('')
 	const [duration, setDuration] = useState('')
+	const [loaded, setLoaded] = useState(serviceid ? false : true)
+
 	const [errorMsg, setErrormsg] = useState('')
+
+	const isMounted = useRef(null)
 
 	const addTheNewService = async() => {
 		const locationid = await AsyncStorage.getItem("locationid")
 
-		if (name && image.uri && (price && !isNaN(price)) && duration) {
-			const data = { locationid, menuid, name, info, image, price, duration }
+		if (name && (price && !isNaN(price)) && duration) {
+			const data = { locationid, menuid, name, info, image, price, duration, permission }
 
 			addNewService(data)
 				.then((res) => {
 					if (res.status == 200) {
-						if (!res.data.errormsg) {
-							return res.data
-						} else {
-							setErrormsg(res.data.errormsg)
-						}
+						return res.data
 					}
 				})
 				.then((res) => {
@@ -54,19 +55,15 @@ export default function addservice(props) {
 					}
 				})
 				.catch((err) => {
-					if (err.response.status == 400) {
-						
+					if (err.response && err.response.status == 400) {
+						const { errormsg, status } = err.response.data
+
+						setErrormsg(errormsg)
 					}
 				})
 		} else {
 			if (!name) {
 				setErrormsg("Please enter the service name")
-
-				return
-			}
-
-			if (!image.uri) {
-				setErrormsg("Please take a good photo")
 
 				return
 			}
@@ -91,15 +88,13 @@ export default function addservice(props) {
 	const updateTheService = async() => {
 		const locationid = await AsyncStorage.getItem("locationid")
 
-		if (name && image.uri && (price && !isNaN(price)) && duration) {
-			const data = { locationid, menuid, serviceid, name, info, image, price, duration }
+		if (name && (price && !isNaN(price)) && duration) {
+			const data = { locationid, menuid, serviceid, name, info, image, price, duration, permission }
 
 			updateService(data)
 				.then((res) => {
 					if (res.status == 200) {
 						return res.data
-					} else {
-						setErrormsg(res.data.errormsg)
 					}
 				})
 				.then((res) => {
@@ -109,19 +104,13 @@ export default function addservice(props) {
 					}
 				})
 				.catch((err) => {
-					if (err.response.status == 400) {
-						
+					if (err.response && err.response.status == 400) {
+
 					}
 				})
 		} else {
 			if (!name) {
 				setErrormsg("Please enter the service name")
-
-				return
-			}
-
-			if (!image.uri) {
-				setErrormsg("Please take a good photo")
 
 				return
 			}
@@ -186,12 +175,12 @@ export default function addservice(props) {
 		}
 	}
 	const openCamera = async() => {
-		const { status } = await Camera.getPermissionsAsync()
+		const { status } = await Camera.getCameraPermissionsAsync()
 
 		if (status == 'granted') {
 			setPermission(status === 'granted')
 		} else {
-			const { status } = await Camera.requestPermissionsAsync()
+			const { status } = await Camera.requestCameraPermissionsAsync()
 
 			setPermission(status === 'granted')
 		}
@@ -205,7 +194,7 @@ export default function addservice(props) {
 				}
 			})
 			.then((res) => {
-				if (res) {
+				if (res && isMounted.current == true) {
 					const { serviceInfo } = res
 
 					setName(serviceInfo.name)
@@ -213,21 +202,26 @@ export default function addservice(props) {
 					setImage({ uri: logo_url + serviceInfo.image, name: serviceInfo.image })
 					setPrice(serviceInfo.price.toString())
 					setDuration(serviceInfo.duration)
+					setLoaded(true)
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
 	}
 
 	useEffect(() => {
-		(async() => openCamera())()
+		isMounted.current = true
+
+		openCamera()
 
 		if (serviceid) {
 			getTheServiceInfo()
 		}
+
+		return () => isMounted.current = false
 	}, [])
 
 	if (permission === null) return <View/>
@@ -236,60 +230,64 @@ export default function addservice(props) {
 		<View style={style.addservice}>
 			<View style={{ paddingBottom: offsetPadding }}>
 				<KeyboardAvoidingView behavior="padding">
-					<ScrollView style={{ backgroundColor: '#EAEAEA' }} showsVerticalScrollIndicator={false}>
-						<View style={style.box}>
-							<Text style={style.addHeader}>Enter service info</Text>
-							
-							<TextInput style={style.addInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Service name" onChangeText={(name) => setName(name)} value={name}/>
-							<TextInput style={style.infoInput} multiline={true} onSubmitEditing={() => Keyboard.dismiss()} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Anything you want to say about this service (optional)" onChangeText={(info) => setInfo(info)} value={info}/>
+					{loaded ? 
+						<ScrollView style={{ backgroundColor: '#EAEAEA' }} showsVerticalScrollIndicator={false}>
+							<View style={style.box}>
+								<Text style={style.addHeader}>Enter service info</Text>
+								
+								<TextInput style={style.addInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Service name" onChangeText={(name) => setName(name)} value={name} autoCapitalize="none"/>
+								<TextInput style={style.infoInput} multiline={true} onSubmitEditing={() => Keyboard.dismiss()} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Anything you want to say about this service (optional)" onChangeText={(info) => setInfo(info)} value={info} autoCapitalize="none"/>
 
-							<View style={style.cameraContainer}>
-								<Text style={style.cameraHeader}>Service photo</Text>
+								<View style={style.cameraContainer}>
+									<Text style={style.cameraHeader}>Service photo</Text>
 
-								{image.uri ? (
-									<>
-										<Image style={style.camera} source={{ uri: image.uri }}/>
+									{image.uri ? (
+										<>
+											<Image style={style.camera} source={{ uri: image.uri }}/>
 
-										<TouchableOpacity style={style.cameraAction} onPress={() => setImage({ uri: '', name: '' })}>
-											<AntDesign name="closecircleo" size={30}/>
-										</TouchableOpacity>
-									</>
-								) : (
-									<>
-										<Camera style={style.camera} type={camType} ref={r => {setCamcomp(r)}}/>
+											<TouchableOpacity style={style.cameraAction} onPress={() => setImage({ uri: '', name: '' })}>
+												<AntDesign name="closecircleo" size={30}/>
+											</TouchableOpacity>
+										</>
+									) : (
+										<>
+											<Camera style={style.camera} type={camType} ref={r => {setCamcomp(r)}}/>
 
-										<TouchableOpacity style={style.cameraAction} onPress={snapPhoto.bind(this)}>
-											<Entypo name="camera" size={30}/>
-										</TouchableOpacity>
-									</>
-								)}	
+											<TouchableOpacity style={style.cameraAction} onPress={snapPhoto.bind(this)}>
+												<Entypo name="camera" size={30}/>
+											</TouchableOpacity>
+										</>
+									)}	
+								</View>
+
+								<View style={style.inputBox}>
+									<Text style={style.inputHeader}>Service price</Text>
+									<TextInput style={style.inputValue} placeholderTextColor="rgba(0, 0, 0, 0.5)" placeholder="4.99" onChangeText={(price) => setPrice(price.toString())} value={price} autoCapitalize="none"/>
+								</View>
+
+								<View style={style.inputBox}>
+									<Text style={style.inputHeader}>Service duration</Text>
+									<TextInput style={style.inputValue} placeholderTextColor="rgba(0, 0, 0, 0.5)" placeholder="4 hours" onChangeText={(duration) => setDuration(duration)} value={duration} autoCapitalize="none"/>
+								</View>
+
+								<Text style={style.errorMsg}>{errorMsg}</Text>
+
+								<View style={style.addActions}>
+									<TouchableOpacity style={style.addAction} onPress={() => {
+										if (!serviceid) {
+											addTheNewService()
+										} else {
+											updateTheService()
+										}
+									}}>
+										<Text>{!serviceid ? "Done" : "Save"}</Text>
+									</TouchableOpacity>
+								</View>
 							</View>
-
-							<View style={style.inputBox}>
-								<Text style={style.inputHeader}>Service price</Text>
-								<TextInput style={style.inputValue} placeholderTextColor="rgba(0, 0, 0, 0.5)" placeholder="4.99" onChangeText={(price) => setPrice(price.toString())} value={price}/>
-							</View>
-
-							<View style={style.inputBox}>
-								<Text style={style.inputHeader}>Service duration</Text>
-								<TextInput style={style.inputValue} placeholderTextColor="rgba(0, 0, 0, 0.5)" placeholder="4 hours" onChangeText={(duration) => setDuration(duration)} value={duration}/>
-							</View>
-
-							<Text style={style.errorMsg}>{errorMsg}</Text>
-
-							<View style={style.addActions}>
-								<TouchableOpacity style={style.addAction} onPress={() => {
-									if (!serviceid) {
-										addTheNewService()
-									} else {
-										updateTheService()
-									}
-								}}>
-									<Text>{!serviceid ? "Done" : "Save"}</Text>
-								</TouchableOpacity>
-							</View>
-						</View>
-					</ScrollView>
+						</ScrollView>
+						:
+						<ActivityIndicator size="large" marginTop={screenHeight / 2}/>
+					}
 				</KeyboardAvoidingView>
 			</View>
 		</View>
@@ -297,7 +295,7 @@ export default function addservice(props) {
 }
 
 const style = StyleSheet.create({
-	addservice: { backgroundColor: 'white' },
+	addservice: { backgroundColor: 'white', height: '100%', width: '100%' },
 	box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', paddingVertical: 10, width: '100%' },
 	addHeader: { fontWeight: 'bold', paddingVertical: 5 },
 	addInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, fontSize: 13, marginBottom: 5, padding: 5, width: '80%' },

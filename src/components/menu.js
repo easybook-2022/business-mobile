@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import { AsyncStorage, ActivityIndicator, Dimensions, View, FlatList, Text, TextInput, Image, TouchableOpacity, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, ScrollView, StyleSheet, Modal } from 'react-native'
+import { ActivityIndicator, Dimensions, View, FlatList, Text, TextInput, Image, TouchableOpacity, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, ScrollView, StyleSheet, Modal } from 'react-native'
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import * as FileSystem from 'expo-file-system'
@@ -57,6 +58,7 @@ export default function menu(props) {
 		const locationid = await AsyncStorage.getItem("locationid")
 		const data = { ownerid, locationid, menuid }
 
+		setLoaded(false)
 		setShowmenus(false)
 		setMenus([])
 		setNummenus(0)
@@ -89,13 +91,13 @@ export default function menu(props) {
 						getAllServices()
 					} else if (msg == "products") {
 						getAllProducts()
+					} else {
+						setLoaded(true)
 					}
-
-					setLoaded(true)
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -117,10 +119,11 @@ export default function menu(props) {
 					setMenus(res.menus)
 					setNummenus(res.nummenus)
 					setShowmenus(true)
+					setLoaded(true)
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -129,19 +132,12 @@ export default function menu(props) {
 		const ownerid = await AsyncStorage.getItem("ownerid")
 		const locationid = await AsyncStorage.getItem("locationid")
 		const { name, info, image } = menuForm
-		const data = { ownerid, locationid, parentMenuid: menuid, name, info, image }
+		const data = { ownerid, locationid, parentMenuid: menuid, name, info, image, permission }
 
 		addNewMenu(data)
 			.then((res) => {
 				if (res.status == 200) {
-					if (!res.data.errormsg) {
-						return res.data
-					} else {
-						setMenuform({
-							...menuForm,
-							errormsg: res.data.errormsg
-						})
-					}
+					return res.data
 				}
 			})
 			.then((res) => {
@@ -155,8 +151,13 @@ export default function menu(props) {
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
-					
+				if (err.response && err.response.status == 400) {
+					const { errormsg, status } = err.response.data
+
+					setMenuform({
+						...menuForm,
+						errormsg
+					})
 				}
 			})
 	}
@@ -176,7 +177,7 @@ export default function menu(props) {
 					}
 				})
 				.catch((err) => {
-					if (err.response.status == 400) {
+					if (err.response && err.response.status == 400) {
 						
 					}
 				})
@@ -194,7 +195,7 @@ export default function menu(props) {
 					}
 				})
 				.catch((err) => {
-					if (err.response.status == 400) {
+					if (err.response && err.response.status == 400) {
 						
 					}
 				})
@@ -222,7 +223,7 @@ export default function menu(props) {
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -255,7 +256,7 @@ export default function menu(props) {
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -277,10 +278,11 @@ export default function menu(props) {
 					setProducts(res.products)
 					setNumproducts(res.numproducts)
 					setShowproducts(true)
+					setLoaded(true)
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -301,7 +303,7 @@ export default function menu(props) {
 					}
 				})
 				.catch((err) => {
-					if (err.response.status == 400) {
+					if (err.response && err.response.status == 400) {
 						
 					}
 				})
@@ -309,19 +311,15 @@ export default function menu(props) {
 			removeProduct(id)
 				.then((res) => {
 					if (res.status == 200) {
-						if (!res.data.errormsg) {
-							return res.data
-						} else {
-							alert("Error removing product")
-						}
+						return res.data
 					}
 				})
 				.then((res) => {
 					if (res) getTheInfo()
 				})
 				.catch((err) => {
-					if (err.response.status == 400) {
-						
+					if (err.response && err.response.status == 400) {
+
 					}
 				})
 		}
@@ -329,8 +327,9 @@ export default function menu(props) {
 
 	// services
 	const getAllServices = async() => {
+		const userid = await AsyncStorage.getItem("userid")
 		const locationid = await AsyncStorage.getItem("locationid")
-		const data = { locationid, menuid: menuid }
+		const data = { userid, locationid, menuid: menuid }
 
 		getServices(data)
 			.then((res) => {
@@ -343,10 +342,11 @@ export default function menu(props) {
 					setServices(res.services)
 					setNumservices(res.numservices)
 					setShowservices(true)
+					setLoaded(true)
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -367,7 +367,7 @@ export default function menu(props) {
 					}
 				})
 				.catch((err) => {
-					if (err.response.status == 400) {
+					if (err.response && err.response.status == 400) {
 						
 					}
 				})
@@ -375,11 +375,7 @@ export default function menu(props) {
 			removeService(id)
 				.then((res) => {
 					if (res.status == 200) {
-						if (!res.data.errormsg) {
-							return res.data
-						} else {
-							alert("Error removing service")
-						}
+						return res.data
 					}
 				})
 				.then((res) => {
@@ -389,7 +385,7 @@ export default function menu(props) {
 					}
 				})
 				.catch((err) => {
-					if (err.response.status == 400) {
+					if (err.response && err.response.status == 400) {
 						
 					}
 				})
@@ -441,12 +437,12 @@ export default function menu(props) {
 		}
 	}
 	const openCamera = async() => {
-		const { status } = await Camera.getPermissionsAsync()
+		const { status } = await Camera.getCameraPermissionsAsync()
 
 		if (status == 'granted') {
 			setPermission(status === 'granted')
 		} else {
-			const { status } = await Camera.requestPermissionsAsync()
+			const { status } = await Camera.requestCameraPermissionsAsync()
 
 			setPermission(status === 'granted')
 		}
@@ -581,7 +577,7 @@ export default function menu(props) {
 
 					<View style={style.bottomNavs}>
 						<View style={{ flexDirection: 'row' }}>
-							<TouchableOpacity style={style.bottomNav} onPress={() => props.navigation.navigate("settings")}>
+							<TouchableOpacity style={style.bottomNav} onPress={() => props.navigation.navigate("settings", { refetch: () => getTheInfo() })}>
 								<AntDesign name="setting" size={30}/>
 							</TouchableOpacity>
 
@@ -647,7 +643,7 @@ export default function menu(props) {
 									<Text style={style.errorMsg}>{menuForm.errormsg}</Text>
 
 									<View style={style.addActions}>
-										<TouchableOpacity style={style.addAction} onPress={() => setMenuform({ ...menuForm, show: false, name: '', info: '', image: { uri: '', name: ''} })}>
+										<TouchableOpacity style={style.addAction} onPress={() => setMenuform({ ...menuForm, show: false, name: '', info: '', image: { uri: '', name: ''}, errormsg: '' })}>
 											<Text>Cancel</Text>
 										</TouchableOpacity>
 										<TouchableOpacity style={style.addAction} onPress={() => {
@@ -785,7 +781,7 @@ export default function menu(props) {
 					)}
 				</View>
 				:
-				<ActivityIndicator size="large"/>
+				<ActivityIndicator size="large" marginTop={(height / 2) - offsetPadding}/>
 			}
 		</View>
 	)

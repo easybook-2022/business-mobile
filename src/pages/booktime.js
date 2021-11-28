@@ -1,23 +1,25 @@
-import React, { useEffect, useState } from 'react'
-import { AsyncStorage, ActivityIndicator, Dimensions, ScrollView, View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import React, { useEffect, useState, useRef } from 'react'
+import { ActivityIndicator, Dimensions, ScrollView, View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { getServiceInfo } from '../apis/services'
 import { getAppointmentInfo, rescheduleAppointment } from '../apis/schedules'
 import { getLocationHours } from '../apis/locations'
+import { socket } from '../../assets/info'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import Entypo from 'react-native-vector-icons/Entypo'
 
-const { height, width } = Dimensions.get('window')
-const offsetPadding = Constants.statusBarHeight
-const screenHeight = height - (offsetPadding * 2)
-const months = ['January', 'February', 'March', 'April', 'May', 'Jun', 'July', 'August', 'September', 'October', 'November', 'December']
-const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-const pushtime = 1000 * (60 * 10)
-
 export default function booktime(props) {
+	const { height, width } = Dimensions.get('window')
+	const offsetPadding = Constants.statusBarHeight
+	const months = ['January', 'February', 'March', 'April', 'May', 'Jun', 'July', 'August', 'September', 'October', 'November', 'December']
+	const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+	const pushtime = 1000 * (60 * 10)
+
 	const { appointmentid, refetch } = props.route.params
 
+	const [ownerId, setOwnerid] = useState(null)
 	const [name, setName] = useState('')
 	const [serviceId, setServiceid] = useState(0)
 
@@ -60,8 +62,12 @@ export default function booktime(props) {
 	const [loaded, setLoaded] = useState(false)
 
 	const [confirm, setConfirm] = useState({ show: false, timeheader: "", requested: false })
+
+	const isMounted = useRef(null)
 	
 	const getTheAppointmentInfo = async() => {
+		const ownerid = await AsyncStorage.getItem("ownerid")
+
 		getAppointmentInfo(appointmentid)
 			.then((res) => {
 				if (res.status == 200) {
@@ -69,16 +75,17 @@ export default function booktime(props) {
 				}
 			})
 			.then((res) => {
-				if (res) {
+				if (res && isMounted.current == true) {
 					const { locationId, name } = res.appointmentInfo
 
+					setOwnerid(ownerid)
 					setName(name)
 					getTheLocationHours(locationId)
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
-					
+				if (err.response && err.response.status == 400) {
+
 				}
 			})
 	}
@@ -98,9 +105,6 @@ export default function booktime(props) {
 
 					let openHour = openTime.hour, openMinute = openTime.minute, openPeriod = openTime.period
 					let closeHour = closeTime.hour, closeMinute = closeTime.minute, closePeriod = closeTime.period
-
-					openHour = openPeriod == "PM" ? parseInt(openHour) + 12 : openHour
-					closeHour = closePeriod == "PM" ? parseInt(closeHour) + 12 : closeHour
 
 					const currTime = new Date(Date.now())
 					const currDay = days[currTime.getDay()]
@@ -164,7 +168,7 @@ export default function booktime(props) {
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -333,7 +337,7 @@ export default function booktime(props) {
 		const selecteddate = new Date(time)
 		const selectedtime = selecteddate.getHours() + ":" + selecteddate.getMinutes()
 		const dateInfo = Date.parse(month + " " + date + ", " + year + " " + selectedtime).toString()
-		const data = { appointmentid, time: dateInfo }
+		let data = { appointmentid, time: dateInfo, type: "rescheduleAppointment" }
 
 		rescheduleAppointment(data)
 			.then((res) => {
@@ -343,20 +347,23 @@ export default function booktime(props) {
 			})
 			.then((res) => {
 				if (res) {
-					setConfirm({ ...confirm, requested: true })
-					refetch()
-					props.navigation.goBack()
+					data = { ...data, receiver: res.receiver }
+					socket.emit("socket/rescheduleAppointment", data, () => setConfirm({ ...confirm, requested: true }))
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
 	}
 	
 	useEffect(() => {
+		isMounted.current = true
+
 		getTheAppointmentInfo()
+
+		return () => isMounted.current = false
 	}, [])
 	
 	return (
@@ -426,13 +433,13 @@ export default function booktime(props) {
 											</TouchableOpacity>
 										)}
 
-										{info.timetaken && (
+										{(info.timetaken && !info.timepassed) && (
 											<TouchableOpacity style={style.selected} disabled={true} onPress={() => {}}>
 												<Text style={{ color: 'white', fontSize: 15 }}>{info.header}</Text>
 											</TouchableOpacity>
 										)}
 
-										{info.timepassed && (
+										{(!info.timetaken && info.timepassed) && (
 											<TouchableOpacity style={style.selectedPassed} disabled={true} onPress={() => {}}>
 												<Text style={{ color: 'black', fontSize: 15 }}>{info.header}</Text>
 											</TouchableOpacity>

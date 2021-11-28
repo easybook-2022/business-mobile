@@ -1,39 +1,38 @@
 {
+  "main": "index.js",
   "scripts": {
-    "start": "react-native start",
-    "android": "react-native run-android",
-    "ios": "react-native run-ios",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
     "web": "expo start --web",
-    "eject": "expo eject"
+    "start": "react-native start"
   },
   "dependencies": {
-    "@react-navigation/native": "^6.0.2",
-    "@react-navigation/native-stack": "^6.1.0",
-    "axios": "^0.21.4",
-    "expo": "~42.0.1",
-    "expo-camera": "~11.2.2",
-    "expo-font": "~9.2.1",
-    "expo-image-manipulator": "~9.2.2",
-    "expo-location": "~12.1.2",
-    "expo-notifications": "~0.12.3",
-    "expo-splash-screen": "~0.11.2",
-    "expo-status-bar": "~1.0.4",
-    "expo-updates": "~0.8.1",
-    "react": "16.13.1",
-    "react-dom": "16.13.1",
-    "react-native": "~0.63.4",
+    "@react-native-async-storage/async-storage": "^1.15.9",
+    "@react-native-community/netinfo": "6.0.2",
+    "@react-navigation/native": "^6.0.6",
+    "@react-navigation/native-stack": "^6.2.5",
+    "axios": "^0.24.0",
+    "expo": "~43.0.0",
+    "expo-camera": "~12.0.3",
+    "expo-font": "~10.0.3",
+    "expo-image-manipulator": "~10.1.2",
+    "expo-location": "~13.0.4",
+    "expo-notifications": "~0.13.3",
+    "expo-splash-screen": "~0.13.4",
+    "expo-status-bar": "~1.1.0",
+    "expo-updates": "~0.10.5",
+    "react": "17.0.1",
+    "react-dom": "17.0.1",
+    "react-native": "0.64.2",
     "react-native-gesture-handler": "~1.10.2",
-    "react-native-network-info": "^5.2.1",
     "react-native-reanimated": "~2.2.0",
-    "react-native-safe-area-context": "3.2.0",
-    "react-native-screens": "~3.4.0",
-    "react-native-unimodules": "~0.14.5",
-    "react-native-web": "~0.13.12"
+    "react-native-safe-area-context": "3.3.2",
+    "react-native-screens": "~3.8.0",
+    "react-native-web": "0.17.1",
+    "socket.io-client": "^4.3.2"
   },
   "devDependencies": {
-    "@babel/core": "^7.9.0"
+    "@babel/core": "^7.12.9"
   },
-  "private": true,
-  "name": "easygo-business",
-  "version": "1.0.0"
+  "private": true
 }

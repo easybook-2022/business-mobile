@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "EasgyGO(Business)",
+    "name": "EasyGO(Business)",
     "slug": "easygo-business",
     "version": "0.0.2",
     "orientation": "portrait",
@@ -9,9 +9,6 @@
       "image": "./assets/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
-    },
-    "updates": {
-      "fallbackToCacheTimeout": 0
     },
     "assetBundlePatterns": [
       "**/*"
@@ -23,6 +20,9 @@
       "infoPlist": {
         "NSCameraUsageDescription": "EasyGO (Business) uses camera to allow you to capture a photo of your location/menu/product/service",
         "NSMicrophoneUsageDescription": ""
+      },
+      "entitlements": {
+        "com.apple.developer.networking.wifi-info": "true"
       }
     },
     "android": {
@@ -31,5 +31,6 @@
     "notification": {
       "icon": "./assets/notification.png"
     }
-  }
+  },
+  "name": "EasyGO(Business)"
 }

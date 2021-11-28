@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react'
-import { AsyncStorage, ActivityIndicator, Dimensions, ScrollView, View, FlatList, Text, Image, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react'
+import { ActivityIndicator, Dimensions, ScrollView, View, FlatList, Text, Image, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
-import { logo_url } from '../../assets/info'
+import { socket, logo_url } from '../../assets/info'
 import { getScheduleInfo, getDiningOrders, deliverRound } from '../apis/schedules'
 
 const { height, width } = Dimensions.get('window')
@@ -11,13 +12,19 @@ const screenHeight = height - (offsetPadding * 2)
 export default function diningorders(props) {
 	const { scheduleid, refetch } = props.route.params
 	
+	const [ownerId, setOwnerid] = useState(null)
 	const [name, setName] = useState('')
 	const [table, setTable] = useState('')
 	const [timeStr, setTimestr] = useState('')
 	const [rounds, setRounds] = useState([])
 	const [loaded, setLoaded] = useState(false)
+	const [showDisabledScreen, setShowdisabledscreen] = useState(false)
+
+	const isMounted = useRef(null)
 	
-	const getTheScheduleInfo = () => {
+	const getTheScheduleInfo = async() => {
+		const ownerid = await AsyncStorage.getItem("ownerid")
+
 		getScheduleInfo(scheduleid)
 			.then((res) => {
 				if (res.status == 200) {
@@ -25,24 +32,27 @@ export default function diningorders(props) {
 				}
 			})
 			.then((res) => {
-				if (res) {
-					const { name, table, time } = res.scheduleInfo
-					const unix = parseInt(time)
+				if (res && isMounted.current == true) {
+					socket.emit("socket/business/login", ownerid, () => {
+						const { name, table, time } = res.scheduleInfo
+						const unix = parseInt(time)
 
-					let date = new Date(unix).toString().split(" ")
-					let timereserved = date[4].split(":")
+						let date = new Date(unix).toString().split(" ")
+						let timereserved = date[4].split(":")
 
-					let hour = timereserved[0]
-					let minute = timereserved[1]
-					let period = hour > 12 ? "PM" : "AM"
+						let hour = timereserved[0]
+						let minute = timereserved[1]
+						let period = hour > 12 ? "PM" : "AM"
 
-					hour = hour > 12 ? hour - 12 : hour
-
-					setTimestr(hour + ":" + minute + " " + period)
+						hour = hour > 12 ? hour - 12 : hour
+						
+						setOwnerid(ownerid)
+						setTimestr(hour + ":" + minute + " " + period)
+					})
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -55,19 +65,19 @@ export default function diningorders(props) {
 				}
 			})
 			.then((res) => {
-				if (res) {
+				if (res && isMounted.current == true) {
 					setRounds(res.rounds)
 					setLoaded(true)
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
 	}
 	const deliverTheRound = (roundid) => {
-		const data = { scheduleid, roundid }
+		let data = { ownerid: ownerId, scheduleid, roundid, type: "deliverRound" }
 
 		deliverRound(data)
 			.then((res) => {
@@ -86,25 +96,69 @@ export default function diningorders(props) {
 					})
 
 					setRounds(newRounds)
+
+					data = { ...data, receiver: res.receiver }
+					socket.emit("socket/deliverRound", data)
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
 	}
 
+	const startWebsocket = () => {
+		socket.on("updateRounds", data => {
+			const receiver = "owner" + ownerId
+
+			if (data.type == "deliverRound") {
+				const newRounds = [...rounds]
+
+				newRounds.forEach(function (round, index) {
+					if (round.id == data.roundid) {
+						newRounds.splice(index, 1)
+					}
+				})
+
+				setRounds(newRounds)
+			} else if (data.type == "sendOrders") {
+				getTheOrders()
+			}
+		})
+		socket.io.on("open", () => {
+			if (ownerId) {
+				socket.emit("socket/business/login", ownerId, () => setShowdisabledscreen(false))
+			}
+		})
+		socket.io.on("close", () => ownerId ? setShowdisabledscreen(true) : {})
+	}
+
 	useEffect(() => {
+		isMounted.current = true
+
 		getTheScheduleInfo()
 		getTheOrders()
+
+		return () => isMounted.current = false
 	}, [])
+
+	useEffect(() => {
+		startWebsocket()
+
+		return () => {
+			socket.off("updateRounds")
+		}
+	}, [rounds.length])
 
 	return (
 		<View style={{ paddingVertical: offsetPadding }}>
 			<View style={style.box}>
 				<TouchableOpacity style={style.back} onPress={() => {
-					refetch()
+					if (refetch) {
+						refetch()
+					}
+
 					props.navigation.goBack()
 				}}>
 					<Text style={style.backHeader}>Back</Text>
@@ -179,6 +233,26 @@ export default function diningorders(props) {
 					<ActivityIndicator size="large" marginTop={'50%'}/>
 				}
 			</View>
+
+			{showDisabledScreen && (
+				<Modal transparent={true}>
+					<View style={style.disabled}>
+						<View style={style.disabledContainer}>
+							<Text style={style.disabledHeader}>
+								There is an update to the app{'\n\n'}
+								Please wait a moment{'\n\n'}
+								or tap 'Close'
+							</Text>
+
+							<TouchableOpacity style={style.disabledClose} onPress={() => socket.emit("socket/business/login", ownerId, () => setShowdisabledscreen(false))}>
+								<Text style={style.disabledCloseHeader}>Close</Text>
+							</TouchableOpacity>
+
+							<ActivityIndicator size="large"/>
+						</View>
+					</View>
+				</Modal>
+			)}
 		</View>
 	)
 }
@@ -213,4 +287,10 @@ const style = StyleSheet.create({
 	orderer: { alignItems: 'center', marginHorizontal: 10 },
 	ordererProfile: { borderRadius: 25, height: 50, overflow: 'hidden', width: 50 },
 	ordererUsername: { textAlign: 'center' },
+
+	disabled: { backgroundColor: 'black', flexDirection: 'column', justifyContent: 'space-around', height: '100%', opacity: 0.8, width: '100%' },
+	disabledContainer: { alignItems: 'center', width: '100%' },
+	disabledHeader: { color: 'white', fontWeight: 'bold', textAlign: 'center' },
+	disabledClose: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 50, padding: 10 },
+	disabledCloseHeader: {  }
 })

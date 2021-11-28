@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { AsyncStorage, ActivityIndicator, Dimensions, ScrollView, View, Text, TextInput, Image, TouchableOpacity, StyleSheet } from 'react-native';
-import { NetworkInfo } from 'react-native-network-info';
+import { ActivityIndicator, Dimensions, ScrollView, View, Text, TextInput, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import NetInfo from '@react-native-community/netinfo';
 import Constants from 'expo-constants';
 import * as FileSystem from 'expo-file-system'
 import { Camera } from 'expo-camera';
@@ -15,11 +16,14 @@ import AntDesign from 'react-native-vector-icons/AntDesign'
 import Entypo from 'react-native-vector-icons/Entypo'
 
 const { height, width } = Dimensions.get('window')
-const offsetPadding = Constants.statusBarHeight
-const screenHeight = height - (offsetPadding * 2)
 
 export default function setup({ navigation }) {
-	const [permission, setPermission] = useState(null);
+	const offsetPadding = Constants.statusBarHeight
+	const screenHeight = height - (offsetPadding * 2)
+
+	const [cameraPermission, setCamerapermission] = useState(null);
+	const [locationPermission, setLocationpermission] = useState(null)
+
 	const [camComp, setCamcomp] = useState(null)
 	const [camType, setCamtype] = useState(Camera.Constants.Type.back);
 	const [storeName, setStorename] = useState(registerInfo.storeName)
@@ -27,7 +31,7 @@ export default function setup({ navigation }) {
 	const [addressOne, setAddressone] = useState(registerInfo.addressOne)
 	const [addressTwo, setAddresstwo] = useState(registerInfo.addressTwo)
 	const [city, setCity] = useState(registerInfo.city)
-	const [province, setProvice] = useState(registerInfo.province)
+	const [province, setProvince] = useState(registerInfo.province)
 	const [postalcode, setPostalcode] = useState(registerInfo.postalcode)
 	const [logo, setLogo] = useState({ uri: '', name: '' })
 	const [loading, setLoading] = useState(false)
@@ -35,14 +39,18 @@ export default function setup({ navigation }) {
 
 	const setupYourLocation = async() => {
 		const ownerid = await AsyncStorage.getItem("ownerid")
-		const ipAddress = await NetworkInfo.getIPAddress()
+		const { details } = await NetInfo.fetch()
+		const ipAddress = details.ipAddress
 
-		if (storeName && phonenumber, addressOne && city && province && postalcode && logo.name) {
-			const [{ latitude, longitude }] = await Location.geocodeAsync(`${addressOne} ${addressTwo}, ${city} ${province}, ${postalcode}`)
+		if (storeName && phonenumber, addressOne && city && province && postalcode) {
+			const [{ latitude, longitude }] = locationPermission ? 
+				await Location.geocodeAsync(`${addressOne} ${addressTwo}, ${city} ${province}, ${postalcode}`)
+				:
+				[{ latitude: registerInfo.latitude, longitude: registerInfo.longitude }]
 			const time = (Date.now() / 1000).toString().split(".")[0]
 			const data = {
 				storeName, phonenumber, addressOne, addressTwo, city, province, postalcode, logo,
-				longitude, latitude, ownerid, time, ipAddress
+				longitude, latitude, ownerid, time, ipAddress, permission: cameraPermission, trialtime: Date.now()
 			}
 
 			setLoading(true)
@@ -50,12 +58,7 @@ export default function setup({ navigation }) {
 			setupLocation(data)
 				.then((res) => {
 					if (res.status == 200) {
-						if (!res.data.errormsg) {
-							return res.data
-						} else {
-							setErrormsg(res.data.errormsg)
-							setLoading(false)
-						}
+						return res.data
 					}
 				})
 				.then((res) => {
@@ -74,8 +77,11 @@ export default function setup({ navigation }) {
 					}
 				})
 				.catch((err) => {
-					if (err.response.status == 400) {
-						
+					if (err.response && err.response.status == 400) {
+						const { errormsg, status } = err.response.data
+
+						setErrormsg(errormsg)
+						setLoading(false)
 					}
 				})
 		} else {
@@ -111,12 +117,6 @@ export default function setup({ navigation }) {
 
 			if (!postalcode) {
 				setErrormsg("Please enter the postal code")
-
-				return
-			}
-
-			if (!logo.name) {
-				setErrormsg("Please take a good photo of your store")
 
 				return
 			}
@@ -167,22 +167,36 @@ export default function setup({ navigation }) {
 		}
 	}
 	const openCamera = async() => {
-		const { status } = await Camera.getPermissionsAsync()
+		const { status } = await Camera.getCameraPermissionsAsync()
 
 		if (status == 'granted') {
-			setPermission(status === 'granted')
+			setCamerapermission(status === 'granted')
 		} else {
-			const { status } = await Camera.requestPermissionsAsync()
+			const { status } = await Camera.requestCameraPermissionsAsync()
 
-			setPermission(status === 'granted')
+			setCamerapermission(status === 'granted')
+		}
+	}
+	const openLocation = async() => {
+		const { status } = await Location.getForegroundPermissionsAsync()
+
+		if (status == 'granted') {
+			setLocationpermission(status === 'granted')
+		} else {
+			const { status } = await Location.requestForegroundPermissionsAsync()
+
+			setLocationpermission(status === 'granted')
 		}
 	}
 	
 	useEffect(() => {
-		(async() => openCamera())()
+		(async() => {
+			openCamera()
+			openLocation()
+		})()
 	}, [])
 
-	if (permission === null) return <View/>
+	if (cameraPermission === null && locationPermission === null) return <View/>
 		
 	return (
 		<View style={style.setup}>
@@ -195,31 +209,31 @@ export default function setup({ navigation }) {
 						<View style={style.inputsBox}>
 							<View style={style.inputContainer}>
 								<Text style={style.inputHeader}>Store Name:</Text>
-								<TextInput style={style.input} onChangeText={(storeName) => setStorename(storeName)} value={storeName} autoCorrect={false}/>
+								<TextInput style={style.input} onChangeText={(storeName) => setStorename(storeName)} value={storeName} autoCorrect={false} autoCapitalize="none"/>
 							</View>
 							<View style={style.inputContainer}>
 								<Text style={style.inputHeader}>Store Phone number:</Text>
-								<TextInput style={style.input} onChangeText={(phonenumber) => setPhonenumber(phonenumber)} value={phonenumber} keyboardType="numeric" autoCorrect={false}/>
+								<TextInput style={style.input} onChangeText={(phonenumber) => setPhonenumber(phonenumber)} value={phonenumber} keyboardType="numeric" autoCorrect={false} autoCapitalize="none"/>
 							</View>
 							<View style={style.inputContainer}>
 								<Text style={style.inputHeader}>Address #1:</Text>
-								<TextInput style={style.input} onChangeText={(addressOne) => setPhonenumber(addressOne)} value={addressOne} keyboardType="numeric" autoCorrect={false}/>
+								<TextInput style={style.input} onChangeText={(addressOne) => setAddressone(addressOne)} value={addressOne} autoCorrect={false} autoCapitalize="none"/>
 							</View>
 							<View style={style.inputContainer}>
 								<Text style={style.inputHeader}>Address #2:</Text>
-								<TextInput style={style.input} onChangeText={(addressTwo) => setPhonenumber(addressTwo)} value={addressTwo} keyboardType="numeric" autoCorrect={false}/>
+								<TextInput style={style.input} onChangeText={(addressTwo) => setAddresstwo(addressTwo)} value={addressTwo} autoCorrect={false} autoCapitalize="none"/>
 							</View>
 							<View style={style.inputContainer}>
 								<Text style={style.inputHeader}>City:</Text>
-								<TextInput style={style.input} onChangeText={(city) => setPhonenumber(city)} value={city} keyboardType="numeric" autoCorrect={false}/>
+								<TextInput style={style.input} onChangeText={(city) => setCity(city)} value={city} autoCorrect={false} autoCapitalize="none"/>
 							</View>
 							<View style={style.inputContainer}>
 								<Text style={style.inputHeader}>Province:</Text>
-								<TextInput style={style.input} onChangeText={(province) => setPhonenumber(province)} value={province} keyboardType="numeric" autoCorrect={false}/>
+								<TextInput style={style.input} onChangeText={(province) => setProvince(province)} value={province} autoCorrect={false} autoCapitalize="none"/>
 							</View>
 							<View style={style.inputContainer}>
 								<Text style={style.inputHeader}>Postal Code:</Text>
-								<TextInput style={style.input} onChangeText={(postalcode) => setPhonenumber(postalcode)} value={postalcode} keyboardType="numeric" autoCorrect={false}/>
+								<TextInput style={style.input} onChangeText={(postalcode) => setPostalcode(postalcode)} value={postalcode} autoCorrect={false} autoCapitalize="none"/>
 							</View>
 
 							<View style={style.cameraContainer}>
@@ -280,10 +294,10 @@ const style = StyleSheet.create({
 	setup: { backgroundColor: 'white' },
 	box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 	boxHeader: { fontFamily: 'appFont', fontSize: 50, fontWeight: 'bold', paddingVertical: 30 },
-	boxMiniheader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold' },
+	boxMiniheader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', marginBottom: 50 },
 
-	inputsBox: { paddingHorizontal: 20, width: '80%' },
-	inputContainer: { marginVertical: 30 },
+	inputsBox: { width: '80%' },
+	inputContainer: { marginBottom: 50 },
 	inputHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold' },
 	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: 20, padding: 5 },
 	cameraContainer: { alignItems: 'center', marginBottom: 10, width: '100%' },
@@ -291,7 +305,7 @@ const style = StyleSheet.create({
 	camera: { height: width * 0.8, width: width * 0.8 },
 	cameraAction: { margin: 10 },
 	errorMsg: { color: 'red', fontWeight: 'bold', marginVertical: 0, textAlign: 'center' },
-	setupButton: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 10, padding: 10 },
+	setupButton: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 50, padding: 10 },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
 	bottomNav: { flexDirection: 'row', height: 30, marginVertical: 5, marginHorizontal: 20 },

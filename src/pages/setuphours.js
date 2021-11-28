@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react'
-import { AsyncStorage, ActivityIndicator, Dimensions, ScrollView, View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react'
+import { ActivityIndicator, Dimensions, ScrollView, View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import { setLocationHours } from '../apis/locations'
@@ -7,31 +8,33 @@ import { setLocationHours } from '../apis/locations'
 import AntDesign from 'react-native-vector-icons/AntDesign'
 
 const { height, width } = Dimensions.get('window')
-const offsetPadding = Constants.statusBarHeight
-const screenHeight = height - (offsetPadding * 2)
 
 export default function setuphours({ navigation }) {
+	const offsetPadding = Constants.statusBarHeight
+	const screenHeight = height - (offsetPadding * 2)
+	
 	const [locationType, setLocationtype] = useState('')
 	const [days, setDays] = useState([
-		{ key: "0", header: "Sunday", opentime: { hour: "00", minute: "00", period: "AM" }, closetime: { hour: "00", minute: "00", period: "AM" }},
-		{ key: "1", header: "Monday", opentime: { hour: "00", minute: "00", period: "AM" }, closetime: { hour: "00", minute: "00", period: "AM" }},
-		{ key: "2", header: "Tuesday", opentime: { hour: "00", minute: "00", period: "AM" }, closetime: { hour: "00", minute: "00", period: "AM" }},
-		{ key: "3", header: "Wednesday", opentime: { hour: "00", minute: "00", period: "AM" }, closetime: { hour: "00", minute: "00", period: "AM" }},
-		{ key: "4", header: "Thursday", opentime: { hour: "00", minute: "00", period: "AM" }, closetime: { hour: "00", minute: "00", period: "AM" }},
-		{ key: "5", header: "Friday", opentime: { hour: "00", minute: "00", period: "AM" }, closetime: { hour: "00", minute: "00", period: "AM" }},
-		{ key: "6", header: "Saturday", opentime: { hour: "00", minute: "00", period: "AM" }, closetime: { hour: "00", minute: "00", period: "AM" }}
+		{ key: "0", header: "Sunday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }},
+		{ key: "1", header: "Monday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }},
+		{ key: "2", header: "Tuesday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }},
+		{ key: "3", header: "Wednesday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }},
+		{ key: "4", header: "Thursday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }},
+		{ key: "5", header: "Friday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }},
+		{ key: "6", header: "Saturday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }}
 	])
 	const [loading, setLoading] = useState(false)
+
+	const isMounted = useRef(null)
 	
 	const updateTime = (index, timetype, dir, open) => {
 		const newDays = [...days]
 		let value, period
 
-		if (open) {
-			value = newDays[index].opentime[timetype]
-		} else {
-			value = newDays[index].closetime[timetype]
-		}
+		value = open ? 
+			newDays[index].opentime[timetype]
+			:
+			newDays[index].closetime[timetype]
 
 		switch (timetype) {
 			case "hour":
@@ -54,8 +57,8 @@ export default function setuphours({ navigation }) {
 				value = dir == "up" ? value + 1 : value - 1
 
 				if (value > 59) {
-					value = 1
-				} else if (value < 1) {
+					value = 0
+				} else if (value < 0) {
 					value = 59
 				}
 
@@ -87,7 +90,56 @@ export default function setuphours({ navigation }) {
 		setLoading(true)
 
 		days.forEach(function (day) {
-			hours[day.header.substr(0, 3)] = { opentime: day.opentime, closetime: day.closetime }
+			let { opentime, closetime } = day
+			let newOpentime = {...opentime}, newClosetime = {...closetime}
+			let openhour = parseInt(newOpentime.hour), closehour = parseInt(newClosetime.hour)
+			let openperiod = newOpentime.period, closeperiod = newClosetime.period
+
+			if (openperiod == "PM") {
+				if (openhour < 12) {
+					openhour += 12
+				}
+
+				openhour = openhour < 10 ? 
+					"0" + openhour
+					:
+					openhour.toString()
+			} else {
+				if (openhour == 12) {
+					openhour = "00"
+				} else if (openhour < 10) {
+					openhour = "0" + openhour
+				} else {
+					openhour = openhour.toString()
+				}
+			}
+
+			if (closeperiod == "PM") {
+				if (closehour < 12) {
+					closehour += 12
+				}
+
+				closehour = closehour < 10 ? 
+					"0" + closehour
+					:
+					closehour.toString()
+			} else {
+				if (closehour == 12) {
+					closehour = "00"
+				} else if (closehour < 10) {
+					closehour = "0" + closehour
+				} else {
+					closehour = closehour.toString()
+				}
+			}
+
+			newOpentime.hour = openhour
+			newClosetime.hour = closehour
+
+			delete newOpentime.period
+			delete newClosetime.period
+
+			hours[day.header.substr(0, 3)] = { opentime: newOpentime, closetime: newClosetime }
 		})
 
 		const data = { ownerid, locationid, hours }
@@ -95,11 +147,7 @@ export default function setuphours({ navigation }) {
 		setLocationHours(data)
 			.then((res) => {
 				if (res.status == 200) {
-					if (!res.data.errormsg) {
-						return res.data
-					} else {
-						setLoading(false)
-					}
+					return res.data
 				}
 			})
 			.then((res) => {
@@ -115,19 +163,25 @@ export default function setuphours({ navigation }) {
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
-					
+				if (err.response && err.response.status == 400) {
+					setLoading(false)
 				}
 			})
 	}
 	const getLocationType = async() => {
 		const type = await AsyncStorage.getItem("locationtype")
 
-		setLocationtype(type)
+		if (isMounted.current == true) {
+			setLocationtype(type)
+		}
 	}
 	
 	useEffect(() => {
+		isMounted.current = true
+
 		getLocationType()
+
+		return () => isMounted.current = false
 	}, [])
 
 	return (
@@ -140,7 +194,7 @@ export default function setuphours({ navigation }) {
 
 						<View style={style.days}>
 							{days.map((day, index) => (
-								<View key={index} style={{ marginVertical: 20 }}>
+								<View key={index} style={style.day}>
 									<Text style={style.dayHeader}>{day.header}</Text>
 									<View style={style.timeSelectionContainer}>
 										<View style={style.timeSelection}>
@@ -244,6 +298,7 @@ const style = StyleSheet.create({
 	boxMiniheader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', marginBottom: 30 },
 
 	days: {  },
+	day: { backgroundColor: 'rgba(255, 255, 255, 0.8)', borderRadius: 10, marginVertical: 10, padding: 5 },
 	dayHeader: { fontSize: 20, marginHorizontal: 10, textAlign: 'center' },
 	timeSelectionContainer: { flexDirection: 'row' },
 	timeSelection: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, flexDirection: 'row', marginHorizontal: 5 },

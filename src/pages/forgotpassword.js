@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { AsyncStorage, Dimensions, View, ImageBackground, Text, TextInput, Image, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet } from 'react-native';
+import { Dimensions, View, ImageBackground, Text, TextInput, Image, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import { getCode } from '../apis/owners'
@@ -18,14 +19,8 @@ export default function forgotpassword({ navigation }) {
 		getCode(info.cellnumber)
 			.then((res) => {
 				if (res.status == 200) {
-					if (!res.data.errormsg) {
-						return res.data
-					} else {
-						setErrormsg(res.data.errormsg)
-					}
+					return res.data
 				}
-
-				return
 			})
 			.then((res) => {
 				if (res) {
@@ -36,8 +31,10 @@ export default function forgotpassword({ navigation }) {
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
-					
+				if (err.response && err.response.status == 400) {
+					const { errormsg, status } = err.response.data
+
+					setErrormsg(errormsg)
 				}
 			})
 	}
@@ -53,85 +50,79 @@ export default function forgotpassword({ navigation }) {
 
 	return (
 		<View style={style.forgotpassword}>
-			<ImageBackground style={{ paddingVertical: offsetPadding }} source={require("../../assets/background.jpg")} resizeMode="stretch">
-				<TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
-					<View style={style.box}>
-						<Text style={style.boxHeader}>Forgot Password</Text>
+			<TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+				<View style={style.box}>
+					<Text style={style.boxHeader}>Forgot Password</Text>
 
-						<View style={style.inputsBox}>
-							{!info.sent ? 
-								<View style={style.inputContainer}>
-									<Text style={style.inputHeader}>Phone number:</Text>
-									<TextInput style={style.input} onChangeText={(cellnumber) => setInfo({ ...info, cellnumber })} value={info.cellnumber} keyboardType="numeric" autoCorrect={false}/>
-								</View>
-								:
-								<View style={style.inputContainer}>
-									<Text style={style.resetCodeHeader}>Please enter the reset code sent to your phone</Text>
-
-									<Text style={style.inputHeader}>Reset Code:</Text>
-									<TextInput style={style.input} onChangeText={(resetcode) => setInfo({ ...info, resetcode })} keyboardType="numeric" value={info.resetcode} autoCorrect={false}/>
-								</View>
-							}
-
-							<Text style={style.errorMsg}>{errorMsg}</Text>
-
-							{!info.sent ? 
-								<TouchableOpacity style={style.submit} onPress={() => getTheCode()}>
-									<Text style={style.submitHeader}>Reset</Text>
-								</TouchableOpacity>
-								:
-								<TouchableOpacity style={style.submit} onPress={() => done()}>
-									<Text style={style.submitHeader}>Done</Text>
-								</TouchableOpacity>
-							}
-						</View>
-						
-						<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-							<View style={style.options}>
-								<TouchableOpacity style={style.option} onPress={() => {
-									navigation.dispatch(
-										CommonActions.reset({
-											index: 1,
-											routes: [{ name: 'login' }]
-										})
-									);
-								}}>
-									<Text style={style.optionHeader}>Already a member ? Log in</Text>
-								</TouchableOpacity>
-								<TouchableOpacity style={style.option} onPress={() => {
-									navigation.dispatch(
-										CommonActions.reset({
-											index: 1,
-											routes: [{ name: 'verifyowner' }]
-										})
-									);
-								}}>
-									<Text style={style.optionHeader}>Don't have an account ? Sign up</Text>
-								</TouchableOpacity>
+					<View style={style.inputsBox}>
+						{!info.sent ? 
+							<View>
+								<Text style={style.inputHeader}>Phone number:</Text>
+								<TextInput style={style.input} onChangeText={(cellnumber) => setInfo({ ...info, cellnumber })} value={info.cellnumber} keyboardType="numeric" autoCorrect={false}/>
 							</View>
+							:
+							<View>
+								<Text style={style.resetCodeHeader}>Please enter the reset code sent to your phone</Text>
+
+								<Text style={style.inputHeader}>Reset Code:</Text>
+								<TextInput style={style.input} onChangeText={(resetcode) => setInfo({ ...info, resetcode })} keyboardType="numeric" value={info.resetcode} autoCorrect={false}/>
+							</View>
+						}
+
+						<Text style={style.errorMsg}>{errorMsg}</Text>
+
+						{!info.sent ? 
+							<TouchableOpacity style={style.submit} onPress={() => getTheCode()}>
+								<Text style={style.submitHeader}>Reset</Text>
+							</TouchableOpacity>
+							:
+							<TouchableOpacity style={style.submit} onPress={() => done()}>
+								<Text style={style.submitHeader}>Done</Text>
+							</TouchableOpacity>
+						}
+					</View>
+					
+					<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+						<View style={style.options}>
+							<TouchableOpacity style={style.option} onPress={() => {
+								navigation.dispatch(
+									CommonActions.reset({
+										index: 1,
+										routes: [{ name: 'login' }]
+									})
+								);
+							}}>
+								<Text>Already a member ? Log in</Text>
+							</TouchableOpacity>
+							<TouchableOpacity style={style.option} onPress={() => {
+								navigation.dispatch(
+									CommonActions.reset({
+										index: 1,
+										routes: [{ name: 'verifyowner' }]
+									})
+								);
+							}}>
+								<Text>Don't have an account ? Sign up</Text>
+							</TouchableOpacity>
 						</View>
 					</View>
-				</TouchableWithoutFeedback>
-			</ImageBackground>
+				</View>
+			</TouchableWithoutFeedback>
 		</View>
 	);
 }
 
 const style = StyleSheet.create({
-	forgotpassword: { height: '100%', width: '100%' },
-	box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
-	background: { height: '100%', position: 'absolute', width: '100%' },
-	boxHeader: { color: 'black', fontFamily: 'appFont', fontSize: 30, fontWeight: 'bold', paddingVertical: 30 },
+	forgotpassword: { backgroundColor: '#3C74FF', height: '100%', width: '100%' },
+	box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-between', paddingVertical: offsetPadding, width: '100%' },
+	boxHeader: { color: 'black', fontFamily: 'appFont', fontSize: 40, fontWeight: 'bold' },
 	
-	inputsBox: { alignItems: 'center', backgroundColor: 'rgba(2, 136, 255, 0.1)', paddingHorizontal: 20, width: '80%' },
-	inputContainer: { marginVertical: 5 },
+	inputsBox: { alignItems: 'center', flexDirection: 'column', height: screenHeight / 2, justifyContent: 'space-around', width: '80%' },
 	inputHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold' },
 	input: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: 20, padding: 10, width: width - 100 },
-	errorMsg: { color: 'red', fontWeight: 'bold', marginVertical: 20, textAlign: 'center' },
-	submit: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontFamily: 'appFont', marginVertical: 40, padding: 10, width: 100 },
+	errorMsg: { color: 'darkred', fontWeight: 'bold', textAlign: 'center' },
+	submit: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontFamily: 'appFont', padding: 10, width: 100 },
 	submitHeader: { fontWeight: 'bold', textAlign: 'center' },
 	
-	options: {  },
-	option: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, marginVertical: 10, padding: 5 },
-	optionHeader: {  },
+	option: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, marginVertical: 10, padding: 5 }
 })
