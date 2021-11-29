@@ -15,7 +15,7 @@ export default function cartorders(props) {
 
 	const [ownerId, setOwnerid] = useState(null)
 	const [orders, setOrders] = useState([])
-	const [totalCost, setTotalcost] = useState(0.00)
+	const [totalCost, setTotalcost] = useState({ price: 0.00, pst: 0.00, hst: 0.00, cost: 0.00, nofee: 0.00, fee: 0.00 })
 	const [ready, setReady] = useState(false)
 	const [loading, setLoading] = useState(false)
 	const [showBankaccountrequired, setShowbankaccountrequired] = useState(false)
@@ -168,7 +168,11 @@ export default function cartorders(props) {
 									</View>
 									<View>
 										<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>Quantity:</Text> {item.quantity}</Text>
-										<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>Cost:</Text> ${item.cost.toFixed(2)}</Text>
+										<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>Price:</Text> ${item.price.toFixed(2)}</Text>
+										{item.pst > 0 && <Text style={style.header}><Text style={{ fontWeight: 'bold' }}>PST:</Text> ${item.pst.toFixed(2)}</Text>}
+										{item.hst > 0 && <Text style={style.header}><Text style={{ fontWeight: 'bold' }}>HST:</Text> ${item.hst.toFixed(2)}</Text>}
+										{item.fee > 0 && <Text style={style.header}><Text style={{ fontWeight: 'bold' }}>E-pay fee:</Text> ${item.fee.toFixed(2)}</Text>}
+										<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>Total Cost:</Text> ${item.totalcost.toFixed(2)}</Text>
 									</View>
 								</View>
 
@@ -198,6 +202,7 @@ export default function cartorders(props) {
 						{loading && <ActivityIndicator size="small"/>}
 						{!ready ? 
 							<>
+								<Text>Total cost: ${totalCost.price.toFixed(2)}</Text>
 								<Text>Order is ready?</Text>
 								<TouchableOpacity style={style.receivePayment} disabled={loading} onPress={() => orderIsReady()}>
 									<Text style={style.receivePaymentHeader}>Alert customer(s)</Text>
@@ -205,7 +210,7 @@ export default function cartorders(props) {
 							</>
 							:
 							<TouchableOpacity style={style.receivePayment} disabled={loading} onPress={() => receiveThePayment()}>
-								<Text style={style.receivePaymentHeader}>Receive payment of $ {totalCost.toFixed(2)}</Text>
+								<Text style={style.receivePaymentHeader}>Receive payment of $ {totalCost.price.toFixed(2)}</Text>
 							</TouchableOpacity>
 						}
 					</View>
@@ -244,7 +249,7 @@ export default function cartorders(props) {
 							<View style={style.confirmBox}>
 								<View style={style.confirmContainer}>
 									<Text style={style.confirmHeader}>
-										You have received a total payment of $ {totalCost.toFixed(2)}
+										You have received a total payment of $ {totalCost.price.toFixed(2)}
 										{'\n\n\n'}
 										Good Job
 									</Text>

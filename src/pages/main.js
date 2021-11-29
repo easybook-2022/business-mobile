@@ -558,7 +558,7 @@ export default function main(props) {
 
 		setAppointments(newAppointments)
 
-		let data = { scheduleid: id, time: Date.now(), ownerid, type: "receivePayment" }
+		let data = { scheduleid: id, ownerid, type: "receivePayment" }
 
 		receiveEpayment(data)
 			.then((res) => {
@@ -621,7 +621,7 @@ export default function main(props) {
 
 		setAppointments(newAppointments)
 
-		let data = { scheduleid: id, time: Date.now(), ownerid, type: "receivePayment" }
+		let data = { scheduleid: id, ownerid, type: "receivePayment" }
 
 		receiveInpersonpayment(data)
 			.then((res) => {
