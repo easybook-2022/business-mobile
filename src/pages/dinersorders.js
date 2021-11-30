@@ -121,11 +121,11 @@ export default function dinersorders(props) {
 			setDiners(newDiners)
 		})
 		socket.io.on("open", () => {
-			if (ownerId) {
+			if (ownerId != null) {
 				socket.emit("socket/business/login", ownerId, () => setShowdisabledscreen(false))
 			}
 		})
-		socket.io.on("close", () => ownerId ? setShowdisabledscreen(true) : {})
+		socket.io.on("close", () => ownerId != null ? setShowdisabledscreen(true) : {})
 	}
 
 	useEffect(() => {

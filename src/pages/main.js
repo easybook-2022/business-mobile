@@ -755,7 +755,7 @@ export default function main(props) {
 				const newAppointments = [...appointments]
 
 				setAppointments(newAppointments.filter(item => {
-					if (item.id != data.scheduleid) {
+					if (item.id != data.id) {
 						return item
 					}
 				}))
@@ -827,11 +827,11 @@ export default function main(props) {
 			}))
 		})
 		socket.io.on("open", () => {
-			if (ownerId) {
+			if (ownerId != null) {
 				socket.emit("socket/business/login", ownerId, () => setShowdisabledscreen(false))
 			}
 		})
-		socket.io.on("close", () => ownerId ? setShowdisabledscreen(true) : {})
+		socket.io.on("close", () => ownerId != null ? setShowdisabledscreen(true) : {})
 	}
 
 	const initialize = () => {

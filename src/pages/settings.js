@@ -33,7 +33,7 @@ export default function settings(props) {
 	const [ownerid, setOwnerid] = useState('')
 	const [permission, setPermission] = useState(null);
 	const [camComp, setCamcomp] = useState(null)
-	const [camType, setCamtype] = useState(Camera.Constants.Type.back);
+	const [camType, setCamtype] = useState(Camera.Constants.Type.front);
 	const [editType, setEdittype] = useState('')
 
 	// location information

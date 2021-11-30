@@ -21,7 +21,7 @@ export default function register(props) {
 	const cellnumber = props.route.params.cellnumber
 	const [permission, setPermission] = useState(null);
 	const [camComp, setCamcomp] = useState(null)
-	const [camType, setCamtype] = useState(Camera.Constants.Type.back);
+	const [camType, setCamtype] = useState(Camera.Constants.Type.front);
 	const [profile, setProfile] = useState({ uri: '', name: '' })
 	const [username, setUsername] = useState(ownerRegisterInfo.username)
 	const [password, setPassword] = useState(ownerRegisterInfo.password)
