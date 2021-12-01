@@ -1,4 +1,4 @@
-package com.easygobusiness;
+package com.geottuse.serviceapp.business;
 
 import android.os.Bundle;
 

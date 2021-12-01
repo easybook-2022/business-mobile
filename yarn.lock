@@ -1067,10 +1067,10 @@
     xcode "^3.0.1"
     xml2js "^0.4.23"
 
-"@expo/config-plugins@4.0.9", "@expo/config-plugins@^4.0.2":
-  version "4.0.9"
-  resolved "https://registry.yarnpkg.com/@expo/config-plugins/-/config-plugins-4.0.9.tgz#52c5bee8411185fc4a340072fbed3584d0409234"
-  integrity sha512-3wv0uhG5U5O4BGX2qm4gjFK3jvYVTy0raFsR6B/2zoBNgD3lXF8Ae5osVN118aKNZb2B7SMx3V7McunZhf7RXg==
+"@expo/config-plugins@4.0.10", "@expo/config-plugins@^4.0.2":
+  version "4.0.10"
+  resolved "https://registry.yarnpkg.com/@expo/config-plugins/-/config-plugins-4.0.10.tgz#6ed83012afea211442b02994fbc3ecffa95b4138"
+  integrity sha512-wdSgwWgonjnZBqkxH1TiFlPsY9nhJ6jSMiSKlUh2N8avgLeot2CzT8kTtJa3jB+3/sHiFZE6/VbD7USAIkmIIA==
   dependencies:
     "@expo/config-types" "^43.0.1"
     "@expo/json-file" "8.2.34"
@@ -1115,13 +1115,13 @@
     slugify "^1.3.4"
     sucrase "^3.20.0"
 
-"@expo/config@6.0.9":
-  version "6.0.9"
-  resolved "https://registry.yarnpkg.com/@expo/config/-/config-6.0.9.tgz#d2f700e067581f7fb088c4e811b38351ac57e151"
-  integrity sha512-UJs8b5SSU9dl4VrX+MiSJcSwUVt7u6oUfNQDJ6VIWu03lDkNKtrk64GeSmUqHKsFd6iFXaMxtvkTBVmWWM6NaA==
+"@expo/config@6.0.10":
+  version "6.0.10"
+  resolved "https://registry.yarnpkg.com/@expo/config/-/config-6.0.10.tgz#98fa11408159e3976046c91124e6a8a70f44a84d"
+  integrity sha512-bFLxWFQexXBXN7P8IKop77rF0P/LMM08s90w+H8+8aLc1Y2A0zq0LoFMkBlT3Ui8bvOTgycPiw4NSkmcMO0gbQ==
   dependencies:
     "@babel/code-frame" "~7.10.4"
-    "@expo/config-plugins" "4.0.9"
+    "@expo/config-plugins" "4.0.10"
     "@expo/config-types" "^43.0.1"
     "@expo/json-file" "8.2.34"
     getenv "^1.0.0"
@@ -1210,12 +1210,12 @@
     xmlbuilder "^14.0.0"
 
 "@expo/prebuild-config@^3.0.6":
-  version "3.0.9"
-  resolved "https://registry.yarnpkg.com/@expo/prebuild-config/-/prebuild-config-3.0.9.tgz#c9a7034d4299bd7b3bf36c17efbdf1772899c7fe"
-  integrity sha512-j4cHyZe04WijAyH2sJS2pH8DltqPDVQczN6brqFiuRktyIAroqh4ZMY1fgpSweX18LTXmGF9d1fG1aXC+N64YQ==
+  version "3.0.10"
+  resolved "https://registry.yarnpkg.com/@expo/prebuild-config/-/prebuild-config-3.0.10.tgz#e3412667444cf6384b7fa1974e2e8e57ea9fa328"
+  integrity sha512-WUEOB0gkTjA/HPC9R6B3W8TNtwU1iaO3HwwfctVBW3b7DDYSIBvUpfe6/xmhI8buIrwQzugr4gUcRRlvN6mIcg==
   dependencies:
-    "@expo/config" "6.0.9"
-    "@expo/config-plugins" "4.0.9"
+    "@expo/config" "6.0.10"
+    "@expo/config-plugins" "4.0.10"
     "@expo/config-types" "^43.0.1"
     "@expo/image-utils" "0.3.18"
     "@expo/json-file" "8.2.34"
@@ -1308,9 +1308,9 @@
     fastq "^1.6.0"
 
 "@react-native-async-storage/async-storage@^1.15.9":
-  version "1.15.13"
-  resolved "https://registry.yarnpkg.com/@react-native-async-storage/async-storage/-/async-storage-1.15.13.tgz#58f1d524c6e38275dbbfc05162c8f090a4c478b6"
-  integrity sha512-OnbPmjiBOREiutFMG356w+eWiEL1WRCgXDH/o6+4S1cIkfl9SZFanxUBlGi4/Ny22KXcJHN0VtWy0gL8jqYYLg==
+  version "1.15.14"
+  resolved "https://registry.yarnpkg.com/@react-native-async-storage/async-storage/-/async-storage-1.15.14.tgz#8165d3f78798b46e693169795b62e40142064273"
+  integrity sha512-eJF2horabXazwszCyyXDe4w7sBSWlB0WPA8akKXuN2n7WXKHYeQJPN41lS9OahrhSZuZwqftNFE9VWgPXA8wyA==
   dependencies:
     merge-options "^3.0.4"
 
@@ -1557,9 +1557,9 @@
     "@types/istanbul-lib-report" "*"
 
 "@types/node@*":
-  version "16.11.10"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-16.11.10.tgz#2e3ad0a680d96367103d3e670d41c2fed3da61ae"
-  integrity sha512-3aRnHa1KlOEEhJ6+CvyHKK5vE9BcLGjtUpwvqYLRvYNQKMfabu3BwfJaA/SLW8dxe28LsNDjtHwePTuzn3gmOA==
+  version "16.11.11"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-16.11.11.tgz#6ea7342dfb379ea1210835bada87b3c512120234"
+  integrity sha512-KB0sixD67CeecHC33MYn+eYARkqTheIRNuu97y2XMjR7Wu3XibO1vaY6VBV6O/a89SPI81cEUIYT87UqUWlZNw==
 
 "@types/yargs-parser@*":
   version "20.2.1"
@@ -1970,7 +1970,7 @@ braces@^3.0.1:
   dependencies:
     fill-range "^7.0.1"
 
-browserslist@^4.17.5, browserslist@^4.17.6:
+browserslist@^4.17.5, browserslist@^4.18.1:
   version "4.18.1"
   resolved "https://registry.yarnpkg.com/browserslist/-/browserslist-4.18.1.tgz#60d3920f25b6860eb917c6c7b185576f4d8b017f"
   integrity sha512-8ScCzdpPwR2wQh8IT82CA2VgDwjHyqMovPBZSNH54+tm4Jk2pCuv90gmAdH6J84OCRWi0b4gMe6O6XPXuJnjgQ==
@@ -2188,9 +2188,9 @@ color-name@^1.0.0, color-name@~1.1.4:
   integrity sha512-dOy+3AuW3a2wNbZHIuMZpTcgjGuLU/uBL/ubcZF9OXbDo8ff4O8yVp5Bf0efS8uEoYo5q4Fx7dY9OgQGXgAsQA==
 
 color-string@^1.5.3:
-  version "1.7.4"
-  resolved "https://registry.yarnpkg.com/color-string/-/color-string-1.7.4.tgz#79a7bf242610a8aa1b5e2681f3bf6bcfa666245f"
-  integrity sha512-nVdUvPVgZMpRQad5dcsCMOSB5BXLljklTiaxS6ehhKxDsAI5sD7k5VmFuBt1y3Rlym8uulc/ANUN/bMWtBu6Sg==
+  version "1.8.2"
+  resolved "https://registry.yarnpkg.com/color-string/-/color-string-1.8.2.tgz#08bd49fa5f3889c27b0c670052ed746dd7a671de"
+  integrity sha512-w5ZkKRdLsc5NOYsmnpS2DpyRW71npwZGwbRpLrJTuqjfTs2Bhrba7UiV59IX9siBlCPl2pne5NtiwnVWUzvYFA==
   dependencies:
     color-name "^1.0.0"
     simple-swizzle "^0.2.2"
@@ -2298,11 +2298,11 @@ copy-descriptor@^0.1.0:
   integrity sha1-Z29us8OZl8LuGsOpJP1hJHSPV40=
 
 core-js-compat@^3.18.0, core-js-compat@^3.19.1:
-  version "3.19.1"
-  resolved "https://registry.yarnpkg.com/core-js-compat/-/core-js-compat-3.19.1.tgz#fe598f1a9bf37310d77c3813968e9f7c7bb99476"
-  integrity sha512-Q/VJ7jAF/y68+aUsQJ/afPOewdsGkDtcMb40J8MbuWKlK3Y+wtHq8bTHKPj2WKWLIqmS5JhHs4CzHtz6pT2W6g==
+  version "3.19.2"
+  resolved "https://registry.yarnpkg.com/core-js-compat/-/core-js-compat-3.19.2.tgz#18066a3404a302433cb0aa8be82dd3d75c76e5c4"
+  integrity sha512-ObBY1W5vx/LFFMaL1P5Udo4Npib6fu+cMokeziWkA8Tns4FcDemKF5j9JvaI5JhdkW8EQJQGJN1EcrzmEwuAqQ==
   dependencies:
-    browserslist "^4.17.6"
+    browserslist "^4.18.1"
     semver "7.0.0"
 
 core-js@^1.0.0:
@@ -2460,9 +2460,9 @@ ee-first@1.1.1:
   integrity sha1-WQxhFWsK4vTwJVcyoViyZrxWsh0=
 
 electron-to-chromium@^1.3.896:
-  version "1.4.4"
-  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.4.4.tgz#57311918524c1a26878c330537f967804d43788a"
-  integrity sha512-teHtgwcmVcL46jlFvAaqjyiTLWuMrUQO1JqV303JKB4ysXG6m8fXSFhbjal9st0r9mNskI22AraJZorb1VcLVg==
+  version "1.4.6"
+  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.4.6.tgz#7bf0c03001bcdbd0fc57a45c6b23bc6432246ade"
+  integrity sha512-YDZAXP0P8USm0YoyIXWijxFT3tJHbt3WwY7CTQiK3+Ad6Ai/b9N4GqfDR107jfGilAfxl7Gkhb+h0KPoKXAgqw==
 
 emoji-regex@^8.0.0:
   version "8.0.0"
@@ -2807,7 +2807,7 @@ expo-updates-interface@~0.4.0:
   resolved "https://registry.yarnpkg.com/expo-updates-interface/-/expo-updates-interface-0.4.0.tgz#20961f2cb4bd068a74c29434affa08791dbaa240"
   integrity sha512-EUJaLnDAePikGEQT8w6gjCY3m/dlGgjZKVn5XBaxZMkHzOy3PDQo6QOcK/bcMdkA3CyNrvo6NCe+/7RHrgmK4A==
 
-expo-updates@~0.10.5:
+expo-updates@~0.10.13:
   version "0.10.15"
   resolved "https://registry.yarnpkg.com/expo-updates/-/expo-updates-0.10.15.tgz#1fcfd78ff615307809ad38a3d37eaa67f7268282"
   integrity sha512-GHh1e0BwJY7aT+huGfneXpMhPKKkDIOBqCWyZDyTo7AWLj2C2ZCvgT2D9LWyl6v9WwxMEfO94RaYCQaayD/rfw==
@@ -5095,10 +5095,10 @@ react-native-web@0.17.1:
     normalize-css-color "^1.0.2"
     prop-types "^15.6.0"
 
-react-native@0.64.2:
-  version "0.64.2"
-  resolved "https://registry.yarnpkg.com/react-native/-/react-native-0.64.2.tgz#233b6ed84ac4749c8bc2a2d6cf63577a1c437d18"
-  integrity sha512-Ty/fFHld9DcYsFZujXYdeVjEhvSeQcwuTGXezyoOkxfiGEGrpL/uwUZvMzwShnU4zbbTKDu2PAm/uwuOittRGA==
+react-native@0.64.3:
+  version "0.64.3"
+  resolved "https://registry.yarnpkg.com/react-native/-/react-native-0.64.3.tgz#40db6385963b4b17325f9cc86dd19132394b03fc"
+  integrity sha512-2OEU74U0Ek1/WeBzPbg6XDsCfjF/9fhrNX/5TFgEiBKd5mNc9LOZ/OlMmkb7iues/ZZ/oc51SbEfLRQdcW0fVw==
   dependencies:
     "@jest/create-cache-key-function" "^26.5.0"
     "@react-native-community/cli" "^5.0.1-alpha.1"
