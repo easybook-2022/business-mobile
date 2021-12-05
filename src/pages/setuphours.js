@@ -15,16 +15,15 @@ export default function setuphours({ navigation }) {
 	
 	const [locationType, setLocationtype] = useState('')
 	const [days, setDays] = useState([
-		{ key: "0", header: "Sunday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }},
-		{ key: "1", header: "Monday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }},
-		{ key: "2", header: "Tuesday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }},
-		{ key: "3", header: "Wednesday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }},
-		{ key: "4", header: "Thursday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }},
-		{ key: "5", header: "Friday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }},
-		{ key: "6", header: "Saturday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }}
+		{ key: "0", header: "Sunday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, close: false },
+		{ key: "1", header: "Monday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, close: false },
+		{ key: "2", header: "Tuesday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, close: false },
+		{ key: "3", header: "Wednesday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, close: false },
+		{ key: "4", header: "Thursday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, close: false },
+		{ key: "5", header: "Friday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, close: false },
+		{ key: "6", header: "Saturday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, close: false }
 	])
 	const [loading, setLoading] = useState(false)
-
 	const isMounted = useRef(null)
 	
 	const updateTime = (index, timetype, dir, open) => {
@@ -82,6 +81,13 @@ export default function setuphours({ navigation }) {
 
 		setDays(newDays)
 	}
+	const dayClose = index => {
+		const newDays = [...days]
+
+		newDays[index].close = !newDays[index].close
+
+		setDays(newDays)
+	}
 	const done = async() => {
 		const ownerid = await AsyncStorage.getItem("ownerid")
 		const locationid = await AsyncStorage.getItem("locationid")
@@ -90,7 +96,7 @@ export default function setuphours({ navigation }) {
 		setLoading(true)
 
 		days.forEach(function (day) {
-			let { opentime, closetime } = day
+			let { opentime, closetime, close } = day
 			let newOpentime = {...opentime}, newClosetime = {...closetime}
 			let openhour = parseInt(newOpentime.hour), closehour = parseInt(newClosetime.hour)
 			let openperiod = newOpentime.period, closeperiod = newClosetime.period
@@ -139,7 +145,7 @@ export default function setuphours({ navigation }) {
 			delete newOpentime.period
 			delete newClosetime.period
 
-			hours[day.header.substr(0, 3)] = { opentime: newOpentime, closetime: newClosetime }
+			hours[day.header.substr(0, 3)] = { opentime: newOpentime, closetime: newClosetime, close }
 		})
 
 		const data = { ownerid, locationid, hours }
@@ -195,70 +201,75 @@ export default function setuphours({ navigation }) {
 						<View style={style.days}>
 							{days.map((day, index) => (
 								<View key={index} style={style.day}>
-									<Text style={style.dayHeader}>{day.header}</Text>
-									<View style={style.timeSelectionContainer}>
-										<View style={style.timeSelection}>
-											<View style={style.selection}>
-												<TouchableOpacity onPress={() => updateTime(index, "hour", "up", true)}>
-													<AntDesign name="up" size={30}/>
-												</TouchableOpacity>
-												<Text style={style.selectionHeader}>{day.opentime.hour}</Text>
-												<TouchableOpacity onPress={() => updateTime(index, "hour", "down", true)}>
-													<AntDesign name="down" size={30}/>
-												</TouchableOpacity>
+									<View style={{ opacity: day.close ? 0.1 : 1 }}>
+										<Text style={style.dayHeader}>{day.header}</Text>
+										<View style={style.timeSelectionContainer}>
+											<View style={style.timeSelection}>
+												<View style={style.selection}>
+													<TouchableOpacity onPress={() => updateTime(index, "hour", "up", true)}>
+														<AntDesign name="up" size={30}/>
+													</TouchableOpacity>
+													<Text style={style.selectionHeader}>{day.opentime.hour}</Text>
+													<TouchableOpacity onPress={() => updateTime(index, "hour", "down", true)}>
+														<AntDesign name="down" size={30}/>
+													</TouchableOpacity>
+												</View>
+												<Text style={style.selectionDiv}>:</Text>
+												<View style={style.selection}>
+													<TouchableOpacity onPress={() => updateTime(index, "minute", "up", true)}>
+														<AntDesign name="up" size={30}/>
+													</TouchableOpacity>
+													<Text style={style.selectionHeader}>{day.opentime.minute}</Text>
+													<TouchableOpacity onPress={() => updateTime(index, "minute", "down", true)}>
+														<AntDesign name="down" size={30}/>
+													</TouchableOpacity>
+												</View>
+												<View style={style.selection}>
+													<TouchableOpacity onPress={() => updateTime(index, "period", "up", true)}>
+														<AntDesign name="up" size={30}/>
+													</TouchableOpacity>
+													<Text style={style.selectionHeader}>{day.opentime.period}</Text>
+													<TouchableOpacity onPress={() => updateTime(index, "period", "down", true)}>
+														<AntDesign name="down" size={30}/>
+													</TouchableOpacity>
+												</View>
 											</View>
-											<Text style={style.selectionDiv}>:</Text>
-											<View style={style.selection}>
-												<TouchableOpacity onPress={() => updateTime(index, "minute", "up", true)}>
-													<AntDesign name="up" size={30}/>
-												</TouchableOpacity>
-												<Text style={style.selectionHeader}>{day.opentime.minute}</Text>
-												<TouchableOpacity onPress={() => updateTime(index, "minute", "down", true)}>
-													<AntDesign name="down" size={30}/>
-												</TouchableOpacity>
-											</View>
-											<View style={style.selection}>
-												<TouchableOpacity onPress={() => updateTime(index, "period", "up", true)}>
-													<AntDesign name="up" size={30}/>
-												</TouchableOpacity>
-												<Text style={style.selectionHeader}>{day.opentime.period}</Text>
-												<TouchableOpacity onPress={() => updateTime(index, "period", "down", true)}>
-													<AntDesign name="down" size={30}/>
-												</TouchableOpacity>
-											</View>
-										</View>
-										<Text style={style.timeSelectionHeader}>To</Text>
-										<View style={style.timeSelection}>
-											<View style={style.selection}>
-												<TouchableOpacity onPress={() => updateTime(index, "hour", "up", false)}>
-													<AntDesign name="up" size={30}/>
-												</TouchableOpacity>
-												<Text style={style.selectionHeader}>{day.closetime.hour}</Text>
-												<TouchableOpacity onPress={() => updateTime(index, "hour", "down", false)}>
-													<AntDesign name="down" size={30}/>
-												</TouchableOpacity>
-											</View>
-											<Text style={style.selectionDiv}>:</Text>
-											<View style={style.selection}>
-												<TouchableOpacity onPress={() => updateTime(index, "minute", "up", false)}>
-													<AntDesign name="up" size={30}/>
-												</TouchableOpacity>
-												<Text style={style.selectionHeader}>{day.closetime.minute}</Text>
-												<TouchableOpacity onPress={() => updateTime(index, "minute", "down", false)}>
-													<AntDesign name="down" size={30}/>
-												</TouchableOpacity>
-											</View>
-											<View style={style.selection}>
-												<TouchableOpacity onPress={() => updateTime(index, "period", "up", false)}>
-													<AntDesign name="up" size={30}/>
-												</TouchableOpacity>
-												<Text style={style.selectionHeader}>{day.closetime.period}</Text>
-												<TouchableOpacity onPress={() => updateTime(index, "period", "down", false)}>
-													<AntDesign name="down" size={30}/>
-												</TouchableOpacity>
+											<Text style={style.timeSelectionHeader}>To</Text>
+											<View style={style.timeSelection}>
+												<View style={style.selection}>
+													<TouchableOpacity onPress={() => updateTime(index, "hour", "up", false)}>
+														<AntDesign name="up" size={30}/>
+													</TouchableOpacity>
+													<Text style={style.selectionHeader}>{day.closetime.hour}</Text>
+													<TouchableOpacity onPress={() => updateTime(index, "hour", "down", false)}>
+														<AntDesign name="down" size={30}/>
+													</TouchableOpacity>
+												</View>
+												<Text style={style.selectionDiv}>:</Text>
+												<View style={style.selection}>
+													<TouchableOpacity onPress={() => updateTime(index, "minute", "up", false)}>
+														<AntDesign name="up" size={30}/>
+													</TouchableOpacity>
+													<Text style={style.selectionHeader}>{day.closetime.minute}</Text>
+													<TouchableOpacity onPress={() => updateTime(index, "minute", "down", false)}>
+														<AntDesign name="down" size={30}/>
+													</TouchableOpacity>
+												</View>
+												<View style={style.selection}>
+													<TouchableOpacity onPress={() => updateTime(index, "period", "up", false)}>
+														<AntDesign name="up" size={30}/>
+													</TouchableOpacity>
+													<Text style={style.selectionHeader}>{day.closetime.period}</Text>
+													<TouchableOpacity onPress={() => updateTime(index, "period", "down", false)}>
+														<AntDesign name="down" size={30}/>
+													</TouchableOpacity>
+												</View>
 											</View>
 										</View>
 									</View>
+									<TouchableOpacity style={day.close ? style.dayCloseSelected : style.dayClose} onPress={() => dayClose(index)}>
+										<Text style={day.close ? style.dayCloseSelectedHeader : style.dayCloseHeader}>{day.header} is close</Text>
+									</TouchableOpacity>
 								</View>
 							))}
 						</View>
@@ -298,7 +309,7 @@ const style = StyleSheet.create({
 	boxMiniheader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', marginBottom: 30 },
 
 	days: {  },
-	day: { backgroundColor: 'rgba(255, 255, 255, 0.8)', borderRadius: 10, marginVertical: 10, padding: 5 },
+	day: { alignItems: 'center', backgroundColor: 'rgba(255, 255, 255, 0.8)', borderRadius: 10, marginVertical: 10, padding: 5 },
 	dayHeader: { fontSize: 20, marginHorizontal: 10, textAlign: 'center' },
 	timeSelectionContainer: { flexDirection: 'row' },
 	timeSelection: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, flexDirection: 'row', marginHorizontal: 5 },
@@ -306,6 +317,10 @@ const style = StyleSheet.create({
 	selection: { alignItems: 'center', margin: 5 },
 	selectionHeader: { fontSize: 20, textAlign: 'center' },
 	selectionDiv: { fontSize: 25, marginVertical: 27 },
+	dayClose: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5 },
+	dayCloseSelected: { backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5 },
+	dayCloseHeader: { textAlign: 'center' },
+	dayCloseSelectedHeader: { color: 'white' },
 
 	done: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 30, padding: 5, width: 100 },
 	doneHeader: { fontWeight: 'bold', textAlign: 'center' },
@@ -314,3 +329,8 @@ const style = StyleSheet.create({
 	bottomNav: { flexDirection: 'row', height: 30, marginVertical: 5, marginHorizontal: 20 },
 	bottomNavHeader: { fontWeight: 'bold', paddingVertical: 5 },
 })
+
+
+
+
+

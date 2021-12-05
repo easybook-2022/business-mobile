@@ -8,21 +8,16 @@ import { Camera } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator'
 import * as ImagePicker from 'expo-image-picker';
 import { logo_url } from '../../assets/info'
-import { getServiceInfo, addNewService, updateService } from '../apis/services'
-
-import FontAwesome from 'react-native-vector-icons/FontAwesome'
-import AntDesign from 'react-native-vector-icons/AntDesign'
-import Entypo from 'react-native-vector-icons/Entypo'
+import { addNewMenu, getMenuInfo, saveMenu } from '../apis/menus'
 
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - (offsetPadding * 2)
 const frameSize = width * 0.9
 
-export default function addservice(props) {
+export default function addmenu(props) {
 	const params = props.route.params
 	const { menuid, refetch } = params
-	const serviceid = params.id ? params.id : ""
 
 	const [cameraPermission, setCamerapermission] = useState(null);
 	const [pickingPermission, setPickingpermission] = useState(null);
@@ -30,109 +25,85 @@ export default function addservice(props) {
 	const [name, setName] = useState('')
 	const [info, setInfo] = useState('')
 	const [image, setImage] = useState({ uri: '', name: '' })
-	const [price, setPrice] = useState('')
-	const [duration, setDuration] = useState('')
-	const [loaded, setLoaded] = useState(serviceid ? false : true)
+
+	const [loaded, setLoaded] = useState(menuid ? false : true)
 
 	const [errorMsg, setErrormsg] = useState('')
 
 	const isMounted = useRef(null)
 
-	const addTheNewService = async() => {
+	const addTheNewMenu = async() => {
+		const ownerid = await AsyncStorage.getItem("ownerid")
 		const locationid = await AsyncStorage.getItem("locationid")
+		const data = { locationid, parentMenuid: menuid, name, info, image, permission: cameraPermission || pickingPermission }
 
-		if (name && (price && !isNaN(price)) && duration) {
-			const data = { locationid, menuid, name, info, image, price, duration, permission: cameraPermission || pickingPermission }
+		addNewMenu(data)
+			.then((res) => {
+				if (res.status == 200) {
+					return res.data
+				}
+			})
+			.then((res) => {
+				if (res) {
+					refetch()
+					props.navigation.goBack()
+				}
+			})
+			.catch((err) => {
+				if (err.response && err.response.status == 400) {
+					const { errormsg, status } = err.response.data
 
-			addNewService(data)
-				.then((res) => {
-					if (res.status == 200) {
-						return res.data
-					}
-				})
-				.then((res) => {
-					if (res) {
-						refetch()
-						props.navigation.goBack()
-					}
-				})
-				.catch((err) => {
-					if (err.response && err.response.status == 400) {
-						const { errormsg, status } = err.response.data
-
-						setErrormsg(errormsg)
-					}
-				})
-		} else {
-			if (!name) {
-				setErrormsg("Please enter the service name")
-
-				return
-			}
-
-			if (!price) {
-				setErrormsg("Please enter the price of the service")
-
-				return
-			} else if (isNaN(price)) {
-				setErrormsg("The price you entered is invalid")
-
-				return
-			}
-
-			if (!duration) {
-				setErrormsg("Please enter the duration of this service")
-
-				return
-			}
-		}
+					setMenuform({
+						...menuForm,
+						errormsg
+					})
+				}
+			})
 	}
-	const updateTheService = async() => {
-		const locationid = await AsyncStorage.getItem("locationid")
+	const saveTheMenu = () => {
+		const data = { id: menuid, name, info, image }
 
-		if (name && (price && !isNaN(price)) && duration) {
-			const data = { locationid, menuid, serviceid, name, info, image, price, duration, permission: cameraPermission || pickingPermission }
+		saveMenu(data)
+			.then((res) => {
+				if (res.status == 200) {
+					return res.data
+				}
+			})
+			.then((res) => {
+				if (res) {
+					refetch()
+					props.navigation.goBack()
+				}
+			})
+			.catch((err) => {
+				if (err.response && err.response.status == 400) {
+					
+				}
+			})
+	}
 
-			updateService(data)
-				.then((res) => {
-					if (res.status == 200) {
-						return res.data
-					}
-				})
-				.then((res) => {
-					if (res) {
-						refetch()
-						props.navigation.goBack()
-					}
-				})
-				.catch((err) => {
-					if (err.response && err.response.status == 400) {
+	const getTheMenuInfo = async() => {
+		getMenuInfo(menuid)
+			.then((res) => {
+				if (res.status == 200) {
+					return res.data
+				}
+			})
+			.then((res) => {
+				if (res && isMounted.current == true) {
+					const { name, info, image } = res.info
 
-					}
-				})
-		} else {
-			if (!name) {
-				setErrormsg("Please enter the service name")
-
-				return
-			}
-
-			if (!price) {
-				setErrormsg("Please enter the price of the service")
-
-				return
-			} else if (isNaN(price)) {
-				setErrormsg("The price you entered is invalid")
-
-				return
-			}
-
-			if (!duration) {
-				setErrormsg("Please enter the duration of this service")
-
-				return
-			}
-		}
+					setName(name)
+					setInfo(info)
+					setImage({ uri: logo_url + image, name: image })
+					setLoaded(true)
+				}
+			})
+			.catch((err) => {
+				if (err.response && err.response.status == 400) {
+					
+				}
+			})
 	}
 
 	const snapPhoto = async() => {
@@ -226,32 +197,6 @@ export default function addservice(props) {
         	setPickingpermission(status === 'granted')
         }
 	}
-	
-	const getTheServiceInfo = async() => {
-		getServiceInfo(serviceid)
-			.then((res) => {
-				if (res.status == 200) {
-					return res.data
-				}
-			})
-			.then((res) => {
-				if (res && isMounted.current == true) {
-					const { serviceInfo } = res
-
-					setName(serviceInfo.name)
-					setInfo(serviceInfo.info)
-					setImage({ uri: logo_url + serviceInfo.image, name: serviceInfo.image })
-					setPrice(serviceInfo.price.toString())
-					setDuration(serviceInfo.duration)
-					setLoaded(true)
-				}
-			})
-			.catch((err) => {
-				if (err.response && err.response.status == 400) {
-					
-				}
-			})
-	}
 
 	useEffect(() => {
 		isMounted.current = true
@@ -259,8 +204,8 @@ export default function addservice(props) {
 		allowCamera()
 		allowChoosing()
 
-		if (serviceid) {
-			getTheServiceInfo()
+		if (menuid) {
+			getTheMenuInfo()
 		}
 
 		return () => isMounted.current = false
@@ -269,23 +214,23 @@ export default function addservice(props) {
 	if (cameraPermission === null || pickingPermission === null) return <View/>
 
 	return (
-		<View style={style.addservice}>
+		<View style={style.addmenu}>
 			<View style={{ paddingBottom: offsetPadding }}>
 				<KeyboardAvoidingView behavior="padding">
 					{loaded ? 
 						<ScrollView style={{ backgroundColor: '#EAEAEA' }} showsVerticalScrollIndicator={false}>
 							<View style={style.box}>
-								<Text style={style.addHeader}>Enter service info</Text>
-								
-								<TextInput style={style.addInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Service name" onChangeText={(name) => setName(name)} value={name} autoCapitalize="none"/>
-								<TextInput style={style.infoInput} multiline={true} onSubmitEditing={() => Keyboard.dismiss()} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Anything you want to say about this service (optional)" onChangeText={(info) => setInfo(info)} value={info} autoCapitalize="none"/>
+								<Text style={style.addHeader}>Enter menu info</Text>
+
+								<TextInput style={style.addInput} placeholder="Menu name" placeholderTextColor="rgba(127, 127, 127, 0.5)" onChangeText={(name) => setName(name)} value={name} autoCorrect={false}/>
+								<TextInput style={style.infoInput} onSubmitEditing={() => Keyboard.dismiss()} multiline={true} placeholder="Anything you want to say about this menu" placeholderTextColor="rgba(127, 127, 127, 0.5)" onChangeText={(info) => setInfo(info)} value={info} autoCorrect={false} autoCompleteType="off"/>
 
 								<View style={style.cameraContainer}>
-									<Text style={style.cameraHeader}>Service photo</Text>
+									<Text style={style.cameraHeader}>Menu photo</Text>
 
 									{image.uri ? (
 										<>
-											<Image style={style.camera} source={{ uri: image.uri }}/>
+											<Image style={{ height: frameSize, width: frameSize }} source={{ uri: image.uri }}/>
 
 											<TouchableOpacity style={style.cameraAction} onPress={() => setImage({ uri: '', name: '' })}>
 												<Text style={style.cameraActionHeader}>Cancel</Text>
@@ -293,7 +238,7 @@ export default function addservice(props) {
 										</>
 									) : (
 										<>
-											<Camera style={style.camera} type={Camera.Constants.Type.back} ref={r => {setCamcomp(r)}}/>
+											<Camera style={style.camera} type={Camera.Constants.Type.back} ref={r => { setCamcomp(r) }}/>
 
 											<View style={style.cameraActions}>
 												<TouchableOpacity style={style.cameraAction} onPress={snapPhoto.bind(this)}>
@@ -304,17 +249,7 @@ export default function addservice(props) {
 												</TouchableOpacity>
 											</View>
 										</>
-									)}	
-								</View>
-
-								<View style={style.inputBox}>
-									<Text style={style.inputHeader}>Service price</Text>
-									<TextInput style={style.inputValue} placeholderTextColor="rgba(0, 0, 0, 0.5)" placeholder="4.99" onChangeText={(price) => setPrice(price.toString())} value={price} keyboardType="numeric" autoCorrect={false} autoCapitalize="none"/>
-								</View>
-
-								<View style={style.inputBox}>
-									<Text style={style.inputHeader}>Service duration</Text>
-									<TextInput style={style.inputValue} placeholderTextColor="rgba(0, 0, 0, 0.5)" placeholder="4 hours" onChangeText={(duration) => setDuration(duration)} value={duration} autoCapitalize="none"/>
+									)}
 								</View>
 
 								<Text style={style.errorMsg}>{errorMsg}</Text>
@@ -324,13 +259,13 @@ export default function addservice(props) {
 										<Text>Cancel</Text>
 									</TouchableOpacity>
 									<TouchableOpacity style={style.addAction} onPress={() => {
-										if (!serviceid) {
-											addTheNewService()
+										if (!menuid) {
+											addTheNewMenu()
 										} else {
-											updateTheService()
+											saveTheMenu()
 										}
 									}}>
-										<Text>{!serviceid ? "Done" : "Save"}</Text>
+										<Text>Done</Text>
 									</TouchableOpacity>
 								</View>
 							</View>
@@ -345,24 +280,24 @@ export default function addservice(props) {
 }
 
 const style = StyleSheet.create({
-	addservice: { backgroundColor: 'white', height: '100%', width: '100%' },
+	addmenu: { backgroundColor: 'white', height: '100%', width: '100%' },
 	box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', paddingVertical: 10, width: '100%' },
 	addHeader: { fontWeight: 'bold', paddingVertical: 5 },
-	addInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, fontSize: 13, marginBottom: 5, padding: 5, width: '80%' },
-	infoInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, fontSize: 13, height: 100, marginBottom: 50, padding: 10, width: '80%' },
-	cameraContainer: { alignItems: 'center', marginBottom: 50, width: '100%' },
+	addInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, fontSize: 13, padding: 10, width: '90%' },
+	infoInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, fontSize: 13, height: 100, marginVertical: 5, padding: 10, textAlignVertical: 'top', width: '90%' },
+	cameraContainer: { alignItems: 'center', width: '100%' },
 	cameraHeader: { fontWeight: 'bold', paddingVertical: 5 },
 	camera: { height: frameSize, width: frameSize },
 	cameraActions: { flexDirection: 'row' },
 	cameraAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginBottom: 50, margin: 5, padding: 5, width: 100 },
 	cameraActionHeader: { fontSize: 13, textAlign: 'center' },
-	inputBox: { flexDirection: 'row', marginBottom: 30 },
-	inputHeader: { fontSize: 15, fontWeight: 'bold', padding: 5 },
-	inputValue: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: '40%' },
-	errorMsg: { color: 'red', fontWeight: 'bold', marginBottom: 50, textAlign: 'center' },
-	addActions: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 50, width: '100%' },
+	errorMsg: { color: 'red', fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
+	addActions: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
 	addAction: { alignItems: 'center', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, padding: 5, width: 100 },
 })
+
+
+
 
 
 

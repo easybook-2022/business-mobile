@@ -6,6 +6,7 @@ import Constants from 'expo-constants';
 import * as FileSystem from 'expo-file-system'
 import { Camera } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator'
+import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import { CommonActions } from '@react-navigation/native';
 import { setupLocation } from '../apis/locations'
@@ -22,10 +23,10 @@ export default function setup({ navigation }) {
 	const screenHeight = height - (offsetPadding * 2)
 
 	const [cameraPermission, setCamerapermission] = useState(null);
+	const [pickingPermission, setPickingpermission] = useState(null);
 	const [locationPermission, setLocationpermission] = useState(null)
 
 	const [camComp, setCamcomp] = useState(null)
-	const [camType, setCamtype] = useState(Camera.Constants.Type.back);
 	const [storeName, setStorename] = useState(registerInfo.storeName)
 	const [phonenumber, setPhonenumber] = useState(registerInfo.phonenumber)
 	const [addressOne, setAddressone] = useState(registerInfo.addressOne)
@@ -136,10 +137,6 @@ export default function setup({ navigation }) {
 			let photo_option = [{ resize: { width: width, height: width }}]
 			let photo_save_option = { format: ImageManipulator.SaveFormat.JPEG, base64: true }
 
-			if (camType == Camera.Constants.Type.front) {
-				photo_option.push({ flip: ImageManipulator.FlipType.Horizontal })
-			}
-
 			photo = await ImageManipulator.manipulateAsync(
 				photo.localUri || photo.uri,
 				photo_option,
@@ -166,7 +163,42 @@ export default function setup({ navigation }) {
 			})
 		}
 	}
-	const openCamera = async() => {
+	const choosePhoto = async() => {
+		let letters = [
+			"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", 
+			"n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"
+		]
+		let photo_name_length = Math.floor(Math.random() * (15 - 10)) + 10
+		let char = "", captured, self = this
+		let photo = await ImagePicker.launchImageLibraryAsync({
+			mediaTypes: ImagePicker.MediaTypeOptions.Images,
+			aspect: [4, 3],
+			quality: 0.1,
+			base64: true
+		});
+
+		for (let k = 0; k <= photo_name_length - 1; k++) {
+			if (k % 2 == 0) {
+                char += "" + letters[Math.floor(Math.random() * letters.length)].toUpperCase();
+            } else {
+                char += "" + (Math.floor(Math.random() * 9) + 0);
+            }
+		}
+
+		if (!photo.cancelled) {
+			FileSystem.moveAsync({
+				from: photo.uri,
+				to: `${FileSystem.documentDirectory}/${char}.jpg`
+			})
+			.then(() => {
+				setLogo({
+					uri: `${FileSystem.documentDirectory}/${char}.jpg`,
+					name: `${char}.jpg`
+				})
+			})
+		}
+	}
+	const allowCamera = async() => {
 		const { status } = await Camera.getCameraPermissionsAsync()
 
 		if (status == 'granted') {
@@ -176,6 +208,17 @@ export default function setup({ navigation }) {
 
 			setCamerapermission(status === 'granted')
 		}
+	}
+	const allowChoosing = async() => {
+		const { status } = await ImagePicker.getMediaLibraryPermissionsAsync()
+        
+        if (status == 'granted') {
+        	setPickingpermission(status === 'granted')
+        } else {
+        	const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+        	setPickingpermission(status === 'granted')
+        }
 	}
 	const openLocation = async() => {
 		const { status } = await Location.getForegroundPermissionsAsync()
@@ -191,12 +234,13 @@ export default function setup({ navigation }) {
 	
 	useEffect(() => {
 		(async() => {
-			openCamera()
+			allowCamera()
+			allowChoosing()
 			openLocation()
 		})()
 	}, [])
 
-	if (cameraPermission === null && locationPermission === null) return <View/>
+	if (cameraPermission === null && pickingPermission && locationPermission === null) return <View/>
 		
 	return (
 		<View style={style.setup}>
@@ -244,16 +288,21 @@ export default function setup({ navigation }) {
 										<Image style={style.camera} source={{ uri: logo.uri }}/>
 
 										<TouchableOpacity style={style.cameraAction} onPress={() => setLogo({ uri: '', name: '' })}>
-											<AntDesign name="closecircleo" size={30}/>
+											<Text style={style.cameraActionHeader}>Cancel</Text>
 										</TouchableOpacity>
 									</>
 								) : (
 									<>
-										<Camera style={style.camera} type={camType} ref={r => {setCamcomp(r)}}/>
+										<Camera style={style.camera} type={Camera.Constants.Type.back} ref={r => {setCamcomp(r)}}/>
 
-										<TouchableOpacity style={style.cameraAction} onPress={snapPhoto.bind(this)}>
-											<Entypo name="camera" size={30}/>
-										</TouchableOpacity>
+										<View style={style.cameraActions}>
+											<TouchableOpacity style={style.cameraAction} onPress={snapPhoto.bind(this)}>
+												<Text style={style.cameraActionHeader}>Take this photo</Text>
+											</TouchableOpacity>
+											<TouchableOpacity style={style.cameraAction} onPress={() => choosePhoto()}>
+												<Text style={style.cameraActionHeader}>Choose from phone</Text>
+											</TouchableOpacity>
+										</View>
 									</>
 								)}	
 							</View>
@@ -303,7 +352,9 @@ const style = StyleSheet.create({
 	cameraContainer: { alignItems: 'center', marginBottom: 10, width: '100%' },
 	cameraHeader: { fontFamily: 'appFont', fontWeight: 'bold', paddingVertical: 5 },
 	camera: { height: width * 0.8, width: width * 0.8 },
-	cameraAction: { margin: 10 },
+	cameraActions: { flexDirection: 'row' },
+	cameraAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: 100 },
+	cameraActionHeader: { fontSize: 13, textAlign: 'center' },
 	errorMsg: { color: 'red', fontWeight: 'bold', marginVertical: 0, textAlign: 'center' },
 	setupButton: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 50, padding: 10 },
 

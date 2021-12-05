@@ -34,6 +34,7 @@ import Booktime from './src/pages/booktime'
 
 // salons' components
 import Services from './src/components/salons/services'
+import Addmenu from './src/components/addmenu'
 import Addproduct from './src/components/addproduct'
 import Addservice from './src/components/addservice'
 
@@ -96,6 +97,18 @@ export default function App() {
                                     refetch()
                                     navigation.goBack({ map })
                                 }}>
+                                    <Text style={style.backHeader}>Go Back</Text>
+                                </TouchableOpacity>
+                            )
+                        })}/>
+                        <Stack.Screen name="addmenu" component={Addmenu} options={({ navigation, route }) => ({
+                            headerTitle: () => (
+                                <View>
+                                    <Text style={{ fontSize: 20, fontWeight: 'bold' }}>{route.params.menuid ? 'Edit' : 'Add'} Menu</Text>
+                                </View>
+                            ),
+                            headerLeft: () => (
+                                <TouchableOpacity style={style.back} onPress={() => navigation.goBack()}>
                                     <Text style={style.backHeader}>Go Back</Text>
                                 </TouchableOpacity>
                             )

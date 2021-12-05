@@ -954,19 +954,19 @@ export default function main(props) {
 														{locationType == 'salon' ? 
 															(item.status == "requested" || item.status == "change") ? 
 																<>
-																	<Text style={{ fontWeight: 'bold' }}>{item.username + ' requested' + (item.status == 'change' ? ' a time change for ' : ' ')}</Text> 
-																	<Text style={{ fontWeight: 'bold' }}>{item.name + ' ' + displayTime(item.time)}</Text>
+																	<Text style={style.requestInfoHeader}>{item.username + ' requested ' + (item.status == 'change' ? ' a time change for ' : '') + item.name}</Text> 
+																	<Text style={style.requestInfoHeader}>{displayTime(item.time)}</Text>
 																</>
 																:
 																<>
-																	<Text style={{ fontWeight: 'bold' }}>{item.username + ' has an appointment for ' + item.name + ' ' + displayTime(item.time) + '\n\n'}</Text>
+																	<Text style={style.requestInfoHeader}>{item.username + ' has an appointment for ' + item.name + displayTime(item.time) + '\n\n'}</Text>
 																	<Text style={{ color: 'grey', fontStyle: 'italic' }}>waiting for confirmation</Text>
 																</>
 															:
 															<>
-																<Text><Text style={{ fontWeight: 'bold' }}>{item.username}</Text> is {item.status == 'change' ? 're-' : ''}booking a reservation</Text>
-																<Text style={{ fontWeight: 'bold' }}>{'\n' + displayTime(item.time)}</Text>
-																<Text style={{ fontWeight: 'bold' }}>{item.diners > 0 ? ' for ' + item.diners + ' ' + (item.diners == 1 ? 'person' : 'people') : ' for 1 person'}</Text>
+																<Text><Text style={style.requestInfoHeader}>{item.username}</Text> is {item.status == 'change' ? 're-' : ''}booking a reservation</Text>
+																<Text style={style.requestInfoHeader}>{'\n' + displayTime(item.time)}</Text>
+																<Text style={style.requestInfoHeader}>{item.diners > 0 ? ' for ' + item.diners + ' ' + (item.diners == 1 ? 'person' : 'people') : ' for 1 person'}</Text>
 
 																{(item.status == "rebook" || item.status == "accepted") && <Text style={{ color: 'grey', fontStyle: 'italic' }}>{'\n\n'}waiting for confirmation</Text>}
 															</>
@@ -1168,11 +1168,11 @@ export default function main(props) {
 							</TouchableOpacity>
 
 							<TouchableOpacity style={style.bottomNavButton} onPress={() => props.navigation.navigate("menu", { menuid: '', name: '', refetch: () => getTheInfo()})}>
-								<Text style={style.bottomNavHeader}>Edit Menu</Text>
+								<Text style={style.bottomNavButtonHeader}>Edit Menu</Text>
 							</TouchableOpacity>
 
 							<TouchableOpacity style={style.bottomNavButton} onPress={() => changeTheLocationState()}>
-								<Text style={style.bottomNavHeader}>Set {locationListed ? "inactive" : "active"}</Text>
+								<Text style={style.bottomNavButtonHeader}>Set {locationListed ? "inactive" : "active"}</Text>
 							</TouchableOpacity>
 
 							<TouchableOpacity style={style.bottomNav} onPress={async() => {
@@ -1510,11 +1510,11 @@ const style = StyleSheet.create({
 	locationName: { fontSize: 13, fontWeight: 'bold', paddingHorizontal: 10, textAlign: 'center' },
 	locationAddress: { fontSize: 13, fontWeight: 'bold', paddingHorizontal: 10, textAlign: 'center' },
 
-	navs: { alignItems: 'center', height: 45 },
-	nav: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: 13, marginHorizontal: 2, marginVertical: 3, padding: 2, width: (width / 3) - 10 },
-	navHeader: { color: 'black', fontSize: 13 },
-	navSelected: { alignItems: 'center', backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: 13, marginHorizontal: 2, marginVertical: 3, padding: 2, width: (width / 3) - 10 },
-	navHeaderSelected: { color: 'white', fontSize: 13 },
+	navs: { alignItems: 'center' },
+	nav: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 2, marginVertical: 3, padding: 2, width: (width / 3) - 10 },
+	navHeader: { color: 'black' },
+	navSelected: { alignItems: 'center', backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 2, marginVertical: 3, padding: 2, width: (width / 3) - 10 },
+	navHeaderSelected: { color: 'white' },
 
 	// body
 	body: { height: screenHeight - 140 },
@@ -1525,6 +1525,7 @@ const style = StyleSheet.create({
 	requestImageHolder: { borderRadius: imageSize / 2, height: imageSize, margin: 5, overflow: 'hidden', width: imageSize },
 	requestImage: { height: imageSize, width: imageSize },
 	requestInfo: { fontFamily: 'appFont', fontSize: 20, padding: 10, width: width - 100 },
+	requestInfoHeader: { fontSize: 20, fontWeight: 'bold' },
 	requestActions: { flexDirection: 'row', justifyContent: 'space-around', marginVertical: 10 },
 	requestAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 5, width: 80 },
 	requestActionHeader: { fontSize: 10, textAlign: 'center' },
@@ -1554,8 +1555,9 @@ const style = StyleSheet.create({
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
 	bottomNav: { flexDirection: 'row', height: 30, marginVertical: 5, marginHorizontal: 20 },
-	bottomNavButton: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, padding: 3 },
-	bottomNavHeader: { fontWeight: 'bold', paddingVertical: 5 },
+	bottomNavHeader: { color: 'black', fontWeight: 'bold', paddingVertical: 5 },
+	bottomNavButton: { backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, padding: 3 },
+	bottomNavButtonHeader: { color: 'white', fontWeight: 'bold', paddingVertical: 5 },
 
 	cancelRequestBox: { backgroundColor: 'white', height: '100%', width: '100%' },
 	cancelRequestHeader: { fontFamily: 'appFont', fontSize: 20, marginHorizontal: 30, marginTop: 50, textAlign: 'center' },
@@ -1577,7 +1579,7 @@ const style = StyleSheet.create({
 	requiredBox: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', paddingVertical: offsetPadding, width: '100%' },
 	requiredContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },
 	requiredHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
-	requiredActions: { flexDirection: 'row', justifyContent: 'space-around' },
+	requiredActions: { alignItems: 'center', justifyContent: 'space-around' },
 	requiredAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 150 },
 	requiredActionHeader: { textAlign: 'center' },
 

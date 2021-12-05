@@ -86,10 +86,10 @@ const { accountNumber, countryCode, currency, routingNumber, accountHolderName }
 	:
 	emptyBankAccount
 
-const login = test_input ? testStores[1] : emptyStore
-const ownerLogin = test_input ? owners[1] : emptyOwner
-const register = test_input ? testStores[1] : emptyStore
-const ownerRegister = test_input ? owners[1] : emptyOwner
+const login = test_input ? testStores[0] : emptyStore
+const ownerLogin = test_input ? owners[0] : emptyOwner
+const register = test_input ? testStores[2] : emptyStore
+const ownerRegister = test_input ? owners[2] : emptyOwner
 const wifi_api_url = "http://192.168.0.172:5000/flask"
 const wifi_socket_url = "http://192.168.0.172:5001"
 const server_api_url = "https://www.easygo.tk/flask"
@@ -131,7 +131,7 @@ export const displayTime = unixtime => {
 	const currentDate = Date.parse(months[currTime.getMonth()] + " " + currTime.getDate() + ", " + currTime.getFullYear() + " 23:59")
 	const time = parseInt(unixtime)
 	const selectedDate = new Date(time)
-	let hour = selectedDate.getHours(), minute = selectedDate.getMinutes(), period
+	let hour = selectedDate.getHours(), minute = selectedDate.getMinutes(), period, date = selectedDate.getDate()
 	let timeStr = "", timeheader = "", diff
 
 	minute = minute < 10 ? '0' + minute : minute
@@ -143,36 +143,24 @@ export const displayTime = unixtime => {
 	if (time < currentDate) {
 		timeStr = "today at " + timeheader
 	} else if (time > currentDate) {
-		if (time - currentDate > 86400000) {
+		if (time - currentDate > 86400000) { // > one day
 			diff = time - currentDate
 
 			if (diff <= 604800000) { // this week
 				let sDay = new Date(time)
 				let eDay = new Date(currentDate)
 
-				if (sDay.getDay() == eDay.getDay()) {
-					timeStr = " next " + days[sDay.getDay()] + " at " + timeheader
-				} else {
-					timeStr = " this " + days[sDay.getDay()] + " at " + timeheader
-				}
+				timeStr = " on " + days[sDay.getDay()] + " at " + timeheader
 			} else if (diff > 604800000 && diff <= 1210000000) { // next week
 				let sDay = new Date(time)
 				let eDay = new Date(currentDate)
 
-				if (sDay.getDay() != eDay.getDay()) {
-					timeStr = " next " + days[sDay.getDay()] + " at " + timeheader
-				} else {
-					timeStr = " this " + days[sDay.getDay()] + ", " + months[sDay.getMonth()] + " " + date + " at " + timeheader
-				}
+				timeStr = " next " + days[sDay.getDay()] + " at " + timeheader
 			} else {
 				let sDay = new Date(time)
 				let eDay = new Date(currentDate)
 
-				if (sDay.getMonth() != eDay.getMonth()) {
-					timeStr = " this " + days[sDay.getDay()] + ", " + months[sDay.getMonth()] + " " + date + " at " + timeheader
-				} else {
-					timeStr = " this " + days[sDay.getDay()] + ", " + date + " at " + timeheader
-				}
+				timeStr = " on " + days[sDay.getDay()] + ", " + months[sDay.getMonth()] + " " + date + " at " + timeheader
 			}
 		} else {
 			timeStr = "tomorrow at " + timeheader

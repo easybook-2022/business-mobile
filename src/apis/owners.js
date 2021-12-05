@@ -13,6 +13,7 @@ export const registerUser = data => {
 	form.append("cellnumber", data.cellnumber)
 	form.append("password", data.password)
 	form.append("confirmPassword", data.confirmPassword)
+	form.append("hours", JSON.stringify(data.hours))
 	form.append("permission", data.permission)
 
 	if (data.profile.uri) {
@@ -41,6 +42,7 @@ export const addOwner = data => {
 	form.append("username", data.username)
 	form.append("password", data.password)
 	form.append("confirmPassword", data.confirmPassword)
+	form.append("hours", JSON.stringify(data.hours))
 	form.append("permission", data.permission)
 
 	if (data.profile.uri) {
@@ -62,6 +64,7 @@ export const updateOwner = data => {
 	form.append("username", data.username)
 	form.append("password", data.password)
 	form.append("confirmPassword", data.confirmPassword)
+	form.append("hours", JSON.stringify(data.hours))
 	form.append("permission", data.permission)
 
 	if (data.profile.uri) {

@@ -377,7 +377,7 @@ export default function booktime(props) {
 													:
 													selectedDateInfo.date == day.num ?
 														<TouchableOpacity key={day.key} style={style.dateDayTouchSelected} onPress={() => selectDate(day.num)}>
-															<Text style={style.dateDayTouchHeaderSelected}>{day.num}</Text>
+															<Text style={style.dateDayTouchSelectedHeader}>{day.num}</Text>
 														</TouchableOpacity>
 														:
 														<TouchableOpacity key={day.key} style={style.dateDayTouch} onPress={() => selectDate(day.num)}>
@@ -397,19 +397,19 @@ export default function booktime(props) {
 									<View key={info.key}>
 										{(!info.timetaken && !info.timepassed) && (
 											<TouchableOpacity style={style.unselect} onPress={() => selectTime(name, info.header, info.time)}>
-												<Text style={{ color: 'black', fontSize: 15 }}>{info.header}</Text>
+												<Text style={{ color: 'black' }}>{info.header}</Text>
 											</TouchableOpacity>
 										)}
 
 										{(info.timetaken && !info.timepassed) && (
 											<TouchableOpacity style={style.selected} disabled={true} onPress={() => {}}>
-												<Text style={{ color: 'white', fontSize: 15 }}>{info.header}</Text>
+												<Text style={{ color: 'white' }}>{info.header}</Text>
 											</TouchableOpacity>
 										)}
 
 										{(!info.timetaken && info.timepassed) && (
 											<TouchableOpacity style={style.selectedPassed} disabled={true} onPress={() => {}}>
-												<Text style={{ color: 'black', fontSize: 15 }}>{info.header}</Text>
+												<Text style={{ color: 'black' }}>{info.header}</Text>
 											</TouchableOpacity>
 										)}
 									</View>
@@ -480,7 +480,7 @@ export default function booktime(props) {
 
 const style = StyleSheet.create({
 	box: { backgroundColor: '#EAEAEA', height: '100%', width: '100%' },
-	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, height: 30, marginVertical: 20, marginHorizontal: 20, padding: 5, width: 100 },
+	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, marginVertical: 20, marginHorizontal: 20, padding: 5, width: 100 },
 	backHeader: { fontFamily: 'appFont', fontSize: 20 },
 
 	boxHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', marginBottom: 10, textAlign: 'center' },
@@ -491,19 +491,18 @@ const style = StyleSheet.create({
 	dateHeader: { fontFamily: 'appFont', fontSize: 20, marginVertical: 5, textAlign: 'center', width: 170 },
 	dateDays: { alignItems: 'center' },
 	dateDaysRow: { flexDirection: 'row' },
-	dateDayTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, padding: 7, width: 40 },
-	dateDayTouchSelected: { backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, padding: 7, width: 40 },
-	dateDayTouchHeaderSelected: { color: 'white', fontSize: 17, textAlign: 'center' },
-	dateDayTouchPassed: { backgroundColor: 'rgba(0, 0, 0, 0.5)', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, padding: 7, width: 40 },
-	dateDayTouchDisabled: { height: 40, margin: 3, padding: 3, width: 40 },
-	dateDayTouchHeader: { color: 'black', fontSize: 17, textAlign: 'center' },
-	dateDayTouchHeaderDisabled: { color: 'white', fontSize: 17, textAlign: 'center' },
+	dateDayTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, padding: 7, width: (width / 7) - 20 },
+	dateDayTouchSelected: { backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, padding: 7, width: (width / 7) - 20 },
+	dateDayTouchSelectedHeader: { color: 'white', fontSize: 17, textAlign: 'center' },
+	dateDayTouchPassed: { backgroundColor: 'rgba(0, 0, 0, 0.5)', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, padding: 7, width: (width / 7) - 20 },
+	dateDayTouchDisabled: { height: 40, margin: 3, padding: 3, width: (width / 7) - 20 },
+	dateDayTouchHeader: { color: 'black', textAlign: 'center' },
 
 	timesHeader: { fontFamily: 'appFont', fontSize: 30, fontWeight: 'bold', textAlign: 'center' },
 	times: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', width: 282 },
-	unselect: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, padding: 5, width: 90 },
-	selected: { alignItems: 'center', backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, padding: 5, width: 90 },
-	selectedPassed: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, opacity: 0.3, padding: 5, width: 90 },
+	unselect: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, padding: 5, width: (width / 3) - 50 },
+	selected: { alignItems: 'center', backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, padding: 5, width: (width / 3) - 50 },
+	selectedPassed: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, opacity: 0.3, padding: 5, width: (width / 3) - 50 },
 
 	// confirm & requested box
 	confirmBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
