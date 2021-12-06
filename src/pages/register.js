@@ -28,13 +28,13 @@ export default function register(props) {
 	const [confirmPassword, setConfirmpassword] = useState(ownerRegisterInfo.password)
 	const [profile, setProfile] = useState({ uri: '', name: '' })
 	const [workerHours, setWorkerhours] = useState([
-		{ key: "0", header: "Sunday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, notworking: false },
-		{ key: "1", header: "Monday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, notworking: false },
-		{ key: "2", header: "Tuesday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, notworking: false },
-		{ key: "3", header: "Wednesday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, notworking: false },
-		{ key: "4", header: "Thursday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, notworking: false },
-		{ key: "5", header: "Friday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, notworking: false },
-		{ key: "6", header: "Saturday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, notworking: false }
+		{ key: "0", header: "Sunday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, working: true },
+		{ key: "1", header: "Monday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, working: true },
+		{ key: "2", header: "Tuesday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, working: true },
+		{ key: "3", header: "Wednesday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, working: true },
+		{ key: "4", header: "Thursday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, working: true },
+		{ key: "5", header: "Friday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, working: true },
+		{ key: "6", header: "Saturday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, working: true }
 	])
 
 	const [loading, setLoading] = useState(false)
@@ -46,7 +46,7 @@ export default function register(props) {
 		setLoading(true)
 
 		workerHours.forEach(function (workerHour) {
-			let { opentime, closetime, notworking } = workerHour
+			let { opentime, closetime, working } = workerHour
 			let newOpentime = {...opentime}, newClosetime = {...closetime}
 			let openhour = parseInt(newOpentime.hour), closehour = parseInt(newClosetime.hour)
 			let openperiod = newOpentime.period, closeperiod = newClosetime.period
@@ -95,7 +95,7 @@ export default function register(props) {
 			delete newOpentime.period
 			delete newClosetime.period
 
-			hours[workerHour.header.substr(0, 3)] = { opentime: newOpentime, closetime: newClosetime, notworking }
+			hours[workerHour.header.substr(0, 3)] = { opentime: newOpentime, closetime: newClosetime, working }
 		})
 
 		const data = { cellnumber, username, password, confirmPassword, profile, hours, permission: cameraPermission || pickingPermission }
@@ -258,10 +258,10 @@ export default function register(props) {
 
 		setWorkerhours(newWorkingHours)
 	}
-	const notWorking = index => {
+	const working = index => {
 		const newWorkerhours = [...workerHours]
 
-		newWorkerhours[index].notworking = !newWorkerhours[index].notworking
+		newWorkerhours[index].working = !newWorkerhours[index].working
 
 		setWorkerhours(newWorkerhours)
 	}
@@ -352,7 +352,7 @@ export default function register(props) {
 
 								{workerHours.map((info, index) => (
 									<View key={index} style={style.workerHour}>
-										<View style={{ opacity: info.close ? 0.1 : 1 }}>
+										<View style={{ opacity: info.working ? 1 : 0.1 }}>
 											<Text style={style.workerHourHeader}>{info.header}</Text>
 											<View style={style.timeSelectionContainer}>
 												<View style={style.timeSelection}>
@@ -418,8 +418,8 @@ export default function register(props) {
 												</View>
 											</View>
 										</View>
-										<TouchableOpacity style={info.notworking ? style.dayCloseSelected : style.dayClose} onPress={() => notWorking(index)}>
-											<Text style={info.notworking ? style.dayCloseSelectedHeader : style.dayCloseHeader}>Not working on {info.header}</Text>
+										<TouchableOpacity style={info.working ? style.dayCloseSelected : style.dayClose} onPress={() => working(index)}>
+											<Text style={info.working ? style.dayCloseSelectedHeader : style.dayCloseHeader}>Not working on {info.header}</Text>
 										</TouchableOpacity>
 									</View>
 								))}

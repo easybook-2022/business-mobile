@@ -64,13 +64,13 @@ export default function settings(props) {
 	const [accountHolders, setAccountHolders] = useState([])
 	const [accountHoldersloading, setAccountholdersloading] = useState(true)
 	const [workerHours, setWorkerhours] = useState([
-		{ key: "0", header: "Sunday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, notworking: false },
-		{ key: "1", header: "Monday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, notworking: false },
-		{ key: "2", header: "Tuesday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, notworking: false },
-		{ key: "3", header: "Wednesday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, notworking: false },
-		{ key: "4", header: "Thursday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, notworking: false },
-		{ key: "5", header: "Friday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, notworking: false },
-		{ key: "6", header: "Saturday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, notworking: false }
+		{ key: "0", header: "Sunday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, working: true },
+		{ key: "1", header: "Monday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, working: true },
+		{ key: "2", header: "Tuesday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, working: true },
+		{ key: "3", header: "Wednesday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, working: true },
+		{ key: "4", header: "Thursday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, working: true },
+		{ key: "5", header: "Friday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, working: true },
+		{ key: "6", header: "Saturday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, working: true }
 	])
 
 	// bank accounts
@@ -343,7 +343,7 @@ export default function settings(props) {
 		const hours = {}
 
 		workerHours.forEach(function (workerHour) {
-			let { opentime, closetime, notworking } = workerHour
+			let { opentime, closetime, working } = workerHour
 			let newOpentime = {...opentime}, newClosetime = {...closetime}
 			let openhour = parseInt(newOpentime.hour), closehour = parseInt(newClosetime.hour)
 			let openperiod = newOpentime.period, closeperiod = newClosetime.period
@@ -392,7 +392,7 @@ export default function settings(props) {
 			delete newOpentime.period
 			delete newClosetime.period
 
-			hours[workerHour.header.substr(0, 3)] = { opentime: newOpentime, closetime: newClosetime, notworking }
+			hours[workerHour.header.substr(0, 3)] = { opentime: newOpentime, closetime: newClosetime, working }
 		})
 
 		const { cellnumber, username, password, confirmPassword, profile } = accountForm
@@ -481,10 +481,10 @@ export default function settings(props) {
 
 		setWorkerhours(newWorkerhours)
 	}
-	const notWorking = index => {
+	const working = index => {
 		const newWorkerhours = [...workerHours]
 
-		newWorkerhours[index].notworking = !newWorkerhours[index].notworking
+		newWorkerhours[index].working = !newWorkerhours[index].working
 
 		setWorkerhours(newWorkerhours)
 	}
@@ -492,7 +492,7 @@ export default function settings(props) {
 		const hours = {}
 
 		workerHours.forEach(function (workerHour) {
-			let { opentime, closetime, notworking } = workerHour
+			let { opentime, closetime, working } = workerHour
 			let newOpentime = {...opentime}, newClosetime = {...closetime}
 			let openhour = parseInt(newOpentime.hour), closehour = parseInt(newClosetime.hour)
 			let openperiod = newOpentime.period, closeperiod = newClosetime.period
@@ -541,7 +541,7 @@ export default function settings(props) {
 			delete newOpentime.period
 			delete newClosetime.period
 
-			hours[workerHour.header.substr(0, 3)] = { opentime: newOpentime, closetime: newClosetime, notworking }
+			hours[workerHour.header.substr(0, 3)] = { opentime: newOpentime, closetime: newClosetime, working }
 		})
 
 		const { id, cellnumber, username, password, confirmPassword, profile } = accountForm
@@ -1347,7 +1347,7 @@ export default function settings(props) {
 											<Text style={style.accountHeader}>#{index + 1}:</Text>
 
 											<View style={style.accountEdit}>
-												<Text style={style.accountEditHeader}>{info.cellnumber}</Text>
+												<Text style={style.accountEditHeader}>{info.username}</Text>
 												<TouchableOpacity style={style.accountEditTouch} onPress={() => {
 													setAccountform({
 														...accountForm,
@@ -1498,7 +1498,7 @@ export default function settings(props) {
 									<View style={style.workerHours}>
 										{workerHours.map((info, index) => (
 											<View key={index} style={style.workerHour}>
-												<View style={{ opacity: info.notworking ? 0.1 : 1 }}>
+												<View style={{ opacity: info.working ? 1 : 0.1 }}>
 													<Text style={style.workerHourHeader}>{info.header}</Text>
 													<View style={style.timeSelectionContainer}>
 														<View style={style.timeSelection}>
@@ -1564,8 +1564,10 @@ export default function settings(props) {
 														</View>
 													</View>
 												</View>
-												<TouchableOpacity style={info.notworking ? style.dayCloseSelected : style.dayClose} onPress={() => notWorking(index)}>
-													<Text style={info.notworking ? style.dayCloseSelectedHeader : style.dayCloseHeader}>Not working on {info.header}</Text>
+												<TouchableOpacity style={style.dayClose} onPress={() => working(index)}>
+													<Text style={style.dayCloseHeader}>
+														{info.working ? 'Not working' : 'Working'}
+													</Text>
 												</TouchableOpacity>
 											</View>
 										))}

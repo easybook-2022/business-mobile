@@ -207,7 +207,9 @@ export default function main(props) {
 	const getTheInfo = async() => {
 		const ownerid = await AsyncStorage.getItem("ownerid")
 		const locationid = await AsyncStorage.getItem("locationid")
-		const data = { locationid, menuid: '' }
+		const longitude = await AsyncStorage.getItem("longitude")
+		const latitude = await AsyncStorage.getItem("latitude")
+		const data = { locationid, menuid: '', longitude, latitude }
 
 		getInfo(data)
 			.then((res) => {
@@ -234,6 +236,7 @@ export default function main(props) {
 							fetchTheNumCartOrderers()
 							getAllReservations()
 						} else {
+							fetchTheNumAppointments()
 							getAllAppointments()
 						}
 					})
@@ -279,8 +282,9 @@ export default function main(props) {
 	}
 	const getAllRequests = async() => {
 		const locationid = await AsyncStorage.getItem("locationid")
+		const data = { ownerid: ownerId, locationid }
 
-		getRequests(locationid)
+		getRequests(data)
 			.then((res) => {
 				if (res.status == 200) {
 					return res.data
@@ -301,8 +305,9 @@ export default function main(props) {
 	}
 	const getAllAppointments = async() => {
 		const locationid = await AsyncStorage.getItem("locationid")
+		const data = { ownerid: ownerId, locationid }
 
-		getAppointments(locationid)
+		getAppointments(data)
 			.then((res) => {
 				if (res.status == 200) {
 					return res.data
@@ -436,7 +441,7 @@ export default function main(props) {
 							if (res) {
 								const newRequests = [...requests]
 
-								data = { ...data, receivers: res.receivers }
+								data = { ...data, receivers: res.receivers, worker: res.worker }
 								socket.emit("socket/business/acceptRequest", data, () => {
 									newRequests[index].status = "accepted"
 
@@ -455,7 +460,7 @@ export default function main(props) {
 				}
 			}
 		} else {
-			let data = { scheduleid: id, tablenum: tablenum ? tablenum : "", type: "acceptRequest" }
+			let data = { scheduleid: id, ownerid: ownerId, tablenum: tablenum ? tablenum : "", type: "acceptRequest" }
 
 			acceptRequest(data)
 				.then((res) => {
@@ -467,9 +472,10 @@ export default function main(props) {
 					if (res) {
 						const newRequests = [...requests]
 
-						data = { ...data, receivers: res.receivers }
+						data = { ...data, receivers: res.receivers, worker: res.worker }
 						socket.emit("socket/business/acceptRequest", data, () => {
 							newRequests[index].status = "accepted"
+							newRequests[index].worker = res.worker
 
 							setRequests(newRequests)
 						})
@@ -764,6 +770,7 @@ export default function main(props) {
 				fetchTheNumRequests()
 			} else if (data.type == "cancelService") {
 				const newAppointments = [...appointments]
+				const newRequests = [...requests]
 
 				setAppointments(newAppointments.filter(item => {
 					if (item.id != data.scheduleid) {
@@ -771,7 +778,22 @@ export default function main(props) {
 					}
 				}))
 
+				setRequests(newRequests.filter(item => {
+					if (item.id != data.scheduleid) {
+						return item
+					}
+				}))
+
 				fetchTheNumAppointments()
+				fetchTheNumRequests()
+			} else if (data.type == "acceptRequest") {
+				const newRequests = [...requests]
+
+				setRequests(newRequests.filter(item => {
+					if (item.id == data.scheduleid) {
+						return item.status = "accepted", item.worker = data.worker
+					}
+				}))
 			}
 		})
 		socket.on("updateSchedules", data => {
@@ -781,7 +803,9 @@ export default function main(props) {
 				fetchTheNumRequests()
 
 				if (locationType == "salon") {
-					fetchTheNumAppointments()
+					if (data.worker.id == ownerId) {
+						fetchTheNumAppointments()
+					}
 				} else {
 					fetchTheNumReservations()
 				}
@@ -911,28 +935,28 @@ export default function main(props) {
 							<View style={{ flexDirection: 'row' }}>
 								{locationType != '' && (
 									<TouchableOpacity style={viewType == "requests" ? style.navSelected : style.nav} onPress={() => getAllRequests()}>
-										<Text style={viewType == "requests" ? style.navHeaderSelected : style.navHeader}>{numRequests}</Text>
+										<Text style={[viewType == "requests" ? style.navHeaderSelected : style.navHeader, { fontSize: 20 }]}>{numRequests}</Text>
 										<Text style={viewType == "requests" ? style.navHeaderSelected : style.navHeader}>Request(s)</Text>
 									</TouchableOpacity>
 								)}
 
 								{locationType == 'salon' && (
 									<TouchableOpacity style={viewType == "appointments" ? style.navSelected : style.nav} onPress={() => getAllAppointments()}>
-										<Text style={viewType == "appointments" ? style.navHeaderSelected : style.navHeader}>{numAppointments}</Text>
+										<Text style={[viewType == "appointments" ? style.navHeaderSelected : style.navHeader, { fontSize: 20 }]}>{numAppointments}</Text>
 										<Text style={viewType == "appointments" ? style.navHeaderSelected : style.navHeader}>Appointment(s)</Text>
 									</TouchableOpacity>
 								)}
 
 								{locationType == 'restaurant' && (
 									<TouchableOpacity style={viewType == "cartorderers" ? style.navSelected : style.nav} onPress={() => getAllCartOrderers()}>
-										<Text style={viewType == "cartorderers" ? style.navHeaderSelected : style.navHeader}>{numCartorderers}</Text>
+										<Text style={[viewType == "cartorderers" ? style.navHeaderSelected : style.navHeader, { fontSize: 20 }]}>{numCartorderers}</Text>
 										<Text style={viewType == "cartorderers" ? style.navHeaderSelected : style.navHeader}>Orderer(s)</Text>
 									</TouchableOpacity>
 								)}
 
 								{locationType == 'restaurant' && (
 									<TouchableOpacity style={viewType == "reservations" ? style.navSelected : style.nav} onPress={() => getAllReservations()}>
-										<Text style={viewType == "reservations" ? style.navHeaderSelected : style.navHeader}>{numReservations}</Text>
+										<Text style={[viewType == "reservations" ? style.navHeaderSelected : style.navHeader, { fontSize: 20 }]}>{numReservations}</Text>
 										<Text style={viewType == "reservations" ? style.navHeaderSelected : style.navHeader}>Reservation(s)</Text>
 									</TouchableOpacity>
 								)}
@@ -954,12 +978,15 @@ export default function main(props) {
 														{locationType == 'salon' ? 
 															(item.status == "requested" || item.status == "change") ? 
 																<>
-																	<Text style={style.requestInfoHeader}>{item.username + ' requested ' + (item.status == 'change' ? ' a time change for ' : '') + item.name}</Text> 
+																	<Text style={style.requestInfoHeader}>{item.username + ' requested ' + (item.status == 'change' ? ' a time change for ' : '') + item.name + '\n'}</Text> 
 																	<Text style={style.requestInfoHeader}>{displayTime(item.time)}</Text>
+																	{item.worker != null && <Text style={style.requestInfoHeader}>{'\nwith worker: '}<Text style={{ fontSize: 30 }}>{item.worker.username}</Text></Text>}
 																</>
 																:
 																<>
-																	<Text style={style.requestInfoHeader}>{item.username + ' has an appointment for ' + item.name + displayTime(item.time) + '\n\n'}</Text>
+																	<Text style={style.requestInfoHeader}>{item.username + ' has an appointment for ' + item.name +'\n'}</Text>
+																	<Text style={style.requestInfoHeader}>{displayTime(item.time)}</Text>
+																	{item.worker != null && <Text style={style.requestInfoHeader}>{'\nwith worker: '}<Text style={{ fontSize: 30 }}>{item.worker.username}</Text>{'\n'}</Text>}
 																	<Text style={{ color: 'grey', fontStyle: 'italic' }}>waiting for confirmation</Text>
 																</>
 															:
@@ -1028,16 +1055,18 @@ export default function main(props) {
 												<Image style={style.scheduleImage} source={{ uri: logo_url + item.image }}/>
 											</View>
 											<Text style={style.scheduleHeader}>
-												<Text style={{ fontFamily: 'Arial', fontWeight: 'bold' }}>{item.username} </Text> 
-												has an appointment for
+												<Text style={{ fontFamily: 'Arial', fontWeight: 'bold' }}>You</Text> have 
+												{' '}an appointment for{'\n'}
 												<Text style={{ fontFamily: 'Arial', fontWeight: 'bold' }}> {item.name}</Text>
 												{'\n'}
 												<Text style={{ fontFamily: 'Arial', fontWeight: 'bold' }}>{displayTime(item.time)}</Text>
+												{'\n\n'}
+												<Text style={{ fontFamily: 'Arial', fontWeight: 'bold' }}>with client: {item.client.username}</Text>
 											</Text>
 
-											<View style={{ flexDirection: 'row', marginBottom: 10 }}>
-												<Text style={{ paddingHorizontal: 8, paddingVertical: 20 }}>Service is done ?</Text>
-												<View>
+											<View style={{ marginBottom: 10 }}>
+												<Text style={style.scheduleActionsHeader}>Service is done ?</Text>
+												<View style={style.scheduleActions}>
 													<TouchableOpacity style={item.gettingPayment ? style.scheduleActionDisabled : style.scheduleAction} disabled={item.gettingPayment} onPress={() => receiveTheepayment(index, item.id)}>
 														<Text style={style.scheduleActionHeader}>{item.allowPayment == true ? 'Receive e-payment' : 'Payment awaits'}</Text>
 													</TouchableOpacity>
@@ -1536,9 +1565,11 @@ const style = StyleSheet.create({
 	scheduleImageHolder: { borderRadius: imageSize / 2, height: imageSize, margin: 5, overflow: 'hidden', width: imageSize },
 	scheduleImage: { height: imageSize, width: imageSize },
 	scheduleHeader: { fontFamily: 'appFont', fontSize: 15, padding: 10, textAlign: 'center', width: width - 100 },
-	scheduleAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, height: 27, marginTop: 3, padding: 5, width: 120 },
-	scheduleActionDisabled: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, height: 27, marginTop: 3, opacity: 0.5, padding: 5, width: 120 },
-	scheduleActionHeader: { fontSize: 10, textAlign: 'center' },
+	scheduleActionsHeader: { fontSize: 20, marginTop: 10, textAlign: 'center' },
+	scheduleActions: { flexDirection: 'row' },
+	scheduleAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 5, width: 130 },
+	scheduleActionDisabled: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, opacity: 0.5, padding: 5, width: 130 },
+	scheduleActionHeader: { fontSize: 15, textAlign: 'center' },
 	scheduleNumOrders: { fontWeight: 'bold', padding: 8 },
 
 	cartorderer: { backgroundColor: 'white', borderRadius: 5, flexDirection: 'row', justifyContent: 'space-between', margin: 10, padding: 5 },

@@ -1,8 +1,11 @@
 import axios from 'axios'
 import { url } from '../../assets/info'
 
-export const getRequests = id => {
-	return axios.get(`${url}/schedules/get_requests/${id}`)
+export const getRequests = data => {
+	return axios.post(
+		`${url}/schedules/get_requests`,
+		data
+	)
 }
 
 export const getAppointmentInfo = id => {
@@ -48,8 +51,11 @@ export const cancelService = data => {
 	)
 }
 
-export const getAppointments = id => {
-	return axios.get(`${url}/schedules/get_appointments/${id}`)
+export const getAppointments = data => {
+	return axios.post(
+		`${url}/schedules/get_appointments`,
+		data
+	)
 }
 
 export const searchCustomers = username => {

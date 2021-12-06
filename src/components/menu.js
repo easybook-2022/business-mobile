@@ -3,10 +3,6 @@ import { ActivityIndicator, Dimensions, View, FlatList, Text, TextInput, Image, 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
-import * as FileSystem from 'expo-file-system'
-import { Camera } from 'expo-camera';
-import * as ImageManipulator from 'expo-image-manipulator'
-import * as ImagePicker from 'expo-image-picker';
 import { logo_url } from '../../assets/info'
 import { getInfo } from '../apis/locations'
 import { getMenus, addNewMenu, removeMenu, getMenuInfo, saveMenu } from '../apis/menus'
@@ -368,108 +364,8 @@ export default function menu(props) {
 				})
 		}
 	}
-
-	const snapPhoto = async() => {
-		let letters = [
-			"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", 
-			"n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"
-		]
-		let photo_name_length = Math.floor(Math.random() * (15 - 10)) + 10
-		let char = "", captured, self = this
-
-		if (camComp) {
-			let options = { quality: 0 };
-			let photo = await camComp.takePictureAsync(options)
-			let photo_option = [{ resize: { width: width, height: width }}]
-			let photo_save_option = { format: ImageManipulator.SaveFormat.JPEG, base64: true }
-
-			photo = await ImageManipulator.manipulateAsync(
-				photo.localUri || photo.uri,
-				photo_option,
-				photo_save_option
-			)
-
-			for (let k = 0; k <= photo_name_length - 1; k++) {
-				if (k % 2 == 0) {
-	                char += "" + letters[Math.floor(Math.random() * letters.length)].toUpperCase();
-	            } else {
-	                char += "" + (Math.floor(Math.random() * 9) + 0);
-	            }
-			}
-
-			FileSystem.moveAsync({
-				from: photo.uri,
-				to: `${FileSystem.documentDirectory}/${char}.jpg`
-			})
-			.then(() => {
-				setMenuform({
-					...menuForm,
-					image: { uri: `${FileSystem.documentDirectory}/${char}.jpg`, name: `${char}.jpg` }
-				})
-			})
-		}
-	}
-	const choosePhoto = async() => {
-		let letters = [
-			"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", 
-			"n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"
-		]
-		let photo_name_length = Math.floor(Math.random() * (15 - 10)) + 10
-		let char = "", captured, self = this
-		let photo = await ImagePicker.launchImageLibraryAsync({
-			mediaTypes: ImagePicker.MediaTypeOptions.Images,
-			aspect: [4, 3],
-			quality: 0.1,
-			base64: true
-		});
-
-		for (let k = 0; k <= photo_name_length - 1; k++) {
-			if (k % 2 == 0) {
-                char += "" + letters[Math.floor(Math.random() * letters.length)].toUpperCase();
-            } else {
-                char += "" + (Math.floor(Math.random() * 9) + 0);
-            }
-		}
-
-		if (!photo.cancelled) {
-			FileSystem.moveAsync({
-				from: photo.uri,
-				to: `${FileSystem.documentDirectory}/${char}.jpg`
-			})
-			.then(() => {
-				setMenuform({
-					...menuForm,
-					image: { uri: `${FileSystem.documentDirectory}/${char}.jpg`, name: `${char}.jpg` }
-				})
-			})
-		}
-	}
-	const allowCamera = async() => {
-		const { status } = await Camera.getCameraPermissionsAsync()
-
-		if (status == 'granted') {
-			setCamerapermission(status === 'granted')
-		} else {
-			const { status } = await Camera.requestCameraPermissionsAsync()
-
-			setCamerapermission(status === 'granted')
-		}
-	}
-	const allowChoosing = async() => {
-		const { status } = await ImagePicker.getMediaLibraryPermissionsAsync()
-        
-        if (status == 'granted') {
-        	setPickingpermission(status === 'granted')
-        } else {
-        	const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-        	setPickingpermission(status === 'granted')
-        }
-	}
 	
 	useEffect(() => {
-		allowCamera()
-		allowChoosing()
 		getTheInfo()
 	}, [])
 
@@ -524,7 +420,7 @@ export default function menu(props) {
 												<View style={style.row} key={item.key}>
 													{item.row.map(info => (
 														info.id ?
-															<TouchableOpacity key={info.key} style={style.menu} onPress={() => props.navigation.push("menu", { menuid: info.id, name: info.name, refetch: () => getTheInfo() })}>
+															<View key={info.key} style={style.menu}>
 																<Text style={style.menuHeader}>{info.name}</Text>
 																<Text style={style.menuInfo}>{info.info ? info.info : ''}</Text>
 																<Image source={{ uri: logo_url + info.image }} style={style.menuImage}/>
@@ -535,8 +431,11 @@ export default function menu(props) {
 																	<TouchableOpacity style={style.menuAction} onPress={() => props.navigation.navigate("addmenu", { menuid: info.id, refetch: () => getTheInfo() })}>
 																		<Text style={style.menuActionHeader}>Change</Text>
 																	</TouchableOpacity>
+																	<TouchableOpacity style={style.menuAction} onPress={() => props.navigation.push("menu", { menuid: info.id, name: info.name, refetch: () => getTheInfo() })}>
+																		<Text style={style.menuActionHeader}>See menu</Text>
+																	</TouchableOpacity>
 																</View>
-															</TouchableOpacity>
+															</View>
 															:
 															<View key={info.key} style={style.menu}>
 															</View>
@@ -655,65 +554,6 @@ export default function menu(props) {
 							</TouchableOpacity>
 						</View>
 					</View>
-
-					{menuForm.show && (
-						<Modal transparent={true}>
-							<TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
-								<View style={style.addBox}>
-									<View style={{ alignItems: 'center', width: '100%' }}>
-										<Text style={style.addHeader}>Enter menu info</Text>
-
-										<TextInput style={style.addInput} placeholder="Menu name" placeholderTextColor="rgba(127, 127, 127, 0.5)" onChangeText={(name) => setMenuform({...menuForm, name: name })} value={menuForm.name} autoCorrect={false}/>
-										<TextInput style={style.infoInput} onSubmitEditing={() => Keyboard.dismiss()} multiline={true} placeholder="Anything you want to say about this menu" placeholderTextColor="rgba(127, 127, 127, 0.5)" onChangeText={(info) => setMenuform({...menuForm, info: info })} value={menuForm.info} autoCorrect={false} autoCompleteType="off"/>
-									</View>
-
-									<View style={style.cameraContainer}>
-										<Text style={style.cameraHeader}>Menu photo</Text>
-
-										{menuForm.image.uri ? (
-											<>
-												<Image style={{ height: width * 0.6, width: width * 0.6 }} source={{ uri: menuForm.image.uri }}/>
-
-												<TouchableOpacity style={style.cameraAction} onPress={() => setMenuform({...menuForm, image: { uri: '', name: '' }})}>
-													<Text style={style.cameraActionHeader}>Cancel</Text>
-												</TouchableOpacity>
-											</>
-										) : (
-											<>
-												<Camera style={style.camera} type={Camera.Constants.Type.back} ref={r => { setCamcomp(r) }}/>
-
-												<View style={style.cameraActions}>
-													<TouchableOpacity style={style.cameraAction} onPress={snapPhoto.bind(this)}>
-														<Text style={style.cameraActionHeader}>Take this photo</Text>
-													</TouchableOpacity>
-													<TouchableOpacity style={style.cameraAction} onPress={() => choosePhoto()}>
-														<Text style={style.cameraActionHeader}>Choose from phone</Text>
-													</TouchableOpacity>
-												</View>
-											</>
-										)}
-									</View>
-
-									<Text style={style.errorMsg}>{menuForm.errormsg}</Text>
-
-									<View style={style.addActions}>
-										<TouchableOpacity style={style.addAction} onPress={() => setMenuform({ ...menuForm, show: false, name: '', info: '', image: { uri: '', name: ''}, errormsg: '' })}>
-											<Text>Cancel</Text>
-										</TouchableOpacity>
-										<TouchableOpacity style={style.addAction} onPress={() => {
-											if (menuForm.type == 'add') {
-												addTheNewMenu()
-											} else {
-												saveTheMenu()
-											}
-										}}>
-											<Text>Done</Text>
-										</TouchableOpacity>
-									</View>
-								</View>
-							</TouchableWithoutFeedback>
-						</Modal>
-					)}
 
 					{removeMenuinfo.show && (
 						<Modal transparent={true}>
@@ -865,42 +705,28 @@ const style = StyleSheet.create({
 	menuHeader: { fontSize: 25, fontWeight: 'bold', paddingVertical: 15 },
 	menuImage: { backgroundColor: 'black', borderRadius: 50, height: 100, width: 100 },
 	menuAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 5, padding: 5 },
-	menuActionHeader: { fontSize: 15, textAlign: 'center' },
+	menuActionHeader: { fontSize: 20, textAlign: 'center' },
 
 	product: { alignItems: 'center', marginHorizontal: 20, marginBottom: 15, width: width / 2 },
 	productHeader: { fontSize: 25, fontWeight: 'bold', paddingVertical: 15 },
 	productImage: { backgroundColor: 'black', borderRadius: 50, height: 100, width: 100 },
-	productPrice: { fontSize: 15, fontWeight: 'bold' },
+	productPrice: { fontSize: 20, fontWeight: 'bold' },
 	productAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 5, padding: 5 },
-	productActionHeader: { fontSize: 15, textAlign: 'center' },
+	productActionHeader: { fontSize: 20, textAlign: 'center' },
 
 	service: { backgroundColor: 'white', marginHorizontal: 10, marginTop: 10, padding: 20 },
 	serviceHeader: { fontSize: 20, fontWeight: 'bold', paddingVertical: 10, textAlign: 'center' },
 	serviceImage: { backgroundColor: 'black', borderRadius: 50, height: 100, marginLeft: 10, width: 100 },
 	serviceInfo: { fontSize: 20, fontWeight: 'bold', marginVertical: 10 },
 	serviceActions: { flexDirection: 'row', justifyContent: 'space-between', width: 180 },
-	serviceAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 8, padding: 5, width: 70 },
-	serviceActionHeader: { textAlign: 'center' },
+	serviceAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 8, padding: 5 },
+	serviceActionHeader: { fontSize: 20, textAlign: 'center' },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 50, justifyContent: 'space-around', width: '100%' },
 	bottomNav: { flexDirection: 'row', height: 30, marginVertical: 5, marginHorizontal: 20 },
 	bottomNavHeader: { fontWeight: 'bold', paddingVertical: 5 },
 
 	// hidden boxes
-	// menu add box
-	addBox: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '100%', justifyContent: 'space-between', paddingVertical: offsetPadding, width: '100%' },
-	addHeader: { fontSize: 20, fontWeight: 'bold', textAlign: 'center', width: '90%' },
-	addInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, fontSize: 13, padding: 10, width: '90%' },
-	infoInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, fontSize: 13, height: 100, marginVertical: 5, padding: 10, textAlignVertical: 'top', width: '90%' },
-	cameraContainer: { alignItems: 'center', width: '100%' },
-	cameraHeader: { fontWeight: 'bold', paddingVertical: 5 },
-	camera: { height: width * 0.6, width: width * 0.6 },
-	cameraActions: { flexDirection: 'row' },
-	cameraAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginBottom: 50, margin: 5, padding: 5, width: 100 },
-	cameraActionHeader: { fontSize: 13, textAlign: 'center' },
-	errorMsg: { color: 'red', fontWeight: 'bold', marginVertical: 20, textAlign: 'center' },
-	addActions: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
-	addAction: { alignItems: 'center', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, padding: 5, width: 100 },
 
 	// remove menu confirmation
 	menuInfoContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', paddingVertical: offsetPadding, width: '100%' },
@@ -910,7 +736,7 @@ const style = StyleSheet.create({
 	menuInfoImage: { height: 200, width: 200 },
 	menuInfoName: { fontSize: 30, fontWeight: 'bold' },
 	menuInfoInfo: { fontSize: 20 },
-	menuInfoHeader: { fontSize: 15, paddingHorizontal: 10, textAlign: 'center' },
+	menuInfoHeader: { fontSize: 15, fontWeight: 'bold', paddingHorizontal: 10, textAlign: 'center' },
 	menuInfoActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	menuInfoAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 10, padding: 5, width: 70 },
 	menuInfoActionHeader: { textAlign: 'center' },
@@ -925,7 +751,7 @@ const style = StyleSheet.create({
 	productInfoQuantity: {  },
 	productInfoPrice: {  },
 	productInfoOrderers: { fontWeight: 'bold' },
-	productInfoHeader: { fontSize: 15, paddingHorizontal: 10, textAlign: 'center' },
+	productInfoHeader: { fontSize: 15, fontWeight: 'bold', paddingHorizontal: 10, textAlign: 'center' },
 	productInfoActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	productInfoAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 10, padding: 5, width: 70 },
 	productInfoActionHeader: { textAlign: 'center' },
@@ -936,11 +762,11 @@ const style = StyleSheet.create({
 	serviceInfoBoxHeader: { fontSize: 20, textAlign: 'center' },
 	serviceInfoImageHolder: { borderRadius: 100, height: 200, overflow: 'hidden', width: 200 },
 	serviceInfoImage: { height: 200, width: 200 },
-	serviceInfoName: { fontWeight: 'bold' },
-	serviceInfoQuantity: {  },
-	serviceInfoPrice: {  },
+	serviceInfoName: { fontSize: 25, fontWeight: 'bold' },
+	serviceInfoQuantity: { fontSize: 25 },
+	serviceInfoPrice: { fontSize: 25 },
 	serviceInfoOrderers: { fontWeight: 'bold' },
-	serviceInfoHeader: { fontSize: 15, paddingHorizontal: 10, textAlign: 'center' },
+	serviceInfoHeader: { fontSize: 15, fontWeight: 'bold', paddingHorizontal: 10, textAlign: 'center' },
 	serviceInfoActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	serviceInfoAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 10, padding: 5, width: 70 },
 	serviceInfoActionHeader: { textAlign: 'center' },

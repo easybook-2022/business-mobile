@@ -88,8 +88,8 @@ const { accountNumber, countryCode, currency, routingNumber, accountHolderName }
 
 const login = test_input ? testStores[0] : emptyStore
 const ownerLogin = test_input ? owners[0] : emptyOwner
-const register = test_input ? testStores[2] : emptyStore
-const ownerRegister = test_input ? owners[2] : emptyOwner
+const register = test_input ? testStores[1] : emptyStore
+const ownerRegister = test_input ? owners[1] : emptyOwner
 const wifi_api_url = "http://192.168.0.172:5000/flask"
 const wifi_socket_url = "http://192.168.0.172:5001"
 const server_api_url = "https://www.easygo.tk/flask"
