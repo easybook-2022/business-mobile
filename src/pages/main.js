@@ -11,7 +11,7 @@ import { socket, logo_url, displayTime } from '../../assets/info'
 import { updateNotificationToken } from '../apis/owners'
 import { fetchNumRequests, fetchNumAppointments, fetchNumCartOrderers, fetchNumReservations, fetchNumorders, getInfo, changeLocationState, setLocationPublic } from '../apis/locations'
 import { getMenus, removeMenu, addNewMenu } from '../apis/menus'
-import { getRequests, acceptRequest, cancelRequest, doneDining, receiveEpayment, receiveInpersonpayment, canServeDiners, getAppointments, getCartOrderers, getReservations } from '../apis/schedules'
+import { getRequests, acceptRequest, cancelRequest, cancelReservation, doneDining, receiveEpayment, receiveInpersonpayment, canServeDiners, getAppointments, getCartOrderers, getReservations } from '../apis/schedules'
 import { getProducts, getServices, removeProduct } from '../apis/products'
 
 import FontAwesome from 'react-native-vector-icons/FontAwesome'
@@ -207,9 +207,7 @@ export default function main(props) {
 	const getTheInfo = async() => {
 		const ownerid = await AsyncStorage.getItem("ownerid")
 		const locationid = await AsyncStorage.getItem("locationid")
-		const longitude = await AsyncStorage.getItem("longitude")
-		const latitude = await AsyncStorage.getItem("latitude")
-		const data = { locationid, menuid: '', longitude, latitude }
+		const data = { locationid, menuid: '' }
 
 		getInfo(data)
 			.then((res) => {
@@ -263,7 +261,7 @@ export default function main(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					if (err.response.data.status) {
-						const status = err.response.data.status
+						const { errormsg, status } = err.response.data
 
 						switch (status) {
 							case "menusetuprequired":
@@ -338,6 +336,7 @@ export default function main(props) {
 			.then((res) => {
 				if (res) {
 					setCartorderers(res.cartOrderers)
+					setNumcartorderers(res.numCartorderers)
 					setViewtype('cartorderers')
 				}
 			})
@@ -441,7 +440,7 @@ export default function main(props) {
 							if (res) {
 								const newRequests = [...requests]
 
-								data = { ...data, receivers: res.receivers, worker: res.worker }
+								data = { ...data, receivers: res.receivers, worker: null }
 								socket.emit("socket/business/acceptRequest", data, () => {
 									newRequests[index].status = "accepted"
 
@@ -488,6 +487,34 @@ export default function main(props) {
 				})
 		}
 	}
+	const cancelTheReservation = (index, id) => {
+		cancelReservation(id)
+			.then((res) => {
+				if (res.status == 200) {
+					return res.data
+				}
+			})
+			.then((res) => {
+				if (res) {
+					const newReservations = [...reservations]
+					const data = { id, type: "cancelReservation", receiver: res.receiver }
+
+					socket.emit("socket/business/cancelReservation", data, () => {
+						newReservations.splice(index, 1)
+
+						setReservations(newReservations)
+						fetchTheNumReservations()
+					})
+				}
+			})
+			.catch((err) => {
+				if (err.response && err.response.status == 400) {
+					const { errormsg, status } = err.response.data
+
+
+				}
+			})
+	}
 	const doneTheDining = (index, id) => {
 		const newReservations = [...reservations]
 
@@ -514,7 +541,7 @@ export default function main(props) {
 			})
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
-					const status = err.response.data.status
+					const { errormsg, status } = err.response.data
 
 					switch (status) {
 						case "unserved":
@@ -546,7 +573,7 @@ export default function main(props) {
 				if (res) {
 					newReservations[index].seated = true
 
-					data = { ...data, receiver: res.receiver }
+					data = { ...data, receiver: res.receiver, time: newReservations[index].time }
 					socket.emit("socket/canServeDiners", data, () => setReservations(newReservations))
 				}
 			})
@@ -590,7 +617,7 @@ export default function main(props) {
 			})
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
-					const status = err.response.data.status
+					const { errormsg, status } = err.response.data
 					const newAppointments = [...appointments]
 
 					newAppointments[index].gettingPayment = false
@@ -653,7 +680,7 @@ export default function main(props) {
 			})
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
-					const status = err.response.data.status
+					const { errormsg, status } = err.response.data
 					const newAppointments = [...appointments]
 
 					newAppointments[index].gettingPayment = false
@@ -1068,10 +1095,10 @@ export default function main(props) {
 												<Text style={style.scheduleActionsHeader}>Service is done ?</Text>
 												<View style={style.scheduleActions}>
 													<TouchableOpacity style={item.gettingPayment ? style.scheduleActionDisabled : style.scheduleAction} disabled={item.gettingPayment} onPress={() => receiveTheepayment(index, item.id)}>
-														<Text style={style.scheduleActionHeader}>{item.allowPayment == true ? 'Receive e-payment' : 'Payment awaits'}</Text>
+														<Text style={style.scheduleActionHeader}>{item.allowPayment == true ? 'Receive\ne-payment' : 'e-payment\nPayment awaits'}</Text>
 													</TouchableOpacity>
 													<TouchableOpacity style={item.gettingPayment ? style.scheduleActionDisabled : style.scheduleAction} disabled={item.gettingPayment} onPress={() => receiveTheinpersonpayment(index, item.id)}>
-														<Text style={style.scheduleActionHeader}>{item.allowPayment == true ? 'Receive in person' : 'Payment awaits'}</Text>
+														<Text style={style.scheduleActionHeader}>{item.allowPayment == true ? 'Receive\nin-person-pay' : 'in-person-pay\nPayment awaits'}</Text>
 													</TouchableOpacity>
 												</View>
 												{item.gettingPayment && <ActivityIndicator marginBottom={-5} marginTop={-15} size="small"/>}
@@ -1099,11 +1126,11 @@ export default function main(props) {
 												<Image style={style.cartordererImage} source={{ uri: logo_url + item.profile }}/>
 											</View>
 											<View style={style.cartordererInfo}>
-												<Text style={style.cartordererUsername}>{item.username}</Text>
+												<Text style={style.cartordererUsername}>Customer: {item.username}</Text>
 												<Text style={style.cartordererOrderNumber}>Order #{item.orderNumber}</Text>
 												<TouchableOpacity style={style.cartordererSeeOrders} onPress={() => {
 													props.navigation.navigate("cartorders", { userid: item.adder, ordernumber: item.orderNumber, refetch: () => {
-														fetchTheNumCartOrderers()
+														getAllCartOrderers()
 														removeFromList(item.id, "cartOrderers")
 													}})
 												}}>
@@ -1160,20 +1187,30 @@ export default function main(props) {
 														</TouchableOpacity>
 														<Text style={style.scheduleNumOrders}>{item.numMakings > 0 && '(' + item.numMakings + ')'}</Text>
 													</View>
-													<View style={{ flexDirection: 'row' }}>
+													<View style={{ alignItems: 'center' }}>
 														<Text style={{ padding: 8 }}>Diners are done ?</Text>
-														<TouchableOpacity style={item.gettingPayment ? style.scheduleActionDisabled : style.scheduleAction} disabled={item.gettingPayment} onPress={() => doneTheDining(index, item.id)}>
-															<Text style={style.scheduleActionHeader}>Receive payment</Text>
-															{item.gettingPayment && <ActivityIndicator marginBottom={-5} marginTop={-15} size="small"/>}
-														</TouchableOpacity>
+														<View style={{ flexDirection: 'row' }}>
+															<TouchableOpacity style={item.gettingPayment ? style.scheduleActionDisabled : style.scheduleAction} disabled={item.gettingPayment} onPress={() => cancelTheReservation(index, item.id)}>
+																<Text style={style.scheduleActionHeader}>Cancel Reservation</Text>
+															</TouchableOpacity>
+															<TouchableOpacity style={item.gettingPayment ? style.scheduleActionDisabled : style.scheduleAction} disabled={item.gettingPayment} onPress={() => doneTheDining(index, item.id)}>
+																<Text style={style.scheduleActionHeader}>Receive payment</Text>
+																{item.gettingPayment && <ActivityIndicator marginBottom={-5} marginTop={-15} size="small"/>}
+															</TouchableOpacity>
+														</View>
 													</View>
 												</View>
 												:
 												<View style={{ alignItems: 'center', marginVertical: 10 }}>
 													<Text style={style.scheduleHeader}>Diner(s) are seated at their table and ready to be serve</Text>
-													<TouchableOpacity style={style.scheduleAction} onPress={() => canServeTheDiners(index, item.id)}>
-														<Text style={style.scheduleActionHeader}>Yes</Text>
-													</TouchableOpacity>
+													<View style={{ flexDirection: 'row' }}>
+														<TouchableOpacity style={style.scheduleAction} disabled={item.gettingPayment} onPress={() => cancelTheReservation(index, item.id)}>
+															<Text style={style.scheduleActionHeader}>Cancel Reservation</Text>
+														</TouchableOpacity>
+														<TouchableOpacity style={style.scheduleAction} onPress={() => canServeTheDiners(index, item.id)}>
+															<Text style={style.scheduleActionHeader}>Yes</Text>
+														</TouchableOpacity>
+													</View>
 												</View>
 											}
 										</View>
@@ -1564,11 +1601,11 @@ const style = StyleSheet.create({
 	scheduleRow: { flexDirection: 'row', justifyContent: 'space-between' },
 	scheduleImageHolder: { borderRadius: imageSize / 2, height: imageSize, margin: 5, overflow: 'hidden', width: imageSize },
 	scheduleImage: { height: imageSize, width: imageSize },
-	scheduleHeader: { fontFamily: 'appFont', fontSize: 15, padding: 10, textAlign: 'center', width: width - 100 },
+	scheduleHeader: { fontFamily: 'appFont', fontSize: 20, padding: 10, textAlign: 'center', width: width - 100 },
 	scheduleActionsHeader: { fontSize: 20, marginTop: 10, textAlign: 'center' },
 	scheduleActions: { flexDirection: 'row' },
-	scheduleAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 5, width: 130 },
-	scheduleActionDisabled: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, opacity: 0.5, padding: 5, width: 130 },
+	scheduleAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: 130 },
+	scheduleActionDisabled: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, opacity: 0.5, padding: 5, width: 130 },
 	scheduleActionHeader: { fontSize: 15, textAlign: 'center' },
 	scheduleNumOrders: { fontWeight: 'bold', padding: 8 },
 
@@ -1577,9 +1614,9 @@ const style = StyleSheet.create({
 	cartordererImage: { height: imageSize, width: imageSize },
 	cartordererInfo: { alignItems: 'center', width: width - 81 },
 	cartordererUsername: { fontWeight: 'bold', marginBottom: 10 },
-	cartordererOrderNumber: { fontSize: 20, paddingVertical: 5 },
+	cartordererOrderNumber: { fontSize: 25, paddingVertical: 5 },
 	cartordererSeeOrders: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5 },
-	cartordererSeeOrdersHeader: { textAlign: 'center' },
+	cartordererSeeOrdersHeader: { fontSize: 25, textAlign: 'center' },
 
 	bodyResult: { alignItems: 'center', flexDirection: 'column', height: screenHeight - 220, justifyContent: 'space-around' },
 	bodyResultHeader: { fontWeight: 'bold' },

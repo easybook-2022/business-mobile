@@ -52,17 +52,19 @@ export default function verifyowner({ navigation }) {
 					<Text style={style.boxHeader}>Sign-Up</Text>
 
 					<View style={style.inputsBox}>
-						{!verifyCode ?
-							<>
-								<Text style={style.inputHeader}>Cell number:</Text>
-								<TextInput style={style.input} onChangeText={(cellnumber) => setCellnumber(cellnumber)} value={cellnumber} keyboardType="numeric" autoCorrect={false}/>
-							</>
-							:
-							<>
-								<Text style={style.inputHeader}>Enter verify code from your message:</Text>
-								<TextInput style={style.input} onChangeText={(usercode) => setUsercode(usercode)} value={userCode} keyboardType="numeric" autoCorrect={false}/>
-							</>
-						}
+						<View style={style.inputContainer}>
+							{!verifyCode ?
+								<>
+									<Text style={style.inputHeader}>Cell number:</Text>
+									<TextInput style={style.input} onChangeText={(cellnumber) => setCellnumber(cellnumber)} value={cellnumber} keyboardType="numeric" autoCorrect={false}/>
+								</>
+								:
+								<>
+									<Text style={style.inputHeader}>Enter verify code from your message:</Text>
+									<TextInput style={style.input} onChangeText={(usercode) => setUsercode(usercode)} value={userCode} keyboardType="numeric" autoCorrect={false}/>
+								</>
+							}
+						</View>
 
 						<Text style={style.errorMsg}>{errorMsg}</Text>
 
@@ -90,29 +92,27 @@ export default function verifyowner({ navigation }) {
 
 					{loading ? <ActivityIndicator color="black" size="small"/> : null}
 
-					<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-						<View style={style.options}>
-							<TouchableOpacity style={style.option} onPress={() => {
-								navigation.dispatch(
-									CommonActions.reset({
-										index: 1,
-										routes: [{ name: 'login' }]
-									})
-								);
-							}}>
-								<Text>Already a member ? Log in</Text>
-							</TouchableOpacity>
-							<TouchableOpacity style={style.option} onPress={() => {
-								navigation.dispatch(
-									CommonActions.reset({
-										index: 1,
-										routes: [{ name: 'forgotpassword' }]
-									})
-								)
-							}}>
-								<Text>Forgot your password ? Reset here</Text>
-							</TouchableOpacity>
-						</View>
+					<View>
+						<TouchableOpacity style={style.option} onPress={() => {
+							navigation.dispatch(
+								CommonActions.reset({
+									index: 1,
+									routes: [{ name: 'login' }]
+								})
+							);
+						}}>
+							<Text style={style.optionHeader}>Already a member ? Log in</Text>
+						</TouchableOpacity>
+						<TouchableOpacity style={style.option} onPress={() => {
+							navigation.dispatch(
+								CommonActions.reset({
+									index: 1,
+									routes: [{ name: 'forgotpassword' }]
+								})
+							)
+						}}>
+							<Text style={style.optionHeader}>Forgot your password ? Reset here</Text>
+						</TouchableOpacity>
 					</View>
 				</View>
 			</TouchableWithoutFeedback>
@@ -126,11 +126,13 @@ const style = StyleSheet.create({
 	boxHeader: { color: 'black', fontFamily: 'appFont', fontSize: 50, fontWeight: 'bold' },
 	
 	inputsBox: { alignItems: 'center', flexDirection: 'column', height: screenHeight / 2, justifyContent: 'space-around', width: '80%' },
-	inputHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold' },
-	input: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: 20, padding: 10, width: width - 100 },
-	errorMsg: { color: 'darkred', fontWeight: 'bold', textAlign: 'center' },
+	inputContainer: { marginBottom: 30, width: '100%' },
+	inputHeader: { fontFamily: 'appFont', fontSize: 25 },
+	input: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: 25, padding: 5, width: '100%' },
+	errorMsg: { color: 'darkred', fontSize: 20, fontWeight: 'bold', textAlign: 'center' },
 	submit: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontFamily: 'appFont', padding: 10, width: 100 },
 	submitHeader: { fontWeight: 'bold', textAlign: 'center' },
 	
-	option: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, marginVertical: 10, padding: 5 }
+	option: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, marginVertical: 10, padding: 5 },
+	optionHeader: { fontSize: 15, fontWeight: 'bold' },
 })

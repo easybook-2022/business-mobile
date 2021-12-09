@@ -24,10 +24,6 @@ export default function menu(props) {
 	const [menuInfo, setMenuinfo] = useState('')
 	const [locationType, setLocationtype] = useState('')
 
-	const [cameraPermission, setCamerapermission] = useState(null);
-	const [pickingPermission, setPickingpermission] = useState(null);
-	const [camComp, setCamcomp] = useState(null)
-
 	const [showMenus, setShowmenus] = useState(false)
 	const [menus, setMenus] = useState([])
 	const [numMenus, setNummenus] = useState(0)
@@ -58,6 +54,7 @@ export default function menu(props) {
 		const data = { ownerid, locationid, menuid }
 
 		setLoaded(false)
+		setNodisplay(false)
 		setShowmenus(false)
 		setMenus([])
 		setNummenus(0)
@@ -369,8 +366,6 @@ export default function menu(props) {
 		getTheInfo()
 	}, [])
 
-	if (cameraPermission === null || pickingPermission === null) return <View/>
-
 	return (
 		<View style={style.boxContainer}>
 			{loaded ? 
@@ -392,15 +387,15 @@ export default function menu(props) {
 						{noDisplay ? 
 							<View style={style.actionsHolder}>
 								<View style={style.actions}>
-									<TouchableOpacity style={style.action} onPress={() => props.navigation.navigate("addmenu", { menuid: menuid, refetch: () => getAllMenus() })}>
+									<TouchableOpacity style={style.action} onPress={() => props.navigation.navigate("addmenu", { menuid: menuid, refetch: () => getTheInfo() })}>
 										<Text style={style.actionHeader}>Add Menu</Text>
 									</TouchableOpacity>
 										
-									<TouchableOpacity style={style.action} onPress={() => props.navigation.navigate("addproduct", { menuid: menuid, refetch: () => getAllProducts() })}>
+									<TouchableOpacity style={style.action} onPress={() => props.navigation.navigate("addproduct", { menuid: menuid, refetch: () => getTheInfo() })}>
 										<Text style={style.actionHeader}>Add Product</Text>
 									</TouchableOpacity>
 
-									<TouchableOpacity style={style.action} onPress={() => props.navigation.navigate("addservice", { menuid: menuid, refetch: () => getAllServices() })}>
+									<TouchableOpacity style={style.action} onPress={() => props.navigation.navigate("addservice", { menuid: menuid, refetch: () => getTheInfo() })}>
 										<Text style={style.actionHeader}>Add Service</Text>
 									</TouchableOpacity>
 								</View>
@@ -409,7 +404,7 @@ export default function menu(props) {
 							<>
 								{showMenus && (
 									<View style={{ alignItems: 'center' }}>
-										<TouchableOpacity style={style.addTouch} onPress={() => props.navigation.navigate("addmenu", { menuid: menuid, refetch: () => getAllMenus() })}>
+										<TouchableOpacity style={style.addTouch} onPress={() => props.navigation.navigate("addmenu", { menuid: menuid, refetch: () => getTheInfo() })}>
 											<Text style={style.addTouchHeader}>Add a new menu</Text>
 										</TouchableOpacity>
 
@@ -448,7 +443,7 @@ export default function menu(props) {
 								
 								{showProducts && (
 									<View style={{ alignItems: 'center' }}>
-										<TouchableOpacity style={style.addTouch} onPress={() => props.navigation.navigate("addproduct", { menuid: menuid, refetch: () => getAllProducts() })}>
+										<TouchableOpacity style={style.addTouch} onPress={() => props.navigation.navigate("addproduct", { menuid: menuid, refetch: () => getTheInfo() })}>
 											<Text style={style.addTouchHeader}>Add a new product</Text>
 										</TouchableOpacity>
 
@@ -486,38 +481,44 @@ export default function menu(props) {
 								)}
 
 								{showServices && (
-									<FlatList
-										data={services}
-										style={{ height: height }}
-										renderItem={({ item, index }) => 
-											<View key={item.key} style={style.service}>
-												<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+									<View style={{ alignItems: 'center' }}>
+										<TouchableOpacity style={style.addTouch} onPress={() => props.navigation.navigate("addservice", { menuid: menuid, refetch: () => getTheInfo() })}>
+											<Text style={style.addTouchHeader}>Add a new service</Text>
+										</TouchableOpacity>
+
+										<FlatList
+											data={services}
+											style={{ height: screenHeight - 170, width: '100%' }}
+											renderItem={({ item, index }) => 
+												<View key={item.key} style={style.service}>
+													<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+														<View style={{ alignItems: 'center' }}>
+															<Text style={style.serviceHeader}>{item.name}</Text>
+															<Image source={{ uri: logo_url + item.image }} style={style.serviceImage}/>
+														</View>
+
+														<View>
+															<Text style={style.serviceInfo}>Price: <Text style={{ fontWeight: '400' }}>$ {item.price}</Text></Text>
+															<Text style={style.serviceInfo}>Time: <Text style={{ fontWeight: '400' }}>{item.duration}</Text></Text>
+														</View>
+													</View>
+
+													{item.info ? <Text style={style.serviceInfo}>Information: <Text style={{ fontWeight: '400' }}>{item.info}</Text></Text> : null}
+
 													<View style={{ alignItems: 'center' }}>
-														<Text style={style.serviceHeader}>{item.name}</Text>
-														<Image source={{ uri: logo_url + item.image }} style={style.serviceImage}/>
-													</View>
-
-													<View>
-														<Text style={style.serviceInfo}>Price: <Text style={{ fontWeight: '400' }}>$ {item.price}</Text></Text>
-														<Text style={style.serviceInfo}>Time: <Text style={{ fontWeight: '400' }}>{item.duration}</Text></Text>
-													</View>
-												</View>
-
-												{item.info ? <Text style={style.serviceInfo}>Information: <Text style={{ fontWeight: '400' }}>{item.info}</Text></Text> : null}
-
-												<View style={{ alignItems: 'center' }}>
-													<View style={style.serviceActions}>
-														<TouchableOpacity style={style.serviceAction} onPress={() => removeTheService(item.id)}>
-															<Text style={style.serviceActionHeader}>Delete</Text>
-														</TouchableOpacity>
-														<TouchableOpacity style={style.serviceAction} onPress={() => props.navigation.navigate("addservice", { menuid, id: item.id, refetch: () => getAllServices() })}>
-															<Text style={style.serviceActionHeader}>Change</Text>
-														</TouchableOpacity>
+														<View style={style.serviceActions}>
+															<TouchableOpacity style={style.serviceAction} onPress={() => removeTheService(item.id)}>
+																<Text style={style.serviceActionHeader}>Delete</Text>
+															</TouchableOpacity>
+															<TouchableOpacity style={style.serviceAction} onPress={() => props.navigation.navigate("addservice", { menuid, id: item.id, refetch: () => getAllServices() })}>
+																<Text style={style.serviceActionHeader}>Change</Text>
+															</TouchableOpacity>
+														</View>
 													</View>
 												</View>
-											</View>
-										}
-									/>
+											}
+										/>
+									</View>
 								)}
 							</>
 						}
@@ -690,12 +691,12 @@ const style = StyleSheet.create({
 	menuBox: { height: 60 },
 
 	headers: { paddingVertical: 5 },
-	header: { fontWeight: 'bold', fontSize: 15, textAlign: 'center' },
+	header: { fontWeight: 'bold', fontSize: 20, textAlign: 'center' },
 
 	actionsHolder: { flexDirection: 'column', height: '100%', justifyContent: 'space-around' },
 	actions: { alignItems: 'center', width: '100%' },
 	action: { alignItems: 'center', backgroundColor: 'white', borderRadius: 15, borderStyle: 'solid', borderWidth: 1, marginHorizontal: 5, marginVertical: 30, padding: 10, width: 200 },
-	actionHeader: { color: 'black', fontFamily: 'appFont', fontSize: 20 },
+	actionHeader: { color: 'black', fontFamily: 'appFont', fontSize: 25 },
 
 	addTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 1, padding: 5, width: 200 },
 	addTouchHeader: { fontSize: 20, textAlign: 'center' },
@@ -749,7 +750,7 @@ const style = StyleSheet.create({
 	productInfoImage: { height: 200, width: 200 },
 	productInfoName: { fontSize: 25, fontWeight: 'bold' },
 	productInfoQuantity: {  },
-	productInfoPrice: {  },
+	productInfoPrice: { fontSize: 25 },
 	productInfoOrderers: { fontWeight: 'bold' },
 	productInfoHeader: { fontSize: 15, fontWeight: 'bold', paddingHorizontal: 10, textAlign: 'center' },
 	productInfoActions: { flexDirection: 'row', justifyContent: 'space-around' },

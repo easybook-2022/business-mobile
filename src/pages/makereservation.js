@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react'
-import { ActivityIndicator, Dimensions, ScrollView, View, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet, Modal } from 'react-native';
+import { ActivityIndicator, Dimensions, ScrollView, View, Text, TextInput, Image, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet, Modal } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
-import { socket, displayTime } from '../../assets/info'
+import { socket, logo_url, displayTime } from '../../assets/info'
 import { getLocationHours } from '../apis/locations'
 import { getReservationInfo, rescheduleReservation } from '../apis/schedules'
 
@@ -10,6 +10,10 @@ import AntDesign from 'react-native-vector-icons/AntDesign'
 import SimpleLineIcons from 'react-native-vector-icons/SimpleLineIcons'
 
 const { height, width } = Dimensions.get('window')
+const offsetPadding = Constants.statusBarHeight
+const screenHeight = height - (offsetPadding * 2)
+const dinerFrameSize = (width / 3) - 30
+const dinerProfileSize = 80
 
 export default function booktime(props) {
 	const offsetPadding = Constants.statusBarHeight
@@ -22,7 +26,8 @@ export default function booktime(props) {
 	
 	const [ownerId, setOwnerid] = useState(null)
 	const [name, setName] = useState(name)
-	const [diners, setDiners] = useState(0)
+	const [numDiners, setNumdiners] = useState(0)
+	const [selectedDiners, setSelecteddiners] = useState([])
 	const [table, setTable] = useState('')
 
 	const [scheduledTimes, setScheduledtimes] = useState([])
@@ -79,11 +84,12 @@ export default function booktime(props) {
 			})
 			.then((res) => {
 				if (res && isMounted.current == true) {
-					const { locationId, name, diners, table } = res.reservationInfo
+					const { locationId, name, numdiners, diners, table } = res.reservationInfo
 
 					setOwnerid(ownerid)
 					setName(name)
-					setDiners(diners)
+					setNumdiners(numdiners)
+					setSelecteddiners(diners)
 					setTable(table)
 					getTheLocationHours(locationId)
 				}
@@ -345,12 +351,31 @@ export default function booktime(props) {
 					<Text style={style.backHeader}>Back</Text>
 				</TouchableOpacity>
 
-				<Text style={style.boxHeader}>Request another time for {diners > 0 ? '\n' + diners + ' ' + (diners == 1 ? 'person' : 'people') : "1 person"}</Text>
+				<Text style={style.boxHeader}>Request another time for {numDiners > 0 ? '\n' + numDiners + ' ' + (numDiners == 1 ? 'person' : 'people') : "1 person"}</Text>
 				
 				{!loaded ? 
 					<ActivityIndicator size="small"/>
 					:
 					<ScrollView>
+						<View style={style.dinersList}>
+							{selectedDiners.map(item => (
+								<View key={item.key} style={style.row}>
+									{item.row.map(diner => (
+										diner.id ? 
+											<View key={diner.key} style={style.diner}>
+												<View style={style.dinerProfileHolder}>
+													<Image source={{ uri: logo_url + diner.profile }} style={{ height: dinerProfileSize, width: dinerProfileSize }}/>
+												</View>
+												<Text style={style.dinerName}>{diner.username}</Text>
+											</View>
+											:
+											<View key={diner.key} style={style.diner}>
+											</View>
+									))}
+								</View>
+							))}
+						</View>
+
 						<View style={style.dateHeaders}>
 							<View style={style.date}>
 								<TouchableOpacity style={style.dateNav} onPress={() => dateNavigate('left')}><AntDesign name="left" size={25}/></TouchableOpacity>
@@ -428,7 +453,7 @@ export default function booktime(props) {
 								{!confirmRequest.requested ? 
 									<>
 										<Text style={style.confirmHeader}>
-											<Text style={{ fontFamily: 'appFont' }}>Request a different time for {diners > 0 ? '\n' + diners + ' ' + (diners == 1 ? 'person' : 'people') : '1 person'}</Text>
+											<Text style={{ fontFamily: 'appFont' }}>Request a different time for {numDiners > 0 ? '\n' + numDiners + ' ' + (numDiners == 1 ? 'person' : 'people') : '1 person'}</Text>
 											{'\n at ' + confirmRequest.service}
 											{'\n' + displayTime(confirmRequest.time)}
 										</Text>
@@ -457,7 +482,7 @@ export default function booktime(props) {
 										<Text style={style.requestedHeader}>Reservation requested at</Text>
 										<Text style={style.requestedHeaderInfo}>{confirmRequest.service}</Text>
 										<Text style={style.requestedHeaderInfo}>{displayTime(confirmRequest.time)}</Text>
-										<Text style={style.requestedHeaderInfo}>for {diners} diner{diners > 1 ? "s" : ""}{'\n'}</Text>
+										<Text style={style.requestedHeaderInfo}>for {numDiners} diner{numDiners > 1 ? "s" : ""}{'\n'}</Text>
 										<Text style={style.requestedHeaderInfo}>You will get notify by the diners</Text>
 										<TouchableOpacity style={style.requestedClose} onPress={() => {
 											setConfirmrequest({ ...confirmRequest, show: false, requested: false })
@@ -485,24 +510,39 @@ const style = StyleSheet.create({
 
 	boxHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', marginBottom: 10, textAlign: 'center' },
 
-	dateHeaders: { alignItems: 'center' },
+	dinersList: { alignItems: 'center', width: '100%' },
+	row: { flexDirection: 'row', justifyContent: 'space-between' },
+	diner: { alignItems: 'center', height: dinerFrameSize, margin: 5, width: dinerFrameSize },
+	dinerProfileHolder: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: dinerProfileSize / 2, height: dinerProfileSize, overflow: 'hidden', width: dinerProfileSize },
+	dinerName: { textAlign: 'center' },
+
+	dateHeaders: { alignItems: 'center', marginVertical: 50 },
 	date: { flexDirection: 'row', margin: 10 },
 	dateNav: { marginHorizontal: 20 },
 	dateHeader: { fontFamily: 'appFont', fontSize: 20, marginVertical: 5, textAlign: 'center', width: 170 },
 	dateDays: { alignItems: 'center' },
 	dateDaysRow: { flexDirection: 'row' },
-	dateDayTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, padding: 7, width: (width / 7) - 20 },
-	dateDayTouchSelected: { backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, padding: 7, width: (width / 7) - 20 },
+
+	dateDayTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, padding: 7, width: 40 },
+	dateDayTouchHeader: { color: 'black', fontSize: 13, textAlign: 'center' },
+	
+	dateDayTouchSelected: { backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, padding: 7, width: 40 },
 	dateDayTouchSelectedHeader: { color: 'white', fontSize: 17, textAlign: 'center' },
-	dateDayTouchPassed: { backgroundColor: 'rgba(0, 0, 0, 0.5)', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, padding: 7, width: (width / 7) - 20 },
-	dateDayTouchDisabled: { height: 40, margin: 3, padding: 3, width: (width / 7) - 20 },
-	dateDayTouchHeader: { color: 'black', textAlign: 'center' },
+
+	dateDayTouchPassed: { backgroundColor: 'rgba(0, 0, 0, 0.5)', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, padding: 7, width: 40 },
+	dateDayTouchPassedHeader: { color: 'black', fontSize: 13, textAlign: 'center' },
+	
+	dateDayTouchDisabled: { height: 40, margin: 3, padding: 3, width: 40 },
+	dateDayTouchDisabledHeader: { fontSize: 13, fontWeight: 'bold' },
 
 	timesHeader: { fontFamily: 'appFont', fontSize: 30, fontWeight: 'bold', textAlign: 'center' },
-	times: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', width: 282 },
-	unselect: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, padding: 5, width: (width / 3) - 50 },
-	selected: { alignItems: 'center', backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, padding: 5, width: (width / 3) - 50 },
-	selectedPassed: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, opacity: 0.3, padding: 5, width: (width / 3) - 50 },
+	times: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', width: 253 },
+	unselect: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, padding: 5, width: 80 },
+	unselectHeader: { color: 'black', fontSize: 15 },
+	selected: { alignItems: 'center', backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, padding: 5, width: 80 },
+	selectedHeader: { color: 'black', fontSize: 15 },
+	selectedPassed: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, opacity: 0.3, padding: 5, width: 80 },
+	selectedPassedHeader: { color: 'black', fontSize: 15 },
 
 	// confirm & requested box
 	confirmBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },

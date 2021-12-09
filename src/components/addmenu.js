@@ -61,8 +61,8 @@ export default function addmenu(props) {
 			})
 	}
 	const saveTheMenu = () => {
-		const data = { id: menuid, name, info, image }
-
+		const data = { menuid, name, info, image, permission: cameraPermission && pickingPermission }
+		
 		saveMenu(data)
 			.then((res) => {
 				if (res.status == 200) {
@@ -77,7 +77,7 @@ export default function addmenu(props) {
 			})
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
-					
+
 				}
 			})
 	}
@@ -222,8 +222,8 @@ export default function addmenu(props) {
 							<View style={style.box}>
 								<Text style={style.addHeader}>Enter menu info</Text>
 
-								<TextInput style={style.addInput} placeholder="Menu name" placeholderTextColor="rgba(127, 127, 127, 0.5)" onChangeText={(name) => setName(name)} value={name} autoCorrect={false}/>
-								<TextInput style={style.infoInput} onSubmitEditing={() => Keyboard.dismiss()} multiline={true} placeholder="Anything you want to say about this menu" placeholderTextColor="rgba(127, 127, 127, 0.5)" onChangeText={(info) => setInfo(info)} value={info} autoCorrect={false} autoCompleteType="off"/>
+								<TextInput style={style.addInput} placeholder="Menu name" placeholderTextColor="rgba(127, 127, 127, 0.5)" onChangeText={(name) => setName(name)} value={name} autoCorrect={false} autoCompleteType="off" autoCapitalize="none"/>
+								<TextInput style={style.infoInput} onSubmitEditing={() => Keyboard.dismiss()} multiline={true} placeholder="Anything you want to say about this menu" placeholderTextColor="rgba(127, 127, 127, 0.5)" onChangeText={(info) => setInfo(info)} value={info} autoCorrect={false} autoCompleteType="off" autoCapitalize="none"/>
 
 								<View style={style.cameraContainer}>
 									<Text style={style.cameraHeader}>Menu photo</Text>
@@ -282,65 +282,16 @@ export default function addmenu(props) {
 const style = StyleSheet.create({
 	addmenu: { backgroundColor: 'white', height: '100%', width: '100%' },
 	box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', paddingVertical: 10, width: '100%' },
-	addHeader: { fontWeight: 'bold', paddingVertical: 5 },
-	addInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, fontSize: 13, padding: 10, width: '90%' },
-	infoInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, fontSize: 13, height: 100, marginVertical: 5, padding: 10, textAlignVertical: 'top', width: '90%' },
+	addHeader: { fontSize: 20, fontWeight: 'bold', paddingVertical: 5 },
+	addInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, fontSize: 20, padding: 10, width: '90%' },
+	infoInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, fontSize: 20, height: 100, marginVertical: 5, padding: 10, textAlignVertical: 'top', width: '90%' },
 	cameraContainer: { alignItems: 'center', width: '100%' },
-	cameraHeader: { fontWeight: 'bold', paddingVertical: 5 },
+	cameraHeader: { fontSize: 20, fontWeight: 'bold', paddingVertical: 5 },
 	camera: { height: frameSize, width: frameSize },
 	cameraActions: { flexDirection: 'row' },
 	cameraAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginBottom: 50, margin: 5, padding: 5, width: 100 },
-	cameraActionHeader: { fontSize: 13, textAlign: 'center' },
+	cameraActionHeader: { fontSize: 15, textAlign: 'center' },
 	errorMsg: { color: 'red', fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
 	addActions: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
-	addAction: { alignItems: 'center', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, padding: 5, width: 100 },
+	addAction: { alignItems: 'center', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: 20, padding: 5, width: 100 },
 })
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

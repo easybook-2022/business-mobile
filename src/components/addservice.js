@@ -277,8 +277,8 @@ export default function addservice(props) {
 							<View style={style.box}>
 								<Text style={style.addHeader}>Enter service info</Text>
 								
-								<TextInput style={style.addInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Service name" onChangeText={(name) => setName(name)} value={name} autoCapitalize="none"/>
-								<TextInput style={style.infoInput} multiline={true} onSubmitEditing={() => Keyboard.dismiss()} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Anything you want to say about this service (optional)" onChangeText={(info) => setInfo(info)} value={info} autoCapitalize="none"/>
+								<TextInput style={style.addInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Service name" onChangeText={(name) => setName(name)} value={name} autoCorrect={false} autoCompleteType="off" autoCapitalize="none"/>
+								<TextInput style={style.infoInput} multiline={true} onSubmitEditing={() => Keyboard.dismiss()} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Anything you want to say about this service (optional)" onChangeText={(info) => setInfo(info)} value={info} autoCorrect={false} autoCompleteType="off" autoCapitalize="none"/>
 
 								<View style={style.cameraContainer}>
 									<Text style={style.cameraHeader}>Service photo</Text>
@@ -347,65 +347,19 @@ export default function addservice(props) {
 const style = StyleSheet.create({
 	addservice: { backgroundColor: 'white', height: '100%', width: '100%' },
 	box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', paddingVertical: 10, width: '100%' },
-	addHeader: { fontWeight: 'bold', paddingVertical: 5 },
-	addInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, fontSize: 13, marginBottom: 5, padding: 5, width: '80%' },
-	infoInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, fontSize: 13, height: 100, marginBottom: 50, padding: 10, width: '80%' },
-	cameraContainer: { alignItems: 'center', marginBottom: 50, width: '100%' },
-	cameraHeader: { fontWeight: 'bold', paddingVertical: 5 },
+	addHeader: { fontSize: 20, fontWeight: 'bold', paddingVertical: 5 },
+	addInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, fontSize: 20, padding: 10, width: '90%' },
+	infoInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, fontSize: 20, height: 100, marginVertical: 5, padding: 10, textAlignVertical: 'top', width: '90%' },
+	cameraContainer: { alignItems: 'center', width: '100%' },
+	cameraHeader: { fontSize: 20, fontWeight: 'bold', paddingVertical: 5 },
 	camera: { height: frameSize, width: frameSize },
 	cameraActions: { flexDirection: 'row' },
 	cameraAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginBottom: 50, margin: 5, padding: 5, width: 100 },
-	cameraActionHeader: { fontSize: 13, textAlign: 'center' },
+	cameraActionHeader: { fontSize: 15, textAlign: 'center' },
 	inputBox: { flexDirection: 'row', marginBottom: 30 },
-	inputHeader: { fontSize: 15, fontWeight: 'bold', padding: 5 },
-	inputValue: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: '40%' },
+	inputHeader: { fontSize: 20, fontWeight: 'bold', padding: 5 },
+	inputValue: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: 20, padding: 5, width: 100 },
 	errorMsg: { color: 'red', fontWeight: 'bold', marginBottom: 50, textAlign: 'center' },
 	addActions: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 50, width: '100%' },
 	addAction: { alignItems: 'center', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, padding: 5, width: 100 },
 })
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

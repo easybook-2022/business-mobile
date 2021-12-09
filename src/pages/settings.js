@@ -398,7 +398,7 @@ export default function settings(props) {
 		const { cellnumber, username, password, confirmPassword, profile } = accountForm
 		const data = { ownerid, cellnumber, username, password, confirmPassword, hours, profile }
 
-		setAccountform({ ...accountForm, loading: true })
+		setAccountform({ ...accountForm, loading: true, errorMsg: "" })
 
 		addOwner(data)
 			.then((res) => {
@@ -413,7 +413,7 @@ export default function settings(props) {
 					setAccountform({
 						...accountForm, show: false, type: '', username: '', cellnumber: '', 
 						password: '', confirmPassword: '', profile: { uri: '', name: '' }, 
-						loading: false
+						loading: false, errorMsg: ""
 					})
 					getAllAccounts()
 				}
@@ -566,6 +566,7 @@ export default function settings(props) {
 						password: '',
 						confirmPassword: '',
 						profile: { uri: '', name: '' },
+						errorMsg: ""
 					})
 					getAllAccounts()
 				}
@@ -1430,7 +1431,8 @@ export default function settings(props) {
 												show: false,
 												username: '',
 												cellnumber: '', password: '', confirmPassword: '',
-												profile: { uri: '', name: '' }
+												profile: { uri: '', name: '' },
+												errorMsg: ""
 											})
 										}}>
 											<AntDesign name="closecircleo" size={30}/>
@@ -1584,7 +1586,8 @@ export default function settings(props) {
 												show: false,
 												username: '',
 												cellnumber: '', password: '', confirmPassword: '',
-												profile: { uri: '', name: '' }
+												profile: { uri: '', name: '' },
+												errorMsg: ""
 											})
 										}}>
 											<Text style={style.accountformSubmitHeader}>Cancel</Text>
@@ -1698,14 +1701,14 @@ const style = StyleSheet.create({
 
 	inputsBox: { paddingHorizontal: 20, width: '100%' },
 	inputContainer: { marginVertical: 20 },
-	inputHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold' },
-	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: 20, padding: 5 },
+	inputHeader: { fontFamily: 'appFont', fontSize: 20 },
+	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: 25, padding: 5 },
 	cameraContainer: { alignItems: 'center', width: '100%' },
 	cameraHeader: { fontFamily: 'appFont', fontWeight: 'bold', paddingVertical: 5 },
 	camera: { height: width * 0.8, width: width * 0.8 },
 	cameraActions: { flexDirection: 'row' },
 	cameraAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginBottom: 50, margin: 5, padding: 5, width: 100 },
-	cameraActionHeader: { fontSize: 13, textAlign: 'center' },
+	cameraActionHeader: { fontSize: 15, textAlign: 'center' },
 	errorMsg: { color: 'red', fontWeight: 'bold', marginVertical: 10, textAlign: 'center' },
 	updateButton: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 10 },
 
@@ -1754,7 +1757,7 @@ const style = StyleSheet.create({
 	accountformHeader: { fontSize: 20, fontWeight: 'bold', marginVertical: 50, textAlign: 'center' },
 	accountformInputField: { marginBottom: 20, marginHorizontal: '10%', width: '80%' },
 	accountformInputHeader: { fontSize: 20, fontWeight: 'bold' },
-	accountformInputInput: { borderRadius: 2, borderStyle: 'solid', borderWidth: 3, fontSize: 20, padding: 5, width: '100%' },
+	accountformInputInput: { borderRadius: 2, borderStyle: 'solid', borderWidth: 3, fontSize: 25, padding: 5, width: '100%' },
 	accountformSubmit: { alignItems: 'center', borderRadius: 2, borderStyle: 'solid', borderWidth: 1, padding: 5, width: 130 },
 	accountformSubmitHeader: {  },
 	workerHours: {  },
@@ -1777,7 +1780,7 @@ const style = StyleSheet.create({
 	bankaccountformHeader: { fontSize: 20, fontWeight: 'bold', marginVertical: 50, textAlign: 'center' },
 	bankaccountformInputField: { marginBottom: 20, marginHorizontal: '10%', width: '80%' },
 	bankaccountformInputHeader: { fontSize: 20, fontWeight: 'bold' },
-	bankaccountformInputInput: { borderRadius: 2, borderStyle: 'solid', borderWidth: 3, fontSize: 20, padding: 5, width: '100%' },
+	bankaccountformInputInput: { borderRadius: 2, borderStyle: 'solid', borderWidth: 3, fontSize: 25, padding: 5, width: '100%' },
 	bankaccountformSubmit: { alignItems: 'center', borderRadius: 2, borderStyle: 'solid', borderWidth: 1, padding: 5 },
 	bankaccountformSubmitHeader: {  },
 })

@@ -56,12 +56,12 @@ export default function forgotpassword({ navigation }) {
 
 					<View style={style.inputsBox}>
 						{!info.sent ? 
-							<View>
+							<View style={style.inputContainer}>
 								<Text style={style.inputHeader}>Phone number:</Text>
 								<TextInput style={style.input} onChangeText={(cellnumber) => setInfo({ ...info, cellnumber })} value={info.cellnumber} keyboardType="numeric" autoCorrect={false}/>
 							</View>
 							:
-							<View>
+							<View style={style.inputContainer}>
 								<Text style={style.resetCodeHeader}>Please enter the reset code sent to your phone</Text>
 
 								<Text style={style.inputHeader}>Reset Code:</Text>
@@ -82,29 +82,27 @@ export default function forgotpassword({ navigation }) {
 						}
 					</View>
 					
-					<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-						<View style={style.options}>
-							<TouchableOpacity style={style.option} onPress={() => {
-								navigation.dispatch(
-									CommonActions.reset({
-										index: 1,
-										routes: [{ name: 'login' }]
-									})
-								);
-							}}>
-								<Text>Already a member ? Log in</Text>
-							</TouchableOpacity>
-							<TouchableOpacity style={style.option} onPress={() => {
-								navigation.dispatch(
-									CommonActions.reset({
-										index: 1,
-										routes: [{ name: 'verifyowner' }]
-									})
-								);
-							}}>
-								<Text>Don't have an account ? Sign up</Text>
-							</TouchableOpacity>
-						</View>
+					<View>
+						<TouchableOpacity style={style.option} onPress={() => {
+							navigation.dispatch(
+								CommonActions.reset({
+									index: 1,
+									routes: [{ name: 'login' }]
+								})
+							);
+						}}>
+							<Text style={style.optionHeader}>Already a member ? Log in</Text>
+						</TouchableOpacity>
+						<TouchableOpacity style={style.option} onPress={() => {
+							navigation.dispatch(
+								CommonActions.reset({
+									index: 1,
+									routes: [{ name: 'verifyowner' }]
+								})
+							);
+						}}>
+							<Text style={style.optionHeader}>Don't have an account ? Sign up</Text>
+						</TouchableOpacity>
 					</View>
 				</View>
 			</TouchableWithoutFeedback>
@@ -118,11 +116,13 @@ const style = StyleSheet.create({
 	boxHeader: { color: 'black', fontFamily: 'appFont', fontSize: 40, fontWeight: 'bold' },
 	
 	inputsBox: { alignItems: 'center', flexDirection: 'column', height: screenHeight / 2, justifyContent: 'space-around', width: '80%' },
-	inputHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold' },
-	input: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: 20, padding: 10, width: width - 100 },
-	errorMsg: { color: 'darkred', fontWeight: 'bold', textAlign: 'center' },
+	inputContainer: { marginBottom: 30, width: '100%' },
+	inputHeader: { fontFamily: 'appFont', fontSize: 25 },
+	input: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: 25, padding: 5, width: '100%' },
+	errorMsg: { color: 'darkred', fontSize: 20, fontWeight: 'bold', textAlign: 'center' },
 	submit: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontFamily: 'appFont', padding: 10, width: 100 },
 	submitHeader: { fontWeight: 'bold', textAlign: 'center' },
 	
-	option: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, marginVertical: 10, padding: 5 }
+	option: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, marginVertical: 10, padding: 5 },
+	optionHeader: { fontSize: 15, fontWeight: 'bold' },
 })

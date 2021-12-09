@@ -175,7 +175,7 @@ export default function setuphours({ navigation }) {
 			})
 	}
 	const getLocationType = async() => {
-		const type = await AsyncStorage.getItem("locationtype")
+		const type = await AsyncStorage.getItem("type")
 
 		if (isMounted.current == true) {
 			setLocationtype(type)
@@ -196,7 +196,7 @@ export default function setuphours({ navigation }) {
 				<ScrollView style={{ backgroundColor: '#EAEAEA', height: screenHeight - 40, width: '100%' }}>
 					<View style={[style.box, { opacity: loading ? 0.6 : 1 }]}>
 						<Text style={style.boxHeader}>Setup</Text>
-						<Text style={style.boxMiniheader}>Please set your opening hours</Text>
+						<Text style={style.boxMiniheader}>Set the {locationType == 'hair' || locationType == 'nail' ? 'salon' : 'restaurant'}'s opening hours</Text>
 
 						<View style={style.days}>
 							{days.map((day, index) => (
@@ -267,8 +267,8 @@ export default function setuphours({ navigation }) {
 											</View>
 										</View>
 									</View>
-									<TouchableOpacity style={day.close ? style.dayCloseSelected : style.dayClose} onPress={() => dayClose(index)}>
-										<Text style={day.close ? style.dayCloseSelectedHeader : style.dayCloseHeader}>{day.header} is close</Text>
+									<TouchableOpacity style={style.dayClose} onPress={() => dayClose(index)}>
+										<Text style={style.dayCloseHeader}>{day.header} is{day.close ? ' not ' : ' '}close</Text>
 									</TouchableOpacity>
 								</View>
 							))}
@@ -318,19 +318,12 @@ const style = StyleSheet.create({
 	selectionHeader: { fontSize: 20, textAlign: 'center' },
 	selectionDiv: { fontSize: 25, marginVertical: 27 },
 	dayClose: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5 },
-	dayCloseSelected: { backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5 },
-	dayCloseHeader: { textAlign: 'center' },
-	dayCloseSelectedHeader: { color: 'white' },
+	dayCloseHeader: { fontSize: 20, textAlign: 'center' },
 
 	done: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 30, padding: 5, width: 100 },
-	doneHeader: { fontWeight: 'bold', textAlign: 'center' },
+	doneHeader: { fontSize: 20, fontWeight: 'bold', textAlign: 'center' },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
 	bottomNav: { flexDirection: 'row', height: 30, marginVertical: 5, marginHorizontal: 20 },
 	bottomNavHeader: { fontWeight: 'bold', paddingVertical: 5 },
 })
-
-
-
-
-

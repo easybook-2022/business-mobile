@@ -321,7 +321,7 @@ export default function register(props) {
 							</View>
 
 							<View style={style.cameraContainer}>
-								<Text style={style.cameraHeader}>Profile Picture</Text>
+								<Text style={style.inputHeader}>Profile Picture</Text>
 
 								{profile.uri ? (
 									<>
@@ -348,7 +348,7 @@ export default function register(props) {
 							</View>
 
 							<View style={style.workerHours}>
-								<Text style={style.workerHoursHeader}>Your working days and hours</Text>
+								<Text style={style.inputHeader}>Your working days and hours</Text>
 
 								{workerHours.map((info, index) => (
 									<View key={index} style={style.workerHour}>
@@ -418,8 +418,8 @@ export default function register(props) {
 												</View>
 											</View>
 										</View>
-										<TouchableOpacity style={info.working ? style.dayCloseSelected : style.dayClose} onPress={() => working(index)}>
-											<Text style={info.working ? style.dayCloseSelectedHeader : style.dayCloseHeader}>Not working on {info.header}</Text>
+										<TouchableOpacity style={style.dayClose} onPress={() => working(index)}>
+											<Text style={style.dayCloseHeader}>{info.working ? 'Not working' : 'Working'}</Text>
 										</TouchableOpacity>
 									</View>
 								))}
@@ -431,26 +431,24 @@ export default function register(props) {
 						{loading ? <ActivityIndicator color="black" size="small"/> : null}
 
 						<TouchableOpacity style={style.submit} onPress={register}>
-							<Text>Register</Text>
+							<Text style={style.submitHeader}>Register</Text>
 						</TouchableOpacity>
 					</View>
 				</ScrollView>
 
 				<View style={style.bottomNavs}>
-					<View style={{ flexDirection: 'row' }}>
-						<TouchableOpacity style={style.bottomNav} onPress={() => {
-							AsyncStorage.clear()
+					<TouchableOpacity style={style.bottomNav} onPress={() => {
+						AsyncStorage.clear()
 
-							props.navigation.dispatch(
-								CommonActions.reset({
-									index: 1,
-									routes: [{ name: 'login' }]
-								})
-							);
-						}}>
-							<Text style={style.bottomNavHeader}>Log-Out</Text>
-						</TouchableOpacity>
-					</View>
+						props.navigation.dispatch(
+							CommonActions.reset({
+								index: 1,
+								routes: [{ name: 'login' }]
+							})
+						);
+					}}>
+						<Text style={style.bottomNavHeader}>Log-Out</Text>
+					</TouchableOpacity>
 				</View>
 			</View>
 		</View>
@@ -460,20 +458,18 @@ export default function register(props) {
 const style = StyleSheet.create({
 	register: { backgroundColor: 'white' },
 	box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
-	boxHeader: { fontFamily: 'appFont', fontSize: 50, fontWeight: 'bold', paddingVertical: 30 },
+	boxHeader: { fontFamily: 'appFont', fontSize: 40, fontWeight: 'bold', paddingVertical: 30 },
 
 	inputsBox: { width: '80%' },
-	inputContainer: { marginBottom: 50 },
-	inputHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold' },
-	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: 20, padding: 5 },
-	cameraContainer: { alignItems: 'center', marginBottom: 50, width: '100%' },
-	cameraHeader: { fontFamily: 'appFont', fontWeight: 'bold', paddingVertical: 5 },
+	inputContainer: { marginBottom: 50, width: '100%' },
+	inputHeader: { fontFamily: 'appFont', fontSize: 25, textAlign: 'center' },
+	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: 25, padding: 5, width: '100%' },
+	cameraContainer: { alignItems: 'center', marginVertical: 50, width: '100%' },
 	camera: { height: width * 0.8, width: width * 0.8 },
 	cameraActions: { flexDirection: 'row' },
 	cameraAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: 100 },
-	cameraActionHeader: { fontSize: 13, textAlign: 'center' },
-	workerHours: {  },
-	workerHoursHeader: { fontFamily: 'appFont', fontWeight: 'bold', paddingVertical: 5, textAlign: 'center' },
+	cameraActionHeader: { fontSize: 15, textAlign: 'center' },
+	workerHours: { marginVertical: 50 },
 	workerHour: { alignItems: 'center', backgroundColor: 'rgba(255, 255, 255, 0.8)', borderRadius: 10, marginVertical: 10, padding: 5 },
 	workerHourHeader: { fontSize: 20, marginHorizontal: 10, textAlign: 'center' },
 	timeSelectionContainer: { flexDirection: 'row' },
@@ -483,11 +479,10 @@ const style = StyleSheet.create({
 	selectionHeader: { fontSize: 20, textAlign: 'center' },
 	selectionDiv: { fontSize: 25, marginVertical: 27 },
 	dayClose: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5 },
-	dayCloseSelected: { backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5 },
-	dayCloseHeader: { textAlign: 'center' },
-	dayCloseSelectedHeader: { color: 'white' },
+	dayCloseHeader: { fontSize: 15, textAlign: 'center' },
 	errorMsg: { color: 'darkred', fontWeight: 'bold', textAlign: 'center' },
 	submit: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginBottom: 50, marginTop: 5, padding: 10 },
+	submitHeader: { fontSize: 25 },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
 	bottomNav: { flexDirection: 'row', height: 30, marginVertical: 5, marginHorizontal: 20 },

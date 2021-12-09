@@ -58,13 +58,19 @@ export default function typesetup({ navigation }) {
 
 					<View style={style.selections}>
 						<TouchableOpacity style={type == 'hair' ? style.selectionSelected : style.selection} onPress={() => setType('hair')}>
+							<Text style={style.selectionHeader}>Hair</Text>
 							<Image source={require("../../assets/hairsalon.png")} style={style.selectionIcon}/>
+							<Text style={style.selectionAction}>Tap{'\n'}to choose</Text>
 						</TouchableOpacity>
 						<TouchableOpacity style={type == 'nail' ? style.selectionSelected : style.selection} onPress={() => setType('nail')}>
+							<Text style={style.selectionHeader}>Nail</Text>
 							<Image source={require("../../assets/nailsalon.png")} style={style.selectionIcon}/>
+							<Text style={style.selectionAction}>Tap{'\n'}to choose</Text>
 						</TouchableOpacity>
 						<TouchableOpacity style={type == 'restaurant' ? style.selectionSelected : style.selection} onPress={() => setType('restaurant')}>
+							<Text style={style.selectionHeader}>Restaurant</Text>
 							<Image source={require("../../assets/food.png")} style={style.selectionIcon}/>
+							<Text style={style.selectionAction}>Tap{'\n'}to choose</Text>
 						</TouchableOpacity>
 					</View>
 					
@@ -102,15 +108,17 @@ const style = StyleSheet.create({
 	typesetup: { backgroundColor: 'white' },
 	box: { alignItems: 'center', backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 	boxHeader: { fontFamily: 'appFont', fontSize: 50, fontWeight: 'bold', paddingVertical: 30 },
-	boxMiniheader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold' },
+	boxMiniheader: { fontFamily: 'appFont', fontSize: 25, fontWeight: 'bold', textAlign: 'center' },
 
-	selections: {  },
-	selection: { backgroundColor: 'rgba(127, 127, 127, 0.05)', borderRadius: iconSize / 2, borderStyle: 'solid', borderWidth: 2, height: iconSize, marginBottom: 5, padding: 20, width: iconSize },
-	selectionSelected: { backgroundColor: 'rgba(127, 127, 127, 0.8)', borderRadius: iconSize / 2, borderStyle: 'solid', borderWidth: 2, height: iconSize, marginBottom: 5, padding: 20, width: iconSize },
-	selectionIcon: { height: '100%', width: '100%' },
+	selections: { alignItems: 'center', width: '100%' },
+	selection: { backgroundColor: 'rgba(127, 127, 127, 0.05)', borderStyle: 'solid', borderWidth: 2, flexDirection: 'row', height: iconSize, justifyContent: 'space-between', marginBottom: 5, padding: 5, width: '80%' },
+	selectionSelected: { backgroundColor: 'rgba(127, 127, 127, 0.8)', borderStyle: 'solid', borderWidth: 2, flexDirection: 'row', height: iconSize, justifyContent: 'space-between', marginBottom: 5, padding: 5, width: '80%' },
+	selectionHeader: { fontSize: 20, fontWeight: 'bold', marginVertical: 20 },
+	selectionIcon: { height: 60, width: 60 },
+	selectionAction: { fontSize: 20, marginVertical: 15, textAlign: 'center' },
 
 	done: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 20, padding: 10 },
-	doneHeader: { fontWeight: 'bold', textAlign: 'center' },
+	doneHeader: { fontSize: 20, fontWeight: 'bold', textAlign: 'center' },
 
 	errorMsg: { color: 'red', fontWeight: 'bold', marginVertical: 10, textAlign: 'center' },
 	setupButton: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 20, padding: 10 },

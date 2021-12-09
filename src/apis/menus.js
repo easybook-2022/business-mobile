@@ -45,7 +45,7 @@ export const saveMenu = data => {
 	const form = new FormData()
 	const { uri, name, type = "image/jpeg" } = data.image
 
-	form.append("id", data.id)
+	form.append("menuid", data.menuid)
 	form.append("name", data.name)
 	form.append("info", data.info)
 	form.append("permission", data.permission)

@@ -19,6 +19,7 @@ export default function cartorders(props) {
 	const [ready, setReady] = useState(false)
 	const [loading, setLoading] = useState(false)
 	const [showBankaccountrequired, setShowbankaccountrequired] = useState(false)
+	const [showNoorders, setShownoorders] = useState(false)
 	const [showPaymentconfirm, setShowpaymentconfirm] = useState(false)
 
 	const isMounted = useRef(null)
@@ -65,7 +66,17 @@ export default function cartorders(props) {
 			})
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
-					
+					if (err.response.data.status) {
+						const { errormsg, status } = err.response.data
+
+						switch (status) {
+							case "nonexist":
+								setShownoorders(true)
+
+								break
+							default:
+						}
+					}
 				}
 			})
 	}
@@ -92,11 +103,15 @@ export default function cartorders(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					if (err.response.data.status) {
-						const status = err.response.data.status
+						const { errormsg, status } = err.response.data
 
 						switch (status) {
 							case "bankaccountrequired":
 								setShowbankaccountrequired(true)
+
+								break
+							case "nonexist":
+								setShownoorders(true)
 
 								break
 							default:
@@ -235,6 +250,29 @@ export default function cartorders(props) {
 											props.navigation.navigate("settings", { required: "bankaccount" })
 										}}>
 											<Text style={style.requiredActionHeader}>Ok</Text>
+										</TouchableOpacity>
+									</View>
+								</View>
+							</View>
+						</View>
+					</Modal>
+				)}
+
+				{showNoorders && (
+					<Modal transparent={true}>
+						<View style={style.requiredBoxContainer}>
+							<View style={style.requiredBox}>
+								<View style={style.requiredContainer}>
+									<Text style={style.requiredHeader}>Order has already been delivered or doesn't exist</Text>
+
+									<View style={style.requiredActions}>
+										<TouchableOpacity style={style.requiredAction} onPress={() => {
+											if (refetch) refetch()
+												
+											setShownoorders(false)
+											props.navigation.goBack()
+										}}>
+											<Text style={style.requiredActionHeader}>Close</Text>
 										</TouchableOpacity>
 									</View>
 								</View>

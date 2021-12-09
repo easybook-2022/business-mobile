@@ -100,6 +100,10 @@ export const deliverRound = data => {
 	)
 }
 
+export const cancelReservation = id => {
+	return axios.get(`${url}/schedules/cancel_reservation/${id}`)
+}
+
 export const doneDining = id => {
 	return axios.get(`${url}/schedules/done_dining/${id}`)
 }

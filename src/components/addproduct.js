@@ -448,8 +448,8 @@ export default function addproduct(props) {
 							<View style={style.box}>
 								<Text style={style.addHeader}>Enter product info</Text>
 
-								<TextInput style={style.addInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Product name" onChangeText={(name) => setName(name)} value={name} autoCorrect={false} autoCapitalize="none"/>
-								<TextInput style={style.infoInput} multiline={true} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Anything you want to say about this product (optional)" onChangeText={(info) => setInfo(info)} value={info} autoCorrect={false} autoCapitalize="none"/>
+								<TextInput style={style.addInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Product name" onChangeText={(name) => setName(name)} value={name} autoCorrect={false} autoCompleteType="off" autoCapitalize="none"/>
+								<TextInput style={style.infoInput} multiline={true} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Anything you want to say about this product (optional)" onChangeText={(info) => setInfo(info)} value={info} autoCorrect={false} autoCompleteType="off" autoCapitalize="none"/>
 
 								<View style={style.cameraContainer}>
 									<Text style={style.cameraHeader}>Product photo</Text>
@@ -690,16 +690,16 @@ export default function addproduct(props) {
 
 const style = StyleSheet.create({
 	addproduct: { backgroundColor: 'white', height: '100%', width: '100%' },
-	box: { alignItems: 'center', flexDirection: 'column', justifyContent: 'space-around', paddingVertical: 10, width: '100%' },
-	addHeader: { fontWeight: 'bold', paddingVertical: 5 },
-	addInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, fontSize: 20, marginBottom: 5, padding: 5, width: '80%' },
-	infoInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, fontSize: 20, height: 100, marginBottom: 50, padding: 10, width: '80%' },
-	cameraContainer: { alignItems: 'center', marginBottom: 50, width: '100%' },
-	cameraHeader: { fontWeight: 'bold', paddingVertical: 5 },
+	box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', paddingVertical: 10, width: '100%' },
+	addHeader: { fontSize: 20, fontWeight: 'bold', paddingVertical: 5 },
+	addInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, fontSize: 20, padding: 10, width: '90%' },
+	infoInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, fontSize: 20, height: 100, marginVertical: 5, padding: 10, textAlignVertical: 'top', width: '90%' },
+	cameraContainer: { alignItems: 'center', width: '100%' },
+	cameraHeader: { fontSize: 20, fontWeight: 'bold', paddingVertical: 5 },
 	camera: { height: frameSize, width: frameSize },
 	cameraActions: { flexDirection: 'row' },
 	cameraAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginBottom: 50, margin: 5, padding: 5, width: 100 },
-	cameraActionHeader: { fontSize: 13, textAlign: 'center' },
+	cameraActionHeader: { fontSize: 15, textAlign: 'center' },
 
 	addOption: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 10 },
 	addOptionHeader: { fontSize: 13 },
@@ -741,19 +741,3 @@ const style = StyleSheet.create({
 	addActions: { flexDirection: 'row', justifyContent: 'space-around', marginVertical: 10 },
 	addAction: { alignItems: 'center', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 10, padding: 5, width: 100 },
 })
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

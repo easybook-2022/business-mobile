@@ -30,7 +30,7 @@
       </dict>
     </array>
     <key>CFBundleVersion</key>
-    <string>0</string>
+    <string>2</string>
     <key>LSRequiresIPhoneOS</key>
     <true/>
     <key>NSAppTransportSecurity</key>
@@ -48,8 +48,6 @@
     </dict>
     <key>NSCameraUsageDescription</key>
     <string>EasyGO (Business) uses camera to allow you to capture a photo of your location/menu/product/service</string>
-    <key>NSPhotoLibraryUsageDescription</key>
-    <string>EasyGO (Business) allows you to choose a photo from your library</string>
     <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
     <string>Allow $(PRODUCT_NAME) to access your location</string>
     <key>NSLocationAlwaysUsageDescription</key>

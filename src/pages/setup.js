@@ -312,8 +312,8 @@ export default function setup({ navigation }) {
 
 						{loading && <ActivityIndicator size="large"/>}
 
-						<TouchableOpacity style={style.setupButton} disabled={loading} onPress={() => setupYourLocation()}>
-							<Text>Done</Text>
+						<TouchableOpacity style={style.submit} disabled={loading} onPress={() => setupYourLocation()}>
+							<Text style={style.submitHeader}>Done</Text>
 						</TouchableOpacity>
 					</View>
 				</ScrollView>
@@ -346,17 +346,18 @@ const style = StyleSheet.create({
 	boxMiniheader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', marginBottom: 50 },
 
 	inputsBox: { width: '80%' },
-	inputContainer: { marginBottom: 50 },
-	inputHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold' },
-	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: 20, padding: 5 },
-	cameraContainer: { alignItems: 'center', marginBottom: 10, width: '100%' },
+	inputContainer: { marginBottom: 50, width: '100%' },
+	inputHeader: { fontFamily: 'appFont', fontSize: 25 },
+	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: 25, padding: 5, width: '100%' },
+	cameraContainer: { alignItems: 'center', marginVertical: 50, width: '100%' },
 	cameraHeader: { fontFamily: 'appFont', fontWeight: 'bold', paddingVertical: 5 },
 	camera: { height: width * 0.8, width: width * 0.8 },
 	cameraActions: { flexDirection: 'row' },
 	cameraAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: 100 },
-	cameraActionHeader: { fontSize: 13, textAlign: 'center' },
+	cameraActionHeader: { fontSize: 15, textAlign: 'center' },
 	errorMsg: { color: 'red', fontWeight: 'bold', marginVertical: 0, textAlign: 'center' },
-	setupButton: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 50, padding: 10 },
+	submit: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginBottom: 50, marginTop: 5, padding: 10 },
+	submitHeader: { fontSize: 25 },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
 	bottomNav: { flexDirection: 'row', height: 30, marginVertical: 5, marginHorizontal: 20 },
