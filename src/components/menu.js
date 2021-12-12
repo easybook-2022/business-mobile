@@ -49,9 +49,8 @@ export default function menu(props) {
 	const [removeProductinfo, setRemoveproductinfo] = useState({ show: false, id: "", name: "", info: "", image: "", sizes: [], others: [], options: [], price: 0 })
 
 	const getTheInfo = async() => {
-		const ownerid = await AsyncStorage.getItem("ownerid")
 		const locationid = await AsyncStorage.getItem("locationid")
-		const data = { ownerid, locationid, menuid }
+		const data = { locationid, menuid }
 
 		setLoaded(false)
 		setNodisplay(false)
@@ -160,7 +159,9 @@ export default function menu(props) {
 	}
 	const removeTheMenu = (id) => {
 		if (!removeMenuinfo.show) {
-			getMenuInfo(id)
+			const data = { parentMenuid: menuid, menuid: id }
+
+			getMenuInfo(data)
 				.then((res) => {
 					if (res.status == 200) {
 						return res.data
@@ -235,7 +236,7 @@ export default function menu(props) {
 	// products
 	const getAllProducts = async() => {
 		const locationid = await AsyncStorage.getItem("locationid")
-		const data = { locationid, menuid: menuid }
+		const data = { locationid, menuid }
 
 		getProducts(data)
 			.then((res) => {
@@ -299,7 +300,7 @@ export default function menu(props) {
 	const getAllServices = async() => {
 		const userid = await AsyncStorage.getItem("userid")
 		const locationid = await AsyncStorage.getItem("locationid")
-		const data = { userid, locationid, menuid: menuid }
+		const data = { userid, locationid, menuid }
 
 		getServices(data)
 			.then((res) => {
@@ -387,16 +388,16 @@ export default function menu(props) {
 						{noDisplay ? 
 							<View style={style.actionsHolder}>
 								<View style={style.actions}>
-									<TouchableOpacity style={style.action} onPress={() => props.navigation.navigate("addmenu", { menuid: menuid, refetch: () => getTheInfo() })}>
-										<Text style={style.actionHeader}>Add Menu</Text>
+									<TouchableOpacity style={style.action} onPress={() => props.navigation.navigate("addmenu", { parentMenuid: menuid, menuid: null, refetch: () => getTheInfo() })}>
+										<Text style={style.actionHeader}>Add a Menu</Text>
 									</TouchableOpacity>
 										
-									<TouchableOpacity style={style.action} onPress={() => props.navigation.navigate("addproduct", { menuid: menuid, refetch: () => getTheInfo() })}>
-										<Text style={style.actionHeader}>Add Product</Text>
+									<TouchableOpacity style={style.action} onPress={() => props.navigation.navigate("addproduct", { parentMenuid: menuid, menuid: null, refetch: () => getTheInfo() })}>
+										<Text style={style.actionHeader}>Add a Product</Text>
 									</TouchableOpacity>
 
-									<TouchableOpacity style={style.action} onPress={() => props.navigation.navigate("addservice", { menuid: menuid, refetch: () => getTheInfo() })}>
-										<Text style={style.actionHeader}>Add Service</Text>
+									<TouchableOpacity style={style.action} onPress={() => props.navigation.navigate("addservice", { parentMenuid: menuid, menuid: null, refetch: () => getTheInfo() })}>
+										<Text style={style.actionHeader}>Add a Service</Text>
 									</TouchableOpacity>
 								</View>
 							</View>
@@ -404,7 +405,7 @@ export default function menu(props) {
 							<>
 								{showMenus && (
 									<View style={{ alignItems: 'center' }}>
-										<TouchableOpacity style={style.addTouch} onPress={() => props.navigation.navigate("addmenu", { menuid: menuid, refetch: () => getTheInfo() })}>
+										<TouchableOpacity style={style.addTouch} onPress={() => props.navigation.navigate("addmenu", { menuid, refetch: () => getTheInfo() })}>
 											<Text style={style.addTouchHeader}>Add a new menu</Text>
 										</TouchableOpacity>
 
@@ -423,7 +424,7 @@ export default function menu(props) {
 																	<TouchableOpacity style={style.menuAction} onPress={() => removeTheMenu(info.id)}>
 																		<Text style={style.menuActionHeader}>Delete</Text>
 																	</TouchableOpacity>
-																	<TouchableOpacity style={style.menuAction} onPress={() => props.navigation.navigate("addmenu", { menuid: info.id, refetch: () => getTheInfo() })}>
+																	<TouchableOpacity style={style.menuAction} onPress={() => props.navigation.navigate("addmenu", { parentMenuid: menuid, menuid: info.id, refetch: () => getTheInfo() })}>
 																		<Text style={style.menuActionHeader}>Change</Text>
 																	</TouchableOpacity>
 																	<TouchableOpacity style={style.menuAction} onPress={() => props.navigation.push("menu", { menuid: info.id, name: info.name, refetch: () => getTheInfo() })}>
@@ -443,7 +444,7 @@ export default function menu(props) {
 								
 								{showProducts && (
 									<View style={{ alignItems: 'center' }}>
-										<TouchableOpacity style={style.addTouch} onPress={() => props.navigation.navigate("addproduct", { menuid: menuid, refetch: () => getTheInfo() })}>
+										<TouchableOpacity style={style.addTouch} onPress={() => props.navigation.navigate("addproduct", { menuid, refetch: () => getTheInfo() })}>
 											<Text style={style.addTouchHeader}>Add a new product</Text>
 										</TouchableOpacity>
 
@@ -482,7 +483,7 @@ export default function menu(props) {
 
 								{showServices && (
 									<View style={{ alignItems: 'center' }}>
-										<TouchableOpacity style={style.addTouch} onPress={() => props.navigation.navigate("addservice", { menuid: menuid, refetch: () => getTheInfo() })}>
+										<TouchableOpacity style={style.addTouch} onPress={() => props.navigation.navigate("addservice", { menuid, refetch: () => getTheInfo() })}>
 											<Text style={style.addTouchHeader}>Add a new service</Text>
 										</TouchableOpacity>
 

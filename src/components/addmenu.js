@@ -15,10 +15,13 @@ const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - (offsetPadding * 2)
 const frameSize = width * 0.9
 
+const steps = ['name', 'info', 'photo']
+
 export default function addmenu(props) {
 	const params = props.route.params
-	const { menuid, refetch } = params
+	const { parentMenuid, menuid, refetch } = params
 
+	const [setupType, setSetuptype] = useState('name')
 	const [cameraPermission, setCamerapermission] = useState(null);
 	const [pickingPermission, setPickingpermission] = useState(null);
 	const [camComp, setCamcomp] = useState(null)
@@ -35,7 +38,7 @@ export default function addmenu(props) {
 	const addTheNewMenu = async() => {
 		const ownerid = await AsyncStorage.getItem("ownerid")
 		const locationid = await AsyncStorage.getItem("locationid")
-		const data = { locationid, parentMenuid: menuid, name, info, image, permission: cameraPermission || pickingPermission }
+		const data = { locationid, parentMenuid, name, info, image, permission: cameraPermission || pickingPermission }
 
 		addNewMenu(data)
 			.then((res) => {
@@ -81,9 +84,17 @@ export default function addmenu(props) {
 				}
 			})
 	}
+	const saveInfo = () => {
+		const index = steps.indexOf(setupType)
+		const nextStep = index == 2 ? "done" : steps[index + 1]
+
+		setSetuptype(nextStep)
+	}
 
 	const getTheMenuInfo = async() => {
-		getMenuInfo(menuid)
+		const data = { parentMenuid, menuid }
+
+		getMenuInfo(data)
 			.then((res) => {
 				if (res.status == 200) {
 					return res.data
@@ -203,10 +214,7 @@ export default function addmenu(props) {
 
 		allowCamera()
 		allowChoosing()
-
-		if (menuid) {
-			getTheMenuInfo()
-		}
+		getTheMenuInfo()
 
 		return () => isMounted.current = false
 	}, [])
@@ -218,13 +226,24 @@ export default function addmenu(props) {
 			<View style={{ paddingBottom: offsetPadding }}>
 				<KeyboardAvoidingView behavior="padding">
 					{loaded ? 
-						<ScrollView style={{ backgroundColor: '#EAEAEA' }} showsVerticalScrollIndicator={false}>
-							<View style={style.box}>
-								<Text style={style.addHeader}>Enter menu info</Text>
+						<View style={style.box}>
+							{setupType == 'name' && (
+								<View style={style.inputContainer}>
+									<Text style={style.addHeader}>Enter menu name</Text>
 
-								<TextInput style={style.addInput} placeholder="Menu name" placeholderTextColor="rgba(127, 127, 127, 0.5)" onChangeText={(name) => setName(name)} value={name} autoCorrect={false} autoCompleteType="off" autoCapitalize="none"/>
-								<TextInput style={style.infoInput} onSubmitEditing={() => Keyboard.dismiss()} multiline={true} placeholder="Anything you want to say about this menu" placeholderTextColor="rgba(127, 127, 127, 0.5)" onChangeText={(info) => setInfo(info)} value={info} autoCorrect={false} autoCompleteType="off" autoCapitalize="none"/>
+									<TextInput style={style.addInput} placeholder="Menu name" placeholderTextColor="rgba(127, 127, 127, 0.5)" onChangeText={(name) => setName(name)} value={name} autoCorrect={false} autoCompleteType="off" autoCapitalize="none"/>
+								</View>
+							)}
 
+							{setupType == 'info' && (
+								<View style={style.inputContainer}>
+									<Text style={style.addHeader}>Enter menu info (optional)</Text>
+
+									<TextInput style={style.infoInput} onSubmitEditing={() => Keyboard.dismiss()} multiline={true} placeholder="Anything you want to say about this menu" placeholderTextColor="rgba(127, 127, 127, 0.5)" onChangeText={(info) => setInfo(info)} value={info} autoCorrect={false} autoCompleteType="off" autoCapitalize="none"/>
+								</View>
+							)}
+
+							{setupType == 'photo' && (
 								<View style={style.cameraContainer}>
 									<Text style={style.cameraHeader}>Menu photo</Text>
 
@@ -251,25 +270,38 @@ export default function addmenu(props) {
 										</>
 									)}
 								</View>
+							)}
+							
+							<Text style={style.errorMsg}>{errorMsg}</Text>
 
-								<Text style={style.errorMsg}>{errorMsg}</Text>
-
-								<View style={style.addActions}>
-									<TouchableOpacity style={style.addAction} onPress={() => props.navigation.goBack()}>
-										<Text>Cancel</Text>
-									</TouchableOpacity>
-									<TouchableOpacity style={style.addAction} onPress={() => {
-										if (!menuid) {
+							<View style={style.addActions}>
+								<TouchableOpacity style={style.addAction} onPress={() => props.navigation.goBack()}>
+									<Text style={style.addActionHeader}>Cancel</Text>
+								</TouchableOpacity>
+								<TouchableOpacity style={style.addAction} onPress={() => {
+									if (!menuid) {
+										if (setupType == "photo") {
 											addTheNewMenu()
 										} else {
-											saveTheMenu()
+											saveInfo()
 										}
-									}}>
-										<Text>Done</Text>
-									</TouchableOpacity>
-								</View>
+									} else {
+										if (setupType == "photo") {
+											saveTheMenu()
+										} else {
+											saveInfo()
+										}
+									}
+								}}>
+									<Text style={style.addActionHeader}>{
+										!menuid ? 
+											setupType == "photo" ? "Done" : "Next"
+											:
+											setupType == "photo" ? "Save" : "Next"
+									}</Text>
+								</TouchableOpacity>
 							</View>
-						</ScrollView>
+						</View>
 						:
 						<ActivityIndicator size="large" marginTop={screenHeight / 2}/>
 					}
@@ -280,18 +312,20 @@ export default function addmenu(props) {
 }
 
 const style = StyleSheet.create({
-	addmenu: { backgroundColor: 'white', height: '100%', width: '100%' },
-	box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', paddingVertical: 10, width: '100%' },
-	addHeader: { fontSize: 20, fontWeight: 'bold', paddingVertical: 5 },
-	addInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, fontSize: 20, padding: 10, width: '90%' },
-	infoInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, fontSize: 20, height: 100, marginVertical: 5, padding: 10, textAlignVertical: 'top', width: '90%' },
+	addmenu: { height: '100%', width: '100%' },
+	box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-between', paddingVertical: 10, width: '100%' },
+	inputContainer: { alignItems: 'center', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '100%' },
+	addHeader: { fontSize: 25, fontWeight: 'bold', paddingVertical: 5 },
+	addInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, fontSize: 25, padding: 10, width: '90%' },
+	infoInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, fontSize: 25, height: 100, marginVertical: 5, padding: 10, textAlignVertical: 'top', width: '90%' },
 	cameraContainer: { alignItems: 'center', width: '100%' },
 	cameraHeader: { fontSize: 20, fontWeight: 'bold', paddingVertical: 5 },
 	camera: { height: frameSize, width: frameSize },
 	cameraActions: { flexDirection: 'row' },
-	cameraAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginBottom: 50, margin: 5, padding: 5, width: 100 },
-	cameraActionHeader: { fontSize: 15, textAlign: 'center' },
+	cameraAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginBottom: 50, margin: 5, padding: 5, width: 120 },
+	cameraActionHeader: { fontSize: 20, textAlign: 'center' },
 	errorMsg: { color: 'red', fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
 	addActions: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
-	addAction: { alignItems: 'center', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: 20, padding: 5, width: 100 },
+	addAction: { alignItems: 'center', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: 25, padding: 5, width: 100 },
+	addActionHeader: { fontSize: 20 },
 })

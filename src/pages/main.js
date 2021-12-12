@@ -22,6 +22,7 @@ import Entypo from 'react-native-vector-icons/Entypo'
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - (offsetPadding * 2)
+const storeLogoSize = 70
 const imageSize = 50
 
 export default function main(props) {
@@ -953,8 +954,8 @@ export default function main(props) {
 						<View style={style.storeIconHolder}>
 							<Image source={{ uri: logo_url + storeIcon }} style={style.image}/>
 						</View>
-						<Text style={style.locationName}>{storeName}</Text>
-						<Text style={style.locationAddress}>{storeAddress}</Text>
+						<Text style={style.locationInfoHeader}>{storeName}</Text>
+						<Text style={style.locationInfoHeader}>{storeAddress}</Text>
 					</View>
 
 					<View style={style.body}>
@@ -1570,11 +1571,10 @@ const style = StyleSheet.create({
 	main: { backgroundColor: 'white' },
 	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 
-	headers: { alignItems: 'center', flexDirection: 'column', height: 100, justifyContent: 'space-between', paddingVertical: 5 },
-	storeIconHolder: { borderRadius: 25, height: 50, overflow: 'hidden', width: 50 },
-	image: { height: 50, width: 50 },
-	locationName: { fontSize: 13, fontWeight: 'bold', paddingHorizontal: 10, textAlign: 'center' },
-	locationAddress: { fontSize: 13, fontWeight: 'bold', paddingHorizontal: 10, textAlign: 'center' },
+	headers: { alignItems: 'center', flexDirection: 'column', height: 150, justifyContent: 'space-between', paddingVertical: 5 },
+	storeIconHolder: { borderRadius: storeLogoSize / 2, height: storeLogoSize, overflow: 'hidden', width: storeLogoSize },
+	image: { height: storeLogoSize, width: storeLogoSize },
+	locationInfoHeader: { fontSize: 18, fontWeight: 'bold', paddingHorizontal: 10, textAlign: 'center' },
 
 	navs: { alignItems: 'center' },
 	nav: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 2, marginVertical: 3, padding: 2, width: (width / 3) - 10 },
@@ -1583,7 +1583,7 @@ const style = StyleSheet.create({
 	navHeaderSelected: { color: 'white' },
 
 	// body
-	body: { height: screenHeight - 140 },
+	body: { height: screenHeight - 190 },
 
 	// client appointment requests
 	request: { borderRadius: 5, backgroundColor: 'white', marginHorizontal: 5, marginVertical: 2.5 },
@@ -1619,7 +1619,7 @@ const style = StyleSheet.create({
 	cartordererSeeOrdersHeader: { fontSize: 25, textAlign: 'center' },
 
 	bodyResult: { alignItems: 'center', flexDirection: 'column', height: screenHeight - 220, justifyContent: 'space-around' },
-	bodyResultHeader: { fontWeight: 'bold' },
+	bodyResultHeader: { fontSize: 20, fontWeight: 'bold' },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
 	bottomNav: { flexDirection: 'row', height: 30, marginVertical: 5, marginHorizontal: 20 },

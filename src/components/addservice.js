@@ -19,11 +19,14 @@ const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - (offsetPadding * 2)
 const frameSize = width * 0.9
 
+const steps = ['name', 'info', 'photo', 'price', 'duration']
+
 export default function addservice(props) {
 	const params = props.route.params
 	const { menuid, refetch } = params
 	const serviceid = params.id ? params.id : ""
 
+	const [setupType, setSetuptype] = useState('name')
 	const [cameraPermission, setCamerapermission] = useState(null);
 	const [pickingPermission, setPickingpermission] = useState(null);
 	const [camComp, setCamcomp] = useState(null)
@@ -133,6 +136,12 @@ export default function addservice(props) {
 				return
 			}
 		}
+	}
+	const saveInfo = () => {
+		const index = steps.indexOf(setupType)
+		const nextStep = index == 4 ? "done" : steps[index + 1]
+
+		setSetuptype(nextStep)
 	}
 
 	const snapPhoto = async() => {
@@ -273,13 +282,24 @@ export default function addservice(props) {
 			<View style={{ paddingBottom: offsetPadding }}>
 				<KeyboardAvoidingView behavior="padding">
 					{loaded ? 
-						<ScrollView style={{ backgroundColor: '#EAEAEA' }} showsVerticalScrollIndicator={false}>
-							<View style={style.box}>
-								<Text style={style.addHeader}>Enter service info</Text>
-								
-								<TextInput style={style.addInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Service name" onChangeText={(name) => setName(name)} value={name} autoCorrect={false} autoCompleteType="off" autoCapitalize="none"/>
-								<TextInput style={style.infoInput} multiline={true} onSubmitEditing={() => Keyboard.dismiss()} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Anything you want to say about this service (optional)" onChangeText={(info) => setInfo(info)} value={info} autoCorrect={false} autoCompleteType="off" autoCapitalize="none"/>
+						<View style={style.box}>
+							{setupType == "name" && (
+								<View style={style.inputContainer}>
+									<Text style={style.addHeader}>Enter service name</Text>
 
+									<TextInput style={style.addInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Service name" onChangeText={(name) => setName(name)} value={name} autoCorrect={false} autoCompleteType="off" autoCapitalize="none"/>
+								</View>
+							)}
+
+							{setupType == "info" && (
+								<View style={style.inputContainer}>
+									<Text style={style.addHeader}>Enter service info</Text>
+
+									<TextInput style={style.infoInput} multiline={true} onSubmitEditing={() => Keyboard.dismiss()} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Anything you want to say about this service (optional)" onChangeText={(info) => setInfo(info)} value={info} autoCorrect={false} autoCompleteType="off" autoCapitalize="none"/>
+								</View>
+							)}
+
+							{setupType == "photo" && (
 								<View style={style.cameraContainer}>
 									<Text style={style.cameraHeader}>Service photo</Text>
 
@@ -306,35 +326,52 @@ export default function addservice(props) {
 										</>
 									)}	
 								</View>
+							)}
 
-								<View style={style.inputBox}>
-									<Text style={style.inputHeader}>Service price</Text>
+							{setupType == "price" && (
+								<View style={style.inputContainer}>
+									<Text style={style.inputHeader}>Enter service price</Text>
 									<TextInput style={style.inputValue} placeholderTextColor="rgba(0, 0, 0, 0.5)" placeholder="4.99" onChangeText={(price) => setPrice(price.toString())} value={price} keyboardType="numeric" autoCorrect={false} autoCapitalize="none"/>
 								</View>
+							)}
 
-								<View style={style.inputBox}>
-									<Text style={style.inputHeader}>Service duration</Text>
+							{setupType == "duration" && (
+								<View style={style.inputContainer}>
+									<Text style={style.inputHeader}>Enter service duration</Text>
 									<TextInput style={style.inputValue} placeholderTextColor="rgba(0, 0, 0, 0.5)" placeholder="4 hours" onChangeText={(duration) => setDuration(duration)} value={duration} autoCapitalize="none"/>
 								</View>
+							)}
 
-								<Text style={style.errorMsg}>{errorMsg}</Text>
+							<Text style={style.errorMsg}>{errorMsg}</Text>
 
-								<View style={style.addActions}>
-									<TouchableOpacity style={style.addAction} onPress={() => props.navigation.goBack()}>
-										<Text>Cancel</Text>
-									</TouchableOpacity>
-									<TouchableOpacity style={style.addAction} onPress={() => {
-										if (!serviceid) {
+							<View style={style.addActions}>
+								<TouchableOpacity style={style.addAction} onPress={() => props.navigation.goBack()}>
+									<Text style={style.addActionHeader}>Cancel</Text>
+								</TouchableOpacity>
+								<TouchableOpacity style={style.addAction} onPress={() => {
+									if (!serviceid) {
+										if (setupType == "duration") {
 											addTheNewService()
 										} else {
-											updateTheService()
+											saveInfo()
 										}
-									}}>
-										<Text>{!serviceid ? "Done" : "Save"}</Text>
-									</TouchableOpacity>
-								</View>
+									} else {
+										if (setupType == "duration") {
+											updateTheService()
+										} else {
+											saveInfo()
+										}
+									}
+								}}>
+									<Text style={style.addActionHeader}>{
+										!serviceid ? 
+											setupType == 'duration' ? "Done" : "Next"
+											: 
+											setupType == 'duration' ? "Save" : "Next"
+									}</Text>
+								</TouchableOpacity>
 							</View>
-						</ScrollView>
+						</View>
 						:
 						<ActivityIndicator size="large" marginTop={screenHeight / 2}/>
 					}
@@ -346,20 +383,21 @@ export default function addservice(props) {
 
 const style = StyleSheet.create({
 	addservice: { backgroundColor: 'white', height: '100%', width: '100%' },
-	box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', paddingVertical: 10, width: '100%' },
-	addHeader: { fontSize: 20, fontWeight: 'bold', paddingVertical: 5 },
-	addInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, fontSize: 20, padding: 10, width: '90%' },
-	infoInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, fontSize: 20, height: 100, marginVertical: 5, padding: 10, textAlignVertical: 'top', width: '90%' },
+	box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-between', paddingVertical: 10, width: '100%' },
+	inputContainer: { alignItems: 'center', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '100%' },
+	addHeader: { fontSize: 25, fontWeight: 'bold', paddingVertical: 5 },
+	addInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, fontSize: 25, padding: 10, width: '90%' },
+	infoInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, fontSize: 25, height: 100, marginVertical: 5, padding: 10, textAlignVertical: 'top', width: '90%' },
 	cameraContainer: { alignItems: 'center', width: '100%' },
 	cameraHeader: { fontSize: 20, fontWeight: 'bold', paddingVertical: 5 },
 	camera: { height: frameSize, width: frameSize },
 	cameraActions: { flexDirection: 'row' },
-	cameraAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginBottom: 50, margin: 5, padding: 5, width: 100 },
-	cameraActionHeader: { fontSize: 15, textAlign: 'center' },
-	inputBox: { flexDirection: 'row', marginBottom: 30 },
-	inputHeader: { fontSize: 20, fontWeight: 'bold', padding: 5 },
-	inputValue: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: 20, padding: 5, width: 100 },
+	cameraAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginBottom: 50, margin: 5, padding: 5, width: 120 },
+	cameraActionHeader: { fontSize: 20, textAlign: 'center' },
+	inputHeader: { fontSize: 25, fontWeight: 'bold', padding: 5 },
+	inputValue: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: 25, padding: 5, width: 100 },
 	errorMsg: { color: 'red', fontWeight: 'bold', marginBottom: 50, textAlign: 'center' },
 	addActions: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 50, width: '100%' },
-	addAction: { alignItems: 'center', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, padding: 5, width: 100 },
+	addAction: { alignItems: 'center', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: 25, padding: 5, width: 100 },
+	addActionHeader: { fontSize: 20 },
 })

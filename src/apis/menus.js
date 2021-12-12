@@ -37,8 +37,11 @@ export const removeMenu = id => {
 	return axios.get(`${url}/menus/remove_menu/${id}`)
 }
 
-export const getMenuInfo = id => {
-	return axios.get(`${url}/menus/get_menu_info/${id}`)
+export const getMenuInfo = data => {
+	return axios.post(
+		`${url}/menus/get_menu_info`,
+		data
+	)
 }
 
 export const saveMenu = data => {
