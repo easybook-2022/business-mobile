@@ -23,7 +23,7 @@ const steps = ['name', 'info', 'photo', 'price', 'duration']
 
 export default function addservice(props) {
 	const params = props.route.params
-	const { menuid, refetch } = params
+	const { parentMenuid, refetch } = params
 	const serviceid = params.id ? params.id : ""
 
 	const [setupType, setSetuptype] = useState('name')
@@ -45,7 +45,7 @@ export default function addservice(props) {
 		const locationid = await AsyncStorage.getItem("locationid")
 
 		if (name && (price && !isNaN(price)) && duration) {
-			const data = { locationid, menuid, name, info, image, price, duration, permission: cameraPermission || pickingPermission }
+			const data = { locationid, menuid: parentMenuid, name, info, image, price, duration, permission: cameraPermission || pickingPermission }
 
 			addNewService(data)
 				.then((res) => {
@@ -94,7 +94,7 @@ export default function addservice(props) {
 		const locationid = await AsyncStorage.getItem("locationid")
 
 		if (name && (price && !isNaN(price)) && duration) {
-			const data = { locationid, menuid, serviceid, name, info, image, price, duration, permission: cameraPermission || pickingPermission }
+			const data = { locationid, menuid: parentMenuid, serviceid, name, info, image, price, duration, permission: cameraPermission || pickingPermission }
 
 			updateService(data)
 				.then((res) => {
@@ -285,7 +285,7 @@ export default function addservice(props) {
 						<View style={style.box}>
 							{setupType == "name" && (
 								<View style={style.inputContainer}>
-									<Text style={style.addHeader}>Enter service name</Text>
+									<Text style={style.addHeader}>{serviceid ? "Update" : "Enter"} service name</Text>
 
 									<TextInput style={style.addInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Service name" onChangeText={(name) => setName(name)} value={name} autoCorrect={false} autoCompleteType="off" autoCapitalize="none"/>
 								</View>
@@ -293,7 +293,7 @@ export default function addservice(props) {
 
 							{setupType == "info" && (
 								<View style={style.inputContainer}>
-									<Text style={style.addHeader}>Enter service info</Text>
+									<Text style={style.addHeader}>{serviceid ? "Update" : "Enter"} service info</Text>
 
 									<TextInput style={style.infoInput} multiline={true} onSubmitEditing={() => Keyboard.dismiss()} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Anything you want to say about this service (optional)" onChangeText={(info) => setInfo(info)} value={info} autoCorrect={false} autoCompleteType="off" autoCapitalize="none"/>
 								</View>
@@ -330,14 +330,14 @@ export default function addservice(props) {
 
 							{setupType == "price" && (
 								<View style={style.inputContainer}>
-									<Text style={style.inputHeader}>Enter service price</Text>
+									<Text style={style.inputHeader}>{serviceid ? "Update" : "Enter"} service price</Text>
 									<TextInput style={style.inputValue} placeholderTextColor="rgba(0, 0, 0, 0.5)" placeholder="4.99" onChangeText={(price) => setPrice(price.toString())} value={price} keyboardType="numeric" autoCorrect={false} autoCapitalize="none"/>
 								</View>
 							)}
 
 							{setupType == "duration" && (
 								<View style={style.inputContainer}>
-									<Text style={style.inputHeader}>Enter service duration</Text>
+									<Text style={style.inputHeader}>{serviceid ? "Update" : "Enter"} service duration</Text>
 									<TextInput style={style.inputValue} placeholderTextColor="rgba(0, 0, 0, 0.5)" placeholder="4 hours" onChangeText={(duration) => setDuration(duration)} value={duration} autoCapitalize="none"/>
 								</View>
 							)}

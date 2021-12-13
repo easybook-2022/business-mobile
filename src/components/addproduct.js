@@ -23,7 +23,7 @@ const steps = ['name', 'info', 'photo', 'options', 'others', 'sizes']
 
 export default function addproduct(props) {
 	const params = props.route.params
-	const { menuid, refetch } = params
+	const { parentMenuid, refetch } = params
 	const productid = params.id ? params.id : ""
 	
 	const [setupType, setSetuptype] = useState('name')
@@ -122,7 +122,7 @@ export default function addproduct(props) {
 				delete size['key']
 			})
 
-			const data = { locationid, menuid, name, info, image, options, others, sizes, price: sizes.length > 0 ? "" : price, permission: cameraPermission || pickingPermission }
+			const data = { locationid, menuid: parentMenuid, name, info, image, options, others, sizes, price: sizes.length > 0 ? "" : price, permission: cameraPermission || pickingPermission }
 
 			addNewProduct(data)
 				.then((res) => {
@@ -240,7 +240,7 @@ export default function addproduct(props) {
 				delete size['key']
 			})
 
-			const data = { locationid, menuid, productid, name, info, image, options, others, sizes, price: sizes.length > 0 ? "" : price, permission: cameraPermission || pickingPermission }
+			const data = { locationid, menuid: parentMenuid, productid, name, info, image, options, others, sizes, price: sizes.length > 0 ? "" : price, permission: cameraPermission || pickingPermission }
 
 			updateProduct(data)
 				.then((res) => {
@@ -456,7 +456,7 @@ export default function addproduct(props) {
 						<View style={style.box}>
 							{setupType == "name" && (
 								<View style={style.inputContainer}>
-									<Text style={style.addHeader}>Enter product name</Text>
+									<Text style={style.addHeader}>{productid ? "Update" : "Enter"} product name</Text>
 
 									<TextInput style={style.addInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Product name" onChangeText={(name) => setName(name)} value={name} autoCorrect={false} autoCompleteType="off" autoCapitalize="none"/>
 								</View>
@@ -464,7 +464,7 @@ export default function addproduct(props) {
 
 							{setupType == "info" && (
 								<View style={style.inputContainer}>
-									<Text style={style.addHeader}>Enter product info (optional)</Text>
+									<Text style={style.addHeader}>{productid ? "Update" : "Enter"} product info (optional)</Text>
 
 									<TextInput style={style.infoInput} multiline={true} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Anything you want to say about this product (optional)" onChangeText={(info) => setInfo(info)} value={info} autoCorrect={false} autoCompleteType="off" autoCapitalize="none"/>
 								</View>

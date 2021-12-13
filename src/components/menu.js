@@ -405,7 +405,7 @@ export default function menu(props) {
 							<>
 								{showMenus && (
 									<View style={{ alignItems: 'center' }}>
-										<TouchableOpacity style={style.addTouch} onPress={() => props.navigation.navigate("addmenu", { menuid, refetch: () => getTheInfo() })}>
+										<TouchableOpacity style={style.addTouch} onPress={() => props.navigation.navigate("addmenu", { parentMenuid: menuid, menuid: null, refetch: () => getTheInfo() })}>
 											<Text style={style.addTouchHeader}>Add a new menu</Text>
 										</TouchableOpacity>
 
@@ -467,7 +467,7 @@ export default function menu(props) {
 																	<TouchableOpacity style={style.productAction} onPress={() => removeTheProduct(info.id)}>
 																		<Text style={style.productActionHeader}>Delete</Text>
 																	</TouchableOpacity>
-																	<TouchableOpacity style={style.productAction} onPress={() => props.navigation.navigate("addproduct", { menuid, id: info.id, refetch: () => getAllProducts() })}>
+																	<TouchableOpacity style={style.productAction} onPress={() => props.navigation.navigate("addproduct", { parentMenuid: menuid, id: info.id, refetch: () => getAllProducts() })}>
 																		<Text style={style.productActionHeader}>Change</Text>
 																	</TouchableOpacity>
 																</View>
@@ -511,7 +511,7 @@ export default function menu(props) {
 															<TouchableOpacity style={style.serviceAction} onPress={() => removeTheService(item.id)}>
 																<Text style={style.serviceActionHeader}>Delete</Text>
 															</TouchableOpacity>
-															<TouchableOpacity style={style.serviceAction} onPress={() => props.navigation.navigate("addservice", { menuid, id: item.id, refetch: () => getAllServices() })}>
+															<TouchableOpacity style={style.serviceAction} onPress={() => props.navigation.navigate("addservice", { parentMenuid: menuid, id: item.id, refetch: () => getAllServices() })}>
 																<Text style={style.serviceActionHeader}>Change</Text>
 															</TouchableOpacity>
 														</View>

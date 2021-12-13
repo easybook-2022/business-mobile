@@ -229,7 +229,7 @@ export default function addmenu(props) {
 						<View style={style.box}>
 							{setupType == 'name' && (
 								<View style={style.inputContainer}>
-									<Text style={style.addHeader}>Enter menu name</Text>
+									<Text style={style.addHeader}>{menuid ? "Update" : "Enter"} menu name</Text>
 
 									<TextInput style={style.addInput} placeholder="Menu name" placeholderTextColor="rgba(127, 127, 127, 0.5)" onChangeText={(name) => setName(name)} value={name} autoCorrect={false} autoCompleteType="off" autoCapitalize="none"/>
 								</View>
@@ -237,7 +237,7 @@ export default function addmenu(props) {
 
 							{setupType == 'info' && (
 								<View style={style.inputContainer}>
-									<Text style={style.addHeader}>Enter menu info (optional)</Text>
+									<Text style={style.addHeader}>{menuid ? "Update" : "Enter"} menu info (optional)</Text>
 
 									<TextInput style={style.infoInput} onSubmitEditing={() => Keyboard.dismiss()} multiline={true} placeholder="Anything you want to say about this menu" placeholderTextColor="rgba(127, 127, 127, 0.5)" onChangeText={(info) => setInfo(info)} value={info} autoCorrect={false} autoCompleteType="off" autoCapitalize="none"/>
 								</View>

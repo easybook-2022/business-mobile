@@ -33,7 +33,6 @@ import Makereservation from './src/pages/makereservation'
 import Booktime from './src/pages/booktime'
 
 // salons' components
-import Services from './src/components/salons/services'
 import Addmenu from './src/components/addmenu'
 import Addproduct from './src/components/addproduct'
 import Addservice from './src/components/addservice'
@@ -83,24 +82,6 @@ export default function App() {
                         <Stack.Screen name="dinersorders" component={Dinersorders} options={{ headerShown: false }}/>
                         <Stack.Screen name="makereservation" component={Makereservation} options={{ headerShown: false }}/>
                         <Stack.Screen name="booktime" component={Booktime} options={{ headerShown: false }}/>
-                        <Stack.Screen name="services" component={Services} options={({ navigation, route }) => ({
-                            headerTitle: () => (
-                                <View>
-                                    <Text style={{ fontSize: 20, fontWeight: 'bold' }}>Edit Menu: {route.params.name}</Text>
-                                </View>
-                            ),
-                            headerLeft: () => (
-                                <TouchableOpacity style={style.back} onPress={() => {
-                                    const { map, refetch } = route.params
-
-                                    map.pop()
-                                    refetch()
-                                    navigation.goBack({ map })
-                                }}>
-                                    <Text style={style.backHeader}>Go Back</Text>
-                                </TouchableOpacity>
-                            )
-                        })}/>
                         <Stack.Screen name="addmenu" component={Addmenu} options={({ navigation, route }) => ({
                             headerTitle: () => (
                                 <View>
