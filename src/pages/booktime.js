@@ -12,6 +12,10 @@ import Entypo from 'react-native-vector-icons/Entypo'
 
 const { height, width } = Dimensions.get('window')
 
+const fsize = p => {
+	return width * p
+}
+
 export default function booktime(props) {
 	const { height, width } = Dimensions.get('window')
 	const offsetPadding = Constants.statusBarHeight
@@ -335,13 +339,14 @@ export default function booktime(props) {
 			setConfirm({ ...confirm, show: true, service: name, timeheader: timedisplay, time })
 		}
 	}
-	const rescheduleTheAppointment = () => {
+	const rescheduleTheAppointment = async() => {
+		const ownerid = await AsyncStorage.getItem("ownerid")
 		const { month, date, year, time } = selectedDateInfo
 		const { service } = confirm
 		const selecteddate = new Date(time)
 		const selectedtime = selecteddate.getHours() + ":" + selecteddate.getMinutes()
 		const dateInfo = Date.parse(month + " " + date + ", " + year + " " + selectedtime).toString()
-		let data = { appointmentid, time: dateInfo, type: "rescheduleAppointment" }
+		let data = { ownerid, appointmentid, time: dateInfo, type: "rescheduleAppointment" }
 
 		rescheduleAppointment(data)
 			.then((res) => {
@@ -351,7 +356,7 @@ export default function booktime(props) {
 			})
 			.then((res) => {
 				if (res) {
-					data = { ...data, receiver: res.receiver }
+					data = { ...data, receiver: res.receiver, worker: res.worker }
 					socket.emit("socket/rescheduleAppointment", data, () => setConfirm({ ...confirm, requested: true }))
 				}
 			})
@@ -466,7 +471,7 @@ export default function booktime(props) {
 										<Text style={style.confirmHeader}>
 											<Text style={{ fontFamily: 'appFont' }}>Select this time for client</Text>
 											{'\n' + confirm.timeheader}
-											<Text style={{ fontFamily: 'appFont', fontSize: 30 }}>{'\n\n for ' + confirm.service}</Text>
+											<Text style={{ fontFamily: 'appFont', fontSize: fsize(0.07) }}>{'\n\n for ' + confirm.service}</Text>
 										</Text>
 
 										<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
@@ -509,40 +514,52 @@ export default function booktime(props) {
 const style = StyleSheet.create({
 	box: { backgroundColor: '#EAEAEA', height: '100%', width: '100%' },
 	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, marginVertical: 20, marginHorizontal: 20, padding: 5, width: 100 },
-	backHeader: { fontFamily: 'appFont', fontSize: 20 },
+	backHeader: { fontFamily: 'appFont', fontSize: fsize(0.05) },
 
-	boxHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', textAlign: 'center' },
-	serviceHeader: { fontSize: 25, textAlign: 'center', marginBottom: 50 },
+	boxHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), fontWeight: 'bold', textAlign: 'center' },
+	serviceHeader: { fontSize: fsize(0.06), textAlign: 'center', marginBottom: 50 },
 
 	dateHeaders: { alignItems: 'center' },
 	date: { flexDirection: 'row', margin: 10 },
 	dateNav: { marginHorizontal: 20 },
-	dateHeader: { fontFamily: 'appFont', fontSize: 20, marginVertical: 5, textAlign: 'center', width: 170 },
+	dateHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), marginVertical: 5, textAlign: 'center', width: fsize(0.5) },
 	dateDays: { alignItems: 'center' },
 	dateDaysRow: { flexDirection: 'row' },
-	dateDayTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, padding: 7, width: (width / 7) - 20 },
-	dateDayTouchSelected: { backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, padding: 7, width: (width / 7) - 20 },
-	dateDayTouchSelectedHeader: { color: 'white', textAlign: 'center' },
-	dateDayTouchPassed: { backgroundColor: 'rgba(0, 0, 0, 0.5)', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, padding: 7, width: (width / 7) - 20 },
-	dateDayTouchDisabled: { height: 40, margin: 3, padding: 3, width: (width / 7) - 20 },
-	dateDayTouchHeader: { color: 'black', textAlign: 'center' },
 
-	timesHeader: { fontFamily: 'appFont', fontSize: 30, fontWeight: 'bold', textAlign: 'center' },
-	times: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', width: 282 },
-	unselect: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, padding: 5, width: (width / 3) - 50 },
-	selected: { alignItems: 'center', backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, padding: 5, width: (width / 3) - 50 },
-	selectedPassed: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, opacity: 0.3, padding: 5, width: (width / 3) - 50 },
+	dateDayTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, paddingVertical: 10, width: fsize(0.1) },
+	dateDayTouchHeader: { color: 'black', fontSize: fsize(0.038), textAlign: 'center' },
+
+	dateDayTouchSelected: { backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, paddingVertical: 10, width: fsize(0.1) },
+	dateDayTouchSelectedHeader: { color: 'white', fontSize: fsize(0.038), textAlign: 'center' },
+
+	dateDayTouchPassed: { backgroundColor: 'rgba(0, 0, 0, 0.5)', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, paddingVertical: 10, width: fsize(0.1) },
+	dateDayTouchPassedHeader: { color: 'black', fontSize: fsize(0.038), textAlign: 'center' },
+
+	dateDayTouchDisabled: { margin: 3, paddingVertical: 10, width: fsize(0.1) },
+	dateDayTouchDisabledHeader: { fontSize: fsize(0.038), fontWeight: 'bold' },
+
+	timesHeader: { fontFamily: 'appFont', fontSize: fsize(0.07), fontWeight: 'bold', textAlign: 'center' },
+	times: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', width: fsize(0.79) },
+	
+	unselect: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, paddingVertical: 10, width: fsize(0.25) },
+	unselectHeader: { color: 'black', fontSize: fsize(0.04) },
+	
+	selected: { alignItems: 'center', backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, paddingVertical: 10, width: fsize(0.25) },
+	selectedHeader: { color: 'white', fontSize: fsize(0.04) },
+
+	selectedPassed: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, opacity: 0.3, paddingVertical: 10, width: fsize(0.25) },
+	selectedPassedHeader: { color: 'black', fontSize: fsize(0.04) },
 
 	// confirm & requested box
 	confirmBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	confirmContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },
-	confirmHeader: { fontSize: 20, fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
+	confirmHeader: { fontSize: fsize(0.05), fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
 	confirmOptions: { flexDirection: 'row' },
 	confirmOption: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 60 },
 	confirmOptionHeader: { textAlign: 'center' },
 	requestedHeaders: { alignItems: 'center', paddingHorizontal: 10 },
 	requestedClose: { borderRadius: 5, borderStyle: 'solid', borderWidth: 1, marginVertical: 10, padding: 5, width: 100 },
-	requestedCloseHeader: { fontFamily: 'appFont', fontSize: 20, textAlign: 'center' },
-	requestedHeader: { fontFamily: 'appFont', fontSize: 25 },
-	requestedHeaderInfo: { fontSize: 20, textAlign: 'center' },
+	requestedCloseHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), textAlign: 'center' },
+	requestedHeader: { fontFamily: 'appFont', fontSize: fsize(0.06) },
+	requestedHeaderInfo: { fontSize: fsize(0.05), textAlign: 'center' },
 })

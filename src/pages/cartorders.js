@@ -10,6 +10,10 @@ const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - (offsetPadding * 2)
 
+const fsize = p => {
+	return width * p
+}
+
 export default function cartorders(props) {
 	const { userid, ordernumber, refetch } = props.route.params
 
@@ -139,10 +143,10 @@ export default function cartorders(props) {
 						refetch()
 						props.navigation.goBack()
 					}}>
-						<Text style={style.backHeader}>Back</Text>
+						<Text allowFontScaling={false} style={style.backHeader}>Back</Text>
 					</TouchableOpacity>
 
-					<Text style={style.boxHeader}><Text style={{ fontFamily: 'Arial', fontWeight: '100' }}>#{ordernumber}</Text> Order(s)</Text>
+					<Text allowFontScaling={false} style={style.boxHeader}><Text allowFontScaling={false} style={{ fontFamily: 'Arial', fontWeight: '100' }}>#{ordernumber}</Text> Order(s)</Text>
 
 					<FlatList
 						data={orders}
@@ -153,11 +157,11 @@ export default function cartorders(props) {
 										<Image source={{ uri: logo_url + item.image }} style={style.itemImage}/>
 									</View>
 									<View style={style.itemInfos}>
-										<Text style={style.itemName}>{item.name}</Text>
+										<Text allowFontScaling={false} style={style.itemName}>{item.name}</Text>
 
 										{item.options.map((option, infoindex) => (
-											<Text key={option.key} style={style.itemInfo}>
-												<Text style={{ fontWeight: 'bold' }}>{option.header}: </Text> 
+											<Text allowFontScaling={false} key={option.key} style={style.itemInfo}>
+												<Text allowFontScaling={false} style={{ fontWeight: 'bold' }}>{option.header}: </Text> 
 												{option.selected}
 												{option.type == 'percentage' && '%'}
 											</Text>
@@ -165,8 +169,8 @@ export default function cartorders(props) {
 
 										{item.others.map((other, otherindex) => (
 											other.selected ? 
-												<Text key={other.key} style={style.itemInfo}>
-													<Text style={{ fontWeight: 'bold' }}>{other.name}: </Text>
+												<Text allowFontScaling={false} key={other.key} style={style.itemInfo}>
+													<Text allowFontScaling={false} style={{ fontWeight: 'bold' }}>{other.name}: </Text>
 													<Text>{other.input}</Text>
 												</Text>
 											: null
@@ -174,26 +178,26 @@ export default function cartorders(props) {
 
 										{item.sizes.map((size, sizeindex) => (
 											size.selected ? 
-												<Text key={size.key} style={style.itemInfo}>
-													<Text style={{ fontWeight: 'bold' }}>Size: </Text>
+												<Text allowFontScaling={false} key={size.key} style={style.itemInfo}>
+													<Text allowFontScaling={false} style={{ fontWeight: 'bold' }}>Size: </Text>
 													<Text>{size.name}</Text>
 												</Text>
 											: null
 										))}
 									</View>
 									<View>
-										<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>Quantity:</Text> {item.quantity}</Text>
-										<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>Price:</Text> ${item.price.toFixed(2)}</Text>
-										{item.fee > 0 && <Text style={style.header}><Text style={{ fontWeight: 'bold' }}>E-pay fee:</Text> ${item.fee.toFixed(2)}</Text>}
-										{item.pst > 0 && <Text style={style.header}><Text style={{ fontWeight: 'bold' }}>PST:</Text> ${item.pst.toFixed(2)}</Text>}
-										{item.hst > 0 && <Text style={style.header}><Text style={{ fontWeight: 'bold' }}>HST:</Text> ${item.hst.toFixed(2)}</Text>}
-										<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>Total Cost:</Text> ${item.totalcost.toFixed(2)}</Text>
+										<Text allowFontScaling={false} style={style.header}><Text allowFontScaling={false} style={{ fontWeight: 'bold' }}>Quantity:</Text> {item.quantity}</Text>
+										<Text allowFontScaling={false} style={style.header}><Text allowFontScaling={false} style={{ fontWeight: 'bold' }}>Price:</Text> ${item.price.toFixed(2)}</Text>
+										{item.fee > 0 && <Text allowFontScaling={false} style={style.header}><Text allowFontScaling={false} style={{ fontWeight: 'bold' }}>E-pay fee:</Text> ${item.fee.toFixed(2)}</Text>}
+										{item.pst > 0 && <Text allowFontScaling={false} style={style.header}><Text allowFontScaling={false} style={{ fontWeight: 'bold' }}>PST:</Text> ${item.pst.toFixed(2)}</Text>}
+										{item.hst > 0 && <Text allowFontScaling={false} style={style.header}><Text allowFontScaling={false} style={{ fontWeight: 'bold' }}>HST:</Text> ${item.hst.toFixed(2)}</Text>}
+										<Text allowFontScaling={false} style={style.header}><Text allowFontScaling={false} style={{ fontWeight: 'bold' }}>Total Cost:</Text> ${item.totalcost.toFixed(2)}</Text>
 									</View>
 								</View>
 
 								{item.note ? 
 									<View style={style.note}>
-										<Text style={style.noteHeader}><Text style={{ fontWeight: 'bold' }}>Customer's note:</Text> {'\n' + item.note}</Text>
+										<Text allowFontScaling={false} style={style.noteHeader}><Text allowFontScaling={false} style={{ fontWeight: 'bold' }}>Customer's note:</Text> {'\n' + item.note}</Text>
 									</View>
 								: null }
 
@@ -201,9 +205,9 @@ export default function cartorders(props) {
 									<>
 										<View style={{ alignItems: 'center' }}>
 											<View style={style.orderersEdit}>
-												<Text style={style.orderersEditHeader}>Calling for</Text>
+												<Text allowFontScaling={false} style={style.orderersEditHeader}>Calling for</Text>
 												<View style={style.orderersNumHolder}>
-													<Text style={style.orderersNumHeader}>{item.orderers} {item.orderers == 1 ? 'person' : 'people'}</Text>
+													<Text allowFontScaling={false} style={style.orderersNumHeader}>{item.orderers} {item.orderers == 1 ? 'person' : 'people'}</Text>
 												</View>
 											</View>
 										</View>
@@ -220,12 +224,12 @@ export default function cartorders(props) {
 								<Text>Total cost: ${totalCost.cost.toFixed(2)}</Text>
 								<Text>Order is ready?</Text>
 								<TouchableOpacity style={style.receivePayment} disabled={loading} onPress={() => orderIsReady()}>
-									<Text style={style.receivePaymentHeader}>Alert customer(s)</Text>
+									<Text allowFontScaling={false} style={style.receivePaymentHeader}>Alert customer(s)</Text>
 								</TouchableOpacity>
 							</>
 							:
 							<TouchableOpacity style={style.receivePayment} disabled={loading} onPress={() => receiveThePayment()}>
-								<Text style={style.receivePaymentHeader}>Receive payment of $ {totalCost.cost.toFixed(2)}</Text>
+								<Text allowFontScaling={false} style={style.receivePaymentHeader}>Receive payment of $ {totalCost.cost.toFixed(2)}</Text>
 							</TouchableOpacity>
 						}
 					</View>
@@ -236,20 +240,20 @@ export default function cartorders(props) {
 						<View style={style.requiredBoxContainer}>
 							<View style={style.requiredBox}>
 								<View style={style.requiredContainer}>
-									<Text style={style.requiredHeader}>
+									<Text allowFontScaling={false} style={style.requiredHeader}>
 										You need to provide a bank account to 
 										receive your payment
 									</Text>
 
 									<View style={style.requiredActions}>
 										<TouchableOpacity style={style.requiredAction} onPress={() => setShowbankaccountrequired(false)}>
-											<Text style={style.requiredActionHeader}>Close</Text>
+											<Text allowFontScaling={false} style={style.requiredActionHeader}>Close</Text>
 										</TouchableOpacity>
 										<TouchableOpacity style={style.requiredAction} onPress={() => {
 											setShowbankaccountrequired(false)
 											props.navigation.navigate("settings", { required: "bankaccount" })
 										}}>
-											<Text style={style.requiredActionHeader}>Ok</Text>
+											<Text allowFontScaling={false} style={style.requiredActionHeader}>Ok</Text>
 										</TouchableOpacity>
 									</View>
 								</View>
@@ -263,7 +267,7 @@ export default function cartorders(props) {
 						<View style={style.requiredBoxContainer}>
 							<View style={style.requiredBox}>
 								<View style={style.requiredContainer}>
-									<Text style={style.requiredHeader}>Order has already been delivered or doesn't exist</Text>
+									<Text allowFontScaling={false} style={style.requiredHeader}>Order has already been delivered or doesn't exist</Text>
 
 									<View style={style.requiredActions}>
 										<TouchableOpacity style={style.requiredAction} onPress={() => {
@@ -272,7 +276,7 @@ export default function cartorders(props) {
 											setShownoorders(false)
 											props.navigation.goBack()
 										}}>
-											<Text style={style.requiredActionHeader}>Close</Text>
+											<Text allowFontScaling={false} style={style.requiredActionHeader}>Close</Text>
 										</TouchableOpacity>
 									</View>
 								</View>
@@ -286,7 +290,7 @@ export default function cartorders(props) {
 						<View style={style.confirmBoxContainer}>
 							<View style={style.confirmBox}>
 								<View style={style.confirmContainer}>
-									<Text style={style.confirmHeader}>
+									<Text allowFontScaling={false} style={style.confirmHeader}>
 										You have received a total payment of $ {totalCost.price.toFixed(2)}
 										{'\n\n\n'}
 										Good Job
@@ -299,7 +303,7 @@ export default function cartorders(props) {
 											setShowpaymentconfirm(false)
 											props.navigation.goBack()
 										}}>
-											<Text style={style.confirmActionHeader}>Ok</Text>
+											<Text allowFontScaling={false} style={style.confirmActionHeader}>Ok</Text>
 										</TouchableOpacity>
 									</View>
 								</View>
@@ -316,16 +320,16 @@ const style = StyleSheet.create({
 	cartorders: { backgroundColor: 'white' },
 	box: { backgroundColor: '#EAEAEA', height: screenHeight, width: '100%' },
 	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, margin: 20, padding: 5, width: 100 },
-	backHeader: { fontFamily: 'appFont', fontSize: 20 },
-	boxHeader: { fontFamily: 'appFont', fontSize: 30, fontWeight: 'bold', marginTop: 10, textAlign: 'center' },
+	backHeader: { fontFamily: 'appFont', fontSize: fsize(0.05) },
+	boxHeader: { fontFamily: 'appFont', fontSize: fsize(0.07), fontWeight: 'bold', marginTop: 10, textAlign: 'center' },
 
 	item: { borderStyle: 'solid', borderBottomWidth: 0.5, borderTopWidth: 0.5, padding: 10 },
 	itemImageHolder: { backgroundColor: 'rgba(0, 0, 0, 0.1)', borderRadius: 35, height: 70, overflow: 'hidden', width: 70 },
 	itemImage: { height: 70, width: 70 },
 	itemInfos: {  },
-	itemName: { fontSize: 20, marginBottom: 10 },
-	itemInfo: { fontSize: 15 },
-	header: { fontSize: 15 },
+	itemName: { fontSize: fsize(0.05), marginBottom: 10 },
+	itemInfo: { fontSize: fsize(0.04) },
+	header: { fontSize: fsize(0.04) },
 	note: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 5, marginVertical: 10, padding: 5 },
 	noteHeader: { textAlign: 'center' },
 	orderersEdit: { flexDirection: 'row' },
@@ -339,7 +343,7 @@ const style = StyleSheet.create({
 	requiredBoxContainer: { backgroundColor: 'rgba(0, 0, 0, 0.7)' },
 	requiredBox: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', paddingVertical: offsetPadding, width: '100%' },
 	requiredContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },
-	requiredHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
+	requiredHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
 	requiredActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	requiredAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
 	requiredActionHeader: { },
@@ -347,7 +351,7 @@ const style = StyleSheet.create({
 	confirmBoxContainer: { backgroundColor: 'rgba(0, 0, 0, 0.7)' },
 	confirmBox: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', paddingVertical: offsetPadding, width: '100%' },
 	confirmContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },
-	confirmHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
+	confirmHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
 	confirmActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	confirmAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
 	confirmActionHeader: { },

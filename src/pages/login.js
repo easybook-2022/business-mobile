@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios'
 import { 
 	Dimensions, View, ImageBackground, Text, TextInput, Image, 
-	TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet 
+	TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
@@ -13,6 +13,10 @@ import { loginInfo } from '../../assets/info'
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - (offsetPadding * 2)
+
+const fsize = p => {
+	return width * p
+}
 
 export default function login({ navigation }) {
 	const [phonenumber, setPhonenumber] = useState(loginInfo.cellnumber)
@@ -58,6 +62,12 @@ export default function login({ navigation }) {
 		<View style={style.login}>
 			<TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
 				<View style={style.box}>
+					<View style={style.background}>
+						<Image source={require("../../assets/background.jpg")} style={{ height: width, width: width }}/>
+					</View>
+					<TouchableOpacity style={style.boxHeaderTouch} onPress={() => navigation.goBack()}>
+						<Text style={style.boxHeaderTouchHeader}>Go back</Text>
+					</TouchableOpacity>
 					<Text style={style.boxHeader}>Log-In</Text>
 
 					<View style={style.inputsBox}>
@@ -83,21 +93,11 @@ export default function login({ navigation }) {
 							navigation.dispatch(
 								CommonActions.reset({
 									index: 1,
-									routes: [{ name: 'verifyowner' }]
-								})
-							);
-						}}>
-							<Text style={style.optionHeader}>Don't have an account ? Sign up</Text>
-						</TouchableOpacity>
-						<TouchableOpacity style={style.option} onPress={() => {
-							navigation.dispatch(
-								CommonActions.reset({
-									index: 1,
 									routes: [{ name: 'forgotpassword' }]
 								})
 							)
 						}}>
-							<Text style={style.optionHeader}>Forgot your password ? Reset here</Text>
+							<Text style={style.optionHeader}>I don't remember my password ? Click here</Text>
 						</TouchableOpacity>
 					</View>
 				</View>
@@ -107,18 +107,22 @@ export default function login({ navigation }) {
 }
 
 const style = StyleSheet.create({
-	login: { backgroundColor: '#3C74FF', height: '100%', width: '100%' },
+	login: { backgroundColor: 'white', height: '100%', width: '100%' },
 	box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-between', paddingVertical: offsetPadding, width: '100%' },
-	boxHeader: { color: 'black', fontFamily: 'appFont', fontSize: 50, fontWeight: 'bold' },
+	background: { alignItems: 'center', flexDirection: 'column', height: screenHeight, justifyContent: 'space-around', position: 'absolute', top: 0, width: width },
+	boxHeaderTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginRight: 10, padding: 10 },
+	boxHeaderTouchHeader: { fontSize: fsize(0.05), textAlign: 'center' },
+	boxHeader: { color: 'black', fontFamily: 'appFont', fontSize: fsize(0.15), fontWeight: 'bold' },
 	
 	inputsBox: { alignItems: 'center', width: '80%' },
 	inputContainer: { marginBottom: 30, width: '100%' },
-	inputHeader: { fontFamily: 'appFont', fontSize: 25 },
-	input: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: 25, padding: 5, width: '100%' },
-	errorMsg: { color: 'darkred', fontSize: 20, fontWeight: 'bold', textAlign: 'center' },
-	submit: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontFamily: 'appFont', padding: 10, width: 100 },
-	submitHeader: { fontWeight: 'bold', textAlign: 'center' },
+	inputHeader: { fontFamily: 'appFont', fontSize: fsize(0.07) },
+	input: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: fsize(0.07), padding: 5, width: '100%' },
+	errorMsg: { color: 'darkred', fontSize: fsize(0.05), fontWeight: 'bold', textAlign: 'center' },
+
+	submit: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontFamily: 'appFont', padding: 10, width: fsize(0.3) },
+	submitHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), fontWeight: 'bold', textAlign: 'center' },
 	
 	option: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, marginVertical: 10, padding: 5 },
-	optionHeader: { fontSize: 15, fontWeight: 'bold' },
+	optionHeader: { fontSize: fsize(0.04), fontWeight: 'bold' },
 })

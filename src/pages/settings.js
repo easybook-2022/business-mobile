@@ -24,6 +24,10 @@ import Entypo from 'react-native-vector-icons/Entypo'
 
 const { height, width } = Dimensions.get('window')
 
+const fsize = p => {
+	return width * p
+}
+
 export default function settings(props) {
 	const offsetPadding = Constants.statusBarHeight
 	const screenHeight = height - (offsetPadding * 2)
@@ -1224,12 +1228,12 @@ export default function settings(props) {
 									</View>
 
 									<TouchableOpacity style={style.updateButton} disabled={loading} onPress={() => updateYourLocation()}>
-										<Text>Save</Text>
+										<Text style={style.updateButtonHeader}>Save</Text>
 									</TouchableOpacity>
 								</>
 								:
 								<TouchableOpacity style={style.editButton} onPress={() => setEdittype('information')}>
-									<Text style={style.editButtonHeader}>Edit Your Location Address and Logo</Text>
+									<Text style={style.editButtonHeader}>Edit Location Info</Text>
 								</TouchableOpacity>
 							:
 							<ActivityIndicator marginTop={'10%'} size="small"/>
@@ -1318,7 +1322,7 @@ export default function settings(props) {
 
 															setDays(newDays)
 														}}>
-															<Text style={style.dayTouchHeader}>Change</Text>
+															<Text style={style.dayTouchHeader}>Change to not open</Text>
 														</TouchableOpacity>
 													</>
 													:
@@ -1332,7 +1336,7 @@ export default function settings(props) {
 
 															setDays(newDays)
 														}}>
-															<Text style={style.dayTouchHeader}>Change</Text>
+															<Text style={style.dayTouchHeader}>Change to open</Text>
 														</TouchableOpacity>
 													</>
 												}
@@ -1341,7 +1345,7 @@ export default function settings(props) {
 									</View>
 
 									<TouchableOpacity style={style.updateButton} disabled={loading} onPress={() => updateLocationHours()}>
-										<Text>Save</Text>
+										<Text style={style.updateButtonHeader}>Save</Text>
 									</TouchableOpacity>
 								</>
 								:
@@ -1355,7 +1359,7 @@ export default function settings(props) {
 						{!accountHoldersloading ?
 							editType == 'users' ? 
 								<View style={style.accountHolders}>
-									<Text style={style.accountHoldersHeader}>Edit Worker(s)</Text>
+									<Text style={style.header}>Edit Worker(s)</Text>
 
 									<TouchableOpacity style={style.accountHoldersAdd} onPress={() => {
 										setAccountform({
@@ -1364,7 +1368,7 @@ export default function settings(props) {
 											type: 'add'
 										})
 									}}>
-										<Text>Add a worker</Text>
+										<Text style={style.accountHoldersAddHeader}>Add a worker</Text>
 									</TouchableOpacity>
 
 									{accountHolders.map((info, index) => (
@@ -1395,7 +1399,7 @@ export default function settings(props) {
 								</View>
 								:
 								<TouchableOpacity style={style.editButton} onPress={() => setEdittype('users')}>
-									<Text style={style.editButtonHeader}>Edit Worker(s) Information</Text>
+									<Text style={style.editButtonHeader}>Edit Worker(s)</Text>
 								</TouchableOpacity>
 							:
 							<ActivityIndicator marginTop={'10%'} size="small"/>
@@ -1404,10 +1408,10 @@ export default function settings(props) {
 						{!bankAccountsloading ?
 							editType == 'bankaccounts' ? 
 								<View style={style.bankaccountHolders}>
-									<Text style={style.bankaccountHolderHeader}>Edit Bank Account(s)</Text>
+									<Text style={style.header}>Edit Bank Account(s)</Text>
 
 									<TouchableOpacity style={style.bankaccountHolderAdd} onPress={() => openBankAccountForm()}>
-										<Text>Add a bank account</Text>
+										<Text style={style.bankaccountHolderAddHeader}>Add a bank account</Text>
 									</TouchableOpacity>
 
 									{bankAccounts.map((info, index) => (
@@ -1434,7 +1438,7 @@ export default function settings(props) {
 								</View>
 								:
 								<TouchableOpacity style={style.editButton} onPress={() => setEdittype('bankaccounts')}>
-									<Text style={style.editButtonHeader}>Edit Bank account(s) information</Text>
+									<Text style={style.editButtonHeader}>Edit Bank account(s)</Text>
 								</TouchableOpacity>
 							:
 							<ActivityIndicator marginTop={'10%'} size="small"/>
@@ -1600,7 +1604,7 @@ export default function settings(props) {
 
 															setWorkerhours(newWorkerhours)
 														}}>
-															<Text style={style.workerHourTouchHeader}>Change</Text>
+															<Text style={style.workerHourTouchHeader}>Change to not working</Text>
 														</TouchableOpacity>
 													</>
 													:
@@ -1614,7 +1618,7 @@ export default function settings(props) {
 
 															setWorkerhours(newWorkerhours)
 														}}>
-															<Text style={style.workerHourTouchHeader}>Change</Text>
+															<Text style={style.workerHourTouchHeader}>Change to working</Text>
 														</TouchableOpacity>
 													</>
 												}
@@ -1741,94 +1745,92 @@ export default function settings(props) {
 const style = StyleSheet.create({
 	settings: { backgroundColor: 'white', height: '100%', width: '100%' },
 	box: { alignItems: 'center', height: '100%', width: '100%' },
-	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, marginVertical: 20, marginHorizontal: 20, padding: 5, width: 100 },
-	backHeader: { fontFamily: 'appFont', fontSize: 20 },
-	boxHeader: { fontFamily: 'appFont', fontSize: 50, textAlign: 'center' },
-	header: { fontFamily: 'appFont', fontSize: 20, marginTop: 20, textAlign: 'center' },
+	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, marginVertical: 20, marginHorizontal: 20, padding: 5, width: fsize(0.2) },
+	backHeader: { fontFamily: 'appFont', fontSize: fsize(0.05) },
+	boxHeader: { fontFamily: 'appFont', fontSize: fsize(0.1), textAlign: 'center' },
+	header: { fontFamily: 'appFont', fontSize: fsize(0.07), marginTop: 20, textAlign: 'center' },
 
 	inputsBox: { paddingHorizontal: 20, width: '100%' },
 	inputContainer: { marginVertical: 20 },
-	inputHeader: { fontFamily: 'appFont', fontSize: 20 },
-	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: 25, padding: 5 },
+	inputHeader: { fontFamily: 'appFont', fontSize: fsize(0.06) },
+	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: fsize(0.07), padding: 5 },
 	cameraContainer: { alignItems: 'center', width: '100%' },
-	cameraHeader: { fontFamily: 'appFont', fontWeight: 'bold', paddingVertical: 5 },
+	cameraHeader: { fontSize: fsize(0.05), fontWeight: 'bold', paddingVertical: 5 },
 	camera: { height: width * 0.8, width: width * 0.8 },
 	cameraActions: { flexDirection: 'row' },
-	cameraAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginBottom: 50, margin: 5, padding: 5, width: 100 },
-	cameraActionHeader: { fontSize: 15, textAlign: 'center' },
+	cameraAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginBottom: 50, margin: 5, padding: 5, width: fsize(0.3) },
+	cameraActionHeader: { fontSize: fsize(0.04), textAlign: 'center' },
 	errorMsg: { color: 'red', fontWeight: 'bold', marginVertical: 10, textAlign: 'center' },
+
 	updateButton: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 10 },
+	updateButtonHeader: { fontFamily: 'appFont', fontSize: fsize(0.05) },
 
 	days: {  },
 	day: { alignItems: 'center', marginVertical: 40, padding: 5 },
-	dayHeader: { fontSize: 20, marginHorizontal: 10, textAlign: 'center' },
+	dayHeader: { fontSize: fsize(0.06), marginHorizontal: 10, textAlign: 'center' },
 	dayAnswer: { alignItems: 'center' },
 	dayAnswerActions: { flexDirection: 'row', justifyContent: 'space-around', width: 210 },
 	dayAnswerAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 10, width: 100 },
 	dayAnswerActionHeader: {  },
 	timeSelectionContainer: { flexDirection: 'row' },
 	timeSelection: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, flexDirection: 'row', marginHorizontal: 5 },
-	timeSelectionHeader: { fontSize: 20, fontWeight: 'bold', paddingVertical: 38 },
+	timeSelectionHeader: { fontSize: fsize(0.06), fontWeight: 'bold', paddingVertical: 38 },
 	selection: { alignItems: 'center', margin: 5 },
-	selectionHeader: { fontSize: 20, textAlign: 'center' },
-	selectionDiv: { fontSize: 29, marginVertical: 27 },
+	selectionHeader: { fontSize: fsize(0.07), textAlign: 'center' },
+	selectionDiv: { fontSize: fsize(0.07), marginVertical: fsize(0.08) },
 	dayTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5 },
-	dayTouchHeader: { fontSize: 20, textAlign: 'center' },
+	dayTouchHeader: { fontSize: fsize(0.05), textAlign: 'center' },
 
 	accountHolders: { alignItems: 'center', marginHorizontal: 10, marginTop: 20 },
-	accountHoldersHeader: { fontFamily: 'appFont', fontSize: 20, textAlign: 'center' },
+	accountHoldersHeader: { fontFamily: 'appFont', fontSize: fsize(0.06), textAlign: 'center' },
 	accountHoldersAdd: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 3, padding: 5 },
+	accountHoldersAddHeader: { fontSize: fsize(0.05) },
 	account: { flexDirection: 'row', justifyContent: 'space-between', marginVertical: 10 },
-	accountHeader: { fontSize: 20, fontWeight: 'bold', padding: 5 },
+	accountHeader: { fontSize: fsize(0.05), fontWeight: 'bold', padding: 5 },
 	accountEdit: { backgroundColor: 'rgba(127, 127, 127, 0.3)', borderRadius: 4, flexDirection: 'row', justifyContent: 'space-between', width: '80%' },
-	accountEditHeader: { fontSize: 20, paddingVertical: 8, textAlign: 'center', width: '50%' },
+	accountEditHeader: { fontSize: fsize(0.05), paddingVertical: 8, textAlign: 'center', width: '50%' },
 	accountEditTouch: { alignItems: 'center', borderRadius: 2, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5 },
 
 	bankaccountHolders: { alignItems: 'center', marginHorizontal: 10, marginTop: 20 },
-	bankaccountHolderHeader: { fontFamily: 'appFont', fontSize: 20, textAlign: 'center' },
+	bankaccountHolderHeader: { fontFamily: 'appFont', fontSize: fsize(0.06), textAlign: 'center' },
 	bankaccountHolderAdd: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 3, padding: 5 },
+	bankaccountHolderAddHeader: { fontSize: fsize(0.05) },
 	bankaccount: { marginVertical: 30 },
 	bankaccountRow: { flexDirection: 'row', justifyContent: 'space-between' },
-	bankaccountHeader: { fontSize: 20, fontWeight: 'bold', padding: 5 },
+	bankaccountHeader: { fontSize: fsize(0.05), fontWeight: 'bold', padding: 5 },
 	bankaccountNumberHolder: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 5, padding: 5, width: '70%' },
-	bankaccountNumberHeader: { fontSize: 20, paddingVertical: 4, textAlign: 'center', width: '100%' },
+	bankaccountNumberHeader: { fontSize: fsize(0.05), paddingVertical: 4, textAlign: 'center', width: '100%' },
 	bankaccountActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	bankaccountAction: { borderRadius: 2, borderStyle: 'solid', borderWidth: 2, marginTop: 5, padding: 5, width: 90 },
-	bankaccountActionHeader: { fontSize: 15, textAlign: 'center' },
+	bankaccountActionHeader: { fontSize: fsize(0.04), textAlign: 'center' },
 	bankaccountActionDisabled: { backgroundColor: 'black', borderRadius: 2, borderStyle: 'solid', borderWidth: 2, marginTop: 5, padding: 5, width: 90 },
-	bankaccountActionHeaderDisabled: { color: 'white', fontSize: 15, textAlign: 'center' },
-
-	editButton: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 50, padding: 5, width: 300 },
-	editButtonHeader: { fontSize: 20, fontWeight: 'bold', textAlign: 'center' },
+	bankaccountActionHeaderDisabled: { color: 'white', fontSize: fsize(0.04), textAlign: 'center' },
+	
+	editButton: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 30, padding: 5, width: fsize(0.8) },
+	editButtonHeader: { fontSize: fsize(0.05), fontWeight: 'bold', textAlign: 'center' },
 
 	// account form
 	accountform: { backgroundColor: 'white', paddingVertical: 50 },
-	accountformHeader: { fontSize: 20, fontWeight: 'bold', marginVertical: 50, textAlign: 'center' },
+	accountformHeader: { fontSize: fsize(0.05), fontWeight: 'bold', marginVertical: 50, textAlign: 'center' },
 	accountformInputField: { marginBottom: 20, marginHorizontal: '10%', width: '80%' },
-	accountformInputHeader: { fontSize: 20, fontWeight: 'bold' },
-	accountformInputInput: { borderRadius: 2, borderStyle: 'solid', borderWidth: 3, fontSize: 25, padding: 5, width: '100%' },
-	accountformSubmit: { alignItems: 'center', borderRadius: 2, borderStyle: 'solid', borderWidth: 1, padding: 5, width: 130 },
-	accountformSubmitHeader: {  },
+	accountformInputHeader: { fontSize: fsize(0.05), fontWeight: 'bold' },
+	accountformInputInput: { borderRadius: 2, borderStyle: 'solid', borderWidth: 3, fontSize: fsize(0.05), padding: 5, width: '100%' },
+	accountformSubmit: { alignItems: 'center', borderRadius: 2, borderStyle: 'solid', borderWidth: 1, padding: 5, width: fsize(0.4) },
+	accountformSubmitHeader: { fontFamily: 'appFont', fontSize: fsize(0.04) },
 
 	workerHours: {  },
 	workerHour: { alignItems: 'center', marginVertical: 40, padding: 5 },
-	workerHourHeader: { fontSize: 20, marginHorizontal: 10, textAlign: 'center' },
-	timeSelectionContainer: { flexDirection: 'row' },
-	timeSelection: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, flexDirection: 'row', marginHorizontal: 5 },
-	timeSelectionHeader: { fontSize: 20, fontWeight: 'bold', paddingVertical: 38 },
-	selection: { alignItems: 'center', margin: 5 },
-	selectionHeader: { fontSize: 20, textAlign: 'center' },
-	selectionDiv: { fontSize: 25, marginVertical: 27 },
+	workerHourHeader: { fontSize: fsize(0.06), marginHorizontal: 10, textAlign: 'center' },
 	workerHourTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5 },
-	workerHourTouchHeader: { fontSize: 15, textAlign: 'center' },
+	workerHourTouchHeader: { fontSize: fsize(0.06), textAlign: 'center' },
 
 	// form
 	bankaccountform: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	bankaccountformContainer: { backgroundColor: 'white', height: '90%', paddingVertical: 10, width: '90%' },
-	bankaccountformHeader: { fontSize: 20, fontWeight: 'bold', marginVertical: 50, textAlign: 'center' },
+	bankaccountformHeader: { fontSize: fsize(0.05), fontWeight: 'bold', marginVertical: 50, textAlign: 'center' },
 	bankaccountformInputField: { marginBottom: 20, marginHorizontal: '10%', width: '80%' },
-	bankaccountformInputHeader: { fontSize: 20, fontWeight: 'bold' },
-	bankaccountformInputInput: { borderRadius: 2, borderStyle: 'solid', borderWidth: 3, fontSize: 25, padding: 5, width: '100%' },
-	bankaccountformSubmit: { alignItems: 'center', borderRadius: 2, borderStyle: 'solid', borderWidth: 1, padding: 5 },
-	bankaccountformSubmitHeader: {  },
+	bankaccountformInputHeader: { fontSize: fsize(0.05), fontWeight: 'bold' },
+	bankaccountformInputInput: { borderRadius: 2, borderStyle: 'solid', borderWidth: 3, fontSize: fsize(0.05), padding: 5, width: '100%' },
+	bankaccountformSubmit: { alignItems: 'center', borderRadius: 2, borderStyle: 'solid', borderWidth: 1, padding: 5, width: fsize(0.5) },
+	bankaccountformSubmitHeader: { fontFamily: 'appFont', fontSize: fsize(0.04) },
 })

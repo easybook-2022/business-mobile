@@ -12,6 +12,10 @@ const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - (offsetPadding * 2)
 const itemSize = 70
 
+const fsize = p => {
+	return width * p
+}
+
 export default function dinersorders(props) {
 	const { scheduleid, refetch } = props.route.params
 
@@ -149,11 +153,11 @@ export default function dinersorders(props) {
 			<View style={{ backgroundColor: '#EAEAEA', paddingVertical: offsetPadding }}>
 				<View style={style.box}>
 					<TouchableOpacity style={gettingPayment ? style.backDisabled : style.back} disabled={gettingPayment} onPress={() => props.navigation.goBack()}>
-						<Text style={style.backHeader}>Back</Text>
+						<Text allowFontScaling={false} style={style.backHeader}>Back</Text>
 					</TouchableOpacity>
 
 					<View style={style.body}>
-						<Text style={style.header}>({diners.length}) Diner(s) made order(s)</Text>
+						<Text allowFontScaling={false} style={style.header}>({diners.length}) Diner(s) made order(s)</Text>
 
 						{loaded ? 
 							<>
@@ -165,8 +169,8 @@ export default function dinersorders(props) {
 												<View style={style.dinerProfile}>
 													<Image source={{ uri: logo_url + item.profile }} style={{ height: itemSize, width: itemSize }}/>
 												</View>
-												<Text style={style.dinerHeader}>{item.username}</Text>
-												<Text style={style.dinerCharge}>
+												<Text allowFontScaling={false} style={style.dinerHeader}>{item.username}</Text>
+												<Text allowFontScaling={false} style={style.dinerCharge}>
 													{(item.paying || (!item.paying && !item.payed && !item.paid)) && 'Paying'}
 													{(item.payed || item.paid) && 'Paid'}
 													: 
@@ -176,15 +180,15 @@ export default function dinersorders(props) {
 												{(item.payed || item.paid) && <View style={{ marginRight: 10, marginTop: 18 }}><AntDesign name="checkcircleo" color="blue" size={30}/></View>}
 												{item.paying && <View style={{ marginRight: 10, marginTop: 18 }}><ActivityIndicator color="blue" size="large"/></View>}
 											</View>
-											<Text style={style.dinerStatus}>{item.allowpayment ? "Payment sent" : "Waiting for payment"}</Text>
+											<Text allowFontScaling={false} style={style.dinerStatus}>{item.allowpayment ? "Payment sent" : "Waiting for payment"}</Text>
 										</View>
 									}
 								/>
 
-								<Text style={style.totalHeader}>Total: $ {totalPayment}</Text>
+								<Text allowFontScaling={false} style={style.totalHeader}>Total: $ {totalPayment}</Text>
 
 								<TouchableOpacity style={gettingPayment ? style.paymentDisabled : style.payment} disabled={gettingPayment} onPress={() => getTheDinersPayments()}>
-									<Text style={style.paymentHeader}>Receive now</Text>
+									<Text allowFontScaling={false} style={style.paymentHeader}>Receive now</Text>
 								</TouchableOpacity>
 							</>
 							:
@@ -198,7 +202,7 @@ export default function dinersorders(props) {
 						<View style={style.confirmBoxContainer}>
 							<View style={style.confirmBox}>
 								<View style={style.confirmContainer}>
-									<Text style={style.confirmHeader}>
+									<Text allowFontScaling={false} style={style.confirmHeader}>
 										All diners have paid
 										{'\n\n'}
 										You have received a total payment of $ {totalPayment}
@@ -218,7 +222,7 @@ export default function dinersorders(props) {
 												}
 											)
 										}}>
-											<Text style={style.confirmActionHeader}>Ok</Text>
+											<Text allowFontScaling={false} style={style.confirmActionHeader}>Ok</Text>
 										</TouchableOpacity>
 									</View>
 								</View>
@@ -232,7 +236,7 @@ export default function dinersorders(props) {
 						<View style={style.confirmBoxContainer}>
 							<View style={style.confirmBox}>
 								<View style={style.confirmContainer}>
-									<Text style={style.confirmHeader}>
+									<Text allowFontScaling={false} style={style.confirmHeader}>
 										{showPaymentUnconfirmed.username} hasn't sent his/her payment yet.
 										{'\n\n'}
 										Please tell him/her to send the payment in their notification
@@ -240,7 +244,7 @@ export default function dinersorders(props) {
 
 									<View style={style.confirmActions}>
 										<TouchableOpacity style={style.confirmAction} onPress={() => setShowpaymentunconfirmed({ show: false, username: "" })}>
-											<Text style={style.confirmActionHeader}>Ok</Text>
+											<Text allowFontScaling={false} style={style.confirmActionHeader}>Ok</Text>
 										</TouchableOpacity>
 									</View>
 								</View>
@@ -254,14 +258,14 @@ export default function dinersorders(props) {
 				<Modal transparent={true}>
 					<View style={style.disabled}>
 						<View style={style.disabledContainer}>
-							<Text style={style.disabledHeader}>
+							<Text allowFontScaling={false} style={style.disabledHeader}>
 								There is an update to the app{'\n\n'}
 								Please wait a moment{'\n\n'}
 								or tap 'Close'
 							</Text>
 
 							<TouchableOpacity style={style.disabledClose} onPress={() => socket.emit("socket/business/login", ownerId, () => setShowdisabledscreen(false))}>
-								<Text style={style.disabledCloseHeader}>Close</Text>
+								<Text allowFontScaling={false} style={style.disabledCloseHeader}>Close</Text>
 							</TouchableOpacity>
 
 							<ActivityIndicator size="large"/>
@@ -278,16 +282,16 @@ const style = StyleSheet.create({
 	box: { backgroundColor: '#EAEAEA', height: '100%', width: '100%' },
 	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, marginTop: 20, marginHorizontal: 20, padding: 5, width: 100 },
 	backDisabled: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, height: 30, marginTop: 20, marginHorizontal: 20, opacity: 0.3, padding: 5, width: 100 },
-	backHeader: { fontFamily: 'appFont', fontSize: 20 },
+	backHeader: { fontFamily: 'appFont', fontSize: fsize(0.05) },
 
 	body: { alignItems: 'center', height: screenHeight - 30 },
-	header: { fontSize: 20, fontWeight: 'bold', marginVertical: 20 },
+	header: { fontSize: fsize(0.05), fontWeight: 'bold', marginVertical: 20 },
 
 	diner: { backgroundColor: 'white', marginBottom: 5, marginHorizontal: 5 },
 	dinerRow: { flexDirection: 'row', justifyContent: 'space-between', padding: 5, width: width - 10 },
 	dinerProfile: { borderRadius: itemSize / 2, height: itemSize, overflow: 'hidden', width: itemSize },
-	dinerHeader: { fontSize: 15, fontWeight: 'bold', marginVertical: 25 },
-	dinerCharge: { fontSize: 15, marginVertical: 25 },
+	dinerHeader: { fontSize: fsize(0.04), fontWeight: 'bold', marginVertical: 25 },
+	dinerCharge: { fontSize: fsize(0.04), marginVertical: 25 },
 	dinerStatus: { fontWeight: '100', marginBottom: 20, textAlign: 'center' },
 
 	totalHeader: { fontWeight: '100', textAlign: 'center' },
@@ -298,7 +302,7 @@ const style = StyleSheet.create({
 	confirmBoxContainer: { backgroundColor: 'rgba(0, 0, 0, 0.7)' },
 	confirmBox: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', paddingVertical: offsetPadding, width: '100%' },
 	confirmContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },
-	confirmHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
+	confirmHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
 	confirmActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	confirmAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
 	confirmActionHeader: { },

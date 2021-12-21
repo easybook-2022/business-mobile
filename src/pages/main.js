@@ -25,6 +25,10 @@ const screenHeight = height - (offsetPadding * 2)
 const storeLogoSize = 70
 const imageSize = 50
 
+const fsize = p => {
+	return width * p
+}
+
 export default function main(props) {
 	const [notificationPermission, setNotificationpermission] = useState(null);
 	const [camComp, setCamcomp] = useState(null)
@@ -61,8 +65,9 @@ export default function main(props) {
 	const [showPaymentconfirm, setShowpaymentconfirm] = useState({ show: false, info: {} })
 	const [showUnservedorders, setShowunservedorders] = useState(false)
 	const [showWrongworker, setShowwrongworker] = useState(false)
+	const [showUnallowedpayment, setShowunallowedpayment] = useState(false)
 	const [showDisabledScreen, setShowdisabledscreen] = useState(false)
-
+	
 	const isMounted = useRef(null)
 
 	const getNotificationPermission = async() => {
@@ -697,6 +702,10 @@ export default function main(props) {
 							setShowwrongworker(true)
 
 							break;
+						case "unallowedpayment":
+							setShowunallowedpayment(true)
+
+							break
 						default:
 					}
 				}
@@ -963,28 +972,28 @@ export default function main(props) {
 							<View style={{ flexDirection: 'row' }}>
 								{locationType != '' && (
 									<TouchableOpacity style={viewType == "requests" ? style.navSelected : style.nav} onPress={() => getAllRequests()}>
-										<Text style={[viewType == "requests" ? style.navHeaderSelected : style.navHeader, { fontSize: 20 }]}>{numRequests}</Text>
+										<Text style={[viewType == "requests" ? style.navHeaderSelected : style.navHeader, { fontSize: fsize(0.07) }]}>{numRequests}</Text>
 										<Text style={viewType == "requests" ? style.navHeaderSelected : style.navHeader}>Request(s)</Text>
 									</TouchableOpacity>
 								)}
 
 								{locationType == 'salon' && (
 									<TouchableOpacity style={viewType == "appointments" ? style.navSelected : style.nav} onPress={() => getAllAppointments()}>
-										<Text style={[viewType == "appointments" ? style.navHeaderSelected : style.navHeader, { fontSize: 20 }]}>{numAppointments}</Text>
+										<Text style={[viewType == "appointments" ? style.navHeaderSelected : style.navHeader, { fontSize: fsize(0.07) }]}>{numAppointments}</Text>
 										<Text style={viewType == "appointments" ? style.navHeaderSelected : style.navHeader}>Appointment(s)</Text>
 									</TouchableOpacity>
 								)}
 
 								{locationType == 'restaurant' && (
 									<TouchableOpacity style={viewType == "cartorderers" ? style.navSelected : style.nav} onPress={() => getAllCartOrderers()}>
-										<Text style={[viewType == "cartorderers" ? style.navHeaderSelected : style.navHeader, { fontSize: 20 }]}>{numCartorderers}</Text>
+										<Text style={[viewType == "cartorderers" ? style.navHeaderSelected : style.navHeader, { fontSize: fsize(0.07) }]}>{numCartorderers}</Text>
 										<Text style={viewType == "cartorderers" ? style.navHeaderSelected : style.navHeader}>Orderer(s)</Text>
 									</TouchableOpacity>
 								)}
 
 								{locationType == 'restaurant' && (
 									<TouchableOpacity style={viewType == "reservations" ? style.navSelected : style.nav} onPress={() => getAllReservations()}>
-										<Text style={[viewType == "reservations" ? style.navHeaderSelected : style.navHeader, { fontSize: 20 }]}>{numReservations}</Text>
+										<Text style={[viewType == "reservations" ? style.navHeaderSelected : style.navHeader, { fontSize: fsize(0.07) }]}>{numReservations}</Text>
 										<Text style={viewType == "reservations" ? style.navHeaderSelected : style.navHeader}>Reservation(s)</Text>
 									</TouchableOpacity>
 								)}
@@ -1008,13 +1017,13 @@ export default function main(props) {
 																<>
 																	<Text style={style.requestInfoHeader}>{item.username + ' requested ' + (item.status == 'change' ? ' a time change for ' : '') + item.name + '\n'}</Text> 
 																	<Text style={style.requestInfoHeader}>{displayTime(item.time)}</Text>
-																	{item.worker != null && <Text style={style.requestInfoHeader}>{'\nwith worker: '}<Text style={{ fontSize: 30 }}>{item.worker.username}</Text></Text>}
+																	{item.worker != null && <Text style={style.requestInfoHeader}>{'\nwith worker: '}<Text style={{ fontSize: fsize(0.07) }}>{item.worker.username}</Text></Text>}
 																</>
 																:
 																<>
 																	<Text style={style.requestInfoHeader}>{item.username + ' has an appointment for ' + item.name +'\n'}</Text>
 																	<Text style={style.requestInfoHeader}>{displayTime(item.time)}</Text>
-																	{item.worker != null && <Text style={style.requestInfoHeader}>{'\nwith worker: '}<Text style={{ fontSize: 30 }}>{item.worker.username}</Text>{'\n'}</Text>}
+																	{item.worker != null && <Text style={style.requestInfoHeader}>{'\nwith worker: '}<Text style={{ fontSize: fsize(0.07) }}>{item.worker.username}</Text>{'\n'}</Text>}
 																	<Text style={{ color: 'grey', fontStyle: 'italic' }}>waiting for confirmation</Text>
 																</>
 															:
@@ -1229,7 +1238,7 @@ export default function main(props) {
 					</View>
 
 					<View style={style.bottomNavs}>
-						<View style={{ flexDirection: 'row' }}>
+						<View style={style.bottomNavsRow}>
 							<TouchableOpacity style={style.bottomNav} onPress={() => props.navigation.navigate("settings", { refetch: () => getTheInfo()})}>
 								<AntDesign name="setting" size={30}/>
 							</TouchableOpacity>
@@ -1239,7 +1248,7 @@ export default function main(props) {
 							</TouchableOpacity>
 
 							<TouchableOpacity style={style.bottomNavButton} onPress={() => changeTheLocationState()}>
-								<Text style={style.bottomNavButtonHeader}>Set {locationListed ? "inactive" : "active"}</Text>
+								<Text style={style.bottomNavButtonHeader}>{locationListed ? "Unlist" : "List"} Public</Text>
 							</TouchableOpacity>
 
 							<TouchableOpacity style={style.bottomNav} onPress={async() => {
@@ -1251,7 +1260,7 @@ export default function main(props) {
 									props.navigation.dispatch(
 										CommonActions.reset({
 											index: 1,
-											routes: [{ name: 'login' }]
+											routes: [{ name: 'auth' }]
 										})
 									);
 								})
@@ -1477,10 +1486,10 @@ export default function main(props) {
 
 				{showPaymentconfirm.show && (
 					<Modal transparent={true}>
-						<View style={style.confirmBoxContainer}>
-							<View style={style.confirmBox}>
-								<View style={style.confirmContainer}>
-									<Text style={style.confirmHeader}>
+						<View style={style.alertBoxContainer}>
+							<View style={style.alertBox}>
+								<View style={style.alertContainer}>
+									<Text style={style.alertHeader}>
 										<Text>Congrats on your service of</Text>
 										{'\n'}
 										<Text style={{ fontFamily: 'Arial', fontWeight: 'bold' }}>{showPaymentconfirm.info.name}</Text>
@@ -1492,9 +1501,9 @@ export default function main(props) {
 										<Text>Good job! :)</Text>
 									</Text>
 
-									<View style={style.confirmActions}>
-										<TouchableOpacity style={style.confirmAction} onPress={() => setShowpaymentconfirm({ show: false, info: {} })}>
-											<Text style={style.confirmActionHeader}>Ok</Text>
+									<View style={style.alertActions}>
+										<TouchableOpacity style={style.alertAction} onPress={() => setShowpaymentconfirm({ show: false, info: {} })}>
+											<Text style={style.alertActionHeader}>Ok</Text>
 										</TouchableOpacity>
 									</View>
 								</View>
@@ -1505,18 +1514,18 @@ export default function main(props) {
 
 				{showUnservedorders && (
 					<Modal transparent={true}>
-						<View style={style.confirmBoxContainer}>
-							<View style={style.confirmBox}>
-								<View style={style.confirmContainer}>
-									<Text style={style.confirmHeader}>
+						<View style={style.alertBoxContainer}>
+							<View style={style.alertBox}>
+								<View style={style.alertContainer}>
+									<Text style={style.alertHeader}>
 										There is one or more unserved orders from the customers.
 										{'\n'}
 										Please finish the serve
 									</Text>
 
-									<View style={style.confirmActions}>
-										<TouchableOpacity style={style.confirmAction} onPress={() => setShowunservedorders(false)}>
-											<Text style={style.confirmActionHeader}>Ok</Text>
+									<View style={style.alertActions}>
+										<TouchableOpacity style={style.alertAction} onPress={() => setShowunservedorders(false)}>
+											<Text style={style.alertActionHeader}>Ok</Text>
 										</TouchableOpacity>
 									</View>
 								</View>
@@ -1527,14 +1536,32 @@ export default function main(props) {
 
 				{showWrongworker && (
 					<Modal transparent={true}>
-						<View style={style.confirmBoxContainer}>
-							<View style={style.confirmBox}>
-								<View style={style.confirmContainer}>
-									<Text style={style.confirmHeader}>Only the worker of this client can receive the payment</Text>
+						<View style={style.alertBoxContainer}>
+							<View style={style.alertBox}>
+								<View style={style.alertContainer}>
+									<Text style={style.alertHeader}>Only the worker of this client can receive the payment</Text>
 
-									<View style={style.confirmActions}>
-										<TouchableOpacity style={style.confirmAction} onPress={() => setShowwrongworker(false)}>
-											<Text style={style.confirmActionHeader}>Ok</Text>
+									<View style={style.alertActions}>
+										<TouchableOpacity style={style.alertAction} onPress={() => setShowwrongworker(false)}>
+											<Text style={style.alertActionHeader}>Ok</Text>
+										</TouchableOpacity>
+									</View>
+								</View>
+							</View>
+						</View>
+					</Modal>
+				)}
+
+				{showUnallowedpayment && (
+					<Modal transparent={true}>
+						<View style={style.alertBoxContainer}>
+							<View style={style.alertBox}>
+								<View style={style.alertContainer}>
+									<Text style={style.alertHeader}>The client hasn't allowed payment yet</Text>
+
+									<View style={style.alertActions}>
+										<TouchableOpacity style={style.alertAction} onPress={() => setShowunallowedpayment(false)}>
+											<Text style={style.alertActionHeader}>Ok</Text>
 										</TouchableOpacity>
 									</View>
 								</View>
@@ -1571,16 +1598,16 @@ const style = StyleSheet.create({
 	main: { backgroundColor: 'white' },
 	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 
-	headers: { alignItems: 'center', flexDirection: 'column', height: 150, justifyContent: 'space-between', paddingVertical: 5 },
+	headers: { alignItems: 'center', flexDirection: 'column', height: fsize(0.25), justifyContent: 'space-between', paddingVertical: 5 },
 	storeIconHolder: { borderRadius: storeLogoSize / 2, height: storeLogoSize, overflow: 'hidden', width: storeLogoSize },
 	image: { height: storeLogoSize, width: storeLogoSize },
-	locationInfoHeader: { fontSize: 18, fontWeight: 'bold', paddingHorizontal: 10, textAlign: 'center' },
+	locationInfoHeader: { fontSize: fsize(0.04), fontWeight: 'bold', paddingHorizontal: 10, textAlign: 'center' },
 
 	navs: { alignItems: 'center' },
-	nav: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 2, marginVertical: 3, padding: 2, width: (width / 3) - 10 },
-	navHeader: { color: 'black' },
-	navSelected: { alignItems: 'center', backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 2, marginVertical: 3, padding: 2, width: (width / 3) - 10 },
-	navHeaderSelected: { color: 'white' },
+	nav: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 2, marginVertical: 3, padding: 2, width: fsize(0.3) },
+	navHeader: { color: 'black', fontSize: fsize(0.035) },
+	navSelected: { alignItems: 'center', backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 2, marginVertical: 3, padding: 2, width: fsize(0.3) },
+	navHeaderSelected: { color: 'white', fontSize: fsize(0.035) },
 
 	// body
 	body: { height: screenHeight - 190 },
@@ -1590,23 +1617,23 @@ const style = StyleSheet.create({
 	requestRow: { flexDirection: 'row', justifyContent: 'space-between' },
 	requestImageHolder: { borderRadius: imageSize / 2, height: imageSize, margin: 5, overflow: 'hidden', width: imageSize },
 	requestImage: { height: imageSize, width: imageSize },
-	requestInfo: { fontFamily: 'appFont', fontSize: 20, padding: 10, width: width - 100 },
-	requestInfoHeader: { fontSize: 20, fontWeight: 'bold' },
+	requestInfo: { fontFamily: 'appFont', fontSize: fsize(0.05), padding: 10, width: width - 100 },
+	requestInfoHeader: { fontSize: fsize(0.05), fontWeight: 'bold' },
 	requestActions: { flexDirection: 'row', justifyContent: 'space-around', marginVertical: 10 },
 	requestAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 5, width: 80 },
-	requestActionHeader: { fontSize: 10, textAlign: 'center' },
+	requestActionHeader: { fontSize: fsize(0.025), textAlign: 'center' },
 
 	// client's schedule
 	schedule: { alignItems: 'center', borderRadius: 5, backgroundColor: 'white', marginHorizontal: 5, marginVertical: 2.5 },
 	scheduleRow: { flexDirection: 'row', justifyContent: 'space-between' },
 	scheduleImageHolder: { borderRadius: imageSize / 2, height: imageSize, margin: 5, overflow: 'hidden', width: imageSize },
 	scheduleImage: { height: imageSize, width: imageSize },
-	scheduleHeader: { fontFamily: 'appFont', fontSize: 20, padding: 10, textAlign: 'center', width: width - 100 },
-	scheduleActionsHeader: { fontSize: 20, marginTop: 10, textAlign: 'center' },
+	scheduleHeader: { fontFamily: 'appFont', fontSize: fsize(0.04), padding: 10, textAlign: 'center', width: width - 100 },
+	scheduleActionsHeader: { fontSize: fsize(0.05), marginTop: 10, textAlign: 'center' },
 	scheduleActions: { flexDirection: 'row' },
 	scheduleAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: 130 },
 	scheduleActionDisabled: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, opacity: 0.5, padding: 5, width: 130 },
-	scheduleActionHeader: { fontSize: 15, textAlign: 'center' },
+	scheduleActionHeader: { fontSize: fsize(0.03), textAlign: 'center' },
 	scheduleNumOrders: { fontWeight: 'bold', padding: 8 },
 
 	cartorderer: { backgroundColor: 'white', borderRadius: 5, flexDirection: 'row', justifyContent: 'space-between', margin: 10, padding: 5 },
@@ -1614,30 +1641,31 @@ const style = StyleSheet.create({
 	cartordererImage: { height: imageSize, width: imageSize },
 	cartordererInfo: { alignItems: 'center', width: width - 81 },
 	cartordererUsername: { fontWeight: 'bold', marginBottom: 10 },
-	cartordererOrderNumber: { fontSize: 25, paddingVertical: 5 },
+	cartordererOrderNumber: { fontSize: fsize(0.06), paddingVertical: 5 },
 	cartordererSeeOrders: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5 },
-	cartordererSeeOrdersHeader: { fontSize: 25, textAlign: 'center' },
+	cartordererSeeOrdersHeader: { fontSize: fsize(0.06), textAlign: 'center' },
 
 	bodyResult: { alignItems: 'center', flexDirection: 'column', height: screenHeight - 220, justifyContent: 'space-around' },
-	bodyResultHeader: { fontSize: 20, fontWeight: 'bold' },
+	bodyResultHeader: { fontSize: fsize(0.05), fontWeight: 'bold' },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
-	bottomNav: { flexDirection: 'row', height: 30, marginVertical: 5, marginHorizontal: 20 },
+	bottomNavsRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
+	bottomNav: { flexDirection: 'row', height: 30, marginVertical: 5 },
 	bottomNavHeader: { color: 'black', fontWeight: 'bold', paddingVertical: 5 },
-	bottomNavButton: { backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, padding: 3 },
-	bottomNavButtonHeader: { color: 'white', fontWeight: 'bold', paddingVertical: 5 },
+	bottomNavButton: { backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, paddingVertical: 8, width: fsize(0.25) },
+	bottomNavButtonHeader: { color: 'white', fontSize: fsize(0.03), fontWeight: 'bold', textAlign: 'center' },
 
 	cancelRequestBox: { backgroundColor: 'white', height: '100%', width: '100%' },
-	cancelRequestHeader: { fontFamily: 'appFont', fontSize: 20, marginHorizontal: 30, marginTop: 50, textAlign: 'center' },
-	cancelRequestInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: 20, height: 200, margin: '5%', padding: 10, width: '90%' },
+	cancelRequestHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), marginHorizontal: 30, marginTop: 50, textAlign: 'center' },
+	cancelRequestInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: fsize(0.05), height: 200, margin: '5%', padding: 10, width: '90%' },
 	cancelRequestActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	cancelRequestTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 5, width: 100 },
 	cancelRequestTouchHeader: { textAlign: 'center' },
 
 	acceptRequestContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	acceptRequestBox: { backgroundColor: 'white', paddingVertical: 10, width: '80%' },
-	acceptRequestHeader: { fontFamily: 'appFont', fontSize: 20, marginHorizontal: 30, textAlign: 'center' },
-	acceptRequestInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: 13, margin: '5%', padding: 10, width: '90%' },
+	acceptRequestHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), marginHorizontal: 30, textAlign: 'center' },
+	acceptRequestInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: fsize(0.033), margin: '5%', padding: 10, width: '90%' },
 	errorMsg: { color: 'red', fontWeight: 'bold', marginVertical: 30, textAlign: 'center' },
 	acceptRequestActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	acceptRequestTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 5, width: 100 },
@@ -1646,18 +1674,18 @@ const style = StyleSheet.create({
 	requiredBoxContainer: { backgroundColor: 'rgba(0, 0, 0, 0.7)' },
 	requiredBox: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', paddingVertical: offsetPadding, width: '100%' },
 	requiredContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },
-	requiredHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
+	requiredHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
 	requiredActions: { alignItems: 'center', justifyContent: 'space-around' },
 	requiredAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 150 },
 	requiredActionHeader: { textAlign: 'center' },
 
-	confirmBoxContainer: { backgroundColor: 'rgba(0, 0, 0, 0.7)' },
-	confirmBox: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', paddingVertical: offsetPadding, width: '100%' },
-	confirmContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },
-	confirmHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
-	confirmActions: { flexDirection: 'row', justifyContent: 'space-around' },
-	confirmAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
-	confirmActionHeader: { },
+	alertBoxContainer: { backgroundColor: 'rgba(0, 0, 0, 0.7)' },
+	alertBox: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', paddingVertical: offsetPadding, width: '100%' },
+	alertContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },
+	alertHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
+	alertActions: { flexDirection: 'row', justifyContent: 'space-around' },
+	alertAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
+	alertActionHeader: { },
 
 	disabled: { backgroundColor: 'black', flexDirection: 'column', justifyContent: 'space-around', height: '100%', opacity: 0.8, width: '100%' },
 	disabledContainer: { alignItems: 'center', width: '100%' },

@@ -14,8 +14,12 @@ import Entypo from 'react-native-vector-icons/Entypo'
 
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
-const screenHeight = height - (offsetPadding * 2)
+const screenHeight = height - offsetPadding
 const frameSize = width * 0.9
+
+const fsize = p => {
+	return width * p
+}
 
 export default function menu(props) {
 	const { menuid, refetch } = props.route.params
@@ -392,11 +396,11 @@ export default function menu(props) {
 										<Text style={style.actionHeader}>Add a Menu</Text>
 									</TouchableOpacity>
 										
-									<TouchableOpacity style={style.action} onPress={() => props.navigation.navigate("addproduct", { parentMenuid: menuid, menuid: null, refetch: () => getTheInfo() })}>
+									<TouchableOpacity style={style.action} onPress={() => props.navigation.navigate("addproduct", { parentMenuid: menuid, productid: null, refetch: () => getTheInfo() })}>
 										<Text style={style.actionHeader}>Add a Product</Text>
 									</TouchableOpacity>
 
-									<TouchableOpacity style={style.action} onPress={() => props.navigation.navigate("addservice", { parentMenuid: menuid, menuid: null, refetch: () => getTheInfo() })}>
+									<TouchableOpacity style={style.action} onPress={() => props.navigation.navigate("addservice", { parentMenuid: menuid, serviceid: null, refetch: () => getTheInfo() })}>
 										<Text style={style.actionHeader}>Add a Service</Text>
 									</TouchableOpacity>
 								</View>
@@ -428,7 +432,7 @@ export default function menu(props) {
 																		<Text style={style.menuActionHeader}>Change</Text>
 																	</TouchableOpacity>
 																	<TouchableOpacity style={style.menuAction} onPress={() => props.navigation.push("menu", { menuid: info.id, name: info.name, refetch: () => getTheInfo() })}>
-																		<Text style={style.menuActionHeader}>See menu</Text>
+																		<Text style={style.menuActionHeader}>Add to menu</Text>
 																	</TouchableOpacity>
 																</View>
 															</View>
@@ -444,7 +448,7 @@ export default function menu(props) {
 								
 								{showProducts && (
 									<View style={{ alignItems: 'center' }}>
-										<TouchableOpacity style={style.addTouch} onPress={() => props.navigation.navigate("addproduct", { menuid, refetch: () => getTheInfo() })}>
+										<TouchableOpacity style={style.addTouch} onPress={() => props.navigation.navigate("addproduct", { parentMenuid: menuid, productid: null, refetch: () => getTheInfo() })}>
 											<Text style={style.addTouchHeader}>Add a new product</Text>
 										</TouchableOpacity>
 
@@ -467,7 +471,7 @@ export default function menu(props) {
 																	<TouchableOpacity style={style.productAction} onPress={() => removeTheProduct(info.id)}>
 																		<Text style={style.productActionHeader}>Delete</Text>
 																	</TouchableOpacity>
-																	<TouchableOpacity style={style.productAction} onPress={() => props.navigation.navigate("addproduct", { parentMenuid: menuid, id: info.id, refetch: () => getAllProducts() })}>
+																	<TouchableOpacity style={style.productAction} onPress={() => props.navigation.navigate("addproduct", { parentMenuid: menuid, productid: info.id, refetch: () => getAllProducts() })}>
 																		<Text style={style.productActionHeader}>Change</Text>
 																	</TouchableOpacity>
 																</View>
@@ -483,7 +487,7 @@ export default function menu(props) {
 
 								{showServices && (
 									<View style={{ alignItems: 'center' }}>
-										<TouchableOpacity style={style.addTouch} onPress={() => props.navigation.navigate("addservice", { menuid, refetch: () => getTheInfo() })}>
+										<TouchableOpacity style={style.addTouch} onPress={() => props.navigation.navigate("addservice", { parentMenuid: menuid, serviceid: null, refetch: () => getTheInfo() })}>
 											<Text style={style.addTouchHeader}>Add a new service</Text>
 										</TouchableOpacity>
 
@@ -511,7 +515,7 @@ export default function menu(props) {
 															<TouchableOpacity style={style.serviceAction} onPress={() => removeTheService(item.id)}>
 																<Text style={style.serviceActionHeader}>Delete</Text>
 															</TouchableOpacity>
-															<TouchableOpacity style={style.serviceAction} onPress={() => props.navigation.navigate("addservice", { parentMenuid: menuid, id: item.id, refetch: () => getAllServices() })}>
+															<TouchableOpacity style={style.serviceAction} onPress={() => props.navigation.navigate("addservice", { parentMenuid: menuid, serviceid: item.id, refetch: () => getAllServices() })}>
 																<Text style={style.serviceActionHeader}>Change</Text>
 															</TouchableOpacity>
 														</View>
@@ -526,7 +530,7 @@ export default function menu(props) {
 					</View>
 
 					<View style={style.bottomNavs}>
-						<View style={{ flexDirection: 'row' }}>
+						<View style={style.bottomNavsRow}>
 							<TouchableOpacity style={style.bottomNav} onPress={() => props.navigation.navigate("settings", { refetch: () => getTheInfo() })}>
 								<AntDesign name="setting" size={30}/>
 							</TouchableOpacity>
@@ -684,48 +688,49 @@ export default function menu(props) {
 }
 
 const style = StyleSheet.create({
-	boxContainer: { backgroundColor: 'white', height: '100%', width: '100%' },
-	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: screenHeight - 24, justifyContent: 'space-between', width: '100%' },
+	boxContainer: { height: '100%', paddingBottom: offsetPadding, width: '100%' },
+	box: { backgroundColor: 'white', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 
-	body: { height: screenHeight - 134 },
+	body: { height: screenHeight - 176 },
 
 	menuBox: { height: 60 },
 
 	headers: { paddingVertical: 5 },
-	header: { fontWeight: 'bold', fontSize: 20, textAlign: 'center' },
+	header: { fontWeight: 'bold', fontSize: fsize(0.05), textAlign: 'center' },
 
 	actionsHolder: { flexDirection: 'column', height: '100%', justifyContent: 'space-around' },
 	actions: { alignItems: 'center', width: '100%' },
 	action: { alignItems: 'center', backgroundColor: 'white', borderRadius: 15, borderStyle: 'solid', borderWidth: 1, marginHorizontal: 5, marginVertical: 30, padding: 10, width: 200 },
-	actionHeader: { color: 'black', fontFamily: 'appFont', fontSize: 25 },
+	actionHeader: { color: 'black', fontFamily: 'appFont', fontSize: fsize(0.06) },
 
 	addTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 1, padding: 5, width: 200 },
-	addTouchHeader: { fontSize: 20, textAlign: 'center' },
+	addTouchHeader: { fontSize: fsize(0.05), textAlign: 'center' },
 	row: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
 
 	menu: { alignItems: 'center', marginHorizontal: 20, marginBottom: 15, width: width / 2 },
-	menuHeader: { fontSize: 25, fontWeight: 'bold', paddingVertical: 15 },
+	menuHeader: { fontSize: fsize(0.06), fontWeight: 'bold', paddingVertical: 15 },
 	menuImage: { backgroundColor: 'black', borderRadius: 50, height: 100, width: 100 },
 	menuAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 5, padding: 5 },
-	menuActionHeader: { fontSize: 20, textAlign: 'center' },
+	menuActionHeader: { fontSize: fsize(0.05), textAlign: 'center' },
 
 	product: { alignItems: 'center', marginHorizontal: 20, marginBottom: 15, width: width / 2 },
-	productHeader: { fontSize: 25, fontWeight: 'bold', paddingVertical: 15 },
+	productHeader: { fontSize: fsize(0.06), fontWeight: 'bold', paddingVertical: 15 },
 	productImage: { backgroundColor: 'black', borderRadius: 50, height: 100, width: 100 },
-	productPrice: { fontSize: 20, fontWeight: 'bold' },
+	productPrice: { fontSize: fsize(0.05), fontWeight: 'bold' },
 	productAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 5, padding: 5 },
-	productActionHeader: { fontSize: 20, textAlign: 'center' },
+	productActionHeader: { fontSize: fsize(0.05), textAlign: 'center' },
 
 	service: { backgroundColor: 'white', marginHorizontal: 10, marginTop: 10, padding: 20 },
-	serviceHeader: { fontSize: 20, fontWeight: 'bold', paddingVertical: 10, textAlign: 'center' },
+	serviceHeader: { fontSize: fsize(0.05), fontWeight: 'bold', paddingVertical: 10, textAlign: 'center' },
 	serviceImage: { backgroundColor: 'black', borderRadius: 50, height: 100, marginLeft: 10, width: 100 },
-	serviceInfo: { fontSize: 20, fontWeight: 'bold', marginVertical: 10 },
+	serviceInfo: { fontSize: fsize(0.05), fontWeight: 'bold', marginVertical: 10 },
 	serviceActions: { flexDirection: 'row', justifyContent: 'space-between', width: 180 },
 	serviceAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 8, padding: 5 },
-	serviceActionHeader: { fontSize: 20, textAlign: 'center' },
+	serviceActionHeader: { fontSize: fsize(0.05), textAlign: 'center' },
 
-	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 50, justifyContent: 'space-around', width: '100%' },
-	bottomNav: { flexDirection: 'row', height: 30, marginVertical: 5, marginHorizontal: 20 },
+	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
+	bottomNavsRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
+	bottomNav: { flexDirection: 'row', justifyContent: 'space-around', margin: 5 },
 	bottomNavHeader: { fontWeight: 'bold', paddingVertical: 5 },
 
 	// hidden boxes
@@ -733,27 +738,27 @@ const style = StyleSheet.create({
 	// remove menu confirmation
 	menuInfoContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', paddingVertical: offsetPadding, width: '100%' },
 	menuInfoBox: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '80%', justifyContent: 'space-between', padding: 10, width: '80%' },
-	menuInfoBoxHeader: { fontSize: 20, textAlign: 'center' },
-	menuInfoImageHolder: { borderRadius: 100, height: 200, overflow: 'hidden', width: 200 },
-	menuInfoImage: { height: 200, width: 200 },
-	menuInfoName: { fontSize: 30, fontWeight: 'bold' },
-	menuInfoInfo: { fontSize: 20 },
-	menuInfoHeader: { fontSize: 15, fontWeight: 'bold', paddingHorizontal: 10, textAlign: 'center' },
+	menuInfoBoxHeader: { fontSize: fsize(0.05), textAlign: 'center' },
+	menuInfoImageHolder: { borderRadius: 100, height: fsize(0.5), overflow: 'hidden', width: fsize(0.5) },
+	menuInfoImage: { height: fsize(0.5), width: fsize(0.5) },
+	menuInfoName: { fontSize: fsize(0.07), fontWeight: 'bold' },
+	menuInfoInfo: { fontSize: fsize(0.05) },
+	menuInfoHeader: { fontSize: fsize(0.04), fontWeight: 'bold', paddingHorizontal: 10, textAlign: 'center' },
 	menuInfoActions: { flexDirection: 'row', justifyContent: 'space-around' },
-	menuInfoAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 10, padding: 5, width: 70 },
+	menuInfoAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 10, padding: 5, width: fsize(0.2) },
 	menuInfoActionHeader: { textAlign: 'center' },
 
 	// remove product confirmation
 	productInfoContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', paddingVertical: offsetPadding, width: '100%' },
 	productInfoBox: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '80%', justifyContent: 'space-between', padding: 10, width: '80%' },
-	productInfoBoxHeader: { fontSize: 20, textAlign: 'center' },
+	productInfoBoxHeader: { fontSize: fsize(0.05), textAlign: 'center' },
 	productInfoImageHolder: { borderRadius: 100, height: 200, overflow: 'hidden', width: 200 },
 	productInfoImage: { height: 200, width: 200 },
-	productInfoName: { fontSize: 25, fontWeight: 'bold' },
+	productInfoName: { fontSize: fsize(0.06), fontWeight: 'bold' },
 	productInfoQuantity: {  },
-	productInfoPrice: { fontSize: 25 },
+	productInfoPrice: { fontSize: fsize(0.06) },
 	productInfoOrderers: { fontWeight: 'bold' },
-	productInfoHeader: { fontSize: 15, fontWeight: 'bold', paddingHorizontal: 10, textAlign: 'center' },
+	productInfoHeader: { fontSize: fsize(0.04), fontWeight: 'bold', paddingHorizontal: 10, textAlign: 'center' },
 	productInfoActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	productInfoAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 10, padding: 5, width: 70 },
 	productInfoActionHeader: { textAlign: 'center' },
@@ -761,14 +766,14 @@ const style = StyleSheet.create({
 	// remove service confirmation
 	serviceInfoContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', paddingVertical: offsetPadding, width: '100%' },
 	serviceInfoBox: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '80%', justifyContent: 'space-between', padding: 10, width: '80%' },
-	serviceInfoBoxHeader: { fontSize: 20, textAlign: 'center' },
+	serviceInfoBoxHeader: { fontSize: fsize(0.05), textAlign: 'center' },
 	serviceInfoImageHolder: { borderRadius: 100, height: 200, overflow: 'hidden', width: 200 },
 	serviceInfoImage: { height: 200, width: 200 },
-	serviceInfoName: { fontSize: 25, fontWeight: 'bold' },
-	serviceInfoQuantity: { fontSize: 25 },
-	serviceInfoPrice: { fontSize: 25 },
+	serviceInfoName: { fontSize: fsize(0.06), fontWeight: 'bold' },
+	serviceInfoQuantity: { fontSize: fsize(0.06) },
+	serviceInfoPrice: { fontSize: fsize(0.06) },
 	serviceInfoOrderers: { fontWeight: 'bold' },
-	serviceInfoHeader: { fontSize: 15, fontWeight: 'bold', paddingHorizontal: 10, textAlign: 'center' },
+	serviceInfoHeader: { fontSize: fsize(0.04), fontWeight: 'bold', paddingHorizontal: 10, textAlign: 'center' },
 	serviceInfoActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	serviceInfoAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 10, padding: 5, width: 70 },
 	serviceInfoActionHeader: { textAlign: 'center' },

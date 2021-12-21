@@ -15,6 +15,10 @@ const screenHeight = height - (offsetPadding * 2)
 const dinerFrameSize = (width / 3) - 30
 const dinerProfileSize = 80
 
+const fsize = p => {
+	return width * p
+}
+
 export default function booktime(props) {
 	const offsetPadding = Constants.statusBarHeight
 	const screenHeight = height - (offsetPadding * 2)
@@ -348,10 +352,10 @@ export default function booktime(props) {
 					refetch()
 					props.navigation.goBack()
 				}}>
-					<Text style={style.backHeader}>Back</Text>
+					<Text allowFontScaling={false} style={style.backHeader}>Back</Text>
 				</TouchableOpacity>
 
-				<Text style={style.boxHeader}>Request another time for {numDiners > 0 ? '\n' + numDiners + ' ' + (numDiners == 1 ? 'person' : 'people') : "1 person"}</Text>
+				<Text allowFontScaling={false} style={style.boxHeader}>Request another time for {numDiners > 0 ? '\n' + numDiners + ' ' + (numDiners == 1 ? 'person' : 'people') : "1 person"}</Text>
 				
 				{!loaded ? 
 					<ActivityIndicator size="small"/>
@@ -366,7 +370,7 @@ export default function booktime(props) {
 												<View style={style.dinerProfileHolder}>
 													<Image source={{ uri: logo_url + diner.profile }} style={{ height: dinerProfileSize, width: dinerProfileSize }}/>
 												</View>
-												<Text style={style.dinerName}>{diner.username}</Text>
+												<Text allowFontScaling={false} style={style.dinerName}>{diner.username}</Text>
 											</View>
 											:
 											<View key={diner.key} style={style.diner}>
@@ -379,7 +383,7 @@ export default function booktime(props) {
 						<View style={style.dateHeaders}>
 							<View style={style.date}>
 								<TouchableOpacity style={style.dateNav} onPress={() => dateNavigate('left')}><AntDesign name="left" size={25}/></TouchableOpacity>
-								<Text style={style.dateHeader}>{selectedDateInfo.month}, {selectedDateInfo.year}</Text>
+								<Text allowFontScaling={false} style={style.dateHeader}>{selectedDateInfo.month}, {selectedDateInfo.year}</Text>
 								<TouchableOpacity style={style.dateNav} onPress={() => dateNavigate('right')}><AntDesign name="right" size={25}/></TouchableOpacity>
 							</View>
 
@@ -387,7 +391,7 @@ export default function booktime(props) {
 								<View style={style.dateDaysRow}>
 									{days.map((day, index) => (
 										<TouchableOpacity key={"day-header-" + index} style={style.dateDayTouchDisabled}>
-											<Text style={{ fontWeight: 'bold', textAlign: 'center' }}>{day.substr(0, 3)}</Text>
+											<Text allowFontScaling={false} style={{ fontWeight: 'bold', textAlign: 'center' }}>{day.substr(0, 3)}</Text>
 										</TouchableOpacity>
 									))}
 								</View>
@@ -397,16 +401,16 @@ export default function booktime(props) {
 											day.num > 0 ?
 												day.passed ? 
 													<TouchableOpacity key={day.key} disabled={true} style={style.dateDayTouchPassed}>
-														<Text style={style.dateDayTouchHeader}>{day.num}</Text>
+														<Text allowFontScaling={false} style={style.dateDayTouchHeader}>{day.num}</Text>
 													</TouchableOpacity>
 													:
 													selectedDateInfo.date == day.num ?
 														<TouchableOpacity key={day.key} style={style.dateDayTouchSelected} onPress={() => selectDate(day.num)}>
-															<Text style={style.dateDayTouchSelectedHeader}>{day.num}</Text>
+															<Text allowFontScaling={false} style={style.dateDayTouchSelectedHeader}>{day.num}</Text>
 														</TouchableOpacity>
 														:
 														<TouchableOpacity key={day.key} style={style.dateDayTouch} onPress={() => selectDate(day.num)}>
-															<Text style={style.dateDayTouchHeader}>{day.num}</Text>
+															<Text allowFontScaling={false} style={style.dateDayTouchHeader}>{day.num}</Text>
 														</TouchableOpacity>
 												:
 												<TouchableOpacity key={"calender-header-" + rowindex + "-" + dayindex} style={style.dateDayTouchDisabled}></TouchableOpacity>
@@ -415,26 +419,26 @@ export default function booktime(props) {
 								))}
 							</View>
 						</View>
-						<Text style={style.timesHeader}>Pick a time</Text>
+						<Text allowFontScaling={false} style={style.timesHeader}>Pick a time</Text>
 						<View style={{ flexDirection: 'row', justifyContent: 'space-around', marginBottom: 50, width: '100%' }}>
 							<View style={style.times}>
 								{times.map(info => (
 									<View key={info.key}>
 										{(!info.timetaken && !info.timepassed) && (
 											<TouchableOpacity style={style.unselect} onPress={() => selectTime(name, info.header, info.time)}>
-												<Text style={{ color: 'black' }}>{info.header}</Text>
+												<Text allowFontScaling={false} style={{ color: 'black' }}>{info.header}</Text>
 											</TouchableOpacity>
 										)}
 
 										{(info.timetaken && !info.timepassed) && (
 											<TouchableOpacity style={style.selected} disabled={true} onPress={() => {}}>
-												<Text style={{ color: 'white' }}>{info.header}</Text>
+												<Text allowFontScaling={false} style={{ color: 'white' }}>{info.header}</Text>
 											</TouchableOpacity>
 										)}
 
 										{(!info.timetaken && info.timepassed) && (
 											<TouchableOpacity style={style.selectedPassed} disabled={true} onPress={() => {}}>
-												<Text style={{ color: 'black' }}>{info.header}</Text>
+												<Text allowFontScaling={false} style={{ color: 'black' }}>{info.header}</Text>
 											</TouchableOpacity>
 										)}
 									</View>
@@ -452,45 +456,45 @@ export default function booktime(props) {
 							<View style={style.confirmContainer}>
 								{!confirmRequest.requested ? 
 									<>
-										<Text style={style.confirmHeader}>
-											<Text style={{ fontFamily: 'appFont' }}>Request a different time for {numDiners > 0 ? '\n' + numDiners + ' ' + (numDiners == 1 ? 'person' : 'people') : '1 person'}</Text>
+										<Text allowFontScaling={false} style={style.confirmHeader}>
+											<Text allowFontScaling={false} style={{ fontFamily: 'appFont' }}>Request a different time for {numDiners > 0 ? '\n' + numDiners + ' ' + (numDiners == 1 ? 'person' : 'people') : '1 person'}</Text>
 											{'\n at ' + confirmRequest.service}
 											{'\n' + displayTime(confirmRequest.time)}
 										</Text>
 
 										<View style={{ alignItems: 'center' }}>
-											<Text style={style.confirmHeader}>Tell the diner the table #?</Text>
+											<Text allowFontScaling={false} style={style.confirmHeader}>Tell the diner the table #?</Text>
 
 											<TextInput placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder={table ? table + "? If not, please re-enter" : 'What table will be available'} style={style.confirmInput} onChangeText={(tablenum) => setConfirmrequest({ ...confirmRequest, tablenum })} autoCorrect={false} autoCapitalize="none"/>
 										</View>
 
-										{confirmRequest.errorMsg ? <Text style={style.errorMsg}>{confirmRequest.errorMsg}</Text> : null}
+										{confirmRequest.errorMsg ? <Text allowFontScaling={false} style={style.errorMsg}>{confirmRequest.errorMsg}</Text> : null}
 
 										<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
 											<View style={style.confirmOptions}>
 												<TouchableOpacity style={style.confirmOption} onPress={() => setConfirmrequest({ show: false, service: "", oldtime: 0, time: 0, note: "", tablenum: "", requested: false, errorMsg: "" })}>
-													<Text style={style.confirmOptionHeader}>No</Text>
+													<Text allowFontScaling={false} style={style.confirmOptionHeader}>No</Text>
 												</TouchableOpacity>
 												<TouchableOpacity style={style.confirmOption} onPress={() => rescheduleTheReservation()}>
-													<Text style={style.confirmOptionHeader}>Yes</Text>
+													<Text allowFontScaling={false} style={style.confirmOptionHeader}>Yes</Text>
 												</TouchableOpacity>
 											</View>
 										</View>
 									</>
 									:
 									<View style={style.requestedHeaders}>
-										<Text style={style.requestedHeader}>Reservation requested at</Text>
-										<Text style={style.requestedHeaderInfo}>{confirmRequest.service}</Text>
-										<Text style={style.requestedHeaderInfo}>{displayTime(confirmRequest.time)}</Text>
-										<Text style={style.requestedHeaderInfo}>for {numDiners} diner{numDiners > 1 ? "s" : ""}{'\n'}</Text>
-										<Text style={style.requestedHeaderInfo}>You will get notify by the diners</Text>
+										<Text allowFontScaling={false} style={style.requestedHeader}>Reservation requested at</Text>
+										<Text allowFontScaling={false} style={style.requestedHeaderInfo}>{confirmRequest.service}</Text>
+										<Text allowFontScaling={false} style={style.requestedHeaderInfo}>{displayTime(confirmRequest.time)}</Text>
+										<Text allowFontScaling={false} style={style.requestedHeaderInfo}>for {numDiners} diner{numDiners > 1 ? "s" : ""}{'\n'}</Text>
+										<Text allowFontScaling={false} style={style.requestedHeaderInfo}>You will get notify by the diners</Text>
 										<TouchableOpacity style={style.requestedClose} onPress={() => {
 											setConfirmrequest({ ...confirmRequest, show: false, requested: false })
 
 											refetch()
 											props.navigation.goBack()
 										}}>
-											<Text style={style.requestedCloseHeader}>Ok</Text>
+											<Text allowFontScaling={false} style={style.requestedCloseHeader}>Ok</Text>
 										</TouchableOpacity>
 									</View>
 								}
@@ -506,9 +510,9 @@ export default function booktime(props) {
 const style = StyleSheet.create({
 	box: { backgroundColor: '#EAEAEA', height: '100%', width: '100%' },
 	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, marginVertical: 20, marginHorizontal: 20, padding: 5, width: 100 },
-	backHeader: { fontFamily: 'appFont', fontSize: 20 },
+	backHeader: { fontFamily: 'appFont', fontSize: fsize(0.05) },
 
-	boxHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', marginBottom: 10, textAlign: 'center' },
+	boxHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), fontWeight: 'bold', marginBottom: 10, textAlign: 'center' },
 
 	dinersList: { alignItems: 'center', width: '100%' },
 	row: { flexDirection: 'row', justifyContent: 'space-between' },
@@ -519,35 +523,38 @@ const style = StyleSheet.create({
 	dateHeaders: { alignItems: 'center', marginVertical: 50 },
 	date: { flexDirection: 'row', margin: 10 },
 	dateNav: { marginHorizontal: 20 },
-	dateHeader: { fontFamily: 'appFont', fontSize: 20, marginVertical: 5, textAlign: 'center', width: 170 },
+	dateHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), marginVertical: 5, textAlign: 'center', width: fsize(0.5) },
 	dateDays: { alignItems: 'center' },
 	dateDaysRow: { flexDirection: 'row' },
 
-	dateDayTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, padding: 7, width: 40 },
-	dateDayTouchHeader: { color: 'black', fontSize: 13, textAlign: 'center' },
-	
-	dateDayTouchSelected: { backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, padding: 7, width: 40 },
-	dateDayTouchSelectedHeader: { color: 'white', fontSize: 17, textAlign: 'center' },
+	dateDayTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, paddingVertical: 10, width: fsize(0.1) },
+	dateDayTouchHeader: { color: 'black', fontSize: fsize(0.038), textAlign: 'center' },
 
-	dateDayTouchPassed: { backgroundColor: 'rgba(0, 0, 0, 0.5)', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, padding: 7, width: 40 },
-	dateDayTouchPassedHeader: { color: 'black', fontSize: 13, textAlign: 'center' },
-	
-	dateDayTouchDisabled: { height: 40, margin: 3, padding: 3, width: 40 },
-	dateDayTouchDisabledHeader: { fontSize: 13, fontWeight: 'bold' },
+	dateDayTouchSelected: { backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, paddingVertical: 10, width: fsize(0.1) },
+	dateDayTouchSelectedHeader: { color: 'white', fontSize: fsize(0.038), textAlign: 'center' },
 
-	timesHeader: { fontFamily: 'appFont', fontSize: 30, fontWeight: 'bold', textAlign: 'center' },
-	times: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', width: 253 },
-	unselect: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, padding: 5, width: 80 },
-	unselectHeader: { color: 'black', fontSize: 15 },
-	selected: { alignItems: 'center', backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, padding: 5, width: 80 },
-	selectedHeader: { color: 'black', fontSize: 15 },
-	selectedPassed: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, opacity: 0.3, padding: 5, width: 80 },
-	selectedPassedHeader: { color: 'black', fontSize: 15 },
+	dateDayTouchPassed: { backgroundColor: 'rgba(0, 0, 0, 0.5)', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, paddingVertical: 10, width: fsize(0.1) },
+	dateDayTouchPassedHeader: { color: 'black', fontSize: fsize(0.038), textAlign: 'center' },
+
+	dateDayTouchDisabled: { margin: 3, paddingVertical: 10, width: fsize(0.1) },
+	dateDayTouchDisabledHeader: { fontSize: fsize(0.038), fontWeight: 'bold' },
+
+	timesHeader: { fontFamily: 'appFont', fontSize: fsize(0.07), fontWeight: 'bold', textAlign: 'center' },
+	times: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', width: fsize(0.79) },
+	
+	unselect: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, paddingVertical: 10, width: fsize(0.25) },
+	unselectHeader: { color: 'black', fontSize: fsize(0.04) },
+	
+	selected: { alignItems: 'center', backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, paddingVertical: 10, width: fsize(0.25) },
+	selectedHeader: { color: 'white', fontSize: fsize(0.04) },
+	
+	selectedPassed: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, opacity: 0.3, paddingVertical: 10, width: fsize(0.25) },
+	selectedPassedHeader: { color: 'black', fontSize: fsize(0.04) },
 
 	// confirm & requested box
 	confirmBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	confirmContainer: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },
-	confirmHeader: { fontSize: 20, fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
+	confirmHeader: { fontSize: fsize(0.05), fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
 	confirmInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: (width * 0.8) - 50 },
 	errorMsg: { color: 'red', fontWeight: 'bold' },
 	confirmOptions: { flexDirection: 'row' },
@@ -555,7 +562,7 @@ const style = StyleSheet.create({
 	confirmOptionHeader: { },
 	requestedHeaders: { alignItems: 'center', paddingHorizontal: 10 },
 	requestedClose: { borderRadius: 5, borderStyle: 'solid', borderWidth: 1, marginVertical: 10, padding: 5, width: 100 },
-	requestedCloseHeader: { fontFamily: 'appFont', fontSize: 20, textAlign: 'center' },
-	requestedHeader: { fontFamily: 'appFont', fontSize: 25, textAlign: 'center' },
-	requestedHeaderInfo: { fontSize: 20, textAlign: 'center' },
+	requestedCloseHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), textAlign: 'center' },
+	requestedHeader: { fontFamily: 'appFont', fontSize: fsize(0.06), textAlign: 'center' },
+	requestedHeaderInfo: { fontSize: fsize(0.05), textAlign: 'center' },
 })

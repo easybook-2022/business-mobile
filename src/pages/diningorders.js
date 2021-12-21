@@ -9,6 +9,10 @@ const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - (offsetPadding * 2)
 
+const fsize = p => {
+	return width * p
+}
+
 export default function diningorders(props) {
 	const { scheduleid, refetch } = props.route.params
 	
@@ -161,10 +165,10 @@ export default function diningorders(props) {
 
 					props.navigation.goBack()
 				}}>
-					<Text style={style.backHeader}>Back</Text>
+					<Text allowFontScaling={false} style={style.backHeader}>Back</Text>
 				</TouchableOpacity>
 
-				<Text style={style.boxHeader}>Order(s)</Text>
+				<Text allowFontScaling={false} style={style.boxHeader}>Order(s)</Text>
 
 				{loaded ?
 					rounds.length > 0 ? 
@@ -173,7 +177,7 @@ export default function diningorders(props) {
 								<View style={style.round} key={round.key}>
 									<View style={{ alignItems: 'center' }}>
 										<TouchableOpacity style={style.roundDeliver} onPress={() => deliverTheRound(round.id)}>
-											<Text style={style.roundDeliverHeader}>Ready to serve</Text>
+											<Text allowFontScaling={false} style={style.roundDeliverHeader}>Ready to serve</Text>
 										</TouchableOpacity>
 									</View>
 
@@ -185,11 +189,11 @@ export default function diningorders(props) {
 														<View style={style.orderItemImageHolder}>
 															<Image source={{ uri: logo_url + order.image }} style={style.orderItemImage}/>
 														</View>
-														<Text style={style.orderItemName}>{order.name}</Text>
+														<Text allowFontScaling={false} style={style.orderItemName}>{order.name}</Text>
 
 														{order.options.map(option => (
-															<Text key={option.key} style={style.itemInfo}>
-																<Text style={{ fontWeight: 'bold' }}>{option.header}: </Text> 
+															<Text allowFontScaling={false} key={option.key} style={style.itemInfo}>
+																<Text allowFontScaling={false} style={{ fontWeight: 'bold' }}>{option.header}: </Text> 
 																{option.selected}
 																{option.type == 'percentage' && '%'}
 															</Text>
@@ -197,8 +201,8 @@ export default function diningorders(props) {
 
 														{order.others.map(other => (
 															other.selected ? 
-																<Text key={other.key} style={style.itemInfo}>
-																	<Text style={{ fontWeight: 'bold' }}>{other.name}: </Text> 
+																<Text allowFontScaling={false} key={other.key} style={style.itemInfo}>
+																	<Text allowFontScaling={false} style={{ fontWeight: 'bold' }}>{other.name}: </Text> 
 																	<Text>{other.input}</Text>
 																</Text>
 															: null
@@ -206,15 +210,15 @@ export default function diningorders(props) {
 
 														{order.sizes.map(size => (
 															size.selected ? 
-																<Text key={size.key} style={style.itemInfo}>
-																	<Text style={{ fontWeight: 'bold' }}>Size: </Text> 
+																<Text allowFontScaling={false} key={size.key} style={style.itemInfo}>
+																	<Text allowFontScaling={false} style={{ fontWeight: 'bold' }}>Size: </Text> 
 																	<Text>{size.name}</Text>
 																</Text>
 															: null
 														))}
 
-														<Text style={style.orderItemQuantity}>
-															<Text style={{ fontWeight: 'bold' }}>Quantity: </Text>
+														<Text allowFontScaling={false} style={style.orderItemQuantity}>
+															<Text allowFontScaling={false} style={{ fontWeight: 'bold' }}>Quantity: </Text>
 															{order.callfor == 0 ? order.quantity : order.callfor}
 														</Text>
 													</View>
@@ -227,7 +231,7 @@ export default function diningorders(props) {
 						</ScrollView>
 						:
 						<View style={{ alignItems: 'center', flexDirection: 'column', height: screenHeight - 86, justifyContent: 'space-around' }}>
-							<Text style={{ fontWeight: 'bold' }}>No Order(s) Yet</Text>
+							<Text allowFontScaling={false} style={{ fontWeight: 'bold' }}>No Order(s) Yet</Text>
 						</View>
 					:
 					<ActivityIndicator size="large" marginTop={'50%'}/>
@@ -238,14 +242,14 @@ export default function diningorders(props) {
 				<Modal transparent={true}>
 					<View style={style.disabled}>
 						<View style={style.disabledContainer}>
-							<Text style={style.disabledHeader}>
+							<Text allowFontScaling={false} style={style.disabledHeader}>
 								There is an update to the app{'\n\n'}
 								Please wait a moment{'\n\n'}
 								or tap 'Close'
 							</Text>
 
 							<TouchableOpacity style={style.disabledClose} onPress={() => socket.emit("socket/business/login", ownerId, () => setShowdisabledscreen(false))}>
-								<Text style={style.disabledCloseHeader}>Close</Text>
+								<Text allowFontScaling={false} style={style.disabledCloseHeader}>Close</Text>
 							</TouchableOpacity>
 
 							<ActivityIndicator size="large"/>
@@ -260,8 +264,8 @@ export default function diningorders(props) {
 const style = StyleSheet.create({
 	box: { height: '100%', width: '100%' },
 	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, marginTop: 20, marginHorizontal: 20, padding: 5, width: 100 },
-	backHeader: { fontFamily: 'appFont', fontSize: 20 },
-	boxHeader: { fontSize: 15, marginHorizontal: 20, textAlign: 'center' },
+	backHeader: { fontFamily: 'appFont', fontSize: fsize(0.05) },
+	boxHeader: { fontSize: fsize(0.04), marginHorizontal: 20, textAlign: 'center' },
 
 	roundTouch: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginLeft: 10, padding: 5, width: 120 },
 	roundTouchHeader: {  },
@@ -277,13 +281,13 @@ const style = StyleSheet.create({
 	orderItemQuantity: {  },
 	orderItemPrice: {  },
 	itemChange: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 20, padding: 5, width: 80 },
-	itemChangeHeader: { fontSize: 13, textAlign: 'center' },
+	itemChangeHeader: { fontSize: fsize(0.033), textAlign: 'center' },
 	orderersEdit: { flexDirection: 'row' },
 	orderersEditHeader: { fontWeight: 'bold', marginRight: 10, marginTop: 7, textAlign: 'center' },
 	orderersEditTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5 },
 	orderersEditTouchHeader: { },
 	orderCallfor: { flexDirection: 'row', justifyContent: 'space-between', marginVertical: 10, width: '100%' },
-	orderCallforHeader: { fontSize: 20, fontWeight: 'bold', marginVertical: 20, textAlign: 'center' },
+	orderCallforHeader: { fontSize: fsize(0.05), fontWeight: 'bold', marginVertical: 20, textAlign: 'center' },
 	orderer: { alignItems: 'center', marginHorizontal: 10 },
 	ordererProfile: { borderRadius: 25, height: 50, overflow: 'hidden', width: 50 },
 	ordererUsername: { textAlign: 'center' },

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react'
-import { ActivityIndicator, Dimensions, ScrollView, View, Text, TextInput, Image, Keyboard, TouchableOpacity, KeyboardAvoidingView, StyleSheet } from 'react-native'
+import { ActivityIndicator, Dimensions, ScrollView, View, Text, TextInput, Image, Keyboard, TouchableOpacity, TouchableWithoutFeedback, StyleSheet } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
@@ -16,6 +16,10 @@ const screenHeight = height - (offsetPadding * 2)
 const frameSize = width * 0.9
 
 const steps = ['name', 'info', 'photo']
+
+const fsize = p => {
+	return width * p
+}
 
 export default function addmenu(props) {
 	const params = props.route.params
@@ -224,7 +228,7 @@ export default function addmenu(props) {
 	return (
 		<View style={style.addmenu}>
 			<View style={{ paddingBottom: offsetPadding }}>
-				<KeyboardAvoidingView behavior="padding">
+				<TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
 					{loaded ? 
 						<View style={style.box}>
 							{setupType == 'name' && (
@@ -305,7 +309,7 @@ export default function addmenu(props) {
 						:
 						<ActivityIndicator size="large" marginTop={screenHeight / 2}/>
 					}
-				</KeyboardAvoidingView>
+				</TouchableWithoutFeedback>
 			</View>
 		</View>
 	)
@@ -315,17 +319,17 @@ const style = StyleSheet.create({
 	addmenu: { height: '100%', width: '100%' },
 	box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-between', paddingVertical: 10, width: '100%' },
 	inputContainer: { alignItems: 'center', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '100%' },
-	addHeader: { fontSize: 25, fontWeight: 'bold', paddingVertical: 5 },
-	addInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, fontSize: 25, padding: 10, width: '90%' },
-	infoInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, fontSize: 25, height: 100, marginVertical: 5, padding: 10, textAlignVertical: 'top', width: '90%' },
+	addHeader: { fontSize: fsize(0.06), fontWeight: 'bold', paddingVertical: 5 },
+	addInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, fontSize: fsize(0.06), padding: 10, width: '90%' },
+	infoInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, fontSize: fsize(0.06), height: 100, marginVertical: 5, padding: 10, textAlignVertical: 'top', width: '90%' },
 	cameraContainer: { alignItems: 'center', width: '100%' },
-	cameraHeader: { fontSize: 20, fontWeight: 'bold', paddingVertical: 5 },
+	cameraHeader: { fontSize: fsize(0.05), fontWeight: 'bold', paddingVertical: 5 },
 	camera: { height: frameSize, width: frameSize },
 	cameraActions: { flexDirection: 'row' },
-	cameraAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginBottom: 50, margin: 5, padding: 5, width: 120 },
-	cameraActionHeader: { fontSize: 20, textAlign: 'center' },
+	cameraAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginBottom: 50, margin: 5, padding: 5, width: fsize(0.3) },
+	cameraActionHeader: { fontSize: fsize(0.04), textAlign: 'center' },
 	errorMsg: { color: 'red', fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
 	addActions: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
-	addAction: { alignItems: 'center', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: 25, padding: 5, width: 100 },
-	addActionHeader: { fontSize: 20 },
+	addAction: { alignItems: 'center', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: fsize(0.06), padding: 5, width: 100 },
+	addActionHeader: { fontSize: fsize(0.05) },
 })

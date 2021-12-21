@@ -12,14 +12,14 @@ LogBox.ignoreLogs([
 ]);
 
 // pages
+import Auth from './src/pages/auth'
 import Login from './src/pages/login'
+import Register from './src/pages/register'
 import Forgotpassword from './src/pages/forgotpassword'
 import Resetpassword from './src/pages/resetpassword'
 import Verifyowner from './src/pages/verifyowner'
-import Register from './src/pages/register'
-import Setup from './src/pages/setup'
-import Typesetup from './src/pages/typesetup'
-import Setuphours from './src/pages/setuphours'
+import Locationsetup from './src/pages/locationsetup'
+import Workinghours from './src/pages/workinghours'
 
 import Main from './src/pages/main'
 import Cartorders from './src/pages/cartorders'
@@ -55,10 +55,10 @@ export default function App() {
                 if (phase) {
                     setRoute(phase)
                 } else {
-                    setRoute("login")
+                    setRoute("auth")
                 }
             } else {
-                setRoute("login")
+                setRoute("auth")
             }
         }
 
@@ -68,14 +68,14 @@ export default function App() {
             return (
                 <NavigationContainer>
                     <Stack.Navigator initialRouteName={route}>
+                        <Stack.Screen name="auth" component={Auth} options={{ headerShown: false }}/>
                         <Stack.Screen name="login" component={Login} options={{ headerShown: false }}/>
+                        <Stack.Screen name="register" component={Register} options={{ headerShown: false }}/>
                         <Stack.Screen name="forgotpassword" component={Forgotpassword} options={{ headerShown: false }}/>
                         <Stack.Screen name="resetpassword" component={Resetpassword} options={{ headerShown: false }}/>
                         <Stack.Screen name="verifyowner" component={Verifyowner} options={{ headerShown: false }}/>
-                        <Stack.Screen name="register" component={Register} options={{ headerShown: false }}/>
-                        <Stack.Screen name="setup" component={Setup} options={{ headerShown: false }}/>
-                        <Stack.Screen name="typesetup" component={Typesetup} options={{ headerShown: false }}/>
-                        <Stack.Screen name="setuphours" component={Setuphours} options={{ headerShown: false }}/>
+                        <Stack.Screen name="locationsetup" component={Locationsetup} options={{ headerShown: false }}/>
+                        <Stack.Screen name="workinghours" component={Workinghours} options={{ headerShown: false }}/>
                         <Stack.Screen name="main" component={Main} options={{ headerShown: false }}/>
                         <Stack.Screen name="cartorders" component={Cartorders} options={{ headerShown: false }}/>
                         <Stack.Screen name="diningorders" component={Diningorders} options={{ headerShown: false }}/>
@@ -143,7 +143,7 @@ export default function App() {
             )
         }  
     }
-    
+
     return null
 }
 
