@@ -226,9 +226,44 @@ export default function locationsetup({ navigation }) {
 	}
 	const saveInfo = () => {
 		const index = steps.indexOf(setupType)
-		const nextStep = index == 4 ? "done" : steps[index + 1]
+		let msg = ""
 
-		setSetuptype(nextStep)
+		switch (index) {
+			case 0:
+				if (!addressOne || !city || !province || !postalcode) {
+					msg = "There are some missing address info"
+				}
+
+				break
+			case 1:
+				if (!phonenumber) {
+					msg = "Please provide the location phone number"
+				}
+
+				break
+			case 2:
+				if (!type) {
+					msg = "Please tell what service you are"
+				}
+
+				break
+			case 3:
+				if (!logo.uri) {
+					msg = "Please provide a photo of the location"
+				}
+
+				break
+			default:
+		}
+
+		if (msg == "") {
+			const nextStep = index == 4 ? "done" : steps[index + 1]
+
+			setSetuptype(nextStep)
+			setErrormsg('')
+		} else {
+			setErrormsg(msg)
+		}
 	}
 
 	const snapPhoto = async() => {
@@ -268,6 +303,7 @@ export default function locationsetup({ navigation }) {
 					uri: `${FileSystem.documentDirectory}/${char}.jpg`,
 					name: `${char}.jpg`
 				})
+				setErrormsg('')
 			})
 		}
 	}
@@ -303,6 +339,7 @@ export default function locationsetup({ navigation }) {
 					uri: `${FileSystem.documentDirectory}/${char}.jpg`,
 					name: `${char}.jpg`
 				})
+				setErrormsg('')
 			})
 		}
 	}
@@ -486,7 +523,7 @@ export default function locationsetup({ navigation }) {
 						<View style={style.introBox}>
 							<Text style={style.introHeader}>Welcome to EasyGO Business</Text>
 							<Text style={style.introHeader}>Our service will get the nearest customers to your door</Text>
-							<Text style={style.introHeader}>Let's get started by setting up your business information</Text>
+							<Text style={style.introHeader}>Let's get started by setting up your location information</Text>
 
 							<TouchableOpacity style={style.submit} disabled={loading} onPress={() => setupType == "hours" ? setupYourLocation() : saveInfo()}>
 								<Text style={style.submitHeader}>{setupType == "" ? "Let's go" : "Next"}</Text>

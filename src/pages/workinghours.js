@@ -3,7 +3,7 @@ import { ActivityIndicator, Dimensions, ScrollView, View, Text, Image, Touchable
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
-import { setLocationHours } from '../apis/locations'
+import { setOwnerHours } from '../apis/owners'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
 
@@ -32,6 +32,7 @@ export default function workinghours({ navigation }) {
 	
 	const getInfo = async() => setType(await AsyncStorage.getItem("locationtype"))
 	const done = async() => {
+		const locationid = await AsyncStorage.getItem("locationid")
 		const ownerid = await AsyncStorage.getItem("ownerid")
 		const hours = {}
 		let invalid = false
@@ -100,7 +101,7 @@ export default function workinghours({ navigation }) {
 		if (!invalid) {
 			const data = { ownerid, hours }
 
-			setLocationHours(data)
+			setOwnerHours(data)
 				.then((res) => {
 					if (res.status == 200) {
 						return res.data
@@ -113,7 +114,7 @@ export default function workinghours({ navigation }) {
 						navigation.dispatch(
 							CommonActions.reset({
 								index: 0,
-								routes: [{ name: "main" }]
+								routes: [{ name: "main", params: { firstTime: true } }]
 							})
 						)
 					}

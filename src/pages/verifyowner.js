@@ -81,7 +81,13 @@ export default function verifyowner({ navigation }) {
 							<View style={{ alignItems: 'center' }}>
 								<View style={style.inputContainer}>
 									<Text style={style.inputHeader}>Enter verify code from your message:</Text>
-									<TextInput style={style.input} onChangeText={(usercode) => setUsercode(usercode)} value={userCode} keyboardType="numeric" autoCorrect={false}/>
+									<TextInput style={style.input} onChangeText={(usercode) => {
+										setUsercode(usercode)
+
+										if (usercode.length == 6) {
+											Keyboard.dismiss()
+										}
+									}} value={userCode} keyboardType="numeric" autoCorrect={false}/>
 								</View>
 								<View style={{ flexDirection: 'row', justifyContent: 'space-between', width: fsize(0.61) }}>
 									<TouchableOpacity style={style.submit} onPress={() => setVerifycode('')}>
@@ -133,7 +139,7 @@ const style = StyleSheet.create({
 	inputContainer: { marginBottom: 30, width: '80%' },
 	inputHeader: { fontFamily: 'appFont', fontSize: fsize(0.07) },
 	input: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: fsize(0.07), padding: 5, width: '100%' },
-	errorMsg: { color: 'darkred', fontSize: fsize(0.1), fontWeight: 'bold', textAlign: 'center' },
+	errorMsg: { color: 'darkred', fontSize: fsize(0.05), fontWeight: 'bold', textAlign: 'center' },
 	
 	submit: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontFamily: 'appFont', padding: 10, width: fsize(0.3) },
 	submitHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), fontWeight: 'bold', textAlign: 'center' },

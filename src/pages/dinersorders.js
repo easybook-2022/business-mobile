@@ -253,7 +253,7 @@ export default function dinersorders(props) {
 					</Modal>
 				)}
 			</View>
-
+			
 			{showDisabledScreen && (
 				<Modal transparent={true}>
 					<View style={style.disabled}>

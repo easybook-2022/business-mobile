@@ -142,9 +142,44 @@ export default function addservice(props) {
 	}
 	const saveInfo = () => {
 		const index = steps.indexOf(setupType)
-		const nextStep = index == 4 ? "done" : steps[index + 1]
+		let msg = ""
 
-		setSetuptype(nextStep)
+		switch (index) {
+			case 0:
+				if (!name) {
+					msg = "Please provide a name for the service"
+				}
+
+				break
+			case 2:
+				if (!image.uri) {
+					msg = "Please provide a photo for the service"
+				}
+
+				break
+			case 3:
+				if (!price) {
+					msg = "Please provide a price for the service"
+				}
+
+				break
+			case 4:
+				if (!duration) {
+					msg = "Please provide the duration of the service"
+				}
+
+				break
+			default:
+		}
+
+		if (msg == "") {
+			const nextStep = index == 4 ? "done" : steps[index + 1]
+
+			setSetuptype(nextStep)
+			setErrormsg('')
+		} else {
+			setErrormsg(msg)
+		}
 	}
 
 	const snapPhoto = async() => {
@@ -181,6 +216,7 @@ export default function addservice(props) {
 			})
 			.then(() => {
 				setImage({ uri: `${FileSystem.documentDirectory}/${char}.jpg`, name: `${char}.jpg` })
+				setErrormsg('')
 			})
 		}
 	}
@@ -213,6 +249,7 @@ export default function addservice(props) {
 			})
 			.then(() => {
 				setImage({ uri: `${FileSystem.documentDirectory}/${char}.jpg`, name: `${char}.jpg` })
+				setErrormsg('')
 			})
 		}
 	}
@@ -394,7 +431,7 @@ export default function addservice(props) {
 
 const style = StyleSheet.create({
 	addservice: { height: '100%', width: '100%' },
-	box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-between', paddingVertical: 10, width: '100%' },
+	box: { alignItems: 'center', paddingVertical: 10, width: '100%' },
 	inputContainer: { alignItems: 'center', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '100%' },
 	addHeader: { fontSize: fsize(0.07), fontWeight: 'bold', paddingVertical: 5 },
 	addInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, fontSize: fsize(0.07), padding: 10, width: '90%' },

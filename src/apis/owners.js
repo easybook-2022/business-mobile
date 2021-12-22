@@ -77,6 +77,13 @@ export const updateOwner = data => {
 	)
 }
 
+export const setOwnerHours = data => {
+	return axios.post(
+		`${url}/owners/set_hours`,
+		data
+	)
+}
+
 export const updateNotificationToken = data => {
 	return axios.post(
 		`${url}/owners/update_notification_token`,

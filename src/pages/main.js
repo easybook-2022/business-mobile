@@ -30,6 +30,8 @@ const fsize = p => {
 }
 
 export default function main(props) {
+	const firstTime = props.route.params ? props.route.params.firstTime ? true : false : false
+
 	const [notificationPermission, setNotificationpermission] = useState(null);
 	const [camComp, setCamcomp] = useState(null)
 	const [camType, setCamtype] = useState(Camera.Constants.Type.back);
@@ -67,6 +69,7 @@ export default function main(props) {
 	const [showWrongworker, setShowwrongworker] = useState(false)
 	const [showUnallowedpayment, setShowunallowedpayment] = useState(false)
 	const [showDisabledScreen, setShowdisabledscreen] = useState(false)
+	const [showFirsttime, setShowfirsttime] = useState({ show: firstTime, step: 0 })
 	
 	const isMounted = useRef(null)
 
@@ -899,6 +902,7 @@ export default function main(props) {
 		getTheInfo()
 
 		if (Constants.isDevice) getNotificationPermission()
+		props.navigation.setParams({ firstTime: false })
 	}
 
 	useEffect(() => {
@@ -1569,6 +1573,49 @@ export default function main(props) {
 						</View>
 					</Modal>
 				)}
+
+				{showFirsttime.show && (
+					<Modal transparent={true}>
+						<View style={style.firstTimeBoxContainer}>
+							<View style={style.firstTimeBox}>
+								<View style={style.firstTimeContainer}>
+									{showFirsttime.step == 0 ? 
+										<Text style={style.firstTimeHeader}>
+											Welcome!!{'\n\n'}
+
+											This is the main page. You will see all appointment requests/scheduled here
+										</Text>
+									: null }
+
+									{showFirsttime.step == 1 ? 
+										<Text style={style.firstTimeHeader}>
+											But before you can start setting your location public and accepting customers' requests,
+										</Text>
+									: null }
+
+									{showFirsttime.step == 2 ? 
+										<Text style={style.firstTimeHeader}>
+											you need to setup your menu(s) and service(s)
+										</Text>
+									: null }
+
+									<View style={style.firstTimeActions}>
+										<TouchableOpacity style={style.firstTimeAction} onPress={() => {
+											if (showFirsttime.step == 2) {
+												setShowfirsttime({ show: false, step: 0 })
+												props.navigation.navigate("menu", { menuid: '', name: '', refetch: () => getTheInfo()})
+											} else {
+												setShowfirsttime({ ...showFirsttime, step: showFirsttime.step + 1 })
+											}
+										}}>
+											<Text style={style.firstTimeActionHeader}>{showFirsttime.step < 2 ? 'Next' : "Let's start"}</Text>
+										</TouchableOpacity>
+									</View>
+								</View>
+							</View>
+						</View>
+					</Modal>
+				)}
 			</View>
 
 			{showDisabledScreen && (
@@ -1651,9 +1698,9 @@ const style = StyleSheet.create({
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
 	bottomNavsRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
 	bottomNav: { flexDirection: 'row', height: 30, marginVertical: 5 },
-	bottomNavHeader: { color: 'black', fontWeight: 'bold', paddingVertical: 5 },
+	bottomNavHeader: { color: 'black', fontSize: fsize(0.04), fontWeight: 'bold', paddingVertical: 5 },
 	bottomNavButton: { backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, paddingVertical: 8, width: fsize(0.25) },
-	bottomNavButtonHeader: { color: 'white', fontSize: fsize(0.03), fontWeight: 'bold', textAlign: 'center' },
+	bottomNavButtonHeader: { color: 'white', fontSize: fsize(0.035), fontWeight: 'bold', textAlign: 'center' },
 
 	cancelRequestBox: { backgroundColor: 'white', height: '100%', width: '100%' },
 	cancelRequestHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), marginHorizontal: 30, marginTop: 50, textAlign: 'center' },
@@ -1686,6 +1733,14 @@ const style = StyleSheet.create({
 	alertActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	alertAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
 	alertActionHeader: { },
+
+	firstTimeBoxContainer: { backgroundColor: 'rgba(0, 0, 0, 0.7)' },
+	firstTimeBox: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', paddingVertical: offsetPadding, width: '100%' },
+	firstTimeContainer: { backgroundColor: 'white', flexDirection: 'column', height: '90%', justifyContent: 'space-around', width: '90%' },
+	firstTimeHeader: { fontSize: fsize(0.08), paddingHorizontal: 10, textAlign: 'center' },
+	firstTimeActions: { flexDirection: 'row', justifyContent: 'space-around' },
+	firstTimeAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
+	firstTimeActionHeader: { },
 
 	disabled: { backgroundColor: 'black', flexDirection: 'column', justifyContent: 'space-around', height: '100%', opacity: 0.8, width: '100%' },
 	disabledContainer: { alignItems: 'center', width: '100%' },

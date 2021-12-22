@@ -70,20 +70,49 @@ export default function register(props) {
 
 	const saveInfo = () => {
 		const index = steps.indexOf(setupType)
-		let nextStep
+		let nextStep, msg = ""
 
-		if (index == 1) {
-			if (passwordInfo.step == 0) {
-				setPasswordinfo({ ...passwordInfo, step: 1 })
-				nextStep = "password"
+		switch (index) {
+			case 0:
+				if (!username) {
+					msg = "Please provide a name you like"
+				}
+
+				break
+			case 1:
+				if (passwordInfo.step == 0) {
+					if (!passwordInfo.password) {
+						msg = "Please provide a password"
+					}
+				} else {
+					if (!passwordInfo.confirmPassword) {
+						msg = "Please confirm your password"
+					}
+				}
+
+				break
+			case 2:
+				if (!profile.uri) {
+					msg = "Please provide a profile you like"
+				}
+		}
+
+		if (msg == "") {
+			if (index == 1) {
+				if (passwordInfo.step == 0) {
+					setPasswordinfo({ ...passwordInfo, step: 1 })
+					nextStep = "password"
+				} else {
+					nextStep = index == 2 ? "done" : steps[index + 1]
+				}
 			} else {
 				nextStep = index == 2 ? "done" : steps[index + 1]
 			}
-		} else {
-			nextStep = index == 2 ? "done" : steps[index + 1]
-		}
 
-		setSetuptype(nextStep)
+			setSetuptype(nextStep)
+		} else {
+			setErrormsg(msg)
+		}
 	}
 
 	const snapPhoto = async() => {
@@ -219,7 +248,13 @@ export default function register(props) {
 								:
 								<View style={style.inputContainer}>
 									<Text style={style.inputHeader}>Confirm your password:</Text>
-									<TextInput style={style.input} secureTextEntry={true} onChangeText={(confirmPassword) => setPasswordinfo({ ...passwordInfo, confirmPassword })} value={passwordInfo.confirmPassword} autoCorrect={false}/>
+									<TextInput style={style.input} secureTextEntry={true} onChangeText={(confirmPassword) => {
+										setPasswordinfo({ ...passwordInfo, confirmPassword })
+
+										if (confirmPassword.length == passwordInfo.password.length) {
+											Keyboard.dismiss()
+										}
+									}} value={passwordInfo.confirmPassword} autoCorrect={false}/>
 								</View>
 						)}
 
@@ -297,7 +332,8 @@ const style = StyleSheet.create({
 	cameraAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: fsize(0.3) },
 	cameraActionHeader: { fontSize: fsize(0.04), textAlign: 'center' },
 
-	errorMsg: { color: 'darkred', fontWeight: 'bold', textAlign: 'center' },
+	errorMsg: { color: 'darkred', fontSize: fsize(0.05), fontWeight: 'bold', textAlign: 'center' },
+
 	submit: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 10, width: fsize(0.3) },
 	submitHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), textAlign: 'center' },
 

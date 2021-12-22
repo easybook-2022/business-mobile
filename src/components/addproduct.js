@@ -284,9 +284,33 @@ export default function addproduct(props) {
 	}
 	const saveInfo = () => {
 		const index = steps.indexOf(setupType)
-		const nextStep = index == 5 ? "done" : steps[index + 1]
+		let msg = ""
 
-		setSetuptype(nextStep)
+		switch (index) {
+			case 0:
+				if (!name) {
+					msg = "Please provide a name for the product"
+				}
+
+				break
+			case 2:
+				if (!image.uri) {
+					msg = "Please provide a photo for the product"
+				}
+
+				break
+			default:
+
+		}
+
+		if (msg == "") {
+			const nextStep = index == 5 ? "done" : steps[index + 1]
+
+			setSetuptype(nextStep)
+			setErrormsg('')
+		} else {
+			setErrormsg(msg)
+		}
 	}
 
 	const snapPhoto = async() => {
@@ -323,6 +347,7 @@ export default function addproduct(props) {
 			})
 			.then(() => {
 				setImage({ uri: `${FileSystem.documentDirectory}/${char}.jpg`, name: `${char}.jpg` })
+				setErrormsg('')
 			})
 		}
 	}
@@ -355,6 +380,7 @@ export default function addproduct(props) {
 			})
 			.then(() => {
 				setImage({ uri: `${FileSystem.documentDirectory}/${char}.jpg`, name: `${char}.jpg` })
+				setErrormsg('')
 			})
 		}
 	}
@@ -692,7 +718,7 @@ export default function addproduct(props) {
 										</View>
 									</ScrollView>
 									:
-									<View style={{ alignItems: 'center', flexDirection: 'column', height: '50%', justifyContent: 'space-between', width: '100%' }}>
+									<View style={{ alignItems: 'center', flexDirection: 'column', justifyContent: 'space-between', width: '100%' }}>
 										<TouchableOpacity style={style.addOption} onPress={() => {
 											let new_key
 
@@ -769,7 +795,7 @@ export default function addproduct(props) {
 
 const style = StyleSheet.create({
 	addproduct: { height: '100%', width: '100%' },
-	box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-between', paddingVertical: 10, width: '100%' },
+	box: { alignItems: 'center', paddingVertical: 10, width: '100%' },
 	inputContainer: { alignItems: 'center', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '100%' },
 	addHeader: { fontSize: fsize(0.06), fontWeight: 'bold', paddingVertical: 5 },
 	addInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, fontSize: fsize(0.06), padding: 10, width: '90%' },

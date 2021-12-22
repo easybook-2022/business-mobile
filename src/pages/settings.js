@@ -270,7 +270,7 @@ export default function settings(props) {
 		setLoading(true)
 
 		days.forEach(function (day) {
-			let { opentime, closetime } = day
+			let { opentime, closetime, close } = day
 			let newOpentime = {...opentime}, newClosetime = {...closetime}
 			let openhour = parseInt(newOpentime.hour), closehour = parseInt(newClosetime.hour)
 			let openperiod = newOpentime.period, closeperiod = newClosetime.period
@@ -319,10 +319,10 @@ export default function settings(props) {
 			delete newOpentime.period
 			delete newClosetime.period
 
-			hours[day.header.substr(0, 3)] = { opentime: newOpentime, closetime: newClosetime }
+			hours[day.header.substr(0, 3)] = { opentime: newOpentime, closetime: newClosetime, close }
 		})
 
-		const data = { ownerid, locationid, hours }
+		const data = { locationid, hours }
 
 		setLocationHours(data)
 			.then((res) => {
