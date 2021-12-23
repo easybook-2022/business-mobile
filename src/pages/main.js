@@ -99,6 +99,8 @@ export default function main(props) {
 					.catch((err) => {
 						if (err.response && err.response.status == 400) {
 
+						} else {
+							alert("an error has occurred in server")
 						}
 					})
 			}
@@ -127,6 +129,8 @@ export default function main(props) {
 						.catch((err) => {
 							if (err.response && err.response.status == 400) {
 								
+							} else {
+								alert("an error has occurred in server")
 							}
 						})
 				}
@@ -151,6 +155,8 @@ export default function main(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
+				} else {
+					alert("an error has occurred in server")
 				}
 			})
 	}
@@ -170,6 +176,8 @@ export default function main(props) {
 				.catch((err) => {
 					if (err.response && err.response.status == 400) {
 						
+					} else {
+						alert("an error has occurred in server")
 					}
 				})
 		}
@@ -190,6 +198,8 @@ export default function main(props) {
 				.catch((err) => {
 					if (err.response && err.response.status == 400) {
 						
+					} else {
+						alert("an error has occurred in server")
 					}
 				})
 		}
@@ -209,6 +219,8 @@ export default function main(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 
+				} else {
+					alert("an error has occurred in server")
 				}
 			})
 	}
@@ -252,6 +264,8 @@ export default function main(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
+				} else {
+					alert("an error has occurred in server")
 				}
 			})
 	}
@@ -284,6 +298,8 @@ export default function main(props) {
 							default:
 						}
 					}
+				} else {
+					alert("an error has occurred in server")
 				}
 			})
 	}
@@ -307,12 +323,15 @@ export default function main(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 
+				} else {
+					alert("an error has occurred in server")
 				}
 			})
 	}
 	const getAllAppointments = async() => {
+		const ownerid = await AsyncStorage.getItem("ownerid")
 		const locationid = await AsyncStorage.getItem("locationid")
-		const data = { ownerid: ownerId, locationid }
+		const data = { ownerid, locationid }
 
 		getAppointments(data)
 			.then((res) => {
@@ -330,6 +349,8 @@ export default function main(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 
+				} else {
+					alert("an error has occurred in server")
 				}
 			})
 	}
@@ -352,6 +373,8 @@ export default function main(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 
+				} else {
+					alert("an error has occurred in server")
 				}
 			})
 	}
@@ -374,6 +397,8 @@ export default function main(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
+				} else {
+					alert("an error has occurred in server")
 				}
 			})
 	}
@@ -421,6 +446,8 @@ export default function main(props) {
 				.catch((err) => {
 					if (err.response && err.response.status == 400) {
 						
+					} else {
+						alert("an error has occurred in server")
 					}
 				})
 		}
@@ -461,6 +488,8 @@ export default function main(props) {
 						.catch((err) => {
 							if (err.response && err.response.status == 400) {
 								
+							} else {
+								alert("an error has occurred in server")
 							}
 						})
 				} else {
@@ -492,6 +521,8 @@ export default function main(props) {
 				.catch((err) => {
 					if (err.response && err.response.status == 400) {
 						
+					} else {
+						alert("an error has occurred in server")
 					}
 				})
 		}
@@ -521,6 +552,8 @@ export default function main(props) {
 					const { errormsg, status } = err.response.data
 
 
+				} else {
+					alert("an error has occurred in server")
 				}
 			})
 	}
@@ -565,6 +598,8 @@ export default function main(props) {
 							break;
 						default:
 					}
+				} else {
+					alert("an error has occurred in server")
 				}
 			})
 	}
@@ -589,6 +624,8 @@ export default function main(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
+				} else {
+					alert("an error has occurred in server")
 				}
 			})
 	}
@@ -652,6 +689,8 @@ export default function main(props) {
 							break;
 						default:
 					}
+				} else {
+					alert("an error has occurred in server")
 				}
 			})
 	}
@@ -711,6 +750,8 @@ export default function main(props) {
 							break
 						default:
 					}
+				} else {
+					alert("an error has occurred in server")
 				}
 			})
 	}
@@ -779,6 +820,8 @@ export default function main(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 
+				} else {
+					alert("an error has occurred in server")
 				}
 			})
 	}
@@ -1583,7 +1626,7 @@ export default function main(props) {
 										<Text style={style.firstTimeHeader}>
 											Welcome!!{'\n\n'}
 
-											This is the main page. You will see all appointment requests/scheduled here
+											This is the main page. You will see all requests/scheduled appointment/reservation here
 										</Text>
 									: null }
 
@@ -1595,7 +1638,7 @@ export default function main(props) {
 
 									{showFirsttime.step == 2 ? 
 										<Text style={style.firstTimeHeader}>
-											you need to setup your menu(s) and service(s)
+											you need to setup your menu(s) and service(s) and product(s)
 										</Text>
 									: null }
 

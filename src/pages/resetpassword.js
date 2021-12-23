@@ -52,6 +52,8 @@ export default function resetpassword(props) {
 					const { errormsg, status } = err.response.data
 
 					setErrormsg(errormsg)
+				} else {
+					setErrormsg("an error has occurred in server")
 				}
 			})
 	}

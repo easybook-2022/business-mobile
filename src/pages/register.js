@@ -64,6 +64,8 @@ export default function register(props) {
 
 					setLoading(false)
 					setErrormsg(errormsg)
+				} else {
+					setErrormsg("an error has occurred in server")
 				}
 			})
 	}
@@ -227,99 +229,101 @@ export default function register(props) {
 
 	return (
 		<View style={style.register}>
-			<View style={{ paddingVertical: offsetPadding, opacity: loading ? 0.5 : 1 }}>
-				<View style={style.box}>
-					<Text style={style.boxHeader}>Setup ({steps.indexOf(setupType) + 1} of 4)</Text>
+			<TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+				<View style={{ opacity: loading ? 0.5 : 1 }}>
+					<View style={style.box}>
+						<Text style={style.boxHeader}>Setup ({steps.indexOf(setupType) + 1} of 4)</Text>
 
-					<View style={style.inputsBox}>
-						{setupType == "nickname" && (
-							<View style={style.inputContainer}>
-								<Text style={style.inputHeader}>Enter a name you like:</Text>
-								<TextInput style={style.input} onChangeText={(username) => setUsername(username)} value={username} autoCorrect={false} autoCapitalize="none"/>
-							</View>
-						)}
-
-						{setupType == "password" && (
-							passwordInfo.step == 0 ? 
+						<View style={style.inputsBox}>
+							{setupType == "nickname" && (
 								<View style={style.inputContainer}>
-									<Text style={style.inputHeader}>Enter a password:</Text>
-									<TextInput style={style.input} secureTextEntry={true} onChangeText={(password) => setPasswordinfo({ ...passwordInfo, password })} value={passwordInfo.password} autoCorrect={false}/>
+									<Text style={style.inputHeader}>Enter a name you like:</Text>
+									<TextInput style={style.input} onChangeText={(username) => setUsername(username)} value={username} autoCorrect={false} autoCapitalize="none"/>
 								</View>
-								:
-								<View style={style.inputContainer}>
-									<Text style={style.inputHeader}>Confirm your password:</Text>
-									<TextInput style={style.input} secureTextEntry={true} onChangeText={(confirmPassword) => {
-										setPasswordinfo({ ...passwordInfo, confirmPassword })
+							)}
 
-										if (confirmPassword.length == passwordInfo.password.length) {
-											Keyboard.dismiss()
-										}
-									}} value={passwordInfo.confirmPassword} autoCorrect={false}/>
+							{setupType == "password" && (
+								passwordInfo.step == 0 ? 
+									<View style={style.inputContainer}>
+										<Text style={style.inputHeader}>Enter a password:</Text>
+										<TextInput style={style.input} secureTextEntry={true} onChangeText={(password) => setPasswordinfo({ ...passwordInfo, password })} value={passwordInfo.password} autoCorrect={false}/>
+									</View>
+									:
+									<View style={style.inputContainer}>
+										<Text style={style.inputHeader}>Confirm your password:</Text>
+										<TextInput style={style.input} secureTextEntry={true} onChangeText={(confirmPassword) => {
+											setPasswordinfo({ ...passwordInfo, confirmPassword })
+
+											if (confirmPassword.length == passwordInfo.password.length) {
+												Keyboard.dismiss()
+											}
+										}} value={passwordInfo.confirmPassword} autoCorrect={false}/>
+									</View>
+							)}
+
+							{setupType == "profile" && (
+								<View style={style.cameraContainer}>
+									<Text style={style.inputHeader}>Profile Picture</Text>
+
+									{profile.uri ? (
+										<>
+											<Image style={style.camera} source={{ uri: profile.uri }}/>
+
+											<TouchableOpacity style={style.cameraAction} onPress={() => setProfile({ uri: '', name: '' })}>
+												<Text style={style.cameraActionHeader}>Cancel</Text>
+											</TouchableOpacity>
+										</>
+									) : (
+										<>
+											<Camera style={style.camera} type={Camera.Constants.Type.front} ref={r => {setCamcomp(r)}}/>
+
+											<View style={style.cameraActions}>
+												<TouchableOpacity style={style.cameraAction} onPress={snapPhoto.bind(this)}>
+													<Text style={style.cameraActionHeader}>Take this photo</Text>
+												</TouchableOpacity>
+												<TouchableOpacity style={style.cameraAction} onPress={() => choosePhoto()}>
+													<Text style={style.cameraActionHeader}>Choose from phone</Text>
+												</TouchableOpacity>
+											</View>
+										</>
+									)}	
 								</View>
-						)}
+							)}
 
-						{setupType == "profile" && (
-							<View style={style.cameraContainer}>
-								<Text style={style.inputHeader}>Profile Picture</Text>
+							<Text style={style.errorMsg}>{errorMsg}</Text>
 
-								{profile.uri ? (
-									<>
-										<Image style={style.camera} source={{ uri: profile.uri }}/>
+							{loading ? <ActivityIndicator color="black" size="small"/> : null}
 
-										<TouchableOpacity style={style.cameraAction} onPress={() => setProfile({ uri: '', name: '' })}>
-											<Text style={style.cameraActionHeader}>Cancel</Text>
-										</TouchableOpacity>
-									</>
-								) : (
-									<>
-										<Camera style={style.camera} type={Camera.Constants.Type.front} ref={r => {setCamcomp(r)}}/>
+							<TouchableOpacity style={style.submit} onPress={() => setupType == "profile" ? register() : saveInfo()}>
+								<Text style={style.submitHeader}>{setupType == "profile" ? "Done" : "Next"}</Text>
+							</TouchableOpacity>
+						</View>
 
-										<View style={style.cameraActions}>
-											<TouchableOpacity style={style.cameraAction} onPress={snapPhoto.bind(this)}>
-												<Text style={style.cameraActionHeader}>Take this photo</Text>
-											</TouchableOpacity>
-											<TouchableOpacity style={style.cameraAction} onPress={() => choosePhoto()}>
-												<Text style={style.cameraActionHeader}>Choose from phone</Text>
-											</TouchableOpacity>
-										</View>
-									</>
-								)}	
-							</View>
-						)}
+						<View style={style.bottomNavs}>
+							<TouchableOpacity style={style.bottomNav} onPress={() => {
+								AsyncStorage.clear()
 
-						<Text style={style.errorMsg}>{errorMsg}</Text>
-
-						{loading ? <ActivityIndicator color="black" size="small"/> : null}
-
-						<TouchableOpacity style={style.submit} onPress={() => setupType == "profile" ? register() : saveInfo()}>
-							<Text style={style.submitHeader}>{setupType == "profile" ? "Done" : "Next"}</Text>
-						</TouchableOpacity>
-					</View>
-
-					<View style={style.bottomNavs}>
-						<TouchableOpacity style={style.bottomNav} onPress={() => {
-							AsyncStorage.clear()
-
-							props.navigation.dispatch(
-								CommonActions.reset({
-									index: 1,
-									routes: [{ name: 'login' }]
-								})
-							);
-						}}>
-							<Text style={style.bottomNavHeader}>Log-Out</Text>
-						</TouchableOpacity>
+								props.navigation.dispatch(
+									CommonActions.reset({
+										index: 1,
+										routes: [{ name: 'auth' }]
+									})
+								);
+							}}>
+								<Text style={style.bottomNavHeader}>Log-Out</Text>
+							</TouchableOpacity>
+						</View>
 					</View>
 				</View>
-			</View>
+			</TouchableWithoutFeedback>
 		</View>
 	);
 }
 
 const style = StyleSheet.create({
-	register: { backgroundColor: 'white', height: '100%', width: '100%' },
-	box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
-	boxHeader: { color: 'black', fontFamily: 'appFont', fontSize: fsize(0.1), fontWeight: 'bold' },
+	register: { backgroundColor: 'white', height: '100%', paddingVertical: offsetPadding, width: '100%' },
+	box: { alignItems: 'center', backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
+	boxHeader: { color: 'black', fontFamily: 'appFont', fontSize: fsize(0.1), fontWeight: 'bold', marginTop: 20 },
 
 	inputsBox: { alignItems: 'center', width: '100%' },
 	inputContainer: { marginTop: 20, width: '80%' },

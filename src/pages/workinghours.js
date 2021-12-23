@@ -10,6 +10,7 @@ import AntDesign from 'react-native-vector-icons/AntDesign'
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - (offsetPadding * 2)
+const daysArr = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
 const fsize = p => {
 	return width * p
@@ -17,6 +18,8 @@ const fsize = p => {
 
 export default function workinghours({ navigation }) {
 	const [type, setType] = useState('')
+
+	const [daysInfo, setDaysinfo] = useState({ working: ['', '', '', '', '', '', ''], done: false })
 	const [workerHours, setWorkerhours] = useState([
 		{ key: "0", header: "Sunday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, working: null },
 		{ key: "1", header: "Monday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, working: null },
@@ -26,11 +29,37 @@ export default function workinghours({ navigation }) {
 		{ key: "5", header: "Friday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, working: null },
 		{ key: "6", header: "Saturday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, working: null }
 	])
-	const [errorMsg, setErrormsg] = useState()
+	const [errorMsg, setErrormsg] = useState('')
 	const [loading, setLoading] = useState(false)
 	const isMounted = useRef(null)
 	
 	const getInfo = async() => setType(await AsyncStorage.getItem("locationtype"))
+	const setTime = () => {
+		const newWorkerhours = []
+		let emptyDays = true
+
+		daysArr.forEach(function (day, index) {
+			newWorkerhours.push({ 
+				key: newWorkerhours.length.toString(), 
+				header: day, 
+				opentime: { hour: "12", minute: "00", period: "AM" }, 
+				closetime: { hour: "11", minute: "59", period: "PM" }, 
+				working: daysInfo.working[index] ? true : false
+			})
+
+			if (daysInfo.working[index]) {
+				emptyDays = false
+			}
+		})
+
+		if (!emptyDays) {
+			setDaysinfo({ ...daysInfo, done: true })
+			setWorkerhours(newWorkerhours)
+			setErrormsg('')
+		} else {
+			setErrormsg('Please select the days you work on')
+		}
+	}
 	const done = async() => {
 		const locationid = await AsyncStorage.getItem("locationid")
 		const ownerid = await AsyncStorage.getItem("ownerid")
@@ -122,6 +151,8 @@ export default function workinghours({ navigation }) {
 				.catch((err) => {
 					if (err.response && err.response.status == 400) {
 						setLoading(false)
+					} else {
+						setErrormsg("an error has occurred in server")
 					}
 				})
 		} else {
@@ -154,144 +185,112 @@ export default function workinghours({ navigation }) {
 							<Text style={style.boxHeader}>Your time</Text>
 							<Text style={style.boxMiniheader}>Set your working days and hours</Text>
 
-							<View style={style.days}>
-								{workerHours.map((info, index) => (
-									<View key={index} style={style.workerHour}>
-										{info.working == null ? 
-											<View style={style.workerHourAnswer}>
-												<Text style={style.workerHourHeader}>Are you working on {info.header}?</Text>
+							{!daysInfo.done ? 
+								<View style={{ alignItems: 'center', width: '100%' }}>
+									<Text style={style.workerDayHeader}>Tap the days you work on</Text>
 
-												<Text style={[style.workerHourHeader, { marginTop: 10 }]}>Tap 'No' or 'Yes'</Text>
+									{daysArr.map((day, index) => (
+										<TouchableOpacity key={index} style={daysInfo.working.indexOf(day) > -1 ? style.workerDayTouchSelected : style.workerDayTouch} onPress={() => {
+											const newWorking = [...daysInfo.working]
 
-												<View style={style.workerHourAnswerActions}>
-													<TouchableOpacity style={style.workerHourAnswerAction} onPress={() => {
-														const newWorkerhours = [...workerHours]
+											if (newWorking[index] == '') {
+												newWorking[index] = day
+											} else {
+												newWorking[index] = ''
+											}
 
-														newWorkerhours[index].working = false
+											setDaysinfo({ ...daysInfo, working: newWorking })
+										}}>
+											<Text style={style.workerDayTouchHeader}>{day}</Text>
+										</TouchableOpacity>
+									))}
+								</View>
+								:
+								<View style={style.workerHours}>
+									<TouchableOpacity style={style.workerHoursBack} onPress={() => setDaysinfo({ working: ['', '', '', '', '', '', ''], done: false })}>
+										<Text style={style.workerHoursBackHeader}>Go Back</Text>
+									</TouchableOpacity>
 
-														setWorkerhours(newWorkerhours)
-													}}>
-														<Text style={style.workerHourAnswerActionHeader}>No</Text>
-													</TouchableOpacity>
-													<TouchableOpacity style={style.workerHourAnswerAction} onPress={() => {
-														const newWorkerhours = [...workerHours]
-
-														newWorkerhours[index].working = true
-
-														setWorkerhours(newWorkerhours)
-													}}>
-														<Text style={style.workerHourAnswerActionHeader}>Yes</Text>
-													</TouchableOpacity>
+									{workerHours.map((info, index) => (
+										info.working ?
+											<View key={index} style={style.workerHour}>
+												<Text style={style.workerHourHeader}>Set your working time for {info.header}</Text>
+												<Text style={[style.workerHourHeader, { marginTop: 10 }]}>Use the arrow to set the time</Text>
+												<View style={style.timeSelectionContainer}>
+													<View style={style.timeSelection}>
+														<View style={style.selection}>
+															<TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "up", true)}>
+																<AntDesign name="up" size={fsize(0.08)}/>
+															</TouchableOpacity>
+															<Text style={style.selectionHeader}>{info.opentime.hour}</Text>
+															<TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "down", true)}>
+																<AntDesign name="down" size={fsize(0.08)}/>
+															</TouchableOpacity>
+														</View>
+														<Text style={style.selectionDiv}>:</Text>
+														<View style={style.selection}>
+															<TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "up", true)}>
+																<AntDesign name="up" size={fsize(0.08)}/>
+															</TouchableOpacity>
+															<Text style={style.selectionHeader}>{info.opentime.minute}</Text>
+															<TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "down", true)}>
+																<AntDesign name="down" size={fsize(0.08)}/>
+															</TouchableOpacity>
+														</View>
+														<View style={style.selection}>
+															<TouchableOpacity onPress={() => updateWorkingHour(index, "period", "up", true)}>
+																<AntDesign name="up" size={fsize(0.08)}/>
+															</TouchableOpacity>
+															<Text style={style.selectionHeader}>{info.opentime.period}</Text>
+															<TouchableOpacity onPress={() => updateWorkingHour(index, "period", "down", true)}>
+																<AntDesign name="down" size={fsize(0.08)}/>
+															</TouchableOpacity>
+														</View>
+													</View>
+													<Text style={style.timeSelectionHeader}>To</Text>
+													<View style={style.timeSelection}>
+														<View style={style.selection}>
+															<TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "up", false)}>
+																<AntDesign name="up" size={fsize(0.08)}/>
+															</TouchableOpacity>
+															<Text style={style.selectionHeader}>{info.closetime.hour}</Text>
+															<TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "down", false)}>
+																<AntDesign name="down" size={fsize(0.08)}/>
+															</TouchableOpacity>
+														</View>
+														<Text style={style.selectionDiv}>:</Text>
+														<View style={style.selection}>
+															<TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "up", false)}>
+																<AntDesign name="up" size={fsize(0.08)}/>
+															</TouchableOpacity>
+															<Text style={style.selectionHeader}>{info.closetime.minute}</Text>
+															<TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "down", false)}>
+																<AntDesign name="down" size={fsize(0.08)}/>
+															</TouchableOpacity>
+														</View>
+														<View style={style.selection}>
+															<TouchableOpacity onPress={() => updateWorkingHour(index, "period", "up", false)}>
+																<AntDesign name="up" size={fsize(0.08)}/>
+															</TouchableOpacity>
+															<Text style={style.selectionHeader}>{info.closetime.period}</Text>
+															<TouchableOpacity onPress={() => updateWorkingHour(index, "period", "down", false)}>
+																<AntDesign name="down" size={fsize(0.08)}/>
+															</TouchableOpacity>
+														</View>
+													</View>
 												</View>
 											</View>
-											:
-											<>
-												{info.working == true ? 
-													<>
-														<View style={{ opacity: info.working ? 1 : 0.1 }}>
-															<Text style={style.workerHourHeader}>You are working on {info.header}</Text>
-															<Text style={[style.workerHourHeader, { marginTop: 10 }]}>Use the arrow to set the time</Text>
-															<View style={style.timeSelectionContainer}>
-																<View style={style.timeSelection}>
-																	<View style={style.selection}>
-																		<TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "up", true)}>
-																			<AntDesign name="up" size={fsize(0.08)}/>
-																		</TouchableOpacity>
-																		<Text style={style.selectionHeader}>{info.opentime.hour}</Text>
-																		<TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "down", true)}>
-																			<AntDesign name="down" size={fsize(0.08)}/>
-																		</TouchableOpacity>
-																	</View>
-																	<Text style={style.selectionDiv}>:</Text>
-																	<View style={style.selection}>
-																		<TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "up", true)}>
-																			<AntDesign name="up" size={fsize(0.08)}/>
-																		</TouchableOpacity>
-																		<Text style={style.selectionHeader}>{info.opentime.minute}</Text>
-																		<TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "down", true)}>
-																			<AntDesign name="down" size={fsize(0.08)}/>
-																		</TouchableOpacity>
-																	</View>
-																	<View style={style.selection}>
-																		<TouchableOpacity onPress={() => updateWorkingHour(index, "period", "up", true)}>
-																			<AntDesign name="up" size={fsize(0.08)}/>
-																		</TouchableOpacity>
-																		<Text style={style.selectionHeader}>{info.opentime.period}</Text>
-																		<TouchableOpacity onPress={() => updateWorkingHour(index, "period", "down", true)}>
-																			<AntDesign name="down" size={fsize(0.08)}/>
-																		</TouchableOpacity>
-																	</View>
-																</View>
-																<Text style={style.timeSelectionHeader}>To</Text>
-																<View style={style.timeSelection}>
-																	<View style={style.selection}>
-																		<TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "up", false)}>
-																			<AntDesign name="up" size={fsize(0.08)}/>
-																		</TouchableOpacity>
-																		<Text style={style.selectionHeader}>{info.closetime.hour}</Text>
-																		<TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "down", false)}>
-																			<AntDesign name="down" size={fsize(0.08)}/>
-																		</TouchableOpacity>
-																	</View>
-																	<Text style={style.selectionDiv}>:</Text>
-																	<View style={style.selection}>
-																		<TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "up", false)}>
-																			<AntDesign name="up" size={fsize(0.08)}/>
-																		</TouchableOpacity>
-																		<Text style={style.selectionHeader}>{info.closetime.minute}</Text>
-																		<TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "down", false)}>
-																			<AntDesign name="down" size={fsize(0.08)}/>
-																		</TouchableOpacity>
-																	</View>
-																	<View style={style.selection}>
-																		<TouchableOpacity onPress={() => updateWorkingHour(index, "period", "up", false)}>
-																			<AntDesign name="up" size={fsize(0.08)}/>
-																		</TouchableOpacity>
-																		<Text style={style.selectionHeader}>{info.closetime.period}</Text>
-																		<TouchableOpacity onPress={() => updateWorkingHour(index, "period", "down", false)}>
-																			<AntDesign name="down" size={fsize(0.08)}/>
-																		</TouchableOpacity>
-																	</View>
-																</View>
-															</View>
-														</View>
-														<TouchableOpacity style={style.workerHourTouch} onPress={() => {
-															const newWorkerhours = [...workerHours]
-
-															newWorkerhours[index].working = null
-
-															setWorkerhours(newWorkerhours)
-														}}>
-															<Text style={style.workerHourTouchHeader}>Cancel</Text>
-														</TouchableOpacity>
-													</>
-													:
-													<>
-														<Text style={style.workerHourHeader}>Not working on {info.header}</Text>
-
-														<TouchableOpacity style={style.workerHourTouch} onPress={() => {
-															const newWorkerhours = [...workerHours]
-
-															newWorkerhours[index].working = null
-
-															setWorkerhours(newWorkerhours)
-														}}>
-															<Text style={style.workerHourTouchHeader}>Change</Text>
-														</TouchableOpacity>
-													</>
-												}
-											</>
-										}
-									</View>
-								))}
-							</View>
+										: null
+									))}
+								</View>
+							}
 
 							<Text style={style.errorMsg}>{errorMsg}</Text>
 
 							{loading && <ActivityIndicator size="large"/>}
 							
-							<TouchableOpacity style={style.submit} disabled={loading} onPress={() => done()}>
-								<Text style={style.submitHeader}>Done</Text>
+							<TouchableOpacity style={style.submit} disabled={loading} onPress={() => !daysInfo.done ? setTime() : done()}>
+								<Text style={style.submitHeader}>{!daysInfo.done ? "Next" : "Done"}</Text>
 							</TouchableOpacity>
 						</View>
 					</ScrollView>
@@ -327,7 +326,17 @@ const style = StyleSheet.create({
 	introBox: { alignItems: 'center', flexDirection: 'column', height: screenHeight - 40, justifyContent: 'space-around', width: '100%' },
 	introHeader: { fontSize: fsize(0.1), textAlign: 'center' },
 
-	workerHours: { marginVertical: 50 },
+	workerHours: { alignItems: 'center', marginVertical: 50 },
+
+	// select working days
+	workerDayHeader: { fontSize: fsize(0.06) },
+	workerDayTouch: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: fsize(0.7) },
+	workerDayTouchSelected: { backgroundColor: 'rgba(0, 0, 0, 0.6)', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: fsize(0.7) },
+	workerDayTouchHeader: { fontSize: fsize(0.06), textAlign: 'center' },
+
+	workerHoursBack: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, marginBottom: 20, padding: 10 },
+	workerHoursBackHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), textAlign: 'center' },
+
 	workerHour: { alignItems: 'center', backgroundColor: 'rgba(255, 255, 255, 0.8)', borderRadius: 10, marginTop: 30, padding: 5 },
 	workerHourHeader: { fontSize: fsize(0.05), fontWeight: 'bold', marginBottom: 10, marginHorizontal: 10, textAlign: 'center' },
 	workerHourAnswer: { alignItems: 'center' },
@@ -340,8 +349,6 @@ const style = StyleSheet.create({
 	selection: { alignItems: 'center', margin: 5 },
 	selectionHeader: { fontSize: fsize(0.05), textAlign: 'center' },
 	selectionDiv: { fontSize: fsize(0.07), marginVertical: fsize(0.07) },
-	workerHourTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5 },
-	workerHourTouchHeader: { fontSize: fsize(0.05), textAlign: 'center' },
 
 	errorMsg: { color: 'darkred', fontWeight: 'bold', textAlign: 'center' },
 

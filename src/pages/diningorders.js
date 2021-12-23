@@ -58,6 +58,8 @@ export default function diningorders(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
+				} else {
+					alert("an error has occurred in server")
 				}
 			})
 	}
@@ -77,6 +79,8 @@ export default function diningorders(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
+				} else {
+					alert("an error has occurred in server")
 				}
 			})
 	}
@@ -108,6 +112,8 @@ export default function diningorders(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
+				} else {
+					alert("an error has occurred in server")
 				}
 			})
 	}

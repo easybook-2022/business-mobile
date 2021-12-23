@@ -3,6 +3,7 @@ import io from 'socket.io-client'
 const local_url = false
 const test_stripe = false
 const test_input = false
+const test_bankaccount = false
 
 const realStores = [
 	{ id: 0, storeName: "Hung Hair Salon", storeType: "hair", phonenumber: "4164621484", addressOne: "642 Gerrard St E", addressTwo: "", city: "Toronto", province: "ON", postalcode: "M4M1Y3" },
@@ -78,7 +79,7 @@ const emptyBankAccount = {
 }
 
 const { accountNumber, countryCode, currency, routingNumber, accountHolderName } = 
-	test_input ? 
+	test_bankaccount ? 
 		test_stripe ? 
 			testBankAccount[Math.floor(Math.random() * 2) + 0]
 			:
@@ -86,10 +87,10 @@ const { accountNumber, countryCode, currency, routingNumber, accountHolderName }
 	:
 	emptyBankAccount
 
-const login = test_input ? testStores[1] : emptyStore
-const ownerLogin = test_input ? owners[1] : emptyOwner
-const register = test_input ? testStores[1] : emptyStore
-const ownerRegister = test_input ? owners[1] : emptyOwner
+const login = test_input ? testStores[0] : emptyStore
+const ownerLogin = test_input ? owners[0] : emptyOwner
+const register = test_input ? testStores[0] : emptyStore
+const ownerRegister = test_input ? owners[0] : emptyOwner
 const wifi_api_url = "http://192.168.0.172:5001/flask"
 const wifi_socket_url = "http://192.168.0.172:5002"
 const server_api_url = "https://www.easygo.tk/flask"

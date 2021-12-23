@@ -8,6 +8,7 @@ import { Camera } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator'
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
+import MapView, { Marker } from 'react-native-maps';
 import { CommonActions } from '@react-navigation/native';
 import { setupLocation } from '../apis/locations'
 import { registerInfo } from '../../assets/info'
@@ -21,6 +22,7 @@ const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - (offsetPadding * 2)
 const iconSize = (width / 2) - 90
 const steps = ['location', 'phonenumber', 'type', 'logo', 'hours']
+const daysArr = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
 const fsize = p => {
 	return width * p
@@ -34,7 +36,7 @@ export default function locationsetup({ navigation }) {
 
 	const [locationInfo, setLocationinfo] = useState('')
 	const [camComp, setCamcomp] = useState(null)
-	const [locationCoords, setLocationcoords] = useState({ longitude: null, latitude: null })
+	const [locationCoords, setLocationcoords] = useState({ longitude: null, latitude: null, address: '' })
 
 	const [storeName, setStorename] = useState(registerInfo.storeName)
 	const [addressOne, setAddressone] = useState(registerInfo.addressOne)
@@ -49,15 +51,8 @@ export default function locationsetup({ navigation }) {
 
 	const [logo, setLogo] = useState({ uri: '', name: '' })
 
-	const [days, setDays] = useState([
-		{ key: "0", header: "Sunday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, close: null },
-		{ key: "1", header: "Monday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, close: null },
-		{ key: "2", header: "Tuesday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, close: null },
-		{ key: "3", header: "Wednesday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, close: null },
-		{ key: "4", header: "Thursday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, close: null },
-		{ key: "5", header: "Friday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, close: null },
-		{ key: "6", header: "Saturday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, close: null }
-	])
+	const [daysInfo, setDaysinfo] = useState({ working: ['', '', '', '', '', '', ''], done: false, step: 0 })
+	const [days, setDays] = useState([])
 
 	const [loading, setLoading] = useState(false)
 	const [errorMsg, setErrormsg] = useState('')
@@ -180,6 +175,8 @@ export default function locationsetup({ navigation }) {
 
 							setErrormsg(errormsg)
 							setLoading(false)
+						} else {
+							setErrormsg("an error has occurred in server")
 						}
 					})
 			} else {
@@ -226,7 +223,7 @@ export default function locationsetup({ navigation }) {
 	}
 	const saveInfo = () => {
 		const index = steps.indexOf(setupType)
-		let msg = ""
+		let msg = "", skip = false
 
 		switch (index) {
 			case 0:
@@ -253,16 +250,40 @@ export default function locationsetup({ navigation }) {
 				}
 
 				break
+			case 4:
+				if (!daysInfo.done) {
+					const newDays = []
+
+					setDaysinfo({ ...daysInfo, done: true, step: 1 })
+
+					daysArr.forEach(function (day, index) {
+						newDays.push({ 
+							key: newDays.length.toString(), 
+							header: day, 
+							opentime: { hour: "12", minute: "00", period: "AM" }, 
+							closetime: { hour: "11", minute: "59", period: "PM" }, 
+							close: daysInfo.working[index] ? false : true
+						})
+					})
+
+					setDays(newDays)
+
+					skip = true
+				}
+
+				break
 			default:
 		}
 
-		if (msg == "") {
-			const nextStep = index == 4 ? "done" : steps[index + 1]
+		if (!skip) {
+			if (msg == "") {
+				const nextStep = index == 4 ? "done" : steps[index + 1]
 
-			setSetuptype(nextStep)
-			setErrormsg('')
-		} else {
-			setErrormsg(msg)
+				setSetuptype(nextStep)
+				setErrormsg('')
+			} else {
+				setErrormsg(msg)
+			}
 		}
 	}
 
@@ -516,14 +537,14 @@ export default function locationsetup({ navigation }) {
 	return (
 		<View style={style.locationsetup}>
 			<View style={[style.box, { opacity: loading ? 0.6 : 1 }]}>
-				{setupType ? <Text style={style.boxHeader}>Setup ({steps.indexOf(setupType) + 1} of 5)</Text> : null}
+				{setupType ? <Text style={style.boxHeader}>Setup</Text> : null}
 
 				<View style={style.inputsBox}>
 					{setupType == "" && (
 						<View style={style.introBox}>
 							<Text style={style.introHeader}>Welcome to EasyGO Business</Text>
 							<Text style={style.introHeader}>Our service will get the nearest customers to your door</Text>
-							<Text style={style.introHeader}>Let's get started by setting up your location information</Text>
+							<Text style={style.introHeader}>Let's get started by setting up your restaurant/salon information</Text>
 
 							<TouchableOpacity style={style.submit} disabled={loading} onPress={() => setupType == "hours" ? setupYourLocation() : saveInfo()}>
 								<Text style={style.submitHeader}>{setupType == "" ? "Let's go" : "Next"}</Text>
@@ -534,7 +555,7 @@ export default function locationsetup({ navigation }) {
 					{setupType == "location" && (
 						locationInfo == '' ?
 							<>
-								<Text style={style.locationHeader}>Are you at the location right now ?</Text>
+								<Text style={style.locationHeader}>Are you at the restaurant/salon right now ?</Text>
 								<View style={style.locationActions}>
 									<TouchableOpacity style={style.locationAction} onPress={() => setLocationinfo('away')}>
 										<Text style={style.locationActionHeader}>No</Text>
@@ -542,8 +563,23 @@ export default function locationsetup({ navigation }) {
 									<TouchableOpacity style={style.locationAction} onPress={async() => {
 										const location = await Location.getCurrentPositionAsync({});
 										const { longitude, latitude } = location.coords
+										let address = await Location.reverseGeocodeAsync({
+											latitude,
+											longitude
+										});
 
-										setLocationcoords({ longitude, latitude })
+										for (let item of address) {
+											setLocationcoords({ 
+												longitude, 
+												latitude,
+												address: `${item.name}, ${item.subregion} ${item.region}, ${item.postalCode}`
+											})
+											setAddressone(item.name)
+											setCity(item.subregion)
+											setProvince(item.region)
+											setPostalcode(item.postalCode)
+										}
+										
 										setLocationinfo('destination')
 									}}>
 										<Text style={style.locationActionHeader}>Yes</Text>
@@ -555,12 +591,27 @@ export default function locationsetup({ navigation }) {
 								<ScrollView style={{ height: screenHeight - 176, width: '100%' }}>
 									<View style={style.locationInfos}>
 										<View style={{ alignItems: 'center', marginBottom: 20, marginTop: 50 }}>
-											<Text style={style.locationHeader}>Are you at the location right now ?</Text>
+											<Text style={style.locationHeader}>Are you at the restaurant/salon right now ?</Text>
 											<TouchableOpacity style={style.locationActionOption} onPress={async() => {
 												const location = await Location.getCurrentPositionAsync({});
 												const { longitude, latitude } = location.coords
+												let address = await Location.reverseGeocodeAsync({
+													latitude,
+													longitude
+												});
 
-												setLocationcoords({ longitude, latitude })
+												for (let item of address) {
+													setLocationcoords({ 
+														longitude, 
+														latitude,
+														address: `${item.name}, ${item.subregion} ${item.region}, ${item.postalCode}`
+													})
+													setAddressone(item.name)
+													setCity(item.subregion)
+													setProvince(item.region)
+													setPostalcode(item.postalCode)
+												}
+
 												setLocationinfo('destination')
 											}}>
 												<Text style={style.locationActionOptionHeader}>Mark location instead</Text>
@@ -580,7 +631,7 @@ export default function locationsetup({ navigation }) {
 											<TextInput style={style.input} onChangeText={(addressOne) => setAddressone(addressOne)} value={addressOne} autoCorrect={false} autoCapitalize="none"/>
 										</View>
 										<View style={style.inputContainer}>
-											<Text style={style.inputHeader}>Enter location address #2:</Text>
+											<Text style={style.inputHeader}>Enter location address #2: (Optional)</Text>
 											<TextInput style={style.input} onChangeText={(addressTwo) => setAddresstwo(addressTwo)} value={addressTwo} autoCorrect={false} autoCapitalize="none"/>
 										</View>
 										<View style={style.inputContainer}>
@@ -607,7 +658,21 @@ export default function locationsetup({ navigation }) {
 								</ScrollView>
 								:
 								<>
-									<Text style={style.locationHeader}>Your location is located</Text>
+									<Text style={style.locationHeader}>Your location is located at</Text>
+									<MapView
+										region={{
+											longitude: locationCoords.longitude,
+											latitude: locationCoords.latitude,
+											latitudeDelta: 0.003,
+											longitudeDelta: 0.003
+										}}
+										scrollEnabled={false}
+										zoomEnabled={false}
+										style={{ borderRadius: fsize(0.5) / 2, height: fsize(0.5), width: fsize(0.5) }}
+									>
+										<Marker coordinate={{ longitude: locationCoords.longitude, latitude: locationCoords.latitude }}/>
+									</MapView>
+									<Text style={style.locationAddressHeader}>{locationCoords.address}</Text>
 									<TouchableOpacity style={style.locationActionOption} onPress={() => {
 										setLocationcoords({ longitude: null, latitude: null })
 										setLocationinfo('away')
@@ -627,7 +692,7 @@ export default function locationsetup({ navigation }) {
 					{setupType == "phonenumber" && (
 						<>
 							<View style={style.inputContainer}>
-								<Text style={style.inputHeader}>Enter location phone number:</Text>
+								<Text style={style.inputHeader}>Enter restaurant/salon's phone number:</Text>
 								<TextInput style={style.input} onChangeText={(phonenumber) => setPhonenumber(phonenumber)} value={phonenumber} keyboardType="numeric" autoCorrect={false} autoCapitalize="none"/>
 							</View>
 
@@ -643,23 +708,23 @@ export default function locationsetup({ navigation }) {
 
 					{setupType == "type" && (
 						<View style={style.typeContainer}>
-							<Text style={style.inputHeader}>What kind of service are you</Text>
+							<Text style={style.inputHeader}>Select the kind of service you are</Text>
 
 							<View style={style.selections}>
 								<TouchableOpacity style={type == 'hair' ? style.typeSelectionSelected : style.typeSelection} onPress={() => setType('hair')}>
-									<Text style={style.selectionHeader}>Hair</Text>
-									<Image source={require("../../assets/hairsalon.png")} style={style.selectionIcon}/>
-									<Text style={style.selectionAction}>Tap{'\n'}to choose</Text>
+									<Text style={style.typeSelectionHeader}>Hair</Text>
+									<Image source={require("../../assets/hairsalon.png")} style={style.typeSelectionIcon}/>
+									<Text style={style.typeSelectionAction}>Tap{'\n'}to choose</Text>
 								</TouchableOpacity>
 								<TouchableOpacity style={type == 'nail' ? style.typeSelectionSelected : style.typeSelection} onPress={() => setType('nail')}>
-									<Text style={style.selectionHeader}>Nail</Text>
-									<Image source={require("../../assets/nailsalon.png")} style={style.selectionIcon}/>
-									<Text style={style.selectionAction}>Tap{'\n'}to choose</Text>
+									<Text style={style.typeSelectionHeader}>Nail</Text>
+									<Image source={require("../../assets/nailsalon.png")} style={style.typeSelectionIcon}/>
+									<Text style={style.typeSelectionAction}>Tap{'\n'}to choose</Text>
 								</TouchableOpacity>
 								<TouchableOpacity style={type == 'restaurant' ? style.typeSelectionSelected : style.typeSelection} onPress={() => setType('restaurant')}>
-									<Text style={style.selectionHeader}>Restaurant</Text>
-									<Image source={require("../../assets/food.png")} style={style.selectionIcon}/>
-									<Text style={style.selectionAction}>Tap{'\n'}to choose</Text>
+									<Text style={style.typeSelectionHeader}>Restaurant</Text>
+									<Image source={require("../../assets/food.png")} style={style.typeSelectionIcon}/>
+									<Text style={style.typeSelectionAction}>Tap{'\n'}to choose</Text>
 								</TouchableOpacity>
 							</View>
 
@@ -711,149 +776,121 @@ export default function locationsetup({ navigation }) {
 					)}
 
 					{setupType == "hours" && (
-						<ScrollView style={{ height: screenHeight - 176, width: '100%' }}>
+						<ScrollView style={{ height: screenHeight - 142, width: '100%' }}>
 							<View style={{ alignItems: 'center' }}>
 								<View style={style.days}>
 									<Text style={[style.inputHeader, { marginBottom: 20, textAlign: 'center' }]}>Set the {type == 'hair' || type == 'nail' ? 'salon' : 'restaurant'}'s opening days and hours</Text>
 
-									{days.map((info, index) => (
-										<View key={index} style={style.day}>
-											{info.close == null ? 
-												<View style={style.dayAnswer}>
-													<Text style={style.dayHeader}>Is the location open on {info.header}?</Text>
+									{!daysInfo.done ?
+										<View style={{ alignItems: 'center', width: '100%' }}>
+											<Text style={style.workingDayHeader}>Tap the days business is open</Text>
 
-													<Text style={[style.dayHeader, { marginTop: 10 }]}>Tap 'No' or 'Yes'</Text>
+											{daysArr.map((day, index) => (
+												<TouchableOpacity key={index} style={daysInfo.working.indexOf(day) > -1 ? style.workingDayTouchSelected : style.workingDayTouch} onPress={() => {
+													const newWorking = [...daysInfo.working]
 
-													<View style={style.dayAnswerActions}>
-														<TouchableOpacity style={style.dayAnswerAction} onPress={() => {
-															const newDays = [...days]
+													if (newWorking[index] == '') {
+														newWorking[index] = day
+													} else {
+														newWorking[index] = ''
+													}
 
-															newDays[index].close = true
+													setDaysinfo({ ...daysInfo, working: newWorking })
+												}}>
+													<Text style={style.workingDayTouchHeader}>{day}</Text>
+												</TouchableOpacity>
+											))}
+										</View>
+										:
+										<View style={{ alignItems: 'center', width: '100%' }}>
+											<TouchableOpacity style={style.daysBack} onPress={() => setDaysinfo({ working: ['', '', '', '', '', '', ''], done: false, step: 0 })}>
+												<Text style={style.daysBackHeader}>Go Back</Text>
+											</TouchableOpacity>
 
-															setDays(newDays)
-														}}>
-															<Text style={style.dayAnswerActionHeader}>No</Text>
-														</TouchableOpacity>
-														<TouchableOpacity style={style.dayAnswerAction} onPress={() => {
-															const newDays = [...days]
+											{days.map((info, index) => (
+												!info.close ?
+													<View key={index} style={style.day}>
+														<View style={{ opacity: info.close ? 0.1 : 1 }}>
+															<Text style={style.dayHeader}>Set the opening time for {info.header}</Text>
+															
+															<Text style={[style.dayHeader, { marginTop: 30 }]}>Use the arrow to set the time</Text>
 
-															newDays[index].close = false
-
-															setDays(newDays)
-														}}>
-															<Text style={style.dayAnswerActionHeader}>Yes</Text>
-														</TouchableOpacity>
-													</View>
-												</View>
-												:
-												<>
-													{info.close == false ? 
-														<>
-															<View style={{ opacity: info.close ? 0.1 : 1 }}>
-																<Text style={style.dayHeader}>The location is open on {info.header}</Text>
-																
-																<Text style={[style.dayHeader, { marginTop: 10 }]}>Use the arrow to set the time</Text>
-
-																<View style={style.timeSelectionContainer}>
-																	<View style={style.timeSelection}>
-																		<View style={style.selection}>
-																			<TouchableOpacity onPress={() => updateTime(index, "hour", "up", true)}>
-																				<AntDesign name="up" size={fsize(0.08)}/>
-																			</TouchableOpacity>
-																			<Text style={style.selectionHeader}>{info.opentime.hour}</Text>
-																			<TouchableOpacity onPress={() => updateTime(index, "hour", "down", true)}>
-																				<AntDesign name="down" size={fsize(0.08)}/>
-																			</TouchableOpacity>
-																		</View>
-																		<Text style={style.selectionDiv}>:</Text>
-																		<View style={style.selection}>
-																			<TouchableOpacity onPress={() => updateTime(index, "minute", "up", true)}>
-																				<AntDesign name="up" size={fsize(0.08)}/>
-																			</TouchableOpacity>
-																			<Text style={style.selectionHeader}>{info.opentime.minute}</Text>
-																			<TouchableOpacity onPress={() => updateTime(index, "minute", "down", true)}>
-																				<AntDesign name="down" size={fsize(0.08)}/>
-																			</TouchableOpacity>
-																		</View>
-																		<View style={style.selection}>
-																			<TouchableOpacity onPress={() => updateTime(index, "period", "up", true)}>
-																				<AntDesign name="up" size={fsize(0.08)}/>
-																			</TouchableOpacity>
-																			<Text style={style.selectionHeader}>{info.opentime.period}</Text>
-																			<TouchableOpacity onPress={() => updateTime(index, "period", "down", true)}>
-																				<AntDesign name="down" size={fsize(0.08)}/>
-																			</TouchableOpacity>
-																		</View>
+															<View style={style.timeSelectionContainer}>
+																<View style={style.timeSelection}>
+																	<View style={style.selection}>
+																		<TouchableOpacity onPress={() => updateTime(index, "hour", "up", true)}>
+																			<AntDesign name="up" size={fsize(0.08)}/>
+																		</TouchableOpacity>
+																		<Text style={style.selectionHeader}>{info.opentime.hour}</Text>
+																		<TouchableOpacity onPress={() => updateTime(index, "hour", "down", true)}>
+																			<AntDesign name="down" size={fsize(0.08)}/>
+																		</TouchableOpacity>
 																	</View>
-																	<Text style={style.timeSelectionHeader}>To</Text>
-																	<View style={style.timeSelection}>
-																		<View style={style.selection}>
-																			<TouchableOpacity onPress={() => updateTime(index, "hour", "up", false)}>
-																				<AntDesign name="up" size={fsize(0.08)}/>
-																			</TouchableOpacity>
-																			<Text style={style.selectionHeader}>{info.closetime.hour}</Text>
-																			<TouchableOpacity onPress={() => updateTime(index, "hour", "down", false)}>
-																				<AntDesign name="down" size={fsize(0.08)}/>
-																			</TouchableOpacity>
-																		</View>
-																		<Text style={style.selectionDiv}>:</Text>
-																		<View style={style.selection}>
-																			<TouchableOpacity onPress={() => updateTime(index, "minute", "up", false)}>
-																				<AntDesign name="up" size={fsize(0.08)}/>
-																			</TouchableOpacity>
-																			<Text style={style.selectionHeader}>{info.closetime.minute}</Text>
-																			<TouchableOpacity onPress={() => updateTime(index, "minute", "down", false)}>
-																				<AntDesign name="down" size={fsize(0.08)}/>
-																			</TouchableOpacity>
-																		</View>
-																		<View style={style.selection}>
-																			<TouchableOpacity onPress={() => updateTime(index, "period", "up", false)}>
-																				<AntDesign name="up" size={fsize(0.08)}/>
-																			</TouchableOpacity>
-																			<Text style={style.selectionHeader}>{info.closetime.period}</Text>
-																			<TouchableOpacity onPress={() => updateTime(index, "period", "down", false)}>
-																				<AntDesign name="down" size={fsize(0.08)}/>
-																			</TouchableOpacity>
-																		</View>
+																	<Text style={style.selectionDiv}>:</Text>
+																	<View style={style.selection}>
+																		<TouchableOpacity onPress={() => updateTime(index, "minute", "up", true)}>
+																			<AntDesign name="up" size={fsize(0.08)}/>
+																		</TouchableOpacity>
+																		<Text style={style.selectionHeader}>{info.opentime.minute}</Text>
+																		<TouchableOpacity onPress={() => updateTime(index, "minute", "down", true)}>
+																			<AntDesign name="down" size={fsize(0.08)}/>
+																		</TouchableOpacity>
+																	</View>
+																	<View style={style.selection}>
+																		<TouchableOpacity onPress={() => updateTime(index, "period", "up", true)}>
+																			<AntDesign name="up" size={fsize(0.08)}/>
+																		</TouchableOpacity>
+																		<Text style={style.selectionHeader}>{info.opentime.period}</Text>
+																		<TouchableOpacity onPress={() => updateTime(index, "period", "down", true)}>
+																			<AntDesign name="down" size={fsize(0.08)}/>
+																		</TouchableOpacity>
+																	</View>
+																</View>
+																<Text style={style.timeSelectionHeader}>To</Text>
+																<View style={style.timeSelection}>
+																	<View style={style.selection}>
+																		<TouchableOpacity onPress={() => updateTime(index, "hour", "up", false)}>
+																			<AntDesign name="up" size={fsize(0.08)}/>
+																		</TouchableOpacity>
+																		<Text style={style.selectionHeader}>{info.closetime.hour}</Text>
+																		<TouchableOpacity onPress={() => updateTime(index, "hour", "down", false)}>
+																			<AntDesign name="down" size={fsize(0.08)}/>
+																		</TouchableOpacity>
+																	</View>
+																	<Text style={style.selectionDiv}>:</Text>
+																	<View style={style.selection}>
+																		<TouchableOpacity onPress={() => updateTime(index, "minute", "up", false)}>
+																			<AntDesign name="up" size={fsize(0.08)}/>
+																		</TouchableOpacity>
+																		<Text style={style.selectionHeader}>{info.closetime.minute}</Text>
+																		<TouchableOpacity onPress={() => updateTime(index, "minute", "down", false)}>
+																			<AntDesign name="down" size={fsize(0.08)}/>
+																		</TouchableOpacity>
+																	</View>
+																	<View style={style.selection}>
+																		<TouchableOpacity onPress={() => updateTime(index, "period", "up", false)}>
+																			<AntDesign name="up" size={fsize(0.08)}/>
+																		</TouchableOpacity>
+																		<Text style={style.selectionHeader}>{info.closetime.period}</Text>
+																		<TouchableOpacity onPress={() => updateTime(index, "period", "down", false)}>
+																			<AntDesign name="down" size={fsize(0.08)}/>
+																		</TouchableOpacity>
 																	</View>
 																</View>
 															</View>
-															<TouchableOpacity style={style.dayTouch} onPress={() => {
-																const newDays = [...days]
-
-																newDays[index].close = null
-
-																setDays(newDays)
-															}}>
-																<Text style={style.dayTouchHeader}>Cancel</Text>
-															</TouchableOpacity>
-														</>
-														:
-														<>
-															<Text style={style.dayHeader}>Not open on {info.header}</Text>
-
-															<TouchableOpacity style={style.dayTouch} onPress={() => {
-																const newDays = [...days]
-
-																newDays[index].close = null
-
-																setDays(newDays)
-															}}>
-																<Text style={style.dayTouchHeader}>Change</Text>
-															</TouchableOpacity>
-														</>
-													}
-												</>
-											}
+														</View>
+													</View>
+												: null
+											))}
 										</View>
-									))}
+									}
 								</View>
 
 								{errorMsg ? <Text style={style.errorMsg}>{errorMsg}</Text> : null }
 
 								{loading && <ActivityIndicator size="large"/>}
 
-								<TouchableOpacity style={style.submit} disabled={loading} onPress={() => setupType == "hours" ? setupYourLocation() : saveInfo()}>
+								<TouchableOpacity style={style.submit} disabled={loading} onPress={() => setupType == "hours" && daysInfo.step == 1 ? setupYourLocation() : saveInfo()}>
 									<Text style={style.submitHeader}>{setupType == "" ? "Let's go" : "Next"}</Text>
 								</TouchableOpacity>
 							</View>
@@ -883,8 +920,8 @@ export default function locationsetup({ navigation }) {
 }
 
 const style = StyleSheet.create({
-	locationsetup: {  },
-	box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-between', paddingVertical: offsetPadding, width: '100%' },
+	locationsetup: { backgroundColor: 'white', paddingVertical: offsetPadding },
+	box: { alignItems: 'center', backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 	boxHeader: { fontFamily: 'appFont', fontSize: fsize(0.1), fontWeight: 'bold', paddingVertical: 30 },
 
 	introBox: { alignItems: 'center', flexDirection: 'column', height: '90%', justifyContent: 'space-around', width: '100%' },
@@ -897,21 +934,22 @@ const style = StyleSheet.create({
 	inputHeader: { fontFamily: 'appFont', fontSize: fsize(0.05) },
 	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: fsize(0.05), padding: 5, width: '100%' },
 
-	locationHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), fontWeight: 'bold', marginBottom: 10 },
+	locationHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), fontWeight: 'bold', marginHorizontal: 10, textAlign: 'center' },
+	locationAddressHeader: { fontSize: fsize(0.05), fontWeight: 'bold', marginVertical: 20 },
 	locationActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	locationAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 10, width: 100 },
 	locationActionHeader: { fontSize: fsize(0.05), textAlign: 'center' },
 	locationActionOption: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 10, width: fsize(0.6) },
 	locationActionOptionHeader: { fontSize: fsize(0.05), textAlign: 'center' },
-	locationInfos: { alignItems: 'center' },
+	locationInfos: { alignItems: 'center', paddingBottom: 100 },
 
 	typeContainer: { alignItems: 'center', width: '100%' },
 	selections: { width: '90%' },
 	typeSelection: { backgroundColor: 'rgba(127, 127, 127, 0.05)', borderStyle: 'solid', borderWidth: 2, flexDirection: 'row', height: iconSize, justifyContent: 'space-between', marginBottom: 5, padding: 5, width: '100%' },
 	typeSelectionSelected: { backgroundColor: 'rgba(127, 127, 127, 0.8)', borderStyle: 'solid', borderWidth: 2, flexDirection: 'row', height: iconSize, justifyContent: 'space-between', marginBottom: 5, padding: 5, width: '100%' },
-	selectionHeader: { fontSize: fsize(0.05), fontWeight: 'bold', marginVertical: 20 },
-	selectionIcon: { height: fsize(0.15), width: fsize(0.15) },
-	selectionAction: { fontSize: fsize(0.05), marginVertical: 15, textAlign: 'center' },
+	typeSelectionHeader: { fontSize: fsize(0.06), fontWeight: 'bold', marginTop: 25 },
+	typeSelectionIcon: { height: fsize(0.15), marginTop: 10, width: fsize(0.15) },
+	typeSelectionAction: { fontSize: fsize(0.04), marginTop: 25, textAlign: 'center' },
 
 	cameraContainer: { alignItems: 'center', width: '100%' },
 	cameraHeader: { fontFamily: 'appFont', fontWeight: 'bold', paddingVertical: 5 },
@@ -920,8 +958,19 @@ const style = StyleSheet.create({
 	cameraAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: fsize(0.3) },
 	cameraActionHeader: { fontSize: fsize(0.04), textAlign: 'center' },
 
-	days: { alignItems: 'center' },
-	day: { alignItems: 'center', backgroundColor: 'rgba(127, 127, 127, 0.4)', borderRadius: 10, marginVertical: 20, padding: 10, width: '90%' },
+	days: { alignItems: 'center', width: '100%' },
+
+	// select working days
+	workingDayHeader: { fontSize: fsize(0.06) },
+	workingDayTouch: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: fsize(0.7) },
+	workingDayTouchSelected: { backgroundColor: 'rgba(0, 0, 0, 0.6)', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: fsize(0.7) },
+	workingDayTouchHeader: { fontSize: fsize(0.06), textAlign: 'center' },
+
+	daysBack: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, marginBottom: 20, padding: 10 },
+	daysBackHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), textAlign: 'center' },
+
+	// adjust working time for each day
+	day: { alignItems: 'center', backgroundColor: 'white', borderRadius: 10, marginBottom: 70, padding: 10, width: '95%' },
 	dayHeader: { fontSize: fsize(0.05), fontWeight: 'bold', textAlign: 'center' },
 	dayAnswer: { alignItems: 'center', width: '100%' },
 	dayAnswerActions: { flexDirection: 'row', justifyContent: 'space-between' },
@@ -929,18 +978,16 @@ const style = StyleSheet.create({
 	dayAnswerActionHeader: { fontSize: fsize(0.04) },
 	timeSelectionContainer: { flexDirection: 'row' },
 	timeSelection: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 3, flexDirection: 'row', marginHorizontal: 5 },
-	timeSelectionHeader: { fontSize: fsize(0.05), fontWeight: 'bold', paddingVertical: fsize(0.1) },
+	timeSelectionHeader: { fontSize: fsize(0.05), fontWeight: 'bold', marginTop: fsize(0.13) },
 	selection: { alignItems: 'center', margin: 5 },
-	selectionHeader: { fontSize: fsize(0.05), textAlign: 'center' },
-	selectionDiv: { fontSize: fsize(0.08), marginVertical: fsize(0.07) },
-	dayTouch: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5 },
-	dayTouchHeader: { fontSize: fsize(0.05), textAlign: 'center' },
+	selectionHeader: { fontSize: fsize(0.08), textAlign: 'center' },
+	selectionDiv: { fontSize: fsize(0.08), marginVertical: fsize(0.085) },
 
 	errorMsg: { color: 'red', fontWeight: 'bold', textAlign: 'center' },
-	submit: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginBottom: 5, marginTop: 5, padding: 10, width: fsize(0.3) },
+	submit: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginBottom: 10, marginTop: 5, padding: 10, width: fsize(0.3) },
 	submitHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), textAlign: 'center' },
 
-	bottomNavs: { flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
+	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
 	bottomNavsRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
 	bottomNav: { flexDirection: 'row', justifyContent: 'space-around', margin: 5 },
 	bottomNavHeader: { fontWeight: 'bold', paddingVertical: 5 },

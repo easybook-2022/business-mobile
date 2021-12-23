@@ -144,6 +144,8 @@ export default function addproduct(props) {
 						const { errormsg, status } = err.response.data
 
 						setErrormsg(errormsg)
+					} else {
+						setErrormsg("an error has occurred in server")
 					}
 				})
 		} else {
@@ -262,6 +264,8 @@ export default function addproduct(props) {
 						const { errormsg, status } = err.response.data
 
 						setErrormsg(errormsg)
+					} else {
+						setErrormsg("an error has occurred in server")
 					}
 				})
 		} else {
@@ -458,6 +462,8 @@ export default function addproduct(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
+				} else {
+					setErrormsg("an error has occurred in server")
 				}
 			})
 	}

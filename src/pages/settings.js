@@ -153,6 +153,8 @@ export default function settings(props) {
 
 						setErrormsg(errormsg)
 						setLoading(false)
+					} else {
+						setErrormsg("an error has occurred in server")
 					}
 				})
 		} else {
@@ -339,6 +341,8 @@ export default function settings(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					setLoading(false)
+				} else {
+					setErrormsg("an error has occurred in server")
 				}
 			})
 	}
@@ -427,6 +431,8 @@ export default function settings(props) {
 					const { errormsg, status } = err.response.data
 
 					setAccountform({ ...accountForm, errormsg })
+				} else {
+					setErrormsg("an error has occurred in server")
 				}
 			})
 	}
@@ -578,6 +584,8 @@ export default function settings(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
+				} else {
+					setErrormsg("an error has occurred in server")
 				}
 			})
 	}
@@ -662,6 +670,8 @@ export default function settings(props) {
 				.catch((err) => {
 					if (err.response && err.response.status == 400) {
 						
+					} else {
+						setErrormsg("an error has occurred in server")
 					}
 				})
 		} else {
@@ -740,6 +750,8 @@ export default function settings(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
+				} else {
+					setErrormsg("an error has occurred in server")
 				}
 			})
 	}
@@ -774,6 +786,8 @@ export default function settings(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
+				} else {
+					setErrormsg("an error has occurred in server")
 				}
 			})
 	}
@@ -835,6 +849,8 @@ export default function settings(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
+				} else {
+					setErrormsg("an error has occurred in server")
 				}
 			})
 	}
@@ -860,6 +876,8 @@ export default function settings(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
+				} else {
+					setErrormsg("an error has occurred in server")
 				}
 			})
 	}
@@ -895,6 +913,8 @@ export default function settings(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
+				} else {
+					setErrormsg("an error has occurred in server")
 				}
 			})
 	}
@@ -918,6 +938,8 @@ export default function settings(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
+				} else {
+					setErrormsg("an error has occurred in server")
 				}
 			})
 	}
@@ -1023,6 +1045,8 @@ export default function settings(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
+				} else {
+					setErrormsg("an error has occurred in server")
 				}
 			})
 	}
@@ -1666,7 +1690,7 @@ export default function settings(props) {
 						<TouchableWithoutFeedback style={{ paddingVertical: offsetPadding }} onPress={() => Keyboard.dismiss()}>
 							<View style={style.bankaccountform}>
 								<View style={style.bankaccountformContainer}>
-									<View style={{ alignItems: 'center', marginVertical: 10 }}>
+									<View style={{ alignItems: 'center', marginVertical: 5 }}>
 										<TouchableOpacity onPress={() => {
 											setBankaccountform({
 												show: false,
@@ -1685,37 +1709,43 @@ export default function settings(props) {
 										}}>
 											<AntDesign name="closecircleo" size={30}/>
 										</TouchableOpacity>
+
+										<Text style={style.bankaccountformHeader}>{bankAccountForm.type == 'add' ? 'Add' : 'Editing'} bank account</Text>
 									</View>
 
-									<Text style={style.bankaccountformHeader}>{bankAccountForm.type == 'add' ? 'Add' : 'Editing'} bank account</Text>
-
 									<View style={style.bankaccountformInputField}>
-										<Text style={style.bankaccountformInputHeader}>Account Holder</Text>
+										<Text style={style.bankaccountformInputHeader}>Enter Account Holder</Text>
 										<TextInput style={style.bankaccountformInputInput} onChangeText={(holder) => setBankaccountform({
 											...bankAccountForm,
 											accountHolderName: holder.toString()
 										})} value={bankAccountForm.accountHolderName} autoCorrect={false}/>
 									</View>
 									<View style={style.bankaccountformInputField}>
-										<Text style={style.bankaccountformInputHeader}>Account Number</Text>
+										<Text style={style.bankaccountformInputHeader}>Enter Account Number</Text>
 										<TextInput style={style.bankaccountformInputInput} onChangeText={(number) => setBankaccountform({
 											...bankAccountForm,
 											accountNumber: number.toString()
-										})} value={bankAccountForm.accountNumber} placeholder={bankAccountForm.placeholder} autoCorrect={false}/>
+										})} value={bankAccountForm.accountNumber} placeholder={bankAccountForm.placeholder} autoCorrect={false} keyboardType="numeric"/>
 									</View>
-									<View style={style.bankaccountformInputField}>
-										<Text style={style.bankaccountformInputHeader}>Institution Number</Text>
-										<TextInput style={style.bankaccountformInputInput} onChangeText={(number) => setBankaccountform({
-											...bankAccountForm,
-											institutionNumber: number.toString()
-										})} value={bankAccountForm.institutionNumber} autoCorrect={false}/>
-									</View>
-									<View style={style.bankaccountformInputField}>
-										<Text style={style.bankaccountformInputHeader}>Transit Number</Text>
-										<TextInput style={style.bankaccountformInputInput} onChangeText={(number) => setBankaccountform({
-											...bankAccountForm,
-											transitNumber: number.toString()
-										})} value={bankAccountForm.transitNumber} autoCorrect={false}/>
+									<View style={{ flexDirection: 'row' }}>
+										<View style={{ width: '50%' }}>
+											<View style={style.bankaccountformInputField}>
+												<Text style={style.bankaccountformInputHeader}>Enter Institution Number</Text>
+												<TextInput style={style.bankaccountformInputInput} onChangeText={(number) => setBankaccountform({
+													...bankAccountForm,
+													institutionNumber: number.toString()
+												})} value={bankAccountForm.institutionNumber} autoCorrect={false} keyboardType="numeric"/>
+											</View>
+										</View>
+										<View style={{ width: '50%' }}>
+											<View style={style.bankaccountformInputField}>
+												<Text style={style.bankaccountformInputHeader}>Enter Transit Number</Text>
+												<TextInput style={style.bankaccountformInputInput} onChangeText={(number) => setBankaccountform({
+													...bankAccountForm,
+													transitNumber: number.toString()
+												})} value={bankAccountForm.transitNumber} autoCorrect={false} keyboardType="numeric"/>
+											</View>
+										</View>
 									</View>
 
 									{bankAccountForm.errormsg ? <Text style={style.errorMsg}>{bankAccountForm.errormsg}</Text> : null}
@@ -1827,10 +1857,10 @@ const style = StyleSheet.create({
 	// form
 	bankaccountform: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	bankaccountformContainer: { backgroundColor: 'white', height: '90%', paddingVertical: 10, width: '90%' },
-	bankaccountformHeader: { fontSize: fsize(0.05), fontWeight: 'bold', marginVertical: 50, textAlign: 'center' },
+	bankaccountformHeader: { fontSize: fsize(0.05), fontWeight: 'bold', marginVertical: 20, textAlign: 'center' },
 	bankaccountformInputField: { marginBottom: 20, marginHorizontal: '10%', width: '80%' },
-	bankaccountformInputHeader: { fontSize: fsize(0.05), fontWeight: 'bold' },
-	bankaccountformInputInput: { borderRadius: 2, borderStyle: 'solid', borderWidth: 3, fontSize: fsize(0.05), padding: 5, width: '100%' },
+	bankaccountformInputHeader: { fontSize: fsize(0.04), fontWeight: 'bold' },
+	bankaccountformInputInput: { borderRadius: 2, borderStyle: 'solid', borderWidth: 3, fontSize: fsize(0.04), padding: 5, width: '100%' },
 	bankaccountformSubmit: { alignItems: 'center', borderRadius: 2, borderStyle: 'solid', borderWidth: 1, padding: 5, width: fsize(0.5) },
 	bankaccountformSubmitHeader: { fontFamily: 'appFont', fontSize: fsize(0.04) },
 })

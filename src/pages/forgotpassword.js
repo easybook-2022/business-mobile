@@ -39,6 +39,8 @@ export default function forgotpassword({ navigation }) {
 					const { errormsg, status } = err.response.data
 
 					setErrormsg(errormsg)
+				} else {
+					setErrormsg("an error has occurred in server")
 				}
 			})
 	}

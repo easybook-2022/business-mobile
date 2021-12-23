@@ -54,6 +54,8 @@ export default function login({ navigation }) {
 					const { errormsg } = err.response.data
 
 					setErrormsg(errormsg)
+				} else {
+					setErrormsg("an error has occurred in server")
 				}
 			})
 	}

@@ -64,6 +64,8 @@ export default function addmenu(props) {
 						...menuForm,
 						errormsg
 					})
+				} else {
+					setErrormsg("an error has occurred in server")
 				}
 			})
 	}
@@ -85,6 +87,8 @@ export default function addmenu(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 
+				} else {
+					setErrormsg("an error has occurred in server")
 				}
 			})
 	}
@@ -140,6 +144,8 @@ export default function addmenu(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
+				} else {
+					setErrormsg("an error has occurred in server")
 				}
 			})
 	}

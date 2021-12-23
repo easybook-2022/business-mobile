@@ -99,6 +99,8 @@ export default function menu(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
+				} else {
+					alert("an error has occurred in server")
 				}
 			})
 	}
@@ -125,6 +127,8 @@ export default function menu(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
+				} else {
+					alert("an error has occurred in server")
 				}
 			})
 	}
@@ -158,6 +162,8 @@ export default function menu(props) {
 						...menuForm,
 						errormsg
 					})
+				} else {
+					alert("an error has occurred in server")
 				}
 			})
 	}
@@ -181,6 +187,8 @@ export default function menu(props) {
 				.catch((err) => {
 					if (err.response && err.response.status == 400) {
 						
+					} else {
+						alert("an error has occurred in server")
 					}
 				})
 		} else {
@@ -199,6 +207,8 @@ export default function menu(props) {
 				.catch((err) => {
 					if (err.response && err.response.status == 400) {
 						
+					} else {
+						alert("an error has occurred in server")
 					}
 				})
 		}
@@ -233,6 +243,8 @@ export default function menu(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
+				} else {
+					alert("an error has occurred in server")
 				}
 			})
 	}
@@ -259,6 +271,8 @@ export default function menu(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
+				} else {
+					alert("an error has occurred in server")
 				}
 			})
 	}
@@ -280,6 +294,8 @@ export default function menu(props) {
 				.catch((err) => {
 					if (err.response && err.response.status == 400) {
 						
+					} else {
+						alert("an error has occurred in server")
 					}
 				})
 		} else {
@@ -295,6 +311,8 @@ export default function menu(props) {
 				.catch((err) => {
 					if (err.response && err.response.status == 400) {
 
+					} else {
+						alert("an error has occurred in server")
 					}
 				})
 		}
@@ -323,6 +341,8 @@ export default function menu(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
+				} else {
+					alert("an error has occurred in server")
 				}
 			})
 	}
@@ -344,6 +364,8 @@ export default function menu(props) {
 				.catch((err) => {
 					if (err.response && err.response.status == 400) {
 						
+					} else {
+						alert("an error has occurred in server")
 					}
 				})
 		} else {
@@ -362,6 +384,8 @@ export default function menu(props) {
 				.catch((err) => {
 					if (err.response && err.response.status == 400) {
 						
+					} else {
+						alert("an error has occurred in server")
 					}
 				})
 		}
@@ -688,8 +712,8 @@ export default function menu(props) {
 }
 
 const style = StyleSheet.create({
-	boxContainer: { height: '100%', paddingBottom: offsetPadding, width: '100%' },
-	box: { backgroundColor: 'white', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
+	boxContainer: { backgroundColor: 'white', height: '100%', paddingBottom: offsetPadding, width: '100%' },
+	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 
 	body: { height: screenHeight - 176 },
 
@@ -720,7 +744,7 @@ const style = StyleSheet.create({
 	productAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 5, padding: 5 },
 	productActionHeader: { fontSize: fsize(0.05), textAlign: 'center' },
 
-	service: { backgroundColor: 'white', marginHorizontal: 10, marginTop: 10, padding: 20 },
+	service: { marginHorizontal: 10, marginTop: 10, padding: 20 },
 	serviceHeader: { fontSize: fsize(0.05), fontWeight: 'bold', paddingVertical: 10, textAlign: 'center' },
 	serviceImage: { backgroundColor: 'black', borderRadius: 50, height: 100, marginLeft: 10, width: 100 },
 	serviceInfo: { fontSize: fsize(0.05), fontWeight: 'bold', marginVertical: 10 },
