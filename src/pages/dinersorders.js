@@ -9,8 +9,6 @@ import AntDesign from 'react-native-vector-icons/AntDesign'
 
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
-const screenHeight = height - (offsetPadding * 2)
-const itemSize = 70
 
 const fsize = p => {
 	return width * p
@@ -154,122 +152,118 @@ export default function dinersorders(props) {
 
 	return (
 		<View style={style.dinersorders}>
-			<View style={{ backgroundColor: '#EAEAEA', paddingVertical: offsetPadding }}>
+			{loaded ? 
 				<View style={style.box}>
-					<TouchableOpacity style={gettingPayment ? style.backDisabled : style.back} disabled={gettingPayment} onPress={() => props.navigation.goBack()}>
-						<Text allowFontScaling={false} style={style.backHeader}>Back</Text>
-					</TouchableOpacity>
+					<View style={style.header}>
+						<Text style={style.boxHeader}>({diners.length}) Diner(s) made order(s)</Text>
+					</View>
 
 					<View style={style.body}>
-						<Text allowFontScaling={false} style={style.header}>({diners.length}) Diner(s) made order(s)</Text>
-
-						{loaded ? 
-							<>
-								<FlatList
-									data={diners}
-									renderItem={({ item, index }) => 
-										<View key={item.key} style={style.diner}>
-											<View style={style.dinerRow}>
-												<View style={style.dinerProfile}>
-													<Image source={{ uri: logo_url + item.profile }} style={{ height: itemSize, width: itemSize }}/>
-												</View>
-												<Text allowFontScaling={false} style={style.dinerHeader}>{item.username}</Text>
-												<Text allowFontScaling={false} style={style.dinerCharge}>
-													{(item.paying || (!item.paying && !item.payed && !item.paid)) && 'Paying'}
-													{(item.payed || item.paid) && 'Paid'}
-													: 
-													$ {item.charge.toFixed(2)}
-												</Text>
-
-												{(item.payed || item.paid) && <View style={{ marginRight: 10, marginTop: 18 }}><AntDesign name="checkcircleo" color="blue" size={30}/></View>}
-												{item.paying && <View style={{ marginRight: 10, marginTop: 18 }}><ActivityIndicator color="blue" size="large"/></View>}
-											</View>
-											<Text allowFontScaling={false} style={style.dinerStatus}>{item.allowpayment ? "Payment sent" : "Waiting for payment"}</Text>
+						<FlatList
+							data={diners}
+							renderItem={({ item, index }) => 
+								<View key={item.key} style={style.diner}>
+									<View style={style.dinerRow}>
+										<View style={style.dinerProfile}>
+											<Image source={{ uri: logo_url + item.profile }} style={{ height: fsize(0.2), width: fsize(0.2) }}/>
 										</View>
-									}
-								/>
+										<Text style={style.dinerHeader}>{item.username}</Text>
+										<Text style={style.dinerCharge}>
+											{(item.paying || (!item.paying && !item.payed && !item.paid)) && 'Paying'}
+											{(item.payed || item.paid) && 'Paid'}
+											: 
+											$ {item.charge.toFixed(2)}
+										</Text>
 
-								<Text allowFontScaling={false} style={style.totalHeader}>Total: $ {totalPayment}</Text>
+										{(item.payed || item.paid) && <View style={{ marginRight: 10, marginTop: 18 }}><AntDesign name="checkcircleo" color="blue" size={30}/></View>}
+										{item.paying && <View style={{ marginRight: 10, marginTop: 18 }}><ActivityIndicator color="blue" size="large"/></View>}
+									</View>
+									<Text style={style.dinerStatus}>{item.allowpayment ? "Payment sent" : "Waiting for payment"}</Text>
+								</View>
+							}
+						/>
+					</View>
 
-								<TouchableOpacity style={gettingPayment ? style.paymentDisabled : style.payment} disabled={gettingPayment} onPress={() => getTheDinersPayments()}>
-									<Text allowFontScaling={false} style={style.paymentHeader}>Receive now</Text>
-								</TouchableOpacity>
-							</>
-							:
-							<ActivityIndicator marginTop={50} size="large"/>
-						}	
+					<View style={style.footer}>
+						<Text style={style.totalHeader}>Total: $ {totalPayment}</Text>
+
+						<TouchableOpacity style={gettingPayment ? style.paymentDisabled : style.payment} disabled={gettingPayment} onPress={() => getTheDinersPayments()}>
+							<Text style={style.paymentHeader}>Receive now</Text>
+						</TouchableOpacity>
 					</View>
 				</View>
+				:
+				<View style={{ alignItems: 'center', flexDirection: 'column', justifyContent: 'space-around', width: '100%' }}>
+					<ActivityIndicator color="black" size="large"/>
+				</View>
+			}
 
-				{paymentConfirm.show && (
-					<Modal transparent={true}>
-						<View style={style.confirmBoxContainer}>
-							<View style={style.confirmBox}>
-								<View style={style.confirmContainer}>
-									<Text allowFontScaling={false} style={style.confirmHeader}>
-										All diners have paid
-										{'\n\n'}
-										You have received a total payment of $ {totalPayment}
-										{'\n\n\n'}
-										Good Job
-									</Text>
+			{paymentConfirm.show && (
+				<Modal transparent={true}>
+					<View style={style.confirmBoxContainer}>
+						<View style={style.confirmBox}>
+							<View style={style.confirmContainer}>
+								<Text style={style.confirmHeader}>
+									All diners have paid
+									{'\n\n'}
+									You have received a total payment of $ {totalPayment}
+									{'\n\n\n'}
+									Good Job
+								</Text>
 
-									<View style={style.confirmActions}>
-										<TouchableOpacity style={style.confirmAction} onPress={() => {
-											socket.emit(
-												"socket/deleteReservation", 
-												{ id: scheduleid, type: "deleteReservation", receiver: paymentConfirm.receiver }, 
-												() => {
-													refetch()
-													setPaymentconfirm({ show: false, receiver: [] })
-													props.navigation.goBack()
-												}
-											)
-										}}>
-											<Text allowFontScaling={false} style={style.confirmActionHeader}>Ok</Text>
-										</TouchableOpacity>
-									</View>
+								<View style={style.confirmActions}>
+									<TouchableOpacity style={style.confirmAction} onPress={() => {
+										socket.emit(
+											"socket/deleteReservation", 
+											{ id: scheduleid, type: "deleteReservation", receiver: paymentConfirm.receiver }, 
+											() => {
+												refetch()
+												setPaymentconfirm({ show: false, receiver: [] })
+												props.navigation.goBack()
+											}
+										)
+									}}>
+										<Text style={style.confirmActionHeader}>Ok</Text>
+									</TouchableOpacity>
 								</View>
 							</View>
 						</View>
-					</Modal>
-				)}
+					</View>
+				</Modal>
+			)}
+			{showPaymentUnconfirmed.show && (
+				<Modal transparent={true}>
+					<View style={style.confirmBoxContainer}>
+						<View style={style.confirmBox}>
+							<View style={style.confirmContainer}>
+								<Text style={style.confirmHeader}>
+									{showPaymentUnconfirmed.username} hasn't sent his/her payment yet.
+									{'\n\n'}
+									Please tell him/her to send the payment in their notification
+								</Text>
 
-				{showPaymentUnconfirmed.show && (
-					<Modal transparent={true}>
-						<View style={style.confirmBoxContainer}>
-							<View style={style.confirmBox}>
-								<View style={style.confirmContainer}>
-									<Text allowFontScaling={false} style={style.confirmHeader}>
-										{showPaymentUnconfirmed.username} hasn't sent his/her payment yet.
-										{'\n\n'}
-										Please tell him/her to send the payment in their notification
-									</Text>
-
-									<View style={style.confirmActions}>
-										<TouchableOpacity style={style.confirmAction} onPress={() => setShowpaymentunconfirmed({ show: false, username: "" })}>
-											<Text allowFontScaling={false} style={style.confirmActionHeader}>Ok</Text>
-										</TouchableOpacity>
-									</View>
+								<View style={style.confirmActions}>
+									<TouchableOpacity style={style.confirmAction} onPress={() => setShowpaymentunconfirmed({ show: false, username: "" })}>
+										<Text style={style.confirmActionHeader}>Ok</Text>
+									</TouchableOpacity>
 								</View>
 							</View>
 						</View>
-					</Modal>
-				)}
-			</View>
-			
+					</View>
+				</Modal>
+			)}
 			{showDisabledScreen && (
 				<Modal transparent={true}>
 					<View style={style.disabled}>
 						<View style={style.disabledContainer}>
-							<Text allowFontScaling={false} style={style.disabledHeader}>
+							<Text style={style.disabledHeader}>
 								There is an update to the app{'\n\n'}
 								Please wait a moment{'\n\n'}
 								or tap 'Close'
 							</Text>
 
 							<TouchableOpacity style={style.disabledClose} onPress={() => socket.emit("socket/business/login", ownerId, () => setShowdisabledscreen(false))}>
-								<Text allowFontScaling={false} style={style.disabledCloseHeader}>Close</Text>
+								<Text style={style.disabledCloseHeader}>Close</Text>
 							</TouchableOpacity>
 
 							<ActivityIndicator size="large"/>
@@ -282,23 +276,23 @@ export default function dinersorders(props) {
 }
 
 const style = StyleSheet.create({
-	dinersorders: { backgroundColor: 'white', height: '100%', width: '100%' },
+	dinersorders: { backgroundColor: 'white', height: '100%', paddingBottom: offsetPadding, width: '100%' },
 	box: { backgroundColor: '#EAEAEA', height: '100%', width: '100%' },
-	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, marginTop: 20, marginHorizontal: 20, padding: 5, width: 100 },
-	backDisabled: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, height: 30, marginTop: 20, marginHorizontal: 20, opacity: 0.3, padding: 5, width: 100 },
-	backHeader: { fontFamily: 'appFont', fontSize: fsize(0.05) },
 
-	body: { alignItems: 'center', height: screenHeight - 30 },
-	header: { fontSize: fsize(0.05), fontWeight: 'bold', marginVertical: 20 },
+	header: { flexDirection: 'column', height: '10%', justifyContent: 'space-around', width: '100%' },
+	boxHeader: { fontSize: fsize(0.05), fontWeight: 'bold', textAlign: 'center' },
+
+	body: { alignItems: 'center', height: '80%' },
 
 	diner: { backgroundColor: 'white', marginBottom: 5, marginHorizontal: 5 },
 	dinerRow: { flexDirection: 'row', justifyContent: 'space-between', padding: 5, width: width - 10 },
-	dinerProfile: { borderRadius: itemSize / 2, height: itemSize, overflow: 'hidden', width: itemSize },
+	dinerProfile: { borderRadius: fsize(0.2) / 2, height: fsize(0.2), overflow: 'hidden', width: fsize(0.2) },
 	dinerHeader: { fontSize: fsize(0.04), fontWeight: 'bold', marginVertical: 25 },
 	dinerCharge: { fontSize: fsize(0.04), marginVertical: 25 },
 	dinerStatus: { fontWeight: '100', marginBottom: 20, textAlign: 'center' },
 
-	totalHeader: { fontWeight: '100', textAlign: 'center' },
+	footer: { alignItems: 'center', flexDirection: 'column', height: '10%', justifyContent: 'space-around', width: '100%' },
+	totalHeader: { fontWeight: 'bold', textAlign: 'center' },
 	payment: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 10, padding: 5, width: 150 },
 	paymentDisabled: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 10, opacity: 0.3, padding: 5, width: 150 },
 	paymentHeader: { textAlign: 'center' },

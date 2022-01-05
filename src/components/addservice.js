@@ -16,8 +16,6 @@ import Entypo from 'react-native-vector-icons/Entypo'
 
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
-const screenHeight = height - (offsetPadding * 2)
-const frameSize = width * 0.9
 
 const steps = ['name', 'info', 'photo', 'price', 'duration']
 
@@ -39,6 +37,7 @@ export default function addservice(props) {
 	const [price, setPrice] = useState('')
 	const [duration, setDuration] = useState('')
 	const [loaded, setLoaded] = useState(serviceid ? false : true)
+	const [loading, setLoading] = useState(false)
 
 	const [errorMsg, setErrormsg] = useState('')
 
@@ -49,6 +48,8 @@ export default function addservice(props) {
 
 		if (name && (price && !isNaN(price)) && duration) {
 			const data = { locationid, menuid: parentMenuid, name, info, image, price, duration, permission: cameraPermission || pickingPermission }
+
+			setLoading(true)
 
 			addNewService(data)
 				.then((res) => {
@@ -67,6 +68,7 @@ export default function addservice(props) {
 						const { errormsg, status } = err.response.data
 
 						setErrormsg(errormsg)
+						setLoading(false)
 					} else {
 						setErrormsg("an error has occurred in server")
 					}
@@ -115,7 +117,10 @@ export default function addservice(props) {
 				})
 				.catch((err) => {
 					if (err.response && err.response.status == 400) {
+						const { errormsg, status } = err.response.data
 
+						setErrormsg(errormsg)
+						setLoading(false)
 					} else {
 						setErrormsg("an error has occurred in server")
 					}
@@ -148,6 +153,8 @@ export default function addservice(props) {
 		const index = steps.indexOf(setupType)
 		let msg = ""
 
+		setLoading(true)
+
 		switch (index) {
 			case 0:
 				if (!name) {
@@ -156,7 +163,7 @@ export default function addservice(props) {
 
 				break
 			case 2:
-				if (!image.uri) {
+				if (!image.uri && Platform.OS == 'ios') {
 					msg = "Please provide a photo for the service"
 				}
 
@@ -179,11 +186,18 @@ export default function addservice(props) {
 		if (msg == "") {
 			const nextStep = index == 4 ? "done" : steps[index + 1]
 
+			if (nextStep == "photo") {
+				allowCamera()
+				allowChoosing()
+			}
+
 			setSetuptype(nextStep)
 			setErrormsg('')
 		} else {
 			setErrormsg(msg)
 		}
+
+		setLoading(false)
 	}
 
 	const snapPhoto = async() => {
@@ -311,9 +325,6 @@ export default function addservice(props) {
 	useEffect(() => {
 		isMounted.current = true
 
-		allowCamera()
-		allowChoosing()
-
 		if (serviceid) {
 			getTheServiceInfo()
 		}
@@ -321,137 +332,152 @@ export default function addservice(props) {
 		return () => isMounted.current = false
 	}, [])
 
-	if (cameraPermission === null || pickingPermission === null) return <View/>
-
 	return (
-		<View style={style.addservice}>
-			<View style={{ paddingBottom: offsetPadding }}>
-				<TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
-					{loaded ? 
-						<View style={style.box}>
-							{setupType == "name" && (
-								<View style={style.inputContainer}>
-									<Text style={style.addHeader}>{serviceid ? "Update" : "Enter"} service name</Text>
+		<View style={[style.addservice, { opacity: loading ? 0.5 : 1 }]}>
+			<TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+				{loaded ? 
+					<View style={style.box}>
+						{setupType == "name" && (
+							<View style={style.inputContainer}>
+								<Text style={style.addHeader}>What is this service call ?</Text>
 
-									<TextInput style={style.addInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Service name" onChangeText={(name) => setName(name)} value={name} autoCorrect={false} autoCompleteType="off" autoCapitalize="none"/>
-								</View>
-							)}
-
-							{setupType == "info" && (
-								<View style={style.inputContainer}>
-									<Text style={style.addHeader}>{serviceid ? "Update" : "Enter"} service info</Text>
-
-									<TextInput style={style.infoInput} multiline={true} onSubmitEditing={() => Keyboard.dismiss()} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Anything you want to say about this service (optional)" onChangeText={(info) => setInfo(info)} value={info} autoCorrect={false} autoCompleteType="off" autoCapitalize="none"/>
-								</View>
-							)}
-
-							{setupType == "photo" && (
-								<View style={style.cameraContainer}>
-									<Text style={style.cameraHeader}>Service photo</Text>
-
-									{image.uri ? (
-										<>
-											<Image style={style.camera} source={{ uri: image.uri }}/>
-
-											<TouchableOpacity style={style.cameraAction} onPress={() => setImage({ uri: '', name: '' })}>
-												<Text style={style.cameraActionHeader}>Cancel</Text>
-											</TouchableOpacity>
-										</>
-									) : (
-										<>
-											<Camera style={style.camera} type={Camera.Constants.Type.back} ref={r => {setCamcomp(r)}}/>
-
-											<View style={style.cameraActions}>
-												<TouchableOpacity style={style.cameraAction} onPress={snapPhoto.bind(this)}>
-													<Text style={style.cameraActionHeader}>Take this photo</Text>
-												</TouchableOpacity>
-												<TouchableOpacity style={style.cameraAction} onPress={() => choosePhoto()}>
-													<Text style={style.cameraActionHeader}>Choose from phone</Text>
-												</TouchableOpacity>
-											</View>
-										</>
-									)}	
-								</View>
-							)}
-
-							{setupType == "price" && (
-								<View style={style.inputContainer}>
-									<Text style={style.inputHeader}>{serviceid ? "Update" : "Enter"} service price</Text>
-									<TextInput style={style.inputValue} placeholderTextColor="rgba(0, 0, 0, 0.5)" placeholder="4.99" onChangeText={(price) => {
-										let newPrice = price.toString()
-
-										if (newPrice.includes(".") && newPrice.split(".")[1].length == 2) {
-											Keyboard.dismiss()
-										}
-
-										setPrice(price.toString())
-									}} value={price} keyboardType="numeric" autoCorrect={false} autoCapitalize="none"/>
-								</View>
-							)}
-
-							{setupType == "duration" && (
-								<View style={style.inputContainer}>
-									<Text style={style.inputHeader}>{serviceid ? "Update" : "Enter"} service duration</Text>
-									<TextInput style={style.inputValue} placeholderTextColor="rgba(0, 0, 0, 0.5)" placeholder="4 hours" onChangeText={(duration) => setDuration(duration)} value={duration} autoCapitalize="none"/>
-								</View>
-							)}
-
-							<Text style={style.errorMsg}>{errorMsg}</Text>
-
-							<View style={style.addActions}>
-								<TouchableOpacity style={style.addAction} onPress={() => props.navigation.goBack()}>
-									<Text style={style.addActionHeader}>Cancel</Text>
-								</TouchableOpacity>
-								<TouchableOpacity style={style.addAction} onPress={() => {
-									if (!serviceid) {
-										if (setupType == "duration") {
-											addTheNewService()
-										} else {
-											saveInfo()
-										}
-									} else {
-										if (setupType == "duration") {
-											updateTheService()
-										} else {
-											saveInfo()
-										}
-									}
-								}}>
-									<Text style={style.addActionHeader}>{
-										!serviceid ? 
-											setupType == 'duration' ? "Done" : "Next"
-											: 
-											setupType == 'duration' ? "Save" : "Next"
-									}</Text>
-								</TouchableOpacity>
+								<TextInput 
+									style={style.addInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" 
+									placeholder="example: Men hair cut" onChangeText={(name) => setName(name)} 
+									value={name} autoCorrect={false} autoCompleteType="off" autoCapitalize="none"
+								/>
 							</View>
+						)}
+
+						{setupType == "info" && (
+							<View style={style.inputContainer}>
+								<Text style={style.addHeader}>Anything you want to say about {'\n' + name} (Optional)</Text>
+
+								<TextInput 
+									style={style.infoInput} multiline textAlignVertical="top"
+									placeholderTextColor="rgba(127, 127, 127, 0.5)" 
+									placeholder={"example: " + name + " will be 20% off this week (Optional)"}
+									onChangeText={(info) => setInfo(info)} value={info} autoCorrect={false} 
+									autoCompleteType="off" autoCapitalize="none"
+								/>
+							</View>
+						)}
+
+						{setupType == "photo" && (
+							<View style={style.cameraContainer}>
+								<Text style={style.cameraHeader}>Provide a photo for {name}</Text>
+
+								{image.uri ? (
+									<>
+										<Image style={style.camera} source={{ uri: image.uri }}/>
+
+										<TouchableOpacity style={style.cameraAction} onPress={() => setImage({ uri: '', name: '' })}>
+											<Text style={style.cameraActionHeader}>Cancel</Text>
+										</TouchableOpacity>
+									</>
+								) : (
+									<>
+										<Camera 
+											style={style.camera} 
+											type={Camera.Constants.Type.back} ref={r => {setCamcomp(r)}}
+											ratio="1:1"
+										/>
+
+										<View style={style.cameraActions}>
+											<TouchableOpacity style={style.cameraAction} onPress={snapPhoto.bind(this)}>
+												<Text style={style.cameraActionHeader}>Take{'\n'}this photo</Text>
+											</TouchableOpacity>
+											<TouchableOpacity style={style.cameraAction} onPress={() => choosePhoto()}>
+												<Text style={style.cameraActionHeader}>Choose{'\n'}from phone</Text>
+											</TouchableOpacity>
+										</View>
+									</>
+								)}	
+							</View>
+						)}
+
+						{setupType == "price" && (
+							<View style={style.inputContainer}>
+								<Text style={style.addHeader}>{serviceid ? "Update" : "Enter"} {name} price</Text>
+								<TextInput style={style.addInput} placeholderTextColor="rgba(0, 0, 0, 0.5)" placeholder="example: 4.99" onChangeText={(price) => {
+									let newPrice = price.toString()
+
+									if (newPrice.includes(".") && newPrice.split(".")[1].length == 2) {
+										Keyboard.dismiss()
+									}
+
+									setPrice(price.toString())
+								}} value={price} keyboardType="numeric" autoCorrect={false} autoCapitalize="none"/>
+							</View>
+						)}
+
+						{setupType == "duration" && (
+							<View style={style.inputContainer}>
+								<Text style={style.addHeader}>How long is {'\n' + name} duration</Text>
+								<TextInput 
+									style={style.addInput} placeholderTextColor="rgba(0, 0, 0, 0.5)" placeholder="example: 4 hours" 
+									onChangeText={(duration) => setDuration(duration)} value={duration} autoCapitalize="none"
+								/>
+							</View>
+						)}
+
+						<Text style={style.errorMsg}>{errorMsg}</Text>
+
+						<View style={style.addActions}>
+							<TouchableOpacity style={style.addAction} disabled={loading} onPress={() => props.navigation.goBack()}>
+								<Text style={style.addActionHeader}>Cancel</Text>
+							</TouchableOpacity>
+							<TouchableOpacity style={style.addAction} disabled={loading} onPress={() => {
+								if (!serviceid) {
+									if (setupType == "duration") {
+										addTheNewService()
+									} else {
+										saveInfo()
+									}
+								} else {
+									if (setupType == "duration") {
+										updateTheService()
+									} else {
+										saveInfo()
+									}
+								}
+							}}>
+								<Text style={style.addActionHeader}>{
+									!serviceid ? 
+										setupType == 'duration' ? "Done" : "Next"
+										: 
+										setupType == 'duration' ? "Save" : "Next"
+								}</Text>
+							</TouchableOpacity>
 						</View>
-						:
-						<ActivityIndicator size="large" marginTop={screenHeight / 2}/>
-					}
-				</TouchableWithoutFeedback>
-			</View>
+					</View>
+					:
+					<View style={{ alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' }}>
+						<ActivityIndicator size="large"/>
+					</View>
+				}
+			</TouchableWithoutFeedback>
 		</View>
 	)
 }
 
 const style = StyleSheet.create({
-	addservice: { height: '100%', width: '100%' },
-	box: { alignItems: 'center', paddingVertical: 10, width: '100%' },
-	inputContainer: { alignItems: 'center', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '100%' },
-	addHeader: { fontSize: fsize(0.07), fontWeight: 'bold', paddingVertical: 5 },
-	addInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, fontSize: fsize(0.07), padding: 10, width: '90%' },
-	infoInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, fontSize: fsize(0.07), height: 100, marginVertical: 5, padding: 10, textAlignVertical: 'top', width: '90%' },
+	addservice: { height: '100%', paddingBottom: offsetPadding, width: '100%' },
+	box: { alignItems: 'center', height: '100%', width: '100%' },
+	inputContainer: { alignItems: 'center', width: '100%' },
+	addHeader: { fontSize: fsize(0.05), fontWeight: 'bold', paddingVertical: 5, textAlign: 'center' },
+	addInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, fontSize: fsize(0.05), padding: 10, width: '90%' },
+	infoInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, fontSize: fsize(0.05), height: 100, marginVertical: 5, padding: 10, textAlignVertical: 'top', width: '90%' },
 	cameraContainer: { alignItems: 'center', width: '100%' },
 	cameraHeader: { fontSize: fsize(0.05), fontWeight: 'bold', paddingVertical: 5 },
-	camera: { height: frameSize, width: frameSize },
+	camera: { height: fsize(0.7), width: fsize(0.7) },
 	cameraActions: { flexDirection: 'row' },
 	cameraAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginBottom: 50, margin: 5, padding: 5, width: fsize(0.3) },
-	cameraActionHeader: { fontSize: fsize(0.04), textAlign: 'center' },
-	inputHeader: { fontSize: fsize(0.07), fontWeight: 'bold', padding: 5 },
-	inputValue: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: fsize(0.07), padding: 5, width: fsize(0.3) },
+	cameraActionHeader: { fontSize: fsize(0.03), textAlign: 'center' },
+	
 	errorMsg: { color: 'red', fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
+	
 	addActions: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 50, width: '100%' },
 	addAction: { alignItems: 'center', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: fsize(0.07), padding: 5, width: 100 },
-	addActionHeader: { fontSize: fsize(0.05) },
+	addActionHeader: { fontSize: fsize(0.04) },
 })

@@ -11,14 +11,13 @@ import AntDesign from 'react-native-vector-icons/AntDesign'
 import Entypo from 'react-native-vector-icons/Entypo'
 
 const { height, width } = Dimensions.get('window')
+const offsetPadding = Constants.statusBarHeight
 
 const fsize = p => {
 	return width * p
 }
 
 export default function booktime(props) {
-	const { height, width } = Dimensions.get('window')
-	const offsetPadding = Constants.statusBarHeight
 	const months = ['January', 'February', 'March', 'April', 'May', 'Jun', 'July', 'August', 'September', 'October', 'November', 'December']
 	const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 	const pushtime = 1000 * (60 * 10)
@@ -382,22 +381,19 @@ export default function booktime(props) {
 	}, [])
 	
 	return (
-		<View style={{ paddingVertical: offsetPadding }}>
+		<View style={style.booktime}>
 			<View style={style.box}>
-				<TouchableOpacity style={style.back} onPress={() => {
-					refetch()
-					props.navigation.goBack()
-				}}>
-					<Text style={style.backHeader}>Back</Text>
-				</TouchableOpacity>
-
-				<Text style={style.boxHeader}>Request another time for client</Text>
-				<Text style={style.serviceHeader}>Service: <Text style={{ fontWeight: 'bold' }}>{name}</Text></Text>
+				<View style={style.headers}>
+					<Text style={style.serviceHeader}><Text style={{ fontSize: fsize(0.05) }}>for</Text> client</Text>
+					<Text style={style.serviceHeader}><Text style={{ fontSize: fsize(0.05) }}>requesting for</Text> {name}</Text>
+				</View>
 
 				{!loaded ? 
-					<ActivityIndicator size="small"/>
+					<View style={{ height: '90%' }}>
+						<ActivityIndicator size="small"/>
+					</View>
 					:
-					<ScrollView>
+					<ScrollView style={{ height: '90%' }}>
 						<View style={style.dateHeaders}>
 							<View style={style.date}>
 								<TouchableOpacity style={style.dateNav} onPress={() => dateNavigate('left')}><AntDesign name="left" size={25}/></TouchableOpacity>
@@ -438,7 +434,7 @@ export default function booktime(props) {
 							</View>
 						</View>
 						<Text style={style.timesHeader}>Pick a time</Text>
-						<View style={{ flexDirection: 'row', justifyContent: 'space-around', marginBottom: 50, width: '100%' }}>
+						<View style={{ flexDirection: 'row', justifyContent: 'space-around', marginBottom: 10, width: '100%' }}>
 							<View style={style.times}>
 								{times.map(info => (
 									<View key={info.key}>
@@ -518,14 +514,13 @@ export default function booktime(props) {
 }
 
 const style = StyleSheet.create({
+	booktime: { backgroundColor: 'white', height: '100%', paddingBottom: offsetPadding, width: '100%' },
 	box: { backgroundColor: '#EAEAEA', height: '100%', width: '100%' },
-	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, marginVertical: 20, marginHorizontal: 20, padding: 5, width: 100 },
-	backHeader: { fontFamily: 'appFont', fontSize: fsize(0.05) },
 
-	boxHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), fontWeight: 'bold', textAlign: 'center' },
-	serviceHeader: { fontSize: fsize(0.06), textAlign: 'center', marginBottom: 50 },
+	headers: { height: '10%' },
+	serviceHeader: { fontSize: fsize(0.08), fontWeight: 'bold', textAlign: 'center' },
 
-	dateHeaders: { alignItems: 'center' },
+	dateHeaders: { alignItems: 'center', paddingTop: 30 },
 	date: { flexDirection: 'row', margin: 10 },
 	dateNav: { marginHorizontal: 20 },
 	dateHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), marginVertical: 5, textAlign: 'center', width: fsize(0.5) },

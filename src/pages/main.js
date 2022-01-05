@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react'
-import { ScrollView, ActivityIndicator, Dimensions, View, FlatList, Image, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet, Modal } from 'react-native'
+import { Platform, ScrollView, ActivityIndicator, Dimensions, View, FlatList, Image, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet, Modal } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
@@ -9,7 +9,7 @@ import { Camera } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator'
 import { socket, logo_url, displayTime } from '../../assets/info'
 import { updateNotificationToken } from '../apis/owners'
-import { fetchNumRequests, fetchNumAppointments, fetchNumCartOrderers, fetchNumReservations, fetchNumorders, getInfo, changeLocationState, setLocationPublic } from '../apis/locations'
+import { fetchNumRequests, fetchNumAppointments, fetchNumCartOrderers, fetchNumReservations, fetchNumorders, getLocationProfile, changeLocationState, setLocationPublic } from '../apis/locations'
 import { getMenus, removeMenu, addNewMenu } from '../apis/menus'
 import { getRequests, acceptRequest, cancelRequest, cancelReservation, doneDining, receiveEpayment, receiveInpersonpayment, canServeDiners, getAppointments, getCartOrderers, getReservations } from '../apis/schedules'
 import { getProducts, getServices, removeProduct } from '../apis/products'
@@ -21,9 +21,6 @@ import Entypo from 'react-native-vector-icons/Entypo'
 
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
-const screenHeight = height - (offsetPadding * 2)
-const storeLogoSize = 70
-const imageSize = 50
 
 const fsize = p => {
 	return width * p
@@ -41,8 +38,6 @@ export default function main(props) {
 	const [storeAddress, setStoreaddress] = useState('')
 	const [locationType, setLocationtype] = useState('')
 	const [locationListed, setLocationlisted] = useState('')
-
-	const [showEdit, setShowedit] = useState('')
 
 	const [requests, setRequests] = useState([])
 	const [numRequests, setNumrequests] = useState(0)
@@ -225,12 +220,12 @@ export default function main(props) {
 			})
 	}
 
-	const getTheInfo = async() => {
+	const getTheLocationProfile = async() => {
 		const ownerid = await AsyncStorage.getItem("ownerid")
 		const locationid = await AsyncStorage.getItem("locationid")
-		const data = { locationid, menuid: '' }
+		const data = { locationid }
 
-		getInfo(data)
+		getLocationProfile(data)
 			.then((res) => {
 				if (res.status == 200) {
 					return res.data
@@ -238,14 +233,13 @@ export default function main(props) {
 			})
 			.then((res) => {
 				if (res && isMounted.current == true) {
-					const { msg, name, address, icon, type, listed } = res
+					const { name, fullAddress, logo, type, listed } = res.info
 
 					socket.emit("socket/business/login", ownerid, () => {
 						setOwnerid(ownerid)
-						setShowedit(msg)
 						setStorename(name)
-						setStoreaddress(address)
-						setStoreicon(icon)
+						setStoreaddress(fullAddress)
+						setStoreicon(logo)
 						setLocationtype(type)
 						setLocationlisted(listed)
 
@@ -942,7 +936,7 @@ export default function main(props) {
 	}
 
 	const initialize = () => {
-		getTheInfo()
+		getTheLocationProfile()
 
 		if (Constants.isDevice) getNotificationPermission()
 		props.navigation.setParams({ firstTime: false })
@@ -1001,666 +995,664 @@ export default function main(props) {
 		requests.length, appointments.length, 
 		cartOrderers.length, reservations.length
 	])
-	
+
 	return (
 		<View style={style.main}>
-			<View style={{ paddingVertical: offsetPadding }}>
-				<View style={style.box}>
-					<View style={style.headers}>
-						<View style={style.storeIconHolder}>
-							<Image source={{ uri: logo_url + storeIcon }} style={style.image}/>
+			<View style={style.box}>
+				<View style={style.headers}>
+					<View style={style.storeIconHolder}>
+						<Image source={{ uri: logo_url + storeIcon }} style={style.image}/>
+					</View>
+					<Text style={style.locationInfoHeader}>{storeName}</Text>
+					<Text style={style.locationInfoHeader}>{storeAddress}</Text>
+				</View>
+
+				<View style={style.body}>
+					<View style={style.navs}>
+						<View style={{ flexDirection: 'row' }}>
+							{locationType != '' && (
+								<TouchableOpacity style={viewType == "requests" ? style.navSelected : style.nav} onPress={() => getAllRequests()}>
+									<Text style={[viewType == "requests" ? style.navHeaderSelected : style.navHeader, { fontSize: fsize(0.07) }]}>{numRequests}</Text>
+									<Text style={viewType == "requests" ? style.navHeaderSelected : style.navHeader}>Request(s)</Text>
+								</TouchableOpacity>
+							)}
+
+							{locationType == 'salon' && (
+								<TouchableOpacity style={viewType == "appointments" ? style.navSelected : style.nav} onPress={() => getAllAppointments()}>
+									<Text style={[viewType == "appointments" ? style.navHeaderSelected : style.navHeader, { fontSize: fsize(0.07) }]}>{numAppointments}</Text>
+									<Text style={viewType == "appointments" ? style.navHeaderSelected : style.navHeader}>Appointment(s)</Text>
+								</TouchableOpacity>
+							)}
+
+							{locationType == 'restaurant' && (
+								<TouchableOpacity style={viewType == "cartorderers" ? style.navSelected : style.nav} onPress={() => getAllCartOrderers()}>
+									<Text style={[viewType == "cartorderers" ? style.navHeaderSelected : style.navHeader, { fontSize: fsize(0.07) }]}>{numCartorderers}</Text>
+									<Text style={viewType == "cartorderers" ? style.navHeaderSelected : style.navHeader}>Orderer(s)</Text>
+								</TouchableOpacity>
+							)}
+
+							{locationType == 'restaurant' && (
+								<TouchableOpacity style={viewType == "reservations" ? style.navSelected : style.nav} onPress={() => getAllReservations()}>
+									<Text style={[viewType == "reservations" ? style.navHeaderSelected : style.navHeader, { fontSize: fsize(0.07) }]}>{numReservations}</Text>
+									<Text style={viewType == "reservations" ? style.navHeaderSelected : style.navHeader}>Reservation(s)</Text>
+								</TouchableOpacity>
+							)}
 						</View>
-						<Text style={style.locationInfoHeader}>{storeName}</Text>
-						<Text style={style.locationInfoHeader}>{storeAddress}</Text>
 					</View>
 
-					<View style={style.body}>
-						<View style={style.navs}>
-							<View style={{ flexDirection: 'row' }}>
-								{locationType != '' && (
-									<TouchableOpacity style={viewType == "requests" ? style.navSelected : style.nav} onPress={() => getAllRequests()}>
-										<Text style={[viewType == "requests" ? style.navHeaderSelected : style.navHeader, { fontSize: fsize(0.07) }]}>{numRequests}</Text>
-										<Text style={viewType == "requests" ? style.navHeaderSelected : style.navHeader}>Request(s)</Text>
-									</TouchableOpacity>
-								)}
-
-								{locationType == 'salon' && (
-									<TouchableOpacity style={viewType == "appointments" ? style.navSelected : style.nav} onPress={() => getAllAppointments()}>
-										<Text style={[viewType == "appointments" ? style.navHeaderSelected : style.navHeader, { fontSize: fsize(0.07) }]}>{numAppointments}</Text>
-										<Text style={viewType == "appointments" ? style.navHeaderSelected : style.navHeader}>Appointment(s)</Text>
-									</TouchableOpacity>
-								)}
-
-								{locationType == 'restaurant' && (
-									<TouchableOpacity style={viewType == "cartorderers" ? style.navSelected : style.nav} onPress={() => getAllCartOrderers()}>
-										<Text style={[viewType == "cartorderers" ? style.navHeaderSelected : style.navHeader, { fontSize: fsize(0.07) }]}>{numCartorderers}</Text>
-										<Text style={viewType == "cartorderers" ? style.navHeaderSelected : style.navHeader}>Orderer(s)</Text>
-									</TouchableOpacity>
-								)}
-
-								{locationType == 'restaurant' && (
-									<TouchableOpacity style={viewType == "reservations" ? style.navSelected : style.nav} onPress={() => getAllReservations()}>
-										<Text style={[viewType == "reservations" ? style.navHeaderSelected : style.navHeader, { fontSize: fsize(0.07) }]}>{numReservations}</Text>
-										<Text style={viewType == "reservations" ? style.navHeaderSelected : style.navHeader}>Reservation(s)</Text>
-									</TouchableOpacity>
-								)}
-							</View>
-						</View>
-
-						{viewType == "requests" && (
-							requests.length > 0 ? 
-								<FlatList
-									data={requests}
-									renderItem={({ item, index }) => 
-										<View key={item.key} style={style.request}>
-											<View style={{ flexDirection: 'row' }}>
-												<View style={style.requestImageHolder}>
-													<Image style={style.requestImage} source={{ uri: logo_url + item.image }}/>
-												</View>
-												<View style={style.requestInfo}>
-													<Text>
-														{locationType == 'salon' ? 
-															(item.status == "requested" || item.status == "change") ? 
-																<>
-																	<Text style={style.requestInfoHeader}>{item.username + ' requested ' + (item.status == 'change' ? ' a time change for ' : '') + item.name + '\n'}</Text> 
-																	<Text style={style.requestInfoHeader}>{displayTime(item.time)}</Text>
-																	{item.worker != null && <Text style={style.requestInfoHeader}>{'\nwith worker: '}<Text style={{ fontSize: fsize(0.07) }}>{item.worker.username}</Text></Text>}
-																</>
-																:
-																<>
-																	<Text style={style.requestInfoHeader}>{item.username + ' has an appointment for ' + item.name +'\n'}</Text>
-																	<Text style={style.requestInfoHeader}>{displayTime(item.time)}</Text>
-																	{item.worker != null && <Text style={style.requestInfoHeader}>{'\nwith worker: '}<Text style={{ fontSize: fsize(0.07) }}>{item.worker.username}</Text>{'\n'}</Text>}
-																	<Text style={{ color: 'grey', fontStyle: 'italic' }}>waiting for confirmation</Text>
-																</>
+					{viewType == "requests" && (
+						requests.length > 0 ? 
+							<FlatList
+								data={requests}
+								renderItem={({ item, index }) => 
+									<View key={item.key} style={style.request}>
+										<View style={{ flexDirection: 'row' }}>
+											<View style={style.requestImageHolder}>
+												<Image style={style.requestImage} source={{ uri: logo_url + item.image }}/>
+											</View>
+											<View style={style.requestInfo}>
+												<Text>
+													{locationType == 'salon' ? 
+														(item.status == "requested" || item.status == "change") ? 
+															<>
+																<Text style={style.requestInfoHeader}>{item.username + ' requested ' + (item.status == 'change' ? ' a time change for ' : '') + item.name + '\n'}</Text> 
+																<Text style={style.requestInfoHeader}>{displayTime(item.time)}</Text>
+																{item.worker != null && <Text style={style.requestInfoHeader}>{'\nwith worker: '}<Text style={{ fontSize: fsize(0.07) }}>{item.worker.username}</Text></Text>}
+															</>
 															:
 															<>
-																<Text><Text style={style.requestInfoHeader}>{item.username}</Text> is {item.status == 'change' ? 're-' : ''}booking a reservation</Text>
-																<Text style={style.requestInfoHeader}>{'\n' + displayTime(item.time)}</Text>
-																<Text style={style.requestInfoHeader}>{item.diners > 0 ? ' for ' + item.diners + ' ' + (item.diners == 1 ? 'person' : 'people') : ' for 1 person'}</Text>
-
-																{(item.status == "rebook" || item.status == "accepted") && <Text style={{ color: 'grey', fontStyle: 'italic' }}>{'\n\n'}waiting for confirmation</Text>}
+																<Text style={style.requestInfoHeader}>{item.username + ' has an appointment for ' + item.name +'\n'}</Text>
+																<Text style={style.requestInfoHeader}>{displayTime(item.time)}</Text>
+																{item.worker != null && <Text style={style.requestInfoHeader}>{'\nwith worker: '}<Text style={{ fontSize: fsize(0.07) }}>{item.worker.username}</Text>{'\n'}</Text>}
+																<Text style={{ color: 'grey', fontStyle: 'italic' }}>waiting for confirmation</Text>
 															</>
+														:
+														<>
+															<Text><Text style={style.requestInfoHeader}>{item.username}</Text> is {item.status == 'change' ? 're-' : ''}booking a reservation</Text>
+															<Text style={style.requestInfoHeader}>{'\n' + displayTime(item.time)}</Text>
+															<Text style={style.requestInfoHeader}>{item.diners > 0 ? ' for ' + item.diners + ' ' + (item.diners == 1 ? 'person' : 'people') : ' for 1 person'}</Text>
+
+															{(item.status == "rebook" || item.status == "accepted") && <Text style={{ color: 'grey', fontStyle: 'italic' }}>{'\n\n'}waiting for confirmation</Text>}
+														</>
+													}
+												</Text>
+												{item.note ? <Text style={{ fontWeight: 'bold', marginTop: 20 }}>Customer's note: {item.note}</Text> : null}
+											</View>
+										</View>
+
+										{(item.status == "requested" || item.status == "change") ? 
+											<View style={style.requestActions}>
+												<View style={{ flexDirection: 'row' }}>
+													<TouchableOpacity style={style.requestAction} onPress={() => {
+														if (locationType == 'salon') {
+															props.navigation.navigate("booktime", { appointmentid: item.id, refetch: () => {
+																fetchTheNumRequests()
+																removeFromList(item.id, "requests")
+															}})
+														} else {
+															props.navigation.navigate("makereservation", { userid: item.userId, scheduleid: item.id, refetch: () => {
+																fetchTheNumRequests()
+																removeFromList(item.id, "requests")
+															}})
 														}
-													</Text>
-													{item.note ? <Text style={{ fontWeight: 'bold', marginTop: 20 }}>Customer's note: {item.note}</Text> : null}
+													}}>
+														<Text style={style.requestActionHeader}>Another time</Text>
+													</TouchableOpacity>
+													<TouchableOpacity style={style.requestAction} onPress={() => cancelTheRequest(index)}>
+														<Text style={style.requestActionHeader}>Cancel</Text>
+													</TouchableOpacity>
+													<TouchableOpacity style={style.requestAction} onPress={() => acceptTheRequest(index)}>
+														<Text style={style.requestActionHeader}>Accept</Text>
+													</TouchableOpacity>
 												</View>
 											</View>
+											:
+											null
+										}
+									</View>
+								}
+							/>
+							:
+							<View style={style.bodyResult}>
+								{numRequests == 0 ? 
+									<Text style={style.bodyResultHeader}>No request(s) yet</Text>
+									:
+									<Text style={style.bodyResultHeader}>{numRequests} request(s)</Text>
+								}
+							</View>
+					)}
 
-											{(item.status == "requested" || item.status == "change") ? 
-												<View style={style.requestActions}>
-													<View style={{ flexDirection: 'row' }}>
-														<TouchableOpacity style={style.requestAction} onPress={() => {
-															if (locationType == 'salon') {
-																props.navigation.navigate("booktime", { appointmentid: item.id, refetch: () => {
-																	fetchTheNumRequests()
-																	removeFromList(item.id, "requests")
-																}})
-															} else {
-																props.navigation.navigate("makereservation", { userid: item.userId, scheduleid: item.id, refetch: () => {
-																	fetchTheNumRequests()
-																	removeFromList(item.id, "requests")
-																}})
-															}
-														}}>
-															<Text style={style.requestActionHeader}>Another time</Text>
-														</TouchableOpacity>
-														<TouchableOpacity style={style.requestAction} onPress={() => cancelTheRequest(index)}>
-															<Text style={style.requestActionHeader}>Cancel</Text>
-														</TouchableOpacity>
-														<TouchableOpacity style={style.requestAction} onPress={() => acceptTheRequest(index)}>
-															<Text style={style.requestActionHeader}>Accept</Text>
-														</TouchableOpacity>
-													</View>
-												</View>
-												:
-												null
-											}
+					{viewType == "appointments" && (
+						appointments.length > 0 ? 
+							<FlatList
+								data={appointments}
+								renderItem={({ item, index }) => 
+									<View key={item.key} style={style.schedule}>
+										<View style={style.scheduleImageHolder}>
+											<Image style={style.scheduleImage} source={{ uri: logo_url + item.image }}/>
 										</View>
-									}
-								/>
-								:
-								<View style={style.bodyResult}>
-									{numRequests == 0 ? 
-										<Text style={style.bodyResultHeader}>No request(s) yet</Text>
-										:
-										<Text style={style.bodyResultHeader}>{numRequests} request(s)</Text>
-									}
-								</View>
-						)}
+										<Text style={style.scheduleHeader}>
+											<Text style={{ fontFamily: Platform.OS == 'ios' ? 'Arial' : 'normal', fontWeight: 'bold' }}>You</Text> have 
+											{' '}an appointment for{'\n'}
+											<Text style={{ fontFamily: Platform.OS == 'ios' ? 'Arial' : 'normal', fontWeight: 'bold' }}> {item.name}</Text>
+											{'\n'}
+											<Text style={{ fontFamily: Platform.OS == 'ios' ? 'Arial' : 'normal', fontWeight: 'bold' }}>{displayTime(item.time)}</Text>
+											{'\n\n'}
+											<Text style={{ fontFamily: Platform.OS == 'ios' ? 'Arial' : 'normal', fontWeight: 'bold' }}>with client: {item.client.username}</Text>
+										</Text>
 
-						{viewType == "appointments" && (
-							appointments.length > 0 ? 
-								<FlatList
-									data={appointments}
-									renderItem={({ item, index }) => 
-										<View key={item.key} style={style.schedule}>
+										<View style={{ marginBottom: 10 }}>
+											<Text style={style.scheduleActionsHeader}>Service is done ?</Text>
+											<View style={style.scheduleActions}>
+												<TouchableOpacity style={item.gettingPayment ? style.scheduleActionDisabled : style.scheduleAction} disabled={item.gettingPayment} onPress={() => receiveTheepayment(index, item.id)}>
+													<Text style={style.scheduleActionHeader}>{item.allowPayment == true ? 'Receive\ne-payment' : 'e-payment\nPayment awaits'}</Text>
+												</TouchableOpacity>
+												<TouchableOpacity style={item.gettingPayment ? style.scheduleActionDisabled : style.scheduleAction} disabled={item.gettingPayment} onPress={() => receiveTheinpersonpayment(index, item.id)}>
+													<Text style={style.scheduleActionHeader}>{item.allowPayment == true ? 'Receive\nin-person-pay' : 'in-person-pay\nPayment awaits'}</Text>
+												</TouchableOpacity>
+											</View>
+											{item.gettingPayment && <ActivityIndicator marginBottom={-5} marginTop={-15} size="small"/>}
+										</View>
+									</View>
+								}
+							/>
+							:
+							<View style={style.bodyResult}>
+								{numAppointments == 0 ? 
+									<Text style={style.bodyResultHeader}>No appointment(s) yet</Text>
+									:
+									<Text style={style.bodyResultHeader}>{numAppointments} appointment(s)</Text>
+								}
+							</View>
+					)}
+
+					{viewType == "cartorderers" && (
+						cartOrderers.length > 0 ? 
+							<FlatList
+								data={cartOrderers}
+								renderItem={({ item, index }) => 
+									<View key={item.key} style={style.cartorderer}>
+										<View style={style.cartordererImageHolder}>
+											<Image style={style.cartordererImage} source={{ uri: logo_url + item.profile }}/>
+										</View>
+										<View style={style.cartordererInfo}>
+											<Text style={style.cartordererUsername}>Customer: {item.username}</Text>
+											<Text style={style.cartordererOrderNumber}>Order #{item.orderNumber}</Text>
+											<TouchableOpacity style={style.cartordererSeeOrders} onPress={() => {
+												props.navigation.navigate("cartorders", { userid: item.adder, ordernumber: item.orderNumber, refetch: () => {
+													getAllCartOrderers()
+													removeFromList(item.id, "cartOrderers")
+												}})
+											}}>
+												<Text style={style.cartordererSeeOrdersHeader}>See Order(s) ({item.numOrders})</Text>
+											</TouchableOpacity>
+										</View>
+									</View>
+								}
+							/>
+							:
+							<View style={style.bodyResult}>
+								{numCartorderers == 0 ? 
+									<Text style={style.bodyResultHeader}>No order(s) yet</Text>
+									:
+									<Text style={style.bodyResultHeader}>{numCartorderers} order(s)</Text>
+								}
+							</View>
+					)}
+
+					{viewType == "reservations" && (
+						reservations.length > 0 ?
+							<FlatList
+								data={reservations}
+								renderItem={({ item, index }) => 
+									<View key={item.key} style={style.schedule}>
+										<View style={style.scheduleRow}>
 											<View style={style.scheduleImageHolder}>
 												<Image style={style.scheduleImage} source={{ uri: logo_url + item.image }}/>
 											</View>
 											<Text style={style.scheduleHeader}>
-												<Text style={{ fontFamily: 'Arial', fontWeight: 'bold' }}>You</Text> have 
-												{' '}an appointment for{'\n'}
-												<Text style={{ fontFamily: 'Arial', fontWeight: 'bold' }}> {item.name}</Text>
-												{'\n'}
-												<Text style={{ fontFamily: 'Arial', fontWeight: 'bold' }}>{displayTime(item.time)}</Text>
-												{'\n\n'}
-												<Text style={{ fontFamily: 'Arial', fontWeight: 'bold' }}>with client: {item.client.username}</Text>
-											</Text>
-
-											<View style={{ marginBottom: 10 }}>
-												<Text style={style.scheduleActionsHeader}>Service is done ?</Text>
-												<View style={style.scheduleActions}>
-													<TouchableOpacity style={item.gettingPayment ? style.scheduleActionDisabled : style.scheduleAction} disabled={item.gettingPayment} onPress={() => receiveTheepayment(index, item.id)}>
-														<Text style={style.scheduleActionHeader}>{item.allowPayment == true ? 'Receive\ne-payment' : 'e-payment\nPayment awaits'}</Text>
-													</TouchableOpacity>
-													<TouchableOpacity style={item.gettingPayment ? style.scheduleActionDisabled : style.scheduleAction} disabled={item.gettingPayment} onPress={() => receiveTheinpersonpayment(index, item.id)}>
-														<Text style={style.scheduleActionHeader}>{item.allowPayment == true ? 'Receive\nin-person-pay' : 'in-person-pay\nPayment awaits'}</Text>
-													</TouchableOpacity>
-												</View>
-												{item.gettingPayment && <ActivityIndicator marginBottom={-5} marginTop={-15} size="small"/>}
-											</View>
-										</View>
-									}
-								/>
-								:
-								<View style={style.bodyResult}>
-									{numAppointments == 0 ? 
-										<Text style={style.bodyResultHeader}>No appointment(s) yet</Text>
-										:
-										<Text style={style.bodyResultHeader}>{numAppointments} appointment(s)</Text>
-									}
-								</View>
-						)}
-
-						{viewType == "cartorderers" && (
-							cartOrderers.length > 0 ? 
-								<FlatList
-									data={cartOrderers}
-									renderItem={({ item, index }) => 
-										<View key={item.key} style={style.cartorderer}>
-											<View style={style.cartordererImageHolder}>
-												<Image style={style.cartordererImage} source={{ uri: logo_url + item.profile }}/>
-											</View>
-											<View style={style.cartordererInfo}>
-												<Text style={style.cartordererUsername}>Customer: {item.username}</Text>
-												<Text style={style.cartordererOrderNumber}>Order #{item.orderNumber}</Text>
-												<TouchableOpacity style={style.cartordererSeeOrders} onPress={() => {
-													props.navigation.navigate("cartorders", { userid: item.adder, ordernumber: item.orderNumber, refetch: () => {
-														getAllCartOrderers()
-														removeFromList(item.id, "cartOrderers")
-													}})
-												}}>
-													<Text style={style.cartordererSeeOrdersHeader}>See Order(s) ({item.numOrders})</Text>
-												</TouchableOpacity>
-											</View>
-										</View>
-									}
-								/>
-								:
-								<View style={style.bodyResult}>
-									{numCartorderers == 0 ? 
-										<Text style={style.bodyResultHeader}>No order(s) yet</Text>
-										:
-										<Text style={style.bodyResultHeader}>{numCartorderers} order(s)</Text>
-									}
-								</View>
-						)}
-
-						{viewType == "reservations" && (
-							reservations.length > 0 ?
-								<FlatList
-									data={reservations}
-									renderItem={({ item, index }) => 
-										<View key={item.key} style={style.schedule}>
-											<View style={style.scheduleRow}>
-												<View style={style.scheduleImageHolder}>
-													<Image style={style.scheduleImage} source={{ uri: logo_url + item.image }}/>
-												</View>
-												<Text style={style.scheduleHeader}>
-													<Text style={{ fontFamily: 'Arial', fontWeight: 'bold' }}>{item.username}{'\n'}</Text> 
-													made a reservation for {'\n'}
-													<Text style={{ fontFamily: 'Arial', fontWeight: 'bold' }}>
-														{item.diners > 0 ? 
-															item.diners + " " + (item.diners > 1 ? 'people' : 'person') 
-															: 
-															" 1 person"
-														}
-													</Text>
-													{'\n'}
-													<Text style={{ fontFamily: 'Arial', fontWeight: 'bold' }}>{displayTime(item.time)}</Text>
-													{'\n'}for table: <Text style={{ fontFamily: 'Arial', fontWeight: 'bold' }}>#{item.table}</Text>
+												<Text style={{ fontFamily: Platform.OS == 'ios' ? 'Arial' : 'normal', fontWeight: 'bold' }}>{item.username}{'\n'}</Text> 
+												made a reservation for {'\n'}
+												<Text style={{ fontFamily: Platform.OS == 'ios' ? 'Arial' : 'normal', fontWeight: 'bold' }}>
+													{item.diners > 0 ? 
+														item.diners + " " + (item.diners > 1 ? 'people' : 'person') 
+														: 
+														" 1 person"
+													}
 												</Text>
-											</View>
+												{'\n'}
+												<Text style={{ fontFamily: Platform.OS == 'ios' ? 'Arial' : 'normal', fontWeight: 'bold' }}>{displayTime(item.time)}</Text>
+												{'\n'}for table: <Text style={{ fontFamily: Platform.OS == 'ios' ? 'Arial' : 'normal', fontWeight: 'bold' }}>#{item.table}</Text>
+											</Text>
+										</View>
 
-											{item.seated ? 
-												<View style={{ alignItems: 'center', marginVertical: 10 }}>
-													<View style={{ flexDirection: 'row', marginBottom: 10 }}>
-														<TouchableOpacity style={style.scheduleAction} onPress={() => props.navigation.navigate("diningorders", { scheduleid: item.id, refetch: () => {
-															fetchTheNumReservations()
-															removeFromList(item.id, "reservations")
-														}})}>
-															<Text style={style.scheduleActionHeader}>Customers' Orders</Text>
-														</TouchableOpacity>
-														<Text style={style.scheduleNumOrders}>{item.numMakings > 0 && '(' + item.numMakings + ')'}</Text>
-													</View>
-													<View style={{ alignItems: 'center' }}>
-														<Text style={{ padding: 8 }}>Diners are done ?</Text>
-														<View style={{ flexDirection: 'row' }}>
-															<TouchableOpacity style={item.gettingPayment ? style.scheduleActionDisabled : style.scheduleAction} disabled={item.gettingPayment} onPress={() => cancelTheReservation(index, item.id)}>
-																<Text style={style.scheduleActionHeader}>Cancel Reservation</Text>
-															</TouchableOpacity>
-															<TouchableOpacity style={item.gettingPayment ? style.scheduleActionDisabled : style.scheduleAction} disabled={item.gettingPayment} onPress={() => doneTheDining(index, item.id)}>
-																<Text style={style.scheduleActionHeader}>Receive payment</Text>
-																{item.gettingPayment && <ActivityIndicator marginBottom={-5} marginTop={-15} size="small"/>}
-															</TouchableOpacity>
-														</View>
-													</View>
+										{item.seated ? 
+											<View style={{ alignItems: 'center', marginVertical: 10 }}>
+												<View style={{ flexDirection: 'row', marginBottom: 10 }}>
+													<TouchableOpacity style={style.scheduleAction} onPress={() => props.navigation.navigate("diningorders", { scheduleid: item.id, refetch: () => {
+														fetchTheNumReservations()
+														removeFromList(item.id, "reservations")
+													}})}>
+														<Text style={style.scheduleActionHeader}>Customers' Orders</Text>
+													</TouchableOpacity>
+													<Text style={style.scheduleNumOrders}>{item.numMakings > 0 && '(' + item.numMakings + ')'}</Text>
 												</View>
-												:
-												<View style={{ alignItems: 'center', marginVertical: 10 }}>
-													<Text style={style.scheduleHeader}>Diner(s) are seated at their table and ready to be serve</Text>
+												<View style={{ alignItems: 'center' }}>
+													<Text style={{ padding: 8 }}>Diners are done ?</Text>
 													<View style={{ flexDirection: 'row' }}>
-														<TouchableOpacity style={style.scheduleAction} disabled={item.gettingPayment} onPress={() => cancelTheReservation(index, item.id)}>
+														<TouchableOpacity style={item.gettingPayment ? style.scheduleActionDisabled : style.scheduleAction} disabled={item.gettingPayment} onPress={() => cancelTheReservation(index, item.id)}>
 															<Text style={style.scheduleActionHeader}>Cancel Reservation</Text>
 														</TouchableOpacity>
-														<TouchableOpacity style={style.scheduleAction} onPress={() => canServeTheDiners(index, item.id)}>
-															<Text style={style.scheduleActionHeader}>Yes</Text>
+														<TouchableOpacity style={item.gettingPayment ? style.scheduleActionDisabled : style.scheduleAction} disabled={item.gettingPayment} onPress={() => doneTheDining(index, item.id)}>
+															<Text style={style.scheduleActionHeader}>Receive payment</Text>
+															{item.gettingPayment && <ActivityIndicator marginBottom={-5} marginTop={-15} size="small"/>}
 														</TouchableOpacity>
 													</View>
 												</View>
-											}
-										</View>
-									}
-								/>
-								:
-								<View style={style.bodyResult}>
-									{numReservations == 0 ? 
-										<Text style={style.bodyResultHeader}>No reservation(s) yet</Text>
-										:
-										<Text style={style.bodyResultHeader}>{numReservations} reservation(s)</Text>
-									}
-								</View>
-						)}
-					</View>
-
-					<View style={style.bottomNavs}>
-						<View style={style.bottomNavsRow}>
-							<TouchableOpacity style={style.bottomNav} onPress={() => props.navigation.navigate("settings", { refetch: () => getTheInfo()})}>
-								<AntDesign name="setting" size={30}/>
-							</TouchableOpacity>
-
-							<TouchableOpacity style={style.bottomNavButton} onPress={() => props.navigation.navigate("menu", { menuid: '', name: '', refetch: () => getTheInfo()})}>
-								<Text style={style.bottomNavButtonHeader}>Edit Menu</Text>
-							</TouchableOpacity>
-
-							<TouchableOpacity style={style.bottomNavButton} onPress={() => changeTheLocationState()}>
-								<Text style={style.bottomNavButtonHeader}>{locationListed ? "Unlist" : "List"} Public</Text>
-							</TouchableOpacity>
-
-							<TouchableOpacity style={style.bottomNav} onPress={async() => {
-								const ownerid = await AsyncStorage.getItem("ownerid")
-
-								socket.emit("socket/business/logout", ownerid, () => {
-									AsyncStorage.clear()
-
-									props.navigation.dispatch(
-										CommonActions.reset({
-											index: 1,
-											routes: [{ name: 'auth' }]
-										})
-									);
-								})
-							}}>
-								<Text style={style.bottomNavHeader}>Log-Out</Text>
-							</TouchableOpacity>
-						</View>
-					</View>
+											</View>
+											:
+											<View style={{ alignItems: 'center', marginVertical: 10 }}>
+												<Text style={style.scheduleHeader}>Diner(s) are seated at their table and ready to be serve</Text>
+												<View style={{ flexDirection: 'row' }}>
+													<TouchableOpacity style={style.scheduleAction} disabled={item.gettingPayment} onPress={() => cancelTheReservation(index, item.id)}>
+														<Text style={style.scheduleActionHeader}>Cancel Reservation</Text>
+													</TouchableOpacity>
+													<TouchableOpacity style={style.scheduleAction} onPress={() => canServeTheDiners(index, item.id)}>
+														<Text style={style.scheduleActionHeader}>Yes</Text>
+													</TouchableOpacity>
+												</View>
+											</View>
+										}
+									</View>
+								}
+							/>
+							:
+							<View style={style.bodyResult}>
+								{numReservations == 0 ? 
+									<Text style={style.bodyResultHeader}>No reservation(s) yet</Text>
+									:
+									<Text style={style.bodyResultHeader}>{numReservations} reservation(s)</Text>
+								}
+							</View>
+					)}
 				</View>
 
-				{cancelRequestInfo.show && (
-					<Modal transparent={true}>
-						<TouchableWithoutFeedback style={{ paddingVertical: offsetPadding }} onPress={() => Keyboard.dismiss()}>
-							<View style={style.cancelRequestBox}>
-								<Text style={style.cancelRequestHeader}>Tell the {cancelRequestInfo.type == "restaurant" ? "diners" : "customer"} the reason for this cancellation ? (optional)</Text>
+				<View style={style.bottomNavs}>
+					<View style={style.bottomNavsRow}>
+						<TouchableOpacity style={style.bottomNav} onPress={() => props.navigation.navigate("settings", { refetch: () => getTheLocationProfile()})}>
+							<AntDesign name="setting" size={30}/>
+						</TouchableOpacity>
 
-								<TextInput placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Write your reason" multiline={true} style={style.cancelRequestInput} onChangeText={(reason) => {
-									setCancelrequestinfo({
-										...cancelRequestInfo,
-										reason: reason
+						<TouchableOpacity style={style.bottomNavButton} onPress={() => props.navigation.navigate("menu", { refetch: () => getTheLocationProfile()})}>
+							<Text style={style.bottomNavButtonHeader}>Edit Menu</Text>
+						</TouchableOpacity>
+
+						<TouchableOpacity style={style.bottomNavButton} onPress={() => changeTheLocationState()}>
+							<Text style={style.bottomNavButtonHeader}>{locationListed ? "Unlist" : "List"} Public</Text>
+						</TouchableOpacity>
+
+						<TouchableOpacity style={style.bottomNav} onPress={async() => {
+							const ownerid = await AsyncStorage.getItem("ownerid")
+
+							socket.emit("socket/business/logout", ownerid, () => {
+								AsyncStorage.clear()
+
+								props.navigation.dispatch(
+									CommonActions.reset({
+										index: 1,
+										routes: [{ name: 'auth' }]
 									})
-								}} autoCorrect={false} autoCapitalize="none"/>
+								);
+							})
+						}}>
+							<Text style={style.bottomNavHeader}>Log-Out</Text>
+						</TouchableOpacity>
+					</View>
+				</View>
+			</View>
 
-								<View style={{ alignItems: 'center' }}>
-									<View style={style.cancelRequestActions}>
-										<TouchableOpacity style={style.cancelRequestTouch} onPress={() => setCancelrequestinfo({ ...cancelRequestInfo, show: false, type: "", id: 0, index: 0, reason: "" })}>
-											<Text style={style.cancelRequestTouchHeader}>Close</Text>
-										</TouchableOpacity>
-										<TouchableOpacity style={style.cancelRequestTouch} onPress={() => cancelTheRequest()}>
-											<Text style={style.cancelRequestTouchHeader}>Done</Text>
-										</TouchableOpacity>
-									</View>
-								</View>
-							</View>
-						</TouchableWithoutFeedback>
-					</Modal>
-				)}
+			{cancelRequestInfo.show && (
+				<Modal transparent={true}>
+					<TouchableWithoutFeedback style={{ paddingVertical: offsetPadding }} onPress={() => Keyboard.dismiss()}>
+						<View style={style.cancelRequestBox}>
+							<Text style={style.cancelRequestHeader}>Tell the {cancelRequestInfo.type == "restaurant" ? "diners" : "customer"} the reason for this cancellation ? (optional)</Text>
 
-				{acceptRequestInfo.show && (
-					<Modal transparent={true}>
-						<TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
-							<View style={style.acceptRequestContainer} onPress={() => Keyboard.dismiss()}>
-								<View style={style.acceptRequestBox}>
-									<Text style={style.acceptRequestHeader}>Tell the diner the table #?</Text>
+							<TextInput placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Write your reason" multiline={true} style={style.cancelRequestInput} onChangeText={(reason) => {
+								setCancelrequestinfo({
+									...cancelRequestInfo,
+									reason: reason
+								})
+							}} autoCorrect={false} autoCapitalize="none"/>
 
-									<TextInput placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder='What table will be available' style={style.acceptRequestInput} onChangeText={(tablenum) => {
-										setAcceptrequestinfo({
-											...acceptRequestInfo,
-											tablenum
-										})
-									}} value={acceptRequestInfo.tablenum} autoCorrect={false} autoComplete="none"/>
-
-									{acceptRequestInfo.errorMsg ? <Text style={style.errorMsg}>{acceptRequestInfo.errorMsg}</Text> : null}
-
-									<View style={{ alignItems: 'center' }}>
-										<View style={style.acceptRequestActions}>
-											<TouchableOpacity style={style.acceptRequestTouch} onPress={() => {
-												getAllRequests()
-												setAcceptrequestinfo({ ...acceptRequestInfo, show: false, tablenum: "" })
-											}}>
-												<Text style={style.acceptRequestTouchHeader}>Close</Text>
-											</TouchableOpacity>
-											<TouchableOpacity style={style.acceptRequestTouch} onPress={() => acceptTheRequest()}>
-												<Text style={style.acceptRequestTouchHeader}>Done</Text>
-											</TouchableOpacity>
-										</View>
-									</View>
-								</View>
-							</View>
-						</TouchableWithoutFeedback>
-					</Modal>
-				)}
-				
-				{showPublicinforequired.show && (
-					<Modal transparent={true}>
-						<View style={style.requiredBoxContainer}>
-							<View style={style.requiredBox}>
-								<View style={style.requiredContainer}>
-									<Text style={style.requiredHeader}>
-										We recommend you provide a bank account before
-										setting your place public for {locationType == "restaurant" ? "customers" : "clients"}
-									</Text>
-
-									{locationType == "restaurant" ? 
-										<View style={{ alignItems: 'center' }}>
-											<TouchableOpacity style={style.requiredAction} onPress={() => setShowpublicinforequired({ show: false, index: 0, type: "" })}>
-												<Text style={style.requiredActionHeader}>Close</Text>
-											</TouchableOpacity>
-											<TouchableOpacity style={style.requiredAction} onPress={() => setTheLocationPublic()}>
-												<Text style={style.requiredActionHeader}>Set public anyway</Text>
-											</TouchableOpacity>
-											<TouchableOpacity style={style.requiredAction} onPress={() => {
-												setShowpublicinforequired({ show: false, index: 0, type: "" })
-												props.navigation.navigate("settings", { required: "bankaccount" })
-											}}>
-												<Text style={style.requiredActionHeader}>Add account</Text>
-											</TouchableOpacity>
-										</View>
-										:
-										<View style={{ alignItems: 'center' }}>
-											<TouchableOpacity style={style.requiredAction} onPress={() => setShowpublicinforequired({ show: false, index: 0, type: "" })}>
-												<Text style={style.requiredActionHeader}>Close</Text>
-											</TouchableOpacity>
-											<TouchableOpacity style={style.requiredAction} onPress={() => setTheLocationPublic()}>
-												<Text style={style.requiredActionHeader}>Set public anyway</Text>
-											</TouchableOpacity>
-											<TouchableOpacity style={style.requiredAction} onPress={() => {
-												setShowpublicinforequired({ show: false, index: 0, type: "" })
-												props.navigation.navigate("settings", { required: "bankaccount" })
-											}}>
-												<Text style={style.requiredActionHeader}>Add account</Text>
-											</TouchableOpacity>
-										</View>
-									}
+							<View style={{ alignItems: 'center' }}>
+								<View style={style.cancelRequestActions}>
+									<TouchableOpacity style={style.cancelRequestTouch} onPress={() => setCancelrequestinfo({ ...cancelRequestInfo, show: false, type: "", id: 0, index: 0, reason: "" })}>
+										<Text style={style.cancelRequestTouchHeader}>Close</Text>
+									</TouchableOpacity>
+									<TouchableOpacity style={style.cancelRequestTouch} onPress={() => cancelTheRequest()}>
+										<Text style={style.cancelRequestTouchHeader}>Done</Text>
+									</TouchableOpacity>
 								</View>
 							</View>
 						</View>
-					</Modal>
-				)}
+					</TouchableWithoutFeedback>
+				</Modal>
+			)}
+			{acceptRequestInfo.show && (
+				<Modal transparent={true}>
+					<TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+						<View style={style.acceptRequestContainer} onPress={() => Keyboard.dismiss()}>
+							<View style={style.acceptRequestBox}>
+								<Text style={style.acceptRequestHeader}>Tell the diner the table #?</Text>
 
-				{showBankaccountrequired.show && (
-					<Modal transparent={true}>
-						<View style={style.requiredBoxContainer}>
-							<View style={style.requiredBox}>
-								<View style={style.requiredContainer}>
-									<Text style={style.requiredHeader}>
-										You need to provide a bank account to
-										receive payment from the client
-									</Text>
+								<TextInput placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder='What table will be available' style={style.acceptRequestInput} onChangeText={(tablenum) => {
+									setAcceptrequestinfo({
+										...acceptRequestInfo,
+										tablenum
+									})
+								}} value={acceptRequestInfo.tablenum} autoCorrect={false} autoComplete="none"/>
 
+								{acceptRequestInfo.errorMsg ? <Text style={style.errorMsg}>{acceptRequestInfo.errorMsg}</Text> : null}
+
+								<View style={{ alignItems: 'center' }}>
+									<View style={style.acceptRequestActions}>
+										<TouchableOpacity style={style.acceptRequestTouch} onPress={() => {
+											getAllRequests()
+											setAcceptrequestinfo({ ...acceptRequestInfo, show: false, tablenum: "" })
+										}}>
+											<Text style={style.acceptRequestTouchHeader}>Close</Text>
+										</TouchableOpacity>
+										<TouchableOpacity style={style.acceptRequestTouch} onPress={() => acceptTheRequest()}>
+											<Text style={style.acceptRequestTouchHeader}>Done</Text>
+										</TouchableOpacity>
+									</View>
+								</View>
+							</View>
+						</View>
+					</TouchableWithoutFeedback>
+				</Modal>
+			)}
+			{showPublicinforequired.show && (
+				<Modal transparent={true}>
+					<View style={style.requiredBoxContainer}>
+						<View style={style.requiredBox}>
+							<View style={style.requiredContainer}>
+								<Text style={style.requiredHeader}>
+									We recommend you provide a bank account before
+									setting your place public for {locationType == "restaurant" ? "customers" : "clients"}
+								</Text>
+
+								{locationType == "restaurant" ? 
 									<View style={{ alignItems: 'center' }}>
-										<TouchableOpacity style={style.requiredAction} onPress={() => setShowbankaccountrequired({ show: false, scheduleid: 0 })}>
+										<TouchableOpacity style={style.requiredAction} onPress={() => setShowpublicinforequired({ show: false, index: 0, type: "" })}>
 											<Text style={style.requiredActionHeader}>Close</Text>
 										</TouchableOpacity>
+										<TouchableOpacity style={style.requiredAction} onPress={() => setTheLocationPublic()}>
+											<Text style={style.requiredActionHeader}>Set public anyway</Text>
+										</TouchableOpacity>
 										<TouchableOpacity style={style.requiredAction} onPress={() => {
-											setShowbankaccountrequired({ show: false, scheduleid: 0 })
+											setShowpublicinforequired({ show: false, index: 0, type: "" })
 											props.navigation.navigate("settings", { required: "bankaccount" })
 										}}>
 											<Text style={style.requiredActionHeader}>Add account</Text>
 										</TouchableOpacity>
 									</View>
-								</View>
-							</View>
-						</View>
-					</Modal>
-				)}
-
-				{showPaymentrequired && (
-					<Modal transparent={true}>
-						<View style={style.requiredBoxContainer}>
-							<View style={style.requiredBox}>
-								<View style={style.requiredContainer}>
-									<Text style={style.requiredHeader}>
-										The client hasn't provide any payment method
-									</Text>
-
-									<View style={style.requiredActions}>
-										<TouchableOpacity style={style.requiredAction} onPress={() => setShowpaymentrequired(false)}>
+									:
+									<View style={{ alignItems: 'center' }}>
+										<TouchableOpacity style={style.requiredAction} onPress={() => setShowpublicinforequired({ show: false, index: 0, type: "" })}>
 											<Text style={style.requiredActionHeader}>Close</Text>
 										</TouchableOpacity>
-									</View>
-								</View>
-							</View>
-						</View>
-					</Modal>
-				)}
-
-				{showPaymentunsent && (
-					<Modal transparent={true}>
-						<View style={style.requiredBoxContainer}>
-							<View style={style.requiredBox}>
-								<View style={style.requiredContainer}>
-									<Text style={style.requiredHeader}>
-										The customer hasn't sent their payment yet.
-										{'\n\n'}
-										When your service with the customer is done, 
-										tell him/her to send their payment in their 
-										notification
-									</Text>
-
-									<View style={style.requiredActions}>
-										<TouchableOpacity style={style.requiredAction} onPress={() => setShowpaymentunsent(false)}>
-											<Text style={style.requiredActionHeader}>Ok</Text>
-										</TouchableOpacity>
-									</View>
-								</View>
-							</View>
-						</View>
-					</Modal>
-				)}
-
-				{showMenurequired && (
-					<Modal transparent={true}>
-						<View style={style.requiredBoxContainer}>
-							<View style={style.requiredBox}>
-								<View style={style.requiredContainer}>
-									<Text style={style.requiredHeader}>
-										You need to add some 
-										{locationType == "restaurant" ? 
-											" food "
-											:
-											" products / services "
-										}
-										to your menu to list your location publicly
-									</Text>
-
-									<View style={style.requiredActions}>
-										<TouchableOpacity style={style.requiredAction} onPress={() => setShowmenurequired(false)}>
-											<Text style={style.requiredActionHeader}>Close</Text>
+										<TouchableOpacity style={style.requiredAction} onPress={() => setTheLocationPublic()}>
+											<Text style={style.requiredActionHeader}>Set public anyway</Text>
 										</TouchableOpacity>
 										<TouchableOpacity style={style.requiredAction} onPress={() => {
-											setShowmenurequired(false)
-											props.navigation.navigate("menu", { menuid: '', name: '', refetch: () => getTheInfo()})
+											setShowpublicinforequired({ show: false, index: 0, type: "" })
+											props.navigation.navigate("settings", { required: "bankaccount" })
 										}}>
-											<Text style={style.requiredActionHeader}>Ok</Text>
+											<Text style={style.requiredActionHeader}>Add account</Text>
 										</TouchableOpacity>
 									</View>
+								}
+							</View>
+						</View>
+					</View>
+				</Modal>
+			)}
+			{showBankaccountrequired.show && (
+				<Modal transparent={true}>
+					<View style={style.requiredBoxContainer}>
+						<View style={style.requiredBox}>
+							<View style={style.requiredContainer}>
+								<Text style={style.requiredHeader}>
+									You need to provide a bank account to
+									receive payment from the client
+								</Text>
+
+								<View style={{ alignItems: 'center' }}>
+									<TouchableOpacity style={style.requiredAction} onPress={() => setShowbankaccountrequired({ show: false, scheduleid: 0 })}>
+										<Text style={style.requiredActionHeader}>Close</Text>
+									</TouchableOpacity>
+									<TouchableOpacity style={style.requiredAction} onPress={() => {
+										setShowbankaccountrequired({ show: false, scheduleid: 0 })
+										props.navigation.navigate("settings", { required: "bankaccount" })
+									}}>
+										<Text style={style.requiredActionHeader}>Add account</Text>
+									</TouchableOpacity>
 								</View>
 							</View>
 						</View>
-					</Modal>
-				)}
+					</View>
+				</Modal>
+			)}
+			{showPaymentrequired && (
+				<Modal transparent={true}>
+					<View style={style.requiredBoxContainer}>
+						<View style={style.requiredBox}>
+							<View style={style.requiredContainer}>
+								<Text style={style.requiredHeader}>
+									The client hasn't provide any payment method
+								</Text>
 
-				{showPaymentconfirm.show && (
-					<Modal transparent={true}>
-						<View style={style.alertBoxContainer}>
-							<View style={style.alertBox}>
-								<View style={style.alertContainer}>
-									<Text style={style.alertHeader}>
-										<Text>Congrats on your service of</Text>
-										{'\n'}
-										<Text style={{ fontFamily: 'Arial', fontWeight: 'bold' }}>{showPaymentconfirm.info.name}</Text>
-										{'\n'}
-										<Text>for {showPaymentconfirm.info.clientName}</Text>
-										{'\n\n'}
-										<Text>You earned ${showPaymentconfirm.info.price}</Text>
-										{'\n\n'}
-										<Text>Good job! :)</Text>
+								<View style={style.requiredActions}>
+									<TouchableOpacity style={style.requiredAction} onPress={() => setShowpaymentrequired(false)}>
+										<Text style={style.requiredActionHeader}>Close</Text>
+									</TouchableOpacity>
+								</View>
+							</View>
+						</View>
+					</View>
+				</Modal>
+			)}
+			{showPaymentunsent && (
+				<Modal transparent={true}>
+					<View style={style.requiredBoxContainer}>
+						<View style={style.requiredBox}>
+							<View style={style.requiredContainer}>
+								<Text style={style.requiredHeader}>
+									The customer hasn't sent their payment yet.
+									{'\n\n'}
+									When your service with the customer is done, 
+									tell him/her to send their payment in their 
+									notification
+								</Text>
+
+								<View style={style.requiredActions}>
+									<TouchableOpacity style={style.requiredAction} onPress={() => setShowpaymentunsent(false)}>
+										<Text style={style.requiredActionHeader}>Ok</Text>
+									</TouchableOpacity>
+								</View>
+							</View>
+						</View>
+					</View>
+				</Modal>
+			)}
+			{showMenurequired && (
+				<Modal transparent={true}>
+					<View style={style.requiredBoxContainer}>
+						<View style={style.requiredBox}>
+							<View style={style.requiredContainer}>
+								<Text style={style.requiredHeader}>
+									You need to add some 
+									{locationType == "restaurant" ? 
+										" food "
+										:
+										" products / services "
+									}
+									to your menu to list your location publicly
+								</Text>
+
+								<View style={style.requiredActions}>
+									<TouchableOpacity style={style.requiredAction} onPress={() => setShowmenurequired(false)}>
+										<Text style={style.requiredActionHeader}>Close</Text>
+									</TouchableOpacity>
+									<TouchableOpacity style={style.requiredAction} onPress={() => {
+										setShowmenurequired(false)
+										props.navigation.navigate("menu", { menuid: '', name: '', refetch: () => getTheLocationProfile()})
+									}}>
+										<Text style={style.requiredActionHeader}>Ok</Text>
+									</TouchableOpacity>
+								</View>
+							</View>
+						</View>
+					</View>
+				</Modal>
+			)}
+			{showPaymentconfirm.show && (
+				<Modal transparent={true}>
+					<View style={style.alertBoxContainer}>
+						<View style={style.alertBox}>
+							<View style={style.alertContainer}>
+								<Text style={style.alertHeader}>
+									<Text>Congrats on your service of</Text>
+									{'\n'}
+									<Text style={{ fontFamily: Platform.OS == 'ios' ? 'Arial' : 'normal', fontWeight: 'bold' }}>{showPaymentconfirm.info.name}</Text>
+									{'\n'}
+									<Text>for {showPaymentconfirm.info.clientName}</Text>
+									{'\n\n'}
+									<Text>You earned ${showPaymentconfirm.info.price}</Text>
+									{'\n\n'}
+									<Text>Good job! :)</Text>
+								</Text>
+
+								<View style={style.alertActions}>
+									<TouchableOpacity style={style.alertAction} onPress={() => setShowpaymentconfirm({ show: false, info: {} })}>
+										<Text style={style.alertActionHeader}>Ok</Text>
+									</TouchableOpacity>
+								</View>
+							</View>
+						</View>
+					</View>
+				</Modal>
+			)}
+			{showUnservedorders && (
+				<Modal transparent={true}>
+					<View style={style.alertBoxContainer}>
+						<View style={style.alertBox}>
+							<View style={style.alertContainer}>
+								<Text style={style.alertHeader}>
+									There is one or more unserved orders from the customers.
+									{'\n'}
+									Please finish the serve
+								</Text>
+
+								<View style={style.alertActions}>
+									<TouchableOpacity style={style.alertAction} onPress={() => setShowunservedorders(false)}>
+										<Text style={style.alertActionHeader}>Ok</Text>
+									</TouchableOpacity>
+								</View>
+							</View>
+						</View>
+					</View>
+				</Modal>
+			)}
+			{showWrongworker && (
+				<Modal transparent={true}>
+					<View style={style.alertBoxContainer}>
+						<View style={style.alertBox}>
+							<View style={style.alertContainer}>
+								<Text style={style.alertHeader}>Only the worker of this client can receive the payment</Text>
+
+								<View style={style.alertActions}>
+									<TouchableOpacity style={style.alertAction} onPress={() => setShowwrongworker(false)}>
+										<Text style={style.alertActionHeader}>Ok</Text>
+									</TouchableOpacity>
+								</View>
+							</View>
+						</View>
+					</View>
+				</Modal>
+			)}
+			{showUnallowedpayment && (
+				<Modal transparent={true}>
+					<View style={style.alertBoxContainer}>
+						<View style={style.alertBox}>
+							<View style={style.alertContainer}>
+								<Text style={style.alertHeader}>The client hasn't allowed payment yet</Text>
+
+								<View style={style.alertActions}>
+									<TouchableOpacity style={style.alertAction} onPress={() => setShowunallowedpayment(false)}>
+										<Text style={style.alertActionHeader}>Ok</Text>
+									</TouchableOpacity>
+								</View>
+							</View>
+						</View>
+					</View>
+				</Modal>
+			)}
+			{showFirsttime.show && (
+				<Modal transparent={true}>
+					<View style={style.firstTimeBoxContainer}>
+						<View style={style.firstTimeBox}>
+							<View style={style.firstTimeContainer}>
+								{showFirsttime.step == 0 ? 
+									<Text style={style.firstTimeHeader}>
+										Welcome!!{'\n\n'}
+
+										This is the main page{'\n\n'}
+
+										You will see all 
+
+										{locationType == 'restaurant' ? 
+											' requests, booked reservations and orders '
+											:
+											' requests and your scheduled appointments '
+										}
+										
+										here
 									</Text>
+								: null }
 
-									<View style={style.alertActions}>
-										<TouchableOpacity style={style.alertAction} onPress={() => setShowpaymentconfirm({ show: false, info: {} })}>
-											<Text style={style.alertActionHeader}>Ok</Text>
-										</TouchableOpacity>
-									</View>
-								</View>
-							</View>
-						</View>
-					</Modal>
-				)}
-
-				{showUnservedorders && (
-					<Modal transparent={true}>
-						<View style={style.alertBoxContainer}>
-							<View style={style.alertBox}>
-								<View style={style.alertContainer}>
-									<Text style={style.alertHeader}>
-										There is one or more unserved orders from the customers.
-										{'\n'}
-										Please finish the serve
+								{showFirsttime.step == 1 ? 
+									<Text style={style.firstTimeHeader}>
+										Before you can accept requests from {locationType == 'restaurant' ? 'diners' : 'clients'}
+										{'\n\n'}
+										you need to setup your menu
 									</Text>
+								: null }
 
-									<View style={style.alertActions}>
-										<TouchableOpacity style={style.alertAction} onPress={() => setShowunservedorders(false)}>
-											<Text style={style.alertActionHeader}>Ok</Text>
+								<View style={style.firstTimeActions}>
+									{showFirsttime.step > 0 && (
+										<TouchableOpacity style={style.firstTimeAction} onPress={() => setShowfirsttime({ ...showFirsttime, step: showFirsttime.step - 1 })}>
+											<Text style={style.firstTimeActionHeader}>Back</Text>
 										</TouchableOpacity>
-									</View>
+									)}
+										
+									<TouchableOpacity style={style.firstTimeAction} onPress={() => {
+										if (showFirsttime.step == 1) {
+											setShowfirsttime({ show: false, step: 0 })
+											props.navigation.navigate("menu", { menuid: '', name: '', refetch: () => getTheLocationProfile()})
+										} else {
+											setShowfirsttime({ ...showFirsttime, step: showFirsttime.step + 1 })
+										}
+									}}>
+										<Text style={style.firstTimeActionHeader}>{showFirsttime.step < 1 ? 'Next' : "Setup Menu"}</Text>
+									</TouchableOpacity>
 								</View>
 							</View>
 						</View>
-					</Modal>
-				)}
-
-				{showWrongworker && (
-					<Modal transparent={true}>
-						<View style={style.alertBoxContainer}>
-							<View style={style.alertBox}>
-								<View style={style.alertContainer}>
-									<Text style={style.alertHeader}>Only the worker of this client can receive the payment</Text>
-
-									<View style={style.alertActions}>
-										<TouchableOpacity style={style.alertAction} onPress={() => setShowwrongworker(false)}>
-											<Text style={style.alertActionHeader}>Ok</Text>
-										</TouchableOpacity>
-									</View>
-								</View>
-							</View>
-						</View>
-					</Modal>
-				)}
-
-				{showUnallowedpayment && (
-					<Modal transparent={true}>
-						<View style={style.alertBoxContainer}>
-							<View style={style.alertBox}>
-								<View style={style.alertContainer}>
-									<Text style={style.alertHeader}>The client hasn't allowed payment yet</Text>
-
-									<View style={style.alertActions}>
-										<TouchableOpacity style={style.alertAction} onPress={() => setShowunallowedpayment(false)}>
-											<Text style={style.alertActionHeader}>Ok</Text>
-										</TouchableOpacity>
-									</View>
-								</View>
-							</View>
-						</View>
-					</Modal>
-				)}
-
-				{showFirsttime.show && (
-					<Modal transparent={true}>
-						<View style={style.firstTimeBoxContainer}>
-							<View style={style.firstTimeBox}>
-								<View style={style.firstTimeContainer}>
-									{showFirsttime.step == 0 ? 
-										<Text style={style.firstTimeHeader}>
-											Welcome!!{'\n\n'}
-
-											This is the main page. You will see all requests/scheduled appointment/reservation here
-										</Text>
-									: null }
-
-									{showFirsttime.step == 1 ? 
-										<Text style={style.firstTimeHeader}>
-											But before you can start setting your location public and accepting customers' requests,
-										</Text>
-									: null }
-
-									{showFirsttime.step == 2 ? 
-										<Text style={style.firstTimeHeader}>
-											you need to setup your menu(s) and service(s) and product(s)
-										</Text>
-									: null }
-
-									<View style={style.firstTimeActions}>
-										<TouchableOpacity style={style.firstTimeAction} onPress={() => {
-											if (showFirsttime.step == 2) {
-												setShowfirsttime({ show: false, step: 0 })
-												props.navigation.navigate("menu", { menuid: '', name: '', refetch: () => getTheInfo()})
-											} else {
-												setShowfirsttime({ ...showFirsttime, step: showFirsttime.step + 1 })
-											}
-										}}>
-											<Text style={style.firstTimeActionHeader}>{showFirsttime.step < 2 ? 'Next' : "Let's start"}</Text>
-										</TouchableOpacity>
-									</View>
-								</View>
-							</View>
-						</View>
-					</Modal>
-				)}
-			</View>
-
+					</View>
+				</Modal>
+			)}
 			{showDisabledScreen && (
 				<Modal transparent={true}>
 					<View style={style.disabled}>
@@ -1685,12 +1677,12 @@ export default function main(props) {
 }
 
 const style = StyleSheet.create({
-	main: { backgroundColor: 'white' },
+	main: { backgroundColor: 'white', height: '100%', paddingVertical: offsetPadding, width: '100%' },
 	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 
-	headers: { alignItems: 'center', flexDirection: 'column', height: fsize(0.25), justifyContent: 'space-between', paddingVertical: 5 },
-	storeIconHolder: { borderRadius: storeLogoSize / 2, height: storeLogoSize, overflow: 'hidden', width: storeLogoSize },
-	image: { height: storeLogoSize, width: storeLogoSize },
+	headers: { alignItems: 'center', flexDirection: 'column', height: '20%', justifyContent: 'space-between', paddingVertical: 5 },
+	storeIconHolder: { borderRadius: fsize(0.2) / 2, height: fsize(0.2), overflow: 'hidden', width: fsize(0.2) },
+	image: { height: fsize(0.2), width: fsize(0.2) },
 	locationInfoHeader: { fontSize: fsize(0.04), fontWeight: 'bold', paddingHorizontal: 10, textAlign: 'center' },
 
 	navs: { alignItems: 'center' },
@@ -1700,24 +1692,24 @@ const style = StyleSheet.create({
 	navHeaderSelected: { color: 'white', fontSize: fsize(0.035) },
 
 	// body
-	body: { height: screenHeight - 190 },
+	body: { height: '70%' },
 
 	// client appointment requests
 	request: { borderRadius: 5, backgroundColor: 'white', marginHorizontal: 5, marginVertical: 2.5 },
 	requestRow: { flexDirection: 'row', justifyContent: 'space-between' },
-	requestImageHolder: { borderRadius: imageSize / 2, height: imageSize, margin: 5, overflow: 'hidden', width: imageSize },
-	requestImage: { height: imageSize, width: imageSize },
+	requestImageHolder: { borderRadius: fsize(0.2) / 2, height: fsize(0.2), margin: 5, overflow: 'hidden', width: fsize(0.2) },
+	requestImage: { height: fsize(0.2), width: fsize(0.2) },
 	requestInfo: { fontFamily: 'appFont', fontSize: fsize(0.05), padding: 10, width: width - 100 },
 	requestInfoHeader: { fontSize: fsize(0.05), fontWeight: 'bold' },
 	requestActions: { flexDirection: 'row', justifyContent: 'space-around', marginVertical: 10 },
-	requestAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 5, width: 80 },
+	requestAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 5 },
 	requestActionHeader: { fontSize: fsize(0.025), textAlign: 'center' },
 
 	// client's schedule
 	schedule: { alignItems: 'center', borderRadius: 5, backgroundColor: 'white', marginHorizontal: 5, marginVertical: 2.5 },
 	scheduleRow: { flexDirection: 'row', justifyContent: 'space-between' },
-	scheduleImageHolder: { borderRadius: imageSize / 2, height: imageSize, margin: 5, overflow: 'hidden', width: imageSize },
-	scheduleImage: { height: imageSize, width: imageSize },
+	scheduleImageHolder: { borderRadius: fsize(0.2) / 2, height: fsize(0.2), margin: 5, overflow: 'hidden', width: fsize(0.2) },
+	scheduleImage: { height: fsize(0.2), width: fsize(0.2) },
 	scheduleHeader: { fontFamily: 'appFont', fontSize: fsize(0.04), padding: 10, textAlign: 'center', width: width - 100 },
 	scheduleActionsHeader: { fontSize: fsize(0.05), marginTop: 10, textAlign: 'center' },
 	scheduleActions: { flexDirection: 'row' },
@@ -1727,20 +1719,20 @@ const style = StyleSheet.create({
 	scheduleNumOrders: { fontWeight: 'bold', padding: 8 },
 
 	cartorderer: { backgroundColor: 'white', borderRadius: 5, flexDirection: 'row', justifyContent: 'space-between', margin: 10, padding: 5 },
-	cartordererImageHolder: { borderRadius: imageSize / 2, height: imageSize, overflow: 'hidden', width: imageSize },
-	cartordererImage: { height: imageSize, width: imageSize },
+	cartordererImageHolder: { borderRadius: fsize(0.2) / 2, height: fsize(0.2), overflow: 'hidden', width: fsize(0.2) },
+	cartordererImage: { height: fsize(0.2), width: fsize(0.2) },
 	cartordererInfo: { alignItems: 'center', width: width - 81 },
 	cartordererUsername: { fontWeight: 'bold', marginBottom: 10 },
 	cartordererOrderNumber: { fontSize: fsize(0.06), paddingVertical: 5 },
 	cartordererSeeOrders: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5 },
-	cartordererSeeOrdersHeader: { fontSize: fsize(0.06), textAlign: 'center' },
+	cartordererSeeOrdersHeader: { fontSize: fsize(0.04), textAlign: 'center' },
 
-	bodyResult: { alignItems: 'center', flexDirection: 'column', height: screenHeight - 220, justifyContent: 'space-around' },
+	bodyResult: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around' },
 	bodyResultHeader: { fontSize: fsize(0.05), fontWeight: 'bold' },
 
-	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
+	bottomNavs: { backgroundColor: 'white', flexDirection: 'column', height: '10%', justifyContent: 'space-around', width: '100%' },
 	bottomNavsRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
-	bottomNav: { flexDirection: 'row', height: 30, marginVertical: 5 },
+	bottomNav: { flexDirection: 'row', marginVertical: 5 },
 	bottomNavHeader: { color: 'black', fontSize: fsize(0.04), fontWeight: 'bold', paddingVertical: 5 },
 	bottomNavButton: { backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, paddingVertical: 8, width: fsize(0.25) },
 	bottomNavButtonHeader: { color: 'white', fontSize: fsize(0.035), fontWeight: 'bold', textAlign: 'center' },
@@ -1779,11 +1771,11 @@ const style = StyleSheet.create({
 
 	firstTimeBoxContainer: { backgroundColor: 'rgba(0, 0, 0, 0.7)' },
 	firstTimeBox: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', paddingVertical: offsetPadding, width: '100%' },
-	firstTimeContainer: { backgroundColor: 'white', flexDirection: 'column', height: '90%', justifyContent: 'space-around', width: '90%' },
-	firstTimeHeader: { fontSize: fsize(0.08), paddingHorizontal: 10, textAlign: 'center' },
+	firstTimeContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '90%' },
+	firstTimeHeader: { fontSize: fsize(0.05), paddingHorizontal: 10, textAlign: 'center' },
 	firstTimeActions: { flexDirection: 'row', justifyContent: 'space-around' },
-	firstTimeAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
-	firstTimeActionHeader: { },
+	firstTimeAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 10, width: 120 },
+	firstTimeActionHeader: { fontSize: fsize(0.04) },
 
 	disabled: { backgroundColor: 'black', flexDirection: 'column', justifyContent: 'space-around', height: '100%', opacity: 0.8, width: '100%' },
 	disabledContainer: { alignItems: 'center', width: '100%' },

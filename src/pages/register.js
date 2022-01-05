@@ -17,6 +17,7 @@ const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - (offsetPadding * 2)
 const steps = ['nickname', 'password', 'profile']
+const screenRatio = width / height
 
 const fsize = p => {
 	return width * p
@@ -74,6 +75,8 @@ export default function register(props) {
 		const index = steps.indexOf(setupType)
 		let nextStep, msg = ""
 
+		setLoading(true)
+
 		switch (index) {
 			case 0:
 				if (!username) {
@@ -94,7 +97,7 @@ export default function register(props) {
 
 				break
 			case 2:
-				if (!profile.uri) {
+				if (!profile.uri && Platform.OS == 'ios') {
 					msg = "Please provide a profile you like"
 				}
 		}
@@ -111,10 +114,17 @@ export default function register(props) {
 				nextStep = index == 2 ? "done" : steps[index + 1]
 			}
 
+			if (nextStep == "profile") {
+				allowCamera()
+				allowChoosing()
+			}
+
 			setSetuptype(nextStep)
 		} else {
 			setErrormsg(msg)
 		}
+
+		setLoading(false)
 	}
 
 	const snapPhoto = async() => {
@@ -126,7 +136,7 @@ export default function register(props) {
 		let char = "", captured, self = this
 
 		if (camComp) {
-			let options = { quality: 0 };
+			let options = { quality: 0, skipProcessing: true };
 			let photo = await camComp.takePictureAsync(options)
 			let photo_option = [
 				{ resize: { width: width, height: width }},
@@ -218,88 +228,97 @@ export default function register(props) {
         }
 	}
 
-	useEffect(() => {
-		(async() => {
-			allowCamera()
-			allowChoosing()
-		})()
-	}, [])
-
-	if (cameraPermission === null || pickingPermission === null) return <View/>
-
 	return (
 		<View style={style.register}>
 			<TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
-				<View style={{ opacity: loading ? 0.5 : 1 }}>
-					<View style={style.box}>
-						<Text style={style.boxHeader}>Setup ({steps.indexOf(setupType) + 1} of 4)</Text>
+				<View style={[style.box, { opacity: loading ? 0.5 : 1 }]}>
+					<Text style={style.boxHeader}>Setup</Text>
 
-						<View style={style.inputsBox}>
-							{setupType == "nickname" && (
+					<View style={style.inputsBox}>
+						{setupType == "nickname" && (
+							<View style={style.inputContainer}>
+								<Text style={style.inputHeader}>Enter your name:</Text>
+								<TextInput style={style.input} onChangeText={(username) => setUsername(username)} value={username} autoCorrect={false} autoCapitalize="none"/>
+							</View>
+						)}
+
+						{setupType == "password" && (
+							passwordInfo.step == 0 ? 
 								<View style={style.inputContainer}>
-									<Text style={style.inputHeader}>Enter a name you like:</Text>
-									<TextInput style={style.input} onChangeText={(username) => setUsername(username)} value={username} autoCorrect={false} autoCapitalize="none"/>
+									<Text style={style.inputHeader}>Enter a password:</Text>
+									<TextInput style={style.input} secureTextEntry={true} onChangeText={(password) => setPasswordinfo({ ...passwordInfo, password })} value={passwordInfo.password} autoCorrect={false}/>
 								</View>
-							)}
+								:
+								<View style={style.inputContainer}>
+									<Text style={style.inputHeader}>Confirm your password:</Text>
+									<TextInput style={style.input} secureTextEntry={true} onChangeText={(confirmPassword) => {
+										setPasswordinfo({ ...passwordInfo, confirmPassword })
 
-							{setupType == "password" && (
-								passwordInfo.step == 0 ? 
-									<View style={style.inputContainer}>
-										<Text style={style.inputHeader}>Enter a password:</Text>
-										<TextInput style={style.input} secureTextEntry={true} onChangeText={(password) => setPasswordinfo({ ...passwordInfo, password })} value={passwordInfo.password} autoCorrect={false}/>
-									</View>
-									:
-									<View style={style.inputContainer}>
-										<Text style={style.inputHeader}>Confirm your password:</Text>
-										<TextInput style={style.input} secureTextEntry={true} onChangeText={(confirmPassword) => {
-											setPasswordinfo({ ...passwordInfo, confirmPassword })
+										if (confirmPassword.length == passwordInfo.password.length) {
+											Keyboard.dismiss()
+										}
+									}} value={passwordInfo.confirmPassword} autoCorrect={false}/>
+								</View>
+						)}
 
-											if (confirmPassword.length == passwordInfo.password.length) {
-												Keyboard.dismiss()
-											}
-										}} value={passwordInfo.confirmPassword} autoCorrect={false}/>
-									</View>
-							)}
+						{(setupType == "profile" && (cameraPermission !== null || pickingPermission !== null)) && (
+							<View style={style.cameraContainer}>
+								<Text style={style.inputHeader}>Profile Picture</Text>
 
-							{setupType == "profile" && (
-								<View style={style.cameraContainer}>
-									<Text style={style.inputHeader}>Profile Picture</Text>
+								{profile.uri ? (
+									<>
+										<Image style={style.camera} source={{ uri: profile.uri }}/>
 
-									{profile.uri ? (
-										<>
-											<Image style={style.camera} source={{ uri: profile.uri }}/>
+										<TouchableOpacity style={style.cameraAction} onPress={() => setProfile({ uri: '', name: '' })}>
+											<Text style={style.cameraActionHeader}>Cancel</Text>
+										</TouchableOpacity>
+									</>
+								) : (
+									<>
+										<Camera 
+											style={style.camera} 
+											type={Camera.Constants.Type.front} ref={r => {setCamcomp(r)}}
+											ratio="1:1"
+										/>
 
-											<TouchableOpacity style={style.cameraAction} onPress={() => setProfile({ uri: '', name: '' })}>
-												<Text style={style.cameraActionHeader}>Cancel</Text>
+										<View style={style.cameraActions}>
+											<TouchableOpacity style={style.cameraAction} onPress={snapPhoto.bind(this)}>
+												<Text style={style.cameraActionHeader}>Take{'\n'}this photo</Text>
 											</TouchableOpacity>
-										</>
-									) : (
-										<>
-											<Camera style={style.camera} type={Camera.Constants.Type.front} ref={r => {setCamcomp(r)}}/>
+											<TouchableOpacity style={style.cameraAction} onPress={() => choosePhoto()}>
+												<Text style={style.cameraActionHeader}>Choose{'\n'}from phone</Text>
+											</TouchableOpacity>
+										</View>
+									</>
+								)}	
+							</View>
+						)}
 
-											<View style={style.cameraActions}>
-												<TouchableOpacity style={style.cameraAction} onPress={snapPhoto.bind(this)}>
-													<Text style={style.cameraActionHeader}>Take this photo</Text>
-												</TouchableOpacity>
-												<TouchableOpacity style={style.cameraAction} onPress={() => choosePhoto()}>
-													<Text style={style.cameraActionHeader}>Choose from phone</Text>
-												</TouchableOpacity>
-											</View>
-										</>
-									)}	
-								</View>
+						<Text style={style.errorMsg}>{errorMsg}</Text>
+
+						{loading ? <ActivityIndicator color="black" size="small"/> : null}
+
+						<View style={style.actions}>
+							{setupType != 'nickname' && (
+								<TouchableOpacity style={style.action} onPress={() => {
+									let index = steps.indexOf(setupType)
+
+									index--
+
+									setSetuptype(steps[index])
+								}}>
+									<Text style={style.actionHeader}>Back</Text>
+								</TouchableOpacity>
 							)}
 
-							<Text style={style.errorMsg}>{errorMsg}</Text>
-
-							{loading ? <ActivityIndicator color="black" size="small"/> : null}
-
-							<TouchableOpacity style={style.submit} onPress={() => setupType == "profile" ? register() : saveInfo()}>
-								<Text style={style.submitHeader}>{setupType == "profile" ? "Done" : "Next"}</Text>
+							<TouchableOpacity style={style.action} disabled={loading} onPress={() => setupType == "profile" ? register() : saveInfo()}>
+								<Text style={style.actionHeader}>{setupType == "profile" ? "Done" : "Next"}</Text>
 							</TouchableOpacity>
 						</View>
+					</View>
 
-						<View style={style.bottomNavs}>
+					<View style={style.bottomNavs}>
+						<View style={style.bottomNavsRow}>
 							<TouchableOpacity style={style.bottomNav} onPress={() => {
 								AsyncStorage.clear()
 
@@ -326,22 +345,24 @@ const style = StyleSheet.create({
 	boxHeader: { color: 'black', fontFamily: 'appFont', fontSize: fsize(0.1), fontWeight: 'bold', marginTop: 20 },
 
 	inputsBox: { alignItems: 'center', width: '100%' },
-	inputContainer: { marginTop: 20, width: '80%' },
+	inputContainer: { width: '80%' },
 	inputHeader: { fontFamily: 'appFont', fontSize: fsize(0.07) },
 	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: fsize(0.07), padding: 5, width: '100%' },
 
 	cameraContainer: { alignItems: 'center', width: '100%' },
-	camera: { height: width * 0.7, width: width * 0.7 },
+	camera: { height: fsize(0.7), width: fsize(0.7) },
 	cameraActions: { flexDirection: 'row' },
 	cameraAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: fsize(0.3) },
-	cameraActionHeader: { fontSize: fsize(0.04), textAlign: 'center' },
+	cameraActionHeader: { fontSize: fsize(0.03), textAlign: 'center' },
 
 	errorMsg: { color: 'darkred', fontSize: fsize(0.05), fontWeight: 'bold', textAlign: 'center' },
 
-	submit: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 10, width: fsize(0.3) },
-	submitHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), textAlign: 'center' },
+	actions: { flexDirection: 'row', justifyContent: 'space-around' },
+	action: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 10, width: fsize(0.3) },
+	actionHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), textAlign: 'center' },
 
-	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
-	bottomNav: { flexDirection: 'row', height: 30, marginVertical: 5, marginHorizontal: 20 },
-	bottomNavHeader: { fontSize: fsize(0.04), fontWeight: 'bold', paddingVertical: 5 },
+	bottomNavs: { backgroundColor: 'white', flexDirection: 'column', height: '10%', justifyContent: 'space-around', width: '100%' },
+	bottomNavsRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
+	bottomNav: { flexDirection: 'row', justifyContent: 'space-around', margin: 5 },
+	bottomNavHeader: { fontWeight: 'bold', paddingVertical: 5 },
 })

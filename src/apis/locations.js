@@ -101,13 +101,6 @@ export const setLocationHours = data => {
 	)
 }
 
-export const getInfo = data => {
-	return axios.post(
-		`${url}/locations/get_info`,
-		data
-	)
-}
-
 export const changeLocationState = id => {
 	return axios.get(`${url}/locations/change_location_state/${id}`)
 }

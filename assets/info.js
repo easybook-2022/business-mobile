@@ -1,9 +1,9 @@
 import io from 'socket.io-client'
 
-const local_url = false
-const test_stripe = false
-const test_input = false
-const test_bankaccount = false
+const local_url = true
+const test_stripe = true
+const test_input = true
+const test_bankaccount = true
 
 const realStores = [
 	{ id: 0, storeName: "Hung Hair Salon", storeType: "hair", phonenumber: "4164621484", addressOne: "642 Gerrard St E", addressTwo: "", city: "Toronto", province: "ON", postalcode: "M4M1Y3" },

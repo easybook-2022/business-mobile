@@ -57,53 +57,37 @@ export default function resetpassword(props) {
 				}
 			})
 	}
-	
+
 	return (
 		<View style={style.resetpassword}>
 			<TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
 				<View style={style.box}>
-					<Text allowFontScaling={false} style={style.boxHeader}>Reset Password</Text>
-
 					<View style={style.inputsBox}>
 						<View style={style.inputContainer}>
-							<Text allowFontScaling={false} style={style.inputHeader}>New password:</Text>
+							<Text style={style.inputHeader}>New password:</Text>
 							<TextInput style={style.input} secureTextEntry={true} onChangeText={(password) => setNewpassword(password)} value={newPassword} autoCorrect={false}/>
 						</View>
 
 						<View style={style.inputContainer}>
-							<Text allowFontScaling={false} style={style.inputHeader}>Confirm password:</Text>
+							<Text style={style.inputHeader}>Confirm password:</Text>
 							<TextInput style={style.input} secureTextEntry={true} onChangeText={(password) => setConfirmpassword(password)} value={confirmPassword} autoCorrect={false}/>
 						</View>
 
-						<Text allowFontScaling={false} style={style.errorMsg}>{errorMsg}</Text>
+						<Text style={style.errorMsg}>{errorMsg}</Text>
 
 						<TouchableOpacity style={style.submit} onPress={() => reset()}>
-							<Text allowFontScaling={false} style={style.submitHeader}>Done</Text>
+							<Text style={style.submitHeader}>Done</Text>
 						</TouchableOpacity>
 					</View>
 
 					<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
 						<View style={style.options}>
-							<TouchableOpacity style={style.option} onPress={() => {
-								navigation.dispatch(
-									CommonActions.reset({
-										index: 1,
-										routes: [{ name: 'register' }]
-									})
-								);
-							}}>
-								<Text allowFontScaling={false} style={style.optionHeader}>Don't have an account ? Sign up</Text>
+							<TouchableOpacity style={style.option} onPress={() => navigation.replace('verifyowner')}>
+								<Text style={style.optionHeader}>Don't have an account ? Sign up</Text>
 							</TouchableOpacity>
 							<View style={style.options}>
-								<TouchableOpacity style={style.option} onPress={() => {
-									navigation.dispatch(
-										CommonActions.reset({
-											index: 1,
-											routes: [{ name: 'login' }]
-										})
-									);
-								}}>
-									<Text allowFontScaling={false} style={style.optionHeader}>Already a member ? Log in</Text>
+								<TouchableOpacity style={style.option} onPress={() => navigation.replace('login')}>
+									<Text style={style.optionHeader}>Already a member ? Log in</Text>
 								</TouchableOpacity>
 							</View>
 						</View>
@@ -118,7 +102,6 @@ const style = StyleSheet.create({
 	resetpassword: { backgroundColor: '#3C74FF', height: '100%', width: '100%' },
 	box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-between', paddingVertical: 30, width: '100%' },
 	background: { height: '100%', position: 'absolute', width: '100%' },
-	boxHeader: { color: 'black', fontFamily: 'appFont', fontSize: fsize(0.07), fontWeight: 'bold', paddingVertical: 30 },
 	
 	inputsBox: { alignItems: 'center', backgroundColor: 'rgba(2, 136, 255, 0.1)', paddingHorizontal: 20, width: '80%' },
 	inputContainer: { marginVertical: 5 },

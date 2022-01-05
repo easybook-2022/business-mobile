@@ -10,6 +10,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "updates": {
+      "fallbackToCacheTimeout": 0
+    },
     "assetBundlePatterns": [
       "**/*"
     ],
@@ -26,11 +29,11 @@
       }
     },
     "android": {
-      "package": "com.geottuse.serviceapp.business"
+      "package": "com.geottuse.serviceapp.business",
+      "versionCode": 0
     },
     "notification": {
       "icon": "./assets/notification.png"
     }
-  },
-  "name": "EasyGO(Business)"
+  }
 }

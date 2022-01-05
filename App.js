@@ -2,7 +2,7 @@ import 'react-native-gesture-handler';
 import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Text, View, TouchableOpacity, StyleSheet, LogBox } from 'react-native';
+import { Platform, Text, View, TouchableOpacity, StyleSheet, LogBox } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Font from 'expo-font';
 import { socket } from './assets/info'
@@ -37,7 +37,7 @@ import Addmenu from './src/components/addmenu'
 import Addproduct from './src/components/addproduct'
 import Addservice from './src/components/addservice'
 
-import Menu from './src/components/menu'
+import Menu from './src/pages/menu'
 import Settings from './src/pages/settings'
 
 const Stack = createNativeStackNavigator();
@@ -69,19 +69,122 @@ export default function App() {
                 <NavigationContainer>
                     <Stack.Navigator initialRouteName={route}>
                         <Stack.Screen name="auth" component={Auth} options={{ headerShown: false }}/>
-                        <Stack.Screen name="login" component={Login} options={{ headerShown: false }}/>
+                        <Stack.Screen name="login" component={Login} options={({ navigation, route }) => ({
+                            headerTitle: () => <Text style={{ fontSize: 20, fontWeight: 'bold' }}>Log-In</Text>,
+                            headerLeft: () => (
+                                Platform.OS == 'ios' && (
+                                    <TouchableOpacity style={style.back} onPress={() => navigation.goBack()}>
+                                        <Text style={style.backHeader}>Go Back</Text>
+                                    </TouchableOpacity>
+                                )
+                            )
+                        })}/>
                         <Stack.Screen name="register" component={Register} options={{ headerShown: false }}/>
-                        <Stack.Screen name="forgotpassword" component={Forgotpassword} options={{ headerShown: false }}/>
-                        <Stack.Screen name="resetpassword" component={Resetpassword} options={{ headerShown: false }}/>
-                        <Stack.Screen name="verifyowner" component={Verifyowner} options={{ headerShown: false }}/>
+                        <Stack.Screen name="forgotpassword" component={Forgotpassword} options={({ navigation, route }) => ({
+                            headerTitle: () => <Text style={{ fontSize: 20, fontWeight: 'bold' }}>Forget your password</Text>,
+                            headerLeft: () => (
+                                Platform.OS == 'ios' && (
+                                    <TouchableOpacity style={style.back} onPress={() => navigation.goBack()}>
+                                        <Text style={style.backHeader}>Go Back</Text>
+                                    </TouchableOpacity>
+                                )
+                            )
+                        })}/>
+                        <Stack.Screen name="resetpassword" component={Resetpassword} options={({ navigation, route }) => ({
+                            headerTitle: () => <Text style={{ fontSize: 20, fontWeight: 'bold' }}>Resetting your password</Text>,
+                            headerLeft: () => (
+                                Platform.OS == 'ios' && (
+                                    <TouchableOpacity style={style.back} onPress={() => navigation.goBack()}>
+                                        <Text style={style.backHeader}>Go Back</Text>
+                                    </TouchableOpacity>
+                                )
+                            )
+                        })}/>
+                        <Stack.Screen name="verifyowner" component={Verifyowner} options={({ navigation, route }) => ({
+                            headerTitle: () => <Text style={{ fontSize: 20, fontWeight: 'bold' }}>Registration</Text>,
+                            headerLeft: () => (
+                                Platform.OS == 'ios' && (
+                                    <TouchableOpacity style={style.back} onPress={() => navigation.goBack()}>
+                                        <Text style={style.backHeader}>Go Back</Text>
+                                    </TouchableOpacity>
+                                )
+                            )
+                        })}/>
                         <Stack.Screen name="locationsetup" component={Locationsetup} options={{ headerShown: false }}/>
                         <Stack.Screen name="workinghours" component={Workinghours} options={{ headerShown: false }}/>
                         <Stack.Screen name="main" component={Main} options={{ headerShown: false }}/>
-                        <Stack.Screen name="cartorders" component={Cartorders} options={{ headerShown: false }}/>
-                        <Stack.Screen name="diningorders" component={Diningorders} options={{ headerShown: false }}/>
-                        <Stack.Screen name="dinersorders" component={Dinersorders} options={{ headerShown: false }}/>
-                        <Stack.Screen name="makereservation" component={Makereservation} options={{ headerShown: false }}/>
-                        <Stack.Screen name="booktime" component={Booktime} options={{ headerShown: false }}/>
+                        <Stack.Screen name="cartorders" component={Cartorders} options={({ navigation, route }) => ({
+                            headerTitle: () => <Text style={{ fontSize: 20, fontWeight: 'bold' }}>#{route.params.ordernumber} Order(s)</Text>,
+                            headerLeft: () => (
+                                Platform.OS == 'ios' && (
+                                    <TouchableOpacity style={style.back} onPress={() => {
+                                        if (route.params.refetch) {
+                                            route.params.refetch()
+                                        }
+
+                                        navigation.goBack()
+                                    }}>
+                                        <Text style={style.backHeader}>Go Back</Text>
+                                    </TouchableOpacity>
+                                )
+                            )
+                        })}/>
+                        <Stack.Screen name="diningorders" component={Diningorders} options={({ navigation, route }) => ({
+                            headerTitle: () => <Text style={{ fontSize: 20, fontWeight: 'bold' }}>Order(s)</Text>,
+                            headerLeft: () => (
+                                Platform.OS == 'ios' && (
+                                    <TouchableOpacity style={style.back} onPress={() => {
+                                        if (route.params && route.params.refetch) {
+                                            route.params.refetch()
+                                        }
+                                        
+                                        navigation.goBack()
+                                    }}>
+                                        <Text style={style.backHeader}>Go Back</Text>
+                                    </TouchableOpacity>
+                                )
+                            )
+                        })}/>
+                        <Stack.Screen name="dinersorders" component={Dinersorders} options={({ navigation }) => ({
+                            headerTitle: () => (
+                                <View>
+                                    <Text style={{ fontSize: 20, fontWeight: 'bold' }}>Diner's Order(s)</Text>
+                                </View>
+                            ),
+                            headerLeft: () => (
+                                Platform.OS == 'ios' && (
+                                    <TouchableOpacity style={style.back} onPress={() => navigation.goBack()}>
+                                        <Text style={style.backHeader}>Go Back</Text>
+                                    </TouchableOpacity>
+                                )
+                            )
+                        })}/>
+                        <Stack.Screen name="makereservation" component={Makereservation} options={({ navigation, route }) => ({
+                            headerTitle: () => <Text style={{ fontSize: 20, fontWeight: 'bold' }}>Choose another time</Text>,
+                            headerLeft: () => (
+                                Platform.OS == 'ios' && (
+                                    <TouchableOpacity style={style.back} onPress={() => {
+                                        if (route.params && route.params.refetch) {
+                                            route.params.refetch()
+                                        }
+
+                                        navigation.goBack()
+                                    }}>
+                                        <Text style={style.backHeader}>Go Back</Text>
+                                    </TouchableOpacity>
+                                )
+                            )
+                        })}/>
+                        <Stack.Screen name="booktime" component={Booktime} options={({ navigation, route }) => ({
+                            headerTitle: () => <Text style={{ fontSize: 20, fontWeight: 'bold' }}>Request another time</Text>,
+                            headerLeft: () => (
+                                Platform.OS == 'ios' && (
+                                    <TouchableOpacity style={style.back} onPress={() => navigation.goBack()}>
+                                        <Text style={style.backHeader}>Go Back</Text>
+                                    </TouchableOpacity>
+                                )
+                            )
+                        })}/>
                         <Stack.Screen name="addmenu" component={Addmenu} options={({ navigation, route }) => ({
                             headerTitle: () => (
                                 <View>
@@ -89,9 +192,11 @@ export default function App() {
                                 </View>
                             ),
                             headerLeft: () => (
-                                <TouchableOpacity style={style.back} onPress={() => navigation.goBack()}>
-                                    <Text style={style.backHeader}>Go Back</Text>
-                                </TouchableOpacity>
+                                Platform.OS == 'ios' && (
+                                    <TouchableOpacity style={style.back} onPress={() => navigation.goBack()}>
+                                        <Text style={style.backHeader}>Go Back</Text>
+                                    </TouchableOpacity>
+                                )
                             )
                         })}/>
                         <Stack.Screen name="addproduct" component={Addproduct} options={({ navigation, route }) => ({
@@ -101,9 +206,11 @@ export default function App() {
                                 </View>
                             ),
                             headerLeft: () => (
-                                <TouchableOpacity style={style.back} onPress={() => navigation.goBack()}>
-                                    <Text style={style.backHeader}>Go Back</Text>
-                                </TouchableOpacity>
+                                Platform.OS == 'ios' && (
+                                    <TouchableOpacity style={style.back} onPress={() => navigation.goBack()}>
+                                        <Text style={style.backHeader}>Go Back</Text>
+                                    </TouchableOpacity>
+                                )
                             )
                         })}/>
                         <Stack.Screen name="addservice" component={Addservice} options={({ navigation, route }) => ({
@@ -113,9 +220,11 @@ export default function App() {
                                 </View>
                             ),
                             headerLeft: () => (
-                                <TouchableOpacity style={style.back} onPress={() => navigation.goBack()}>
-                                    <Text style={style.backHeader}>Go Back</Text>
-                                </TouchableOpacity>
+                                Platform.OS == 'ios' && (
+                                    <TouchableOpacity style={style.back} onPress={() => navigation.goBack()}>
+                                        <Text style={style.backHeader}>Go Back</Text>
+                                    </TouchableOpacity>
+                                )
                             )
                         })}/>
                         <Stack.Screen name="menu" component={Menu} disableMode={false} options={({ navigation, route }) => ({
@@ -127,17 +236,38 @@ export default function App() {
                                 </View>
                             ),
                             headerLeft: () => (
-                                <TouchableOpacity style={style.back} onPress={() => {
-                                    const { refetch } = route.params
+                                Platform.OS == 'ios' && (
+                                    <TouchableOpacity style={style.back} onPress={() => {
+                                        const { refetch } = route.params
 
-                                    refetch()
-                                    navigation.goBack()
-                                }}>
-                                    <Text style={style.backHeader}>Go Back</Text>
-                                </TouchableOpacity>
+                                        refetch()
+                                        navigation.goBack()
+                                    }}>
+                                        <Text style={style.backHeader}>Go Back</Text>
+                                    </TouchableOpacity>
+                                )
                             )
                         })}/>
-                        <Stack.Screen name="settings" component={Settings} options={{ headerShown: false }}/>
+                        <Stack.Screen name="settings" component={Settings} options={({ navigation, route }) => ({
+                            headerTitle: () => (
+                                <View>
+                                    <Text style={{ fontSize: 20, fontWeight: 'bold' }}>Setting(s)</Text>
+                                </View>
+                            ),
+                            headerLeft: () => (
+                                Platform.OS == 'ios' && (
+                                    <TouchableOpacity style={style.back} onPress={() => {
+                                        if (route.params && route.params.refetch()) {
+                                            route.params.refetch()
+                                        }
+
+                                        navigation.goBack()
+                                    }}>
+                                        <Text style={style.backHeader}>Go Back</Text>
+                                    </TouchableOpacity>
+                                )
+                            )
+                        })}/>
                     </Stack.Navigator>
                 </NavigationContainer>
             )

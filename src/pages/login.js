@@ -67,10 +67,6 @@ export default function login({ navigation }) {
 					<View style={style.background}>
 						<Image source={require("../../assets/background.jpg")} style={{ height: width, width: width }}/>
 					</View>
-					<TouchableOpacity style={style.boxHeaderTouch} onPress={() => navigation.goBack()}>
-						<Text style={style.boxHeaderTouchHeader}>Go back</Text>
-					</TouchableOpacity>
-					<Text style={style.boxHeader}>Log-In</Text>
 
 					<View style={style.inputsBox}>
 						<View style={style.inputContainer}>
@@ -90,18 +86,9 @@ export default function login({ navigation }) {
 						</TouchableOpacity>
 					</View>
 
-					<View>
-						<TouchableOpacity style={style.option} onPress={() => {
-							navigation.dispatch(
-								CommonActions.reset({
-									index: 1,
-									routes: [{ name: 'forgotpassword' }]
-								})
-							)
-						}}>
-							<Text style={style.optionHeader}>I don't remember my password ? Click here</Text>
-						</TouchableOpacity>
-					</View>
+					<TouchableOpacity style={style.option} onPress={() => navigation.replace('forgotpassword')}>
+						<Text style={style.optionHeader}>I don't remember my password ? Click here</Text>
+					</TouchableOpacity>
 				</View>
 			</TouchableWithoutFeedback>
 		</View>
@@ -112,9 +99,6 @@ const style = StyleSheet.create({
 	login: { backgroundColor: 'white', height: '100%', width: '100%' },
 	box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-between', paddingVertical: offsetPadding, width: '100%' },
 	background: { alignItems: 'center', flexDirection: 'column', height: screenHeight, justifyContent: 'space-around', position: 'absolute', top: 0, width: width },
-	boxHeaderTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginRight: 10, padding: 10 },
-	boxHeaderTouchHeader: { fontSize: fsize(0.05), textAlign: 'center' },
-	boxHeader: { color: 'black', fontFamily: 'appFont', fontSize: fsize(0.15), fontWeight: 'bold' },
 	
 	inputsBox: { alignItems: 'center', width: '80%' },
 	inputContainer: { marginBottom: 30, width: '100%' },

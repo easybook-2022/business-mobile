@@ -23,15 +23,13 @@ import AntDesign from 'react-native-vector-icons/AntDesign'
 import Entypo from 'react-native-vector-icons/Entypo'
 
 const { height, width } = Dimensions.get('window')
+const offsetPadding = Constants.statusBarHeight
 
 const fsize = p => {
 	return width * p
 }
 
 export default function settings(props) {
-	const offsetPadding = Constants.statusBarHeight
-	const screenHeight = height - (offsetPadding * 2)
-
 	const { refetch } = props.route.params
 	const required = props.route.params ? props.route.params.required : ""
 
@@ -884,7 +882,7 @@ export default function settings(props) {
 
 	const getTheLocationProfile = async() => {
 		const locationid = await AsyncStorage.getItem("locationid")
-		const data = { locationid, longitude: null, latitude: null }
+		const data = { locationid }
 
 		getLocationProfile(data)
 			.then((res) => {
@@ -894,8 +892,7 @@ export default function settings(props) {
 			})
 			.then((res) => {
 				if (res && isMounted.current == true) {
-					const { locationInfo, msg } = res
-					const { name, phonenumber, addressOne, addressTwo, city, province, postalcode, logo, hours } = locationInfo
+					const { name, phonenumber, addressOne, addressTwo, city, province, postalcode, logo, hours } = res.info
 
 					setStorename(name)
 					setPhonenumber(phonenumber)
@@ -1165,25 +1162,11 @@ export default function settings(props) {
 		return () => isMounted.current = false
 	}, [])
 
-	if (cameraPermission === null || pickingPermission === null) return <View/>
-
 	return (
 		<View style={style.settings}>
-			<View style={{ backgroundColor: '#EAEAEA', paddingVertical: offsetPadding }}>
-				<TouchableOpacity style={style.back} onPress={() => {
-					if (refetch) {
-						refetch()
-					}
-					
-					props.navigation.goBack()
-				}}>
-					<Text style={style.backHeader}>Back</Text>
-				</TouchableOpacity>
-
-				<ScrollView style={{ height: screenHeight - 70, width: '100%' }}>
+			<View style={style.settingsContainer}>
+				<ScrollView style={{ width: '100%' }}>
 					<View style={[style.box, { opacity: loading ? 0.6 : 1 }]}>
-						<Text style={style.boxHeader}>Setting(s)</Text>
-						
 						{!infoLoading ?
 							editType == 'information' ? 
 								<>
@@ -1684,7 +1667,6 @@ export default function settings(props) {
 						</View>
 					</Modal>
 				)}
-
 				{bankAccountForm.show && (
 					<Modal transparent={true}>
 						<TouchableWithoutFeedback style={{ paddingVertical: offsetPadding }} onPress={() => Keyboard.dismiss()}>
@@ -1773,11 +1755,9 @@ export default function settings(props) {
 }
 
 const style = StyleSheet.create({
-	settings: { backgroundColor: 'white', height: '100%', width: '100%' },
+	settings: { backgroundColor: 'white', height: '100%', paddingBottom: offsetPadding, width: '100%' },
+	settingsContainer: { backgroundColor: '#EAEAEA', height: '100%', width: '100%' },
 	box: { alignItems: 'center', height: '100%', width: '100%' },
-	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, marginVertical: 20, marginHorizontal: 20, padding: 5, width: fsize(0.2) },
-	backHeader: { fontFamily: 'appFont', fontSize: fsize(0.05) },
-	boxHeader: { fontFamily: 'appFont', fontSize: fsize(0.1), textAlign: 'center' },
 	header: { fontFamily: 'appFont', fontSize: fsize(0.07), marginTop: 20, textAlign: 'center' },
 
 	inputsBox: { paddingHorizontal: 20, width: '100%' },

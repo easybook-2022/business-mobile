@@ -1,11 +1,8 @@
 import axios from 'axios'
 import { url } from '../../assets/info'
 
-export const getMenus = (data) => {
-	return axios.post(
-		`${url}/menus/get_menus`,
-		data
-	)
+export const getMenus = id => {
+	return axios.get(`${url}/menus/get_menus/${id}`)
 }
 
 export const getRequests = () => {
@@ -37,11 +34,8 @@ export const removeMenu = id => {
 	return axios.get(`${url}/menus/remove_menu/${id}`)
 }
 
-export const getMenuInfo = data => {
-	return axios.post(
-		`${url}/menus/get_menu_info`,
-		data
-	)
+export const getMenuInfo = id => {
+	return axios.get(`${url}/menus/get_menu_info/${id}`)
 }
 
 export const saveMenu = data => {

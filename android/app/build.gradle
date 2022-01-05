@@ -135,7 +135,7 @@ android {
         applicationId 'com.geottuse.serviceapp.business'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
+        versionCode 0
         versionName "0.0.0"
     }
     splits {

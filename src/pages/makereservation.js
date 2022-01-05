@@ -11,7 +11,6 @@ import SimpleLineIcons from 'react-native-vector-icons/SimpleLineIcons'
 
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
-const screenHeight = height - (offsetPadding * 2)
 const dinerFrameSize = (width / 3) - 30
 const dinerProfileSize = 80
 
@@ -21,7 +20,6 @@ const fsize = p => {
 
 export default function booktime(props) {
 	const offsetPadding = Constants.statusBarHeight
-	const screenHeight = height - (offsetPadding * 2)
 	const months = ['January', 'February', 'March', 'April', 'May', 'Jun', 'July', 'August', 'September', 'October', 'November', 'December']
 	const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 	const pushtime = 1000 * (60 * 10)
@@ -352,155 +350,156 @@ export default function booktime(props) {
 	}, [])
 
 	return (
-		<View style={{ paddingVertical: offsetPadding }}>
-			<View style={style.box}>
-				<TouchableOpacity style={style.back} onPress={() => {
-					refetch()
-					props.navigation.goBack()
-				}}>
-					<Text allowFontScaling={false} style={style.backHeader}>Back</Text>
-				</TouchableOpacity>
+		<View style={style.makereservation}>
+			{loaded ? 
+				<View style={style.box}>
+					<View style={style.header}>
+						<Text style={style.boxHeader}>
+							Request another time for 
+							{numDiners > 0 ? '\n' + numDiners + ' ' + (numDiners == 1 ? 'person' : 'people') : "1 person"}
+						</Text>
+					</View>
 
-				<Text allowFontScaling={false} style={style.boxHeader}>Request another time for {numDiners > 0 ? '\n' + numDiners + ' ' + (numDiners == 1 ? 'person' : 'people') : "1 person"}</Text>
-				
-				{!loaded ? 
-					<ActivityIndicator size="small"/>
-					:
-					<ScrollView>
-						<View style={style.dinersList}>
-							{selectedDiners.map(item => (
-								<View key={item.key} style={style.row}>
-									{item.row.map(diner => (
-										diner.id ? 
-											<View key={diner.key} style={style.diner}>
-												<View style={style.dinerProfileHolder}>
-													<Image source={{ uri: logo_url + diner.profile }} style={{ height: dinerProfileSize, width: dinerProfileSize }}/>
+					<View style={style.body}>
+						<ScrollView style={{ height: '100%' }}>
+							<View style={style.dinersList}>
+								{selectedDiners.map(item => (
+									<View key={item.key} style={style.row}>
+										{item.row.map(diner => (
+											diner.id ? 
+												<View key={diner.key} style={style.diner}>
+													<View style={style.dinerProfileHolder}>
+														<Image source={{ uri: logo_url + diner.profile }} style={{ height: dinerProfileSize, width: dinerProfileSize }}/>
+													</View>
+													<Text style={style.dinerName}>{diner.username}</Text>
 												</View>
-												<Text allowFontScaling={false} style={style.dinerName}>{diner.username}</Text>
-											</View>
-											:
-											<View key={diner.key} style={style.diner}>
-											</View>
-									))}
-								</View>
-							))}
-						</View>
-
-						<View style={style.dateHeaders}>
-							<View style={style.date}>
-								<TouchableOpacity style={style.dateNav} onPress={() => dateNavigate('left')}><AntDesign name="left" size={25}/></TouchableOpacity>
-								<Text allowFontScaling={false} style={style.dateHeader}>{selectedDateInfo.month}, {selectedDateInfo.year}</Text>
-								<TouchableOpacity style={style.dateNav} onPress={() => dateNavigate('right')}><AntDesign name="right" size={25}/></TouchableOpacity>
-							</View>
-
-							<View style={style.dateDays}>
-								<View style={style.dateDaysRow}>
-									{days.map((day, index) => (
-										<TouchableOpacity key={"day-header-" + index} style={style.dateDayTouchDisabled}>
-											<Text allowFontScaling={false} style={{ fontWeight: 'bold', textAlign: 'center' }}>{day.substr(0, 3)}</Text>
-										</TouchableOpacity>
-									))}
-								</View>
-								{calendar.data.map((info, rowindex) => (
-									<View key={info.key} style={style.dateDaysRow}>
-										{info.row.map((day, dayindex) => (
-											day.num > 0 ?
-												day.passed ? 
-													<TouchableOpacity key={day.key} disabled={true} style={style.dateDayTouchPassed}>
-														<Text allowFontScaling={false} style={style.dateDayTouchHeader}>{day.num}</Text>
-													</TouchableOpacity>
-													:
-													selectedDateInfo.date == day.num ?
-														<TouchableOpacity key={day.key} style={style.dateDayTouchSelected} onPress={() => selectDate(day.num)}>
-															<Text allowFontScaling={false} style={style.dateDayTouchSelectedHeader}>{day.num}</Text>
-														</TouchableOpacity>
-														:
-														<TouchableOpacity key={day.key} style={style.dateDayTouch} onPress={() => selectDate(day.num)}>
-															<Text allowFontScaling={false} style={style.dateDayTouchHeader}>{day.num}</Text>
-														</TouchableOpacity>
 												:
-												<TouchableOpacity key={"calender-header-" + rowindex + "-" + dayindex} style={style.dateDayTouchDisabled}></TouchableOpacity>
+												<View key={diner.key} style={style.diner}>
+												</View>
 										))}
 									</View>
 								))}
 							</View>
-						</View>
-						<Text allowFontScaling={false} style={style.timesHeader}>Pick a time</Text>
-						<View style={{ flexDirection: 'row', justifyContent: 'space-around', marginBottom: 50, width: '100%' }}>
-							<View style={style.times}>
-								{times.map(info => (
-									<View key={info.key}>
-										{(!info.timetaken && !info.timepassed) && (
-											<TouchableOpacity style={style.unselect} onPress={() => selectTime(name, info.header, info.time)}>
-												<Text allowFontScaling={false} style={{ color: 'black' }}>{info.header}</Text>
-											</TouchableOpacity>
-										)}
+							<View style={style.dateHeaders}>
+								<View style={style.date}>
+									<TouchableOpacity style={style.dateNav} onPress={() => dateNavigate('left')}><AntDesign name="left" size={25}/></TouchableOpacity>
+									<Text style={style.dateHeader}>{selectedDateInfo.month}, {selectedDateInfo.year}</Text>
+									<TouchableOpacity style={style.dateNav} onPress={() => dateNavigate('right')}><AntDesign name="right" size={25}/></TouchableOpacity>
+								</View>
 
-										{(info.timetaken && !info.timepassed) && (
-											<TouchableOpacity style={style.selected} disabled={true} onPress={() => {}}>
-												<Text allowFontScaling={false} style={{ color: 'white' }}>{info.header}</Text>
+								<View style={style.dateDays}>
+									<View style={style.dateDaysRow}>
+										{days.map((day, index) => (
+											<TouchableOpacity key={"day-header-" + index} style={style.dateDayTouchDisabled}>
+												<Text style={{ fontWeight: 'bold', textAlign: 'center' }}>{day.substr(0, 3)}</Text>
 											</TouchableOpacity>
-										)}
-
-										{(!info.timetaken && info.timepassed) && (
-											<TouchableOpacity style={style.selectedPassed} disabled={true} onPress={() => {}}>
-												<Text allowFontScaling={false} style={{ color: 'black' }}>{info.header}</Text>
-											</TouchableOpacity>
-										)}
+										))}
 									</View>
-								))}
+									{calendar.data.map((info, rowindex) => (
+										<View key={info.key} style={style.dateDaysRow}>
+											{info.row.map((day, dayindex) => (
+												day.num > 0 ?
+													day.passed ? 
+														<TouchableOpacity key={day.key} disabled={true} style={style.dateDayTouchPassed}>
+															<Text style={style.dateDayTouchHeader}>{day.num}</Text>
+														</TouchableOpacity>
+														:
+														selectedDateInfo.date == day.num ?
+															<TouchableOpacity key={day.key} style={style.dateDayTouchSelected} onPress={() => selectDate(day.num)}>
+																<Text style={style.dateDayTouchSelectedHeader}>{day.num}</Text>
+															</TouchableOpacity>
+															:
+															<TouchableOpacity key={day.key} style={style.dateDayTouch} onPress={() => selectDate(day.num)}>
+																<Text style={style.dateDayTouchHeader}>{day.num}</Text>
+															</TouchableOpacity>
+													:
+													<TouchableOpacity key={"calender-header-" + rowindex + "-" + dayindex} style={style.dateDayTouchDisabled}></TouchableOpacity>
+											))}
+										</View>
+									))}
+								</View>
 							</View>
-						</View>
-					</ScrollView>
-				}
-			</View>
+							<Text style={style.timesHeader}>Pick a time</Text>
+							<View style={{ flexDirection: 'row', justifyContent: 'space-around', marginBottom: 50, width: '100%' }}>
+								<View style={style.times}>
+									{times.map(info => (
+										<View key={info.key}>
+											{(!info.timetaken && !info.timepassed) && (
+												<TouchableOpacity style={style.unselect} onPress={() => selectTime(name, info.header, info.time)}>
+													<Text style={{ color: 'black' }}>{info.header}</Text>
+												</TouchableOpacity>
+											)}
+
+											{(info.timetaken && !info.timepassed) && (
+												<TouchableOpacity style={style.selected} disabled={true} onPress={() => {}}>
+													<Text style={{ color: 'white' }}>{info.header}</Text>
+												</TouchableOpacity>
+											)}
+
+											{(!info.timetaken && info.timepassed) && (
+												<TouchableOpacity style={style.selectedPassed} disabled={true} onPress={() => {}}>
+													<Text style={{ color: 'black' }}>{info.header}</Text>
+												</TouchableOpacity>
+											)}
+										</View>
+									))}
+								</View>
+							</View>
+						</ScrollView>
+					</View>
+				</View>
+				:
+				<View style={{ alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' }}>
+					<ActivityIndicator color="black" size="large"/>
+				</View>
+			}
 
 			{confirmRequest.show && (
 				<Modal transparent={true}>
-					<TouchableWithoutFeedback style={{ paddingVertical: offsetPadding }} onPress={() => Keyboard.dismiss()}>
+					<TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
 						<View style={style.confirmBox}>
 							<View style={style.confirmContainer}>
 								{!confirmRequest.requested ? 
 									<>
-										<Text allowFontScaling={false} style={style.confirmHeader}>
-											<Text allowFontScaling={false} style={{ fontFamily: 'appFont' }}>Request a different time for {numDiners > 0 ? '\n' + numDiners + ' ' + (numDiners == 1 ? 'person' : 'people') : '1 person'}</Text>
+										<Text style={style.confirmHeader}>
+											<Text style={{ fontFamily: 'appFont' }}>Request a different time for {numDiners > 0 ? '\n' + numDiners + ' ' + (numDiners == 1 ? 'person' : 'people') : '1 person'}</Text>
 											{'\n at ' + confirmRequest.service}
 											{'\n' + displayTime(confirmRequest.time)}
 										</Text>
 
 										<View style={{ alignItems: 'center' }}>
-											<Text allowFontScaling={false} style={style.confirmHeader}>Tell the diner the table #?</Text>
+											<Text style={style.confirmHeader}>Tell the diner the table #?</Text>
 
 											<TextInput placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder={table ? table + "? If not, please re-enter" : 'What table will be available'} style={style.confirmInput} onChangeText={(tablenum) => setConfirmrequest({ ...confirmRequest, tablenum })} autoCorrect={false} autoCapitalize="none"/>
 										</View>
 
-										{confirmRequest.errorMsg ? <Text allowFontScaling={false} style={style.errorMsg}>{confirmRequest.errorMsg}</Text> : null}
+										{confirmRequest.errorMsg ? <Text style={style.errorMsg}>{confirmRequest.errorMsg}</Text> : null}
 
 										<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
 											<View style={style.confirmOptions}>
 												<TouchableOpacity style={style.confirmOption} onPress={() => setConfirmrequest({ show: false, service: "", oldtime: 0, time: 0, note: "", tablenum: "", requested: false, errorMsg: "" })}>
-													<Text allowFontScaling={false} style={style.confirmOptionHeader}>No</Text>
+													<Text style={style.confirmOptionHeader}>No</Text>
 												</TouchableOpacity>
 												<TouchableOpacity style={style.confirmOption} onPress={() => rescheduleTheReservation()}>
-													<Text allowFontScaling={false} style={style.confirmOptionHeader}>Yes</Text>
+													<Text style={style.confirmOptionHeader}>Yes</Text>
 												</TouchableOpacity>
 											</View>
 										</View>
 									</>
 									:
 									<View style={style.requestedHeaders}>
-										<Text allowFontScaling={false} style={style.requestedHeader}>Reservation requested at</Text>
-										<Text allowFontScaling={false} style={style.requestedHeaderInfo}>{confirmRequest.service}</Text>
-										<Text allowFontScaling={false} style={style.requestedHeaderInfo}>{displayTime(confirmRequest.time)}</Text>
-										<Text allowFontScaling={false} style={style.requestedHeaderInfo}>for {numDiners} diner{numDiners > 1 ? "s" : ""}{'\n'}</Text>
-										<Text allowFontScaling={false} style={style.requestedHeaderInfo}>You will get notify by the diners</Text>
+										<Text style={style.requestedHeader}>Reservation requested at</Text>
+										<Text style={style.requestedHeaderInfo}>{confirmRequest.service}</Text>
+										<Text style={style.requestedHeaderInfo}>{displayTime(confirmRequest.time)}</Text>
+										<Text style={style.requestedHeaderInfo}>for {numDiners} diner{numDiners > 1 ? "s" : ""}{'\n'}</Text>
+										<Text style={style.requestedHeaderInfo}>You will get notify by the diners</Text>
 										<TouchableOpacity style={style.requestedClose} onPress={() => {
 											setConfirmrequest({ ...confirmRequest, show: false, requested: false })
 
 											refetch()
 											props.navigation.goBack()
 										}}>
-											<Text allowFontScaling={false} style={style.requestedCloseHeader}>Ok</Text>
+											<Text style={style.requestedCloseHeader}>Ok</Text>
 										</TouchableOpacity>
 									</View>
 								}
@@ -514,11 +513,12 @@ export default function booktime(props) {
 }
 
 const style = StyleSheet.create({
-	box: { backgroundColor: '#EAEAEA', height: '100%', width: '100%' },
-	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, marginVertical: 20, marginHorizontal: 20, padding: 5, width: 100 },
-	backHeader: { fontFamily: 'appFont', fontSize: fsize(0.05) },
+	makereservation: { backgroundColor: 'white', height: '100%', paddingBottom: offsetPadding, width: '100%' }, 
+	box: { height: '100%', width: '100%' },
+	header: { flexDirection: 'column', height: '10%', justifyContent: 'space-around', width: '100%' },
+	boxHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), fontWeight: 'bold', textAlign: 'center' },
 
-	boxHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), fontWeight: 'bold', marginBottom: 10, textAlign: 'center' },
+	body: { height: '90%' },
 
 	dinersList: { alignItems: 'center', width: '100%' },
 	row: { flexDirection: 'row', justifyContent: 'space-between' },
@@ -558,7 +558,7 @@ const style = StyleSheet.create({
 	selectedPassedHeader: { color: 'black', fontSize: fsize(0.04) },
 
 	// confirm & requested box
-	confirmBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
+	confirmBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', paddingVertical: offsetPadding, width: '100%' },
 	confirmContainer: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },
 	confirmHeader: { fontSize: fsize(0.05), fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
 	confirmInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: (width * 0.8) - 50 },

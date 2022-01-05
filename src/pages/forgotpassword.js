@@ -61,7 +61,6 @@ export default function forgotpassword({ navigation }) {
 					<View style={style.background}>
 						<Image source={require("../../assets/background.jpg")} style={{ height: fsize(1), width: fsize(1) }}/>
 					</View>
-					<Text style={style.boxHeader}>Forgot Password</Text>
 
 					<View style={style.inputsBox}>
 						{!info.sent ? 
@@ -94,24 +93,10 @@ export default function forgotpassword({ navigation }) {
 					</View>
 					
 					<View>
-						<TouchableOpacity style={style.option} onPress={() => {
-							navigation.dispatch(
-								CommonActions.reset({
-									index: 1,
-									routes: [{ name: 'login' }]
-								})
-							);
-						}}>
+						<TouchableOpacity style={style.option} onPress={() => navigation.replace('login')}>
 							<Text style={style.optionHeader}>Already a member ? Log in</Text>
 						</TouchableOpacity>
-						<TouchableOpacity style={style.option} onPress={() => {
-							navigation.dispatch(
-								CommonActions.reset({
-									index: 1,
-									routes: [{ name: 'verifyowner' }]
-								})
-							);
-						}}>
+						<TouchableOpacity style={style.option} onPress={() => navigation.replace('verifyowner')}>
 							<Text style={style.optionHeader}>Don't have an account ? Sign up</Text>
 						</TouchableOpacity>
 					</View>
@@ -125,7 +110,6 @@ const style = StyleSheet.create({
 	forgotpassword: { backgroundColor: 'white', height: '100%', width: '100%' },
 	box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-between', paddingVertical: offsetPadding, width: '100%' },
 	background: { alignItems: 'center', flexDirection: 'column', height: screenHeight, justifyContent: 'space-around', position: 'absolute', top: 0, width: width },
-	boxHeader: { color: 'black', fontFamily: 'appFont', fontSize: fsize(0.10), fontWeight: 'bold' },
 	
 	inputsBox: { flexDirection: 'column', height: screenHeight / 2, justifyContent: 'space-around', width: '80%' },
 	inputContainer: { marginBottom: 30, width: '100%' },
