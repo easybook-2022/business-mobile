@@ -340,7 +340,7 @@ export default function workinghours({ navigation }) {
 
 						<Text style={style.errorMsg}>{errorMsg}</Text>
 
-						{loading && <ActivityIndicator size="large"/>}
+						{loading && <ActivityIndicator color="black" size="large"/>}
 						
 						<TouchableOpacity style={style.submit} disabled={loading} onPress={() => !daysInfo.done ? setTime() : done()}>
 							<Text style={style.submitHeader}>{!daysInfo.done ? "Next" : "Done"}</Text>

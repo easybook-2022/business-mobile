@@ -263,7 +263,7 @@ export default function register(props) {
 
 						{(setupType == "profile" && (cameraPermission !== null || pickingPermission !== null)) && (
 							<View style={style.cameraContainer}>
-								<Text style={style.inputHeader}>Profile Picture</Text>
+								<Text style={style.inputHeader}>Provide a photo of yourself</Text>
 
 								{profile.uri ? (
 									<>
@@ -346,7 +346,7 @@ const style = StyleSheet.create({
 
 	inputsBox: { alignItems: 'center', width: '100%' },
 	inputContainer: { width: '80%' },
-	inputHeader: { fontFamily: 'appFont', fontSize: fsize(0.07) },
+	inputHeader: { fontFamily: 'appFont', fontSize: fsize(0.06) },
 	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: fsize(0.07), padding: 5, width: '100%' },
 
 	cameraContainer: { alignItems: 'center', width: '100%' },

@@ -1151,7 +1151,7 @@ export default function main(props) {
 													<Text style={style.scheduleActionHeader}>{item.allowPayment == true ? 'Receive\nin-person-pay' : 'in-person-pay\nPayment awaits'}</Text>
 												</TouchableOpacity>
 											</View>
-											{item.gettingPayment && <ActivityIndicator marginBottom={-5} marginTop={-15} size="small"/>}
+											{item.gettingPayment && <ActivityIndicator marginBottom={-5} color="black" size="small"/>}
 										</View>
 									</View>
 								}
@@ -1245,7 +1245,7 @@ export default function main(props) {
 														</TouchableOpacity>
 														<TouchableOpacity style={item.gettingPayment ? style.scheduleActionDisabled : style.scheduleAction} disabled={item.gettingPayment} onPress={() => doneTheDining(index, item.id)}>
 															<Text style={style.scheduleActionHeader}>Receive payment</Text>
-															{item.gettingPayment && <ActivityIndicator marginBottom={-5} marginTop={-15} size="small"/>}
+															{item.gettingPayment && <ActivityIndicator marginBottom={-5} color="black" size="small"/>}
 														</TouchableOpacity>
 													</View>
 												</View>
@@ -1667,7 +1667,7 @@ export default function main(props) {
 								<Text style={style.disabledCloseHeader}>Close</Text>
 							</TouchableOpacity>
 
-							<ActivityIndicator size="large"/>
+							<ActivityIndicator color="black" size="large"/>
 						</View>
 					</View>
 				</Modal>
@@ -1680,7 +1680,7 @@ const style = StyleSheet.create({
 	main: { backgroundColor: 'white', height: '100%', paddingVertical: offsetPadding, width: '100%' },
 	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 
-	headers: { alignItems: 'center', flexDirection: 'column', height: '20%', justifyContent: 'space-between', paddingVertical: 5 },
+	headers: { alignItems: 'center', flexDirection: 'column', height: '20%', justifyContent: 'space-between' },
 	storeIconHolder: { borderRadius: fsize(0.2) / 2, height: fsize(0.2), overflow: 'hidden', width: fsize(0.2) },
 	image: { height: fsize(0.2), width: fsize(0.2) },
 	locationInfoHeader: { fontSize: fsize(0.04), fontWeight: 'bold', paddingHorizontal: 10, textAlign: 'center' },
@@ -1727,7 +1727,7 @@ const style = StyleSheet.create({
 	cartordererSeeOrders: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5 },
 	cartordererSeeOrdersHeader: { fontSize: fsize(0.04), textAlign: 'center' },
 
-	bodyResult: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around' },
+	bodyResult: { alignItems: 'center', flexDirection: 'column', height: '70%', justifyContent: 'space-around' },
 	bodyResultHeader: { fontSize: fsize(0.05), fontWeight: 'bold' },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'column', height: '10%', justifyContent: 'space-around', width: '100%' },

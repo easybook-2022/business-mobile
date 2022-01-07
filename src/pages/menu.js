@@ -386,7 +386,7 @@ export default function menu(props) {
 	}
 	
 	useEffect(() => getTheLocationProfile(), [])
-	
+
 	return (
 		<View style={style.menuBox}>
 			{loaded ? 
@@ -396,10 +396,16 @@ export default function menu(props) {
 							{displayList({ name: "", image: "", list: menus, listType: "list", left: 0 })}
 						</View>
 
-						<View style={{ alignItems: 'center', marginVertical: 50 }}>
-							<TouchableOpacity onPress={() => setCreateoptionbox({ show: true, id: "", allow: "both" })}>
-								<AntDesign name="pluscircleo" size={40}/>
-							</TouchableOpacity>
+						<View style={{ alignItems: 'center', marginVertical: 20 }}>
+							{menus.length == 0 ? 
+								<TouchableOpacity style={style.menuStart} onPress={() => setCreateoptionbox({ show: true, id: "", allow: "both" })}>
+									<Text style={style.menuStartHeader}>Click to start</Text>
+								</TouchableOpacity>
+								:
+								<TouchableOpacity onPress={() => setCreateoptionbox({ show: true, id: "", allow: "both" })}>
+									<AntDesign name="pluscircleo" size={40}/>
+								</TouchableOpacity>
+							}
 						</View>
 					</ScrollView>
 
@@ -592,7 +598,9 @@ export default function menu(props) {
 					)}
 				</View>
 				:
-				<ActivityIndicator size="large" marginTop={(height / 2) - offsetPadding}/>
+				<View style={{ alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' }}>
+					<ActivityIndicator color="black" size="large"/>
+				</View>
 			}
 		</View>
 	)
@@ -601,7 +609,10 @@ export default function menu(props) {
 const style = StyleSheet.create({
 	menuBox: { backgroundColor: 'white', height: '100%', paddingBottom: offsetPadding, width: '100%' },
 	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
-	
+
+	menuStart: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5 },
+	menuStartHeader: { fontSize: fsize(0.05), textAlign: 'center' },
+
 	menu: { backgroundColor: 'white', padding: 3, width: '98%' },
 	menuImageHolder: { borderRadius: fsize(0.1) / 2, height: fsize(0.1), overflow: 'hidden', width: fsize(0.1) },
 	menuImage: { height: fsize(0.1), width: fsize(0.1) },
@@ -640,7 +651,7 @@ const style = StyleSheet.create({
 	createOptionClose: { borderRadius: 18, borderStyle: 'solid', borderWidth: 2 },
 	createOptionActions: { flexDirection: 'column', height: '50%', justifyContent: 'space-around' },
 	createOptionAction: { borderRadius: 3, borderStyle: 'solid', borderWidth: 1, padding: 10 },
-	createOptionActionHeader: { textAlign: 'center' },
+	createOptionActionHeader: { fontSize: fsize(0.08), textAlign: 'center' },
 
 	// remove menu confirmation
 	menuInfoContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },

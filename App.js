@@ -118,7 +118,7 @@ export default function App() {
                             headerLeft: () => (
                                 Platform.OS == 'ios' && (
                                     <TouchableOpacity style={style.back} onPress={() => {
-                                        if (route.params.refetch) {
+                                        if (route.params && route.params.refetch) {
                                             route.params.refetch()
                                         }
 
@@ -137,7 +137,7 @@ export default function App() {
                                         if (route.params && route.params.refetch) {
                                             route.params.refetch()
                                         }
-                                        
+
                                         navigation.goBack()
                                     }}>
                                         <Text style={style.backHeader}>Go Back</Text>
@@ -257,7 +257,7 @@ export default function App() {
                             headerLeft: () => (
                                 Platform.OS == 'ios' && (
                                     <TouchableOpacity style={style.back} onPress={() => {
-                                        if (route.params && route.params.refetch()) {
+                                        if (route.params && route.params.refetch) {
                                             route.params.refetch()
                                         }
 

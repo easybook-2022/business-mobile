@@ -1231,7 +1231,7 @@ export default function settings(props) {
 
 										{errorMsg ? <Text style={style.errorMsg}>{errorMsg}</Text> : null }
 
-										{loading && <ActivityIndicator size="large"/>}
+										{loading && <ActivityIndicator color="black" size="large"/>}
 									</View>
 
 									<TouchableOpacity style={style.updateButton} disabled={loading} onPress={() => updateYourLocation()}>
@@ -1243,7 +1243,7 @@ export default function settings(props) {
 									<Text style={style.editButtonHeader}>Edit Location Info</Text>
 								</TouchableOpacity>
 							:
-							<ActivityIndicator marginTop={'10%'} size="small"/>
+							<ActivityIndicator marginTop={'10%'} color="black" size="small"/>
 						}
 
 						{!daysLoading ?
@@ -1360,7 +1360,7 @@ export default function settings(props) {
 									<Text style={style.editButtonHeader}>Edit Store Hour(s)</Text>
 								</TouchableOpacity>
 							:
-							<ActivityIndicator marginTop={'10%'} size="small"/>
+							<ActivityIndicator marginTop={'10%'} color="black" size="small"/>
 						}
 
 						{!accountHoldersloading ?
@@ -1409,7 +1409,7 @@ export default function settings(props) {
 									<Text style={style.editButtonHeader}>Edit Worker(s)</Text>
 								</TouchableOpacity>
 							:
-							<ActivityIndicator marginTop={'10%'} size="small"/>
+							<ActivityIndicator marginTop={'10%'} color="black" size="small"/>
 						}
 
 						{!bankAccountsloading ?
@@ -1448,7 +1448,7 @@ export default function settings(props) {
 									<Text style={style.editButtonHeader}>Edit Bank account(s)</Text>
 								</TouchableOpacity>
 							:
-							<ActivityIndicator marginTop={'10%'} size="small"/>
+							<ActivityIndicator marginTop={'10%'} color="black" size="small"/>
 						}
 					</View>
 				</ScrollView>

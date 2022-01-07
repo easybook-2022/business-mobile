@@ -382,18 +382,14 @@ export default function booktime(props) {
 	
 	return (
 		<View style={style.booktime}>
-			<View style={style.box}>
-				<View style={style.headers}>
-					<Text style={style.serviceHeader}><Text style={{ fontSize: fsize(0.05) }}>for</Text> client</Text>
-					<Text style={style.serviceHeader}><Text style={{ fontSize: fsize(0.05) }}>requesting for</Text> {name}</Text>
-				</View>
-
-				{!loaded ? 
-					<View style={{ height: '90%' }}>
-						<ActivityIndicator size="small"/>
+			{loaded ? 
+				<View style={style.box}>
+					<View style={style.headers}>
+						<Text style={style.serviceHeader}><Text style={{ fontSize: fsize(0.04) }}>for</Text> client</Text>
+						<Text style={style.serviceHeader}><Text style={{ fontSize: fsize(0.04) }}>requesting for</Text> {name}</Text>
 					</View>
-					:
-					<ScrollView style={{ height: '90%' }}>
+		
+					<ScrollView style={style.body}>
 						<View style={style.dateHeaders}>
 							<View style={style.date}>
 								<TouchableOpacity style={style.dateNav} onPress={() => dateNavigate('left')}><AntDesign name="left" size={25}/></TouchableOpacity>
@@ -434,7 +430,7 @@ export default function booktime(props) {
 							</View>
 						</View>
 						<Text style={style.timesHeader}>Pick a time</Text>
-						<View style={{ flexDirection: 'row', justifyContent: 'space-around', marginBottom: 10, width: '100%' }}>
+						<View style={style.timesContainer}>
 							<View style={style.times}>
 								{times.map(info => (
 									<View key={info.key}>
@@ -460,8 +456,12 @@ export default function booktime(props) {
 							</View>
 						</View>
 					</ScrollView>
-				}
-			</View>
+				</View>
+				:
+				<View style={{ alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' }}>
+					<ActivityIndicator color="black" size="small"/>
+				</View>
+			}
 			
 			{confirm.show && (
 				<Modal transparent={true}>
@@ -517,10 +517,12 @@ const style = StyleSheet.create({
 	booktime: { backgroundColor: 'white', height: '100%', paddingBottom: offsetPadding, width: '100%' },
 	box: { backgroundColor: '#EAEAEA', height: '100%', width: '100%' },
 
-	headers: { height: '10%' },
-	serviceHeader: { fontSize: fsize(0.08), fontWeight: 'bold', textAlign: 'center' },
+	headers: { flexDirection: 'column', height: '15%', justifyContent: 'space-around', width: '100%' },
+	serviceHeader: { fontSize: fsize(0.06), fontWeight: 'bold', textAlign: 'center' },
 
-	dateHeaders: { alignItems: 'center', paddingTop: 30 },
+	body: { height: '85%' },
+
+	dateHeaders: { alignItems: 'center', marginVertical: 50 },
 	date: { flexDirection: 'row', margin: 10 },
 	dateNav: { marginHorizontal: 20 },
 	dateHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), marginVertical: 5, textAlign: 'center', width: fsize(0.5) },
@@ -539,6 +541,7 @@ const style = StyleSheet.create({
 	dateDayTouchDisabled: { margin: 3, paddingVertical: 10, width: fsize(0.1) },
 	dateDayTouchDisabledHeader: { fontSize: fsize(0.038), fontWeight: 'bold' },
 
+	timesContainer: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 10, width: '100%' },
 	timesHeader: { fontFamily: 'appFont', fontSize: fsize(0.07), fontWeight: 'bold', textAlign: 'center' },
 	times: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', width: fsize(0.79) },
 	

@@ -17,9 +17,9 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": false,
+      "supportsTablet": true,
       "bundleIdentifier": "com.geottuse.serviceapp.business",
-      "buildNumber": "12",
+      "buildNumber": "13",
       "infoPlist": {
         "NSCameraUsageDescription": "EasyGO (Business) uses camera to allow you to capture a photo of your location/menu/product/service",
         "NSMicrophoneUsageDescription": "EasyGO (Business) does not need microphone"
@@ -30,7 +30,7 @@
     },
     "android": {
       "package": "com.geottuse.serviceapp.business",
-      "versionCode": 0
+      "versionCode": 4
     },
     "notification": {
       "icon": "./assets/notification.png"

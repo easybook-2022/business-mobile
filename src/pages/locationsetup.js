@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Platform, ActivityIndicator, Dimensions, ScrollView, View, Text, TextInput, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { Platform, ActivityIndicator, Dimensions, ScrollView, View, Text, TextInput, Image, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
 import Constants from 'expo-constants';
@@ -157,14 +157,27 @@ export default function locationsetup({ navigation }) {
 
 							AsyncStorage.setItem("locationid", id.toString())
 							AsyncStorage.setItem("locationtype", type)
-							AsyncStorage.setItem("phase", "workinghours")
 
-							navigation.dispatch(
-								CommonActions.reset({
-									index: 0,
-									routes: [{ name: "workinghours" }]
-								})
-							)
+							if (type == "restaurant") {
+								AsyncStorage.setItem("phase", "main")
+
+								navigation.dispatch(
+									CommonActions.reset({
+										index: 0,
+										routes: [{ name: "main", params: { firstTime: true } }]
+									})
+								)
+							} else {
+								AsyncStorage.setItem("phase", "workinghours")
+
+								navigation.dispatch(
+									CommonActions.reset({
+										index: 0,
+										routes: [{ name: "workinghours" }]
+									})
+								)
+							}
+								
 						}
 					})
 					.catch((err) => {
@@ -223,24 +236,28 @@ export default function locationsetup({ navigation }) {
 		const index = steps.indexOf(setupType)
 		let msg = "", skip = false
 
-		setLoading(true)
-
 		switch (index) {
 			case 0:
-				if (!addressOne || !city || !province || !postalcode) {
-					msg = "There are some missing address info"
+				if (!type) {
+					msg = "Please tell what service you are"
 				}
 
 				break
 			case 1:
-				if (!phonenumber) {
-					msg = "Please provide the " + (type == 'restaurant' ? 'restaurant' : type + ' salon') + " phone number"
+				if (locationInfo != "") {
+					if (locationInfo == "destination") {
+						if (!addressOne || !city || !province || !postalcode) {
+							msg = "There are some missing address info"
+						}
+					}
+				} else {
+					msg = "Please choose an option"
 				}
 
 				break
 			case 2:
-				if (!type) {
-					msg = "Please tell what service you are"
+				if (!phonenumber) {
+					msg = "Please provide the " + (type == 'restaurant' ? 'restaurant' : type + ' salon') + " phone number"
 				}
 
 				break
@@ -535,389 +552,384 @@ export default function locationsetup({ navigation }) {
 	return (
 		<View style={[style.locationsetup, { opacity: loading ? 0.5 : 1 }]}>
 			<View style={style.box}>
+				<View style={style.header}>
+					<Text style={style.boxHeader}>Setup</Text>
+				</View>
+
 				<View style={style.inputsBox}>
-					{setupType ? <Text style={style.boxHeader}>Setup</Text> : null}
-
-					{setupType == "" && (
-						<View style={style.introBox}>
-							<Text style={style.introHeader}>Welcome to EasyGO Business</Text>
-							<Text style={style.introHeader}>We will bring the nearest customers to your door</Text>
-							<Text style={style.introHeader}>Let's setup your business information</Text>
-
-							<TouchableOpacity style={style.submit} disabled={loading} onPress={() => setupType == "hours" ? setupYourLocation() : saveInfo()}>
-								<Text style={style.submitHeader}>{setupType == "" ? "Let's go" : "Next"}</Text>
-							</TouchableOpacity>
-						</View>
-					)}
-
-					{setupType == "type" && (
-						<View style={style.typeContainer}>
-							<Text style={style.inputHeader}>What business are you ?</Text>
-
-							<View style={style.selections}>
-								<TouchableOpacity style={type == 'hair' ? style.typeSelectionSelected : style.typeSelection} onPress={() => setType('hair')}>
-									<View style={style.typeSelectionRow}>
-										<Text style={style.typeSelectionHeader}>Hair{'\n'}Salon</Text>
-										<Image source={require("../../assets/hairsalon.png")} style={style.typeSelectionIcon}/>
-										<Text style={style.typeSelectionAction}>Tap{'\n'}to choose</Text>
-									</View>
-								</TouchableOpacity>
-								<TouchableOpacity style={type == 'nail' ? style.typeSelectionSelected : style.typeSelection} onPress={() => setType('nail')}>
-									<View style={style.typeSelectionRow}>
-										<Text style={style.typeSelectionHeader}>Nail{'\n'}Salon</Text>
-										<Image source={require("../../assets/nailsalon.png")} style={style.typeSelectionIcon}/>
-										<Text style={style.typeSelectionAction}>Tap{'\n'}to choose</Text>
-									</View>
-								</TouchableOpacity>
-								<TouchableOpacity style={type == 'restaurant' ? style.typeSelectionSelected : style.typeSelection} onPress={() => setType('restaurant')}>
-									<View style={style.typeSelectionRow}>
-										<Text style={style.typeSelectionHeader}>Restaurant</Text>
-										<Image source={require("../../assets/food.png")} style={style.typeSelectionIcon}/>
-										<Text style={style.typeSelectionAction}>Tap{'\n'}to choose</Text>
-									</View>
-								</TouchableOpacity>
+					<View style={style.inputsContainer}>
+						{setupType == "" && (
+							<View style={style.introBox}>
+								<Text style={style.introHeader}>Welcome to EasyGO Business</Text>
+								<Text style={style.introHeader}>We will bring the nearest customers to your door</Text>
+								<Text style={style.introHeader}>Let's setup your business information</Text>
 							</View>
+						)}
 
-							{errorMsg ? <Text style={style.errorMsg}>{errorMsg}</Text> : null }
+						{setupType == "type" && (
+							<View style={style.typeContainer}>
+								<Text style={style.inputHeader}>What business are you ?</Text>
 
-							{loading && <ActivityIndicator size="large"/>}
-
-							<TouchableOpacity style={style.submit} disabled={loading} onPress={() => setupType == "hours" ? setupYourLocation() : saveInfo()}>
-								<Text style={style.submitHeader}>{setupType == "" ? "Let's go" : "Next"}</Text>
-							</TouchableOpacity>
-						</View>
-					)}
-
-					{(setupType == "location" && locationPermission) && (
-						<View style={style.locationContainer}>
-							{locationInfo == '' ?
-								<View style={{ height: '100%' }}>
-									<Text style={style.locationHeader}>Are you at the {type == 'restaurant' ? 'restaurant' : type + ' salon'} right now ?</Text>
-									<View style={style.locationActions}>
-										<TouchableOpacity style={style.locationAction} disabled={loading} onPress={() => setLocationinfo('away')}>
-											<Text style={style.locationActionHeader}>No</Text>
-										</TouchableOpacity>
-										<TouchableOpacity style={style.locationAction} disabled={loading} onPress={async() => {
-											setLoading(true)
-
-											const location = await Location.getCurrentPositionAsync({});
-											const { longitude, latitude } = location.coords
-											let address = await Location.reverseGeocodeAsync({
-												latitude,
-												longitude
-											});
-
-											for (let item of address) {
-												setLocationcoords({ 
-													longitude, 
-													latitude,
-													address: `${item.name}, ${item.subregion} ${item.region}, ${item.postalCode}`
-												})
-												setAddressone(item.name)
-												setCity(item.subregion)
-												setProvince(item.region)
-												setPostalcode(item.postalCode)
-											}
-											
-											setLocationinfo('destination')
-											setLoading(false)
-										}}>
-											<Text style={style.locationActionHeader}>Yes</Text>
-										</TouchableOpacity>
-									</View>
-
-									{loading && (
-										<View style={{ marginVertical: 20 }}>
-											<Text style={style.locationFetchingHeader}>getting your location</Text>
-											<ActivityIndicator size="small"/>
+								<View style={style.selections}>
+									<TouchableOpacity style={type == 'hair' ? style.typeSelectionSelected : style.typeSelection} onPress={() => setType('hair')}>
+										<View style={style.typeSelectionRow}>
+											<Text style={style.typeSelectionHeader}>Hair{'\n'}Salon</Text>
+											<Image source={require("../../assets/hairsalon.png")} style={style.typeSelectionIcon}/>
+											<Text style={style.typeSelectionAction}>Tap{'\n'}to choose</Text>
 										</View>
-									)}
-								</View>
-								:
-								locationInfo != 'destination' ? 
-									<ScrollView style={{ height: '100%', width: '100%' }}>
-										<View style={style.locationInfos}>
-											<View style={{ alignItems: 'center', marginVertical: 50 }}>
-												<Text style={style.locationHeader}>Are you at the restaurant/salon right now ?</Text>
-												<TouchableOpacity style={style.locationActionOption} disabled={loading} onPress={async() => {
-													setLoading(true)
-
-													const location = await Location.getCurrentPositionAsync({});
-													const { longitude, latitude } = location.coords
-													let address = await Location.reverseGeocodeAsync({
-														latitude,
-														longitude
-													});
-
-													for (let item of address) {
-														setLocationcoords({ 
-															longitude, 
-															latitude,
-															address: `${item.name}, ${item.subregion} ${item.region}, ${item.postalCode}`
-														})
-														setAddressone(item.name)
-														setCity(item.subregion)
-														setProvince(item.region)
-														setPostalcode(item.postalCode)
-													}
-
-													setLocationinfo('destination')
-													setLoading(false)
-												}}>
-													<Text style={style.locationActionOptionHeader}>Mark location instead</Text>
-												</TouchableOpacity>
-											</View>
-
-											<Text style={{ fontSize: 20, fontWeight: 'bold', marginVertical: 20 }}>Or</Text>
-
-											<Text style={style.boxMiniheader}>Enter your location information</Text>
-
-											<View style={style.inputContainer}>
-												<Text style={style.inputHeader}>Enter location name:</Text>
-												<TextInput style={style.input} onChangeText={(storeName) => setStorename(storeName)} value={storeName} autoCorrect={false} autoCapitalize="none"/>
-											</View>
-											<View style={style.inputContainer}>
-												<Text style={style.inputHeader}>Enter location address #1:</Text>
-												<TextInput style={style.input} onChangeText={(addressOne) => setAddressone(addressOne)} value={addressOne} autoCorrect={false} autoCapitalize="none"/>
-											</View>
-											<View style={style.inputContainer}>
-												<Text style={style.inputHeader}>Enter location address #2: (Optional)</Text>
-												<TextInput style={style.input} onChangeText={(addressTwo) => setAddresstwo(addressTwo)} value={addressTwo} autoCorrect={false} autoCapitalize="none"/>
-											</View>
-											<View style={style.inputContainer}>
-												<Text style={style.inputHeader}>Enter city:</Text>
-												<TextInput style={style.input} onChangeText={(city) => setCity(city)} value={city} autoCorrect={false} autoCapitalize="none"/>
-											</View>
-											<View style={style.inputContainer}>
-												<Text style={style.inputHeader}>Enter province:</Text>
-												<TextInput style={style.input} onChangeText={(province) => setProvince(province)} value={province} autoCorrect={false} autoCapitalize="none"/>
-											</View>
-											<View style={style.inputContainer}>
-												<Text style={style.inputHeader}>Enter postal code:</Text>
-												<TextInput style={style.input} onChangeText={(postalcode) => setPostalcode(postalcode)} value={postalcode} autoCorrect={false} autoCapitalize="none"/>
-											</View>
-
-											{errorMsg ? <Text style={style.errorMsg}>{errorMsg}</Text> : null }
-
-											{loading && <ActivityIndicator size="large"/>}
-
-											<TouchableOpacity style={style.submit} disabled={loading} onPress={() => setupType == "hours" ? setupYourLocation() : saveInfo()}>
-												<Text style={style.submitHeader}>{setupType == "" ? "Let's go" : "Next"}</Text>
-											</TouchableOpacity>
-										</View>
-									</ScrollView>
-									:
-									<View style={{ height: '100%', width: '100%' }}>
-										<Text style={style.locationHeader}>Your location is located at</Text>
-										<MapView
-											region={{
-												longitude: locationCoords.longitude,
-												latitude: locationCoords.latitude,
-												latitudeDelta: 0.003,
-												longitudeDelta: 0.003
-											}}
-											scrollEnabled={false}
-											zoomEnabled={false}
-											style={{ borderRadius: fsize(0.5) / 2, height: fsize(0.5), width: fsize(0.5) }}
-										>
-											<Marker coordinate={{ longitude: locationCoords.longitude, latitude: locationCoords.latitude }}/>
-										</MapView>
-										<Text style={style.locationAddressHeader}>{locationCoords.address}</Text>
-										{errorMsg ? <Text style={style.errorMsg}>{errorMsg}</Text> : null }
-
-										<TouchableOpacity style={style.submit} disabled={loading} onPress={() => setupType == "hours" ? setupYourLocation() : saveInfo()}>
-											<Text style={style.submitHeader}>{setupType == "" ? "Let's go" : "Next"}</Text>
-										</TouchableOpacity>
-										<TouchableOpacity style={style.locationActionOption} onPress={() => {
-											setLocationcoords({ longitude: null, latitude: null })
-											setLocationinfo('away')
-										}}>
-											<Text style={style.locationActionOptionHeader}>Enter full address instead</Text>
-										</TouchableOpacity>
-
-										{loading && <ActivityIndicator size="large"/>}
-									</View>
-							}
-						</View>
-					)}
-
-					{setupType == "phonenumber" && (
-						<View style={{ alignItems: 'center', height: '100%', width: '100%' }}>
-							<View style={style.inputContainer}>
-								<Text style={style.inputHeader}>Enter {type == 'restaurant' ? 'restaurant' : type + ' salon'}'s phone number:</Text>
-								<TextInput style={style.input} onChangeText={(phonenumber) => setPhonenumber(phonenumber)} value={phonenumber} keyboardType="numeric" autoCorrect={false} autoCapitalize="none"/>
-							</View>
-
-							{errorMsg ? <Text style={style.errorMsg}>{errorMsg}</Text> : null }
-
-							{loading && <ActivityIndicator size="large"/>}
-
-							<TouchableOpacity style={style.submit} disabled={loading} onPress={() => setupType == "hours" ? setupYourLocation() : saveInfo()}>
-								<Text style={style.submitHeader}>{setupType == "" ? "Let's go" : "Next"}</Text>
-							</TouchableOpacity>
-						</View>
-					)}
-					
-					{(setupType == "logo" && (cameraPermission || pickingPermission)) && (
-						<View style={style.cameraContainer}>
-							<Text style={style.inputHeader}>Provide a photo for {type == 'restaurant' ? 'restaurant' : type + ' salon'}</Text>
-
-							{logo.uri ? (
-								<>
-									<Image style={style.camera} source={{ uri: logo.uri }}/>
-
-									<TouchableOpacity style={style.cameraAction} onPress={() => setLogo({ uri: '', name: '' })}>
-										<Text style={style.cameraActionHeader}>Cancel</Text>
 									</TouchableOpacity>
-								</>
-							) : (
-								<>
-									<Camera 
-										style={style.camera} 
-										type={Camera.Constants.Type.back} ref={r => {setCamcomp(r)}}
-										ratio="1:1"
-									/>
-
-									<View style={style.cameraActions}>
-										<TouchableOpacity style={style.cameraAction} onPress={snapPhoto.bind(this)}>
-											<Text style={style.cameraActionHeader}>Take{'\n'}this photo</Text>
-										</TouchableOpacity>
-										<TouchableOpacity style={style.cameraAction} onPress={() => choosePhoto()}>
-											<Text style={style.cameraActionHeader}>Choose{'\n'}from phone</Text>
-										</TouchableOpacity>
-									</View>
-								</>
-							)}
-
-							{errorMsg ? <Text style={style.errorMsg}>{errorMsg}</Text> : null }
-
-							{loading && <ActivityIndicator size="large"/>}
-
-							<TouchableOpacity style={style.submit} disabled={loading} onPress={() => setupType == "hours" ? setupYourLocation() : saveInfo()}>
-								<Text style={style.submitHeader}>{setupType == "" ? "Let's go" : "Next"}</Text>
-							</TouchableOpacity>
-						</View>
-					)}
-
-					{setupType == "hours" && (
-						<ScrollView style={{ height: '100%', width: '100%' }}>
-							<View style={{ alignItems: 'center' }}>
-								<View style={style.days}>
-									<Text style={[style.inputHeader, { marginBottom: 20, textAlign: 'center' }]}>Set the {type == 'restaurant' ? 'restaurant' : type + ' salon'}'s opening hours</Text>
-
-									{!daysInfo.done ?
-										<View style={{ alignItems: 'center', width: '100%' }}>
-											<Text style={style.workingDayHeader}>What day is business open ?</Text>
-
-											{daysArr.map((day, index) => (
-												<TouchableOpacity key={index} style={daysInfo.working.indexOf(day) > -1 ? style.workingDayTouchSelected : style.workingDayTouch} onPress={() => {
-													const newWorking = [...daysInfo.working]
-
-													if (newWorking[index] == '') {
-														newWorking[index] = day
-													} else {
-														newWorking[index] = ''
-													}
-
-													setDaysinfo({ ...daysInfo, working: newWorking })
-												}}>
-													<Text style={style.workingDayTouchHeader}>{day}</Text>
-												</TouchableOpacity>
-											))}
+									<TouchableOpacity style={type == 'nail' ? style.typeSelectionSelected : style.typeSelection} onPress={() => setType('nail')}>
+										<View style={style.typeSelectionRow}>
+											<Text style={style.typeSelectionHeader}>Nail{'\n'}Salon</Text>
+											<Image source={require("../../assets/nailsalon.png")} style={style.typeSelectionIcon}/>
+											<Text style={style.typeSelectionAction}>Tap{'\n'}to choose</Text>
 										</View>
+									</TouchableOpacity>
+									<TouchableOpacity style={type == 'restaurant' ? style.typeSelectionSelected : style.typeSelection} onPress={() => setType('restaurant')}>
+										<View style={style.typeSelectionRow}>
+											<Text style={style.typeSelectionHeader}>Restaurant</Text>
+											<Image source={require("../../assets/food.png")} style={style.typeSelectionIcon}/>
+											<Text style={style.typeSelectionAction}>Tap{'\n'}to choose</Text>
+										</View>
+									</TouchableOpacity>
+								</View>
+
+								{loading && <ActivityIndicator color="black" size="large"/>}
+							</View>
+						)}
+
+						{(setupType == "location" && locationPermission) && (
+							<View style={style.locationContainer}>
+								{locationInfo == '' ?
+									<View style={{ height: '100%' }}>
+										<Text style={style.locationHeader}>Are you at the {type == 'restaurant' ? 'restaurant' : type + ' salon'} right now ?</Text>
+										<View style={style.locationActions}>
+											<TouchableOpacity style={style.locationAction} disabled={loading} onPress={() => {
+												setLocationinfo('away')
+												setErrormsg()
+											}}>
+												<Text style={style.locationActionHeader}>No</Text>
+											</TouchableOpacity>
+											<TouchableOpacity style={style.locationAction} disabled={loading} onPress={async() => {
+												setLoading(true)
+
+												const location = await Location.getCurrentPositionAsync({});
+												const { longitude, latitude } = location.coords
+												let address = await Location.reverseGeocodeAsync({
+													latitude,
+													longitude
+												});
+
+												for (let item of address) {
+													setLocationcoords({ 
+														longitude, 
+														latitude,
+														address: `${item.name}, ${item.subregion} ${item.region}, ${item.postalCode}`
+													})
+													setAddressone(item.name)
+													setCity(item.subregion)
+													setProvince(item.region)
+													setPostalcode(item.postalCode)
+												}
+												
+												setLocationinfo('destination')
+												setLoading(false)
+												setErrormsg()
+											}}>
+												<Text style={style.locationActionHeader}>Yes</Text>
+											</TouchableOpacity>
+										</View>
+
+										{loading && (
+											<View style={{ marginVertical: 10 }}>
+												<Text style={style.locationFetchingHeader}>getting your location</Text>
+												<ActivityIndicator color="black" size="small"/>
+											</View>
+										)}
+									</View>
+									:
+									locationInfo != 'destination' ? 
+										<ScrollView style={{ height: '100%', width: '100%' }}>
+											<View style={style.locationInfos}>
+												<View style={{ alignItems: 'center', marginTop: 50 }}>
+													<Text style={style.locationHeader}>Are you at the restaurant/salon right now ?</Text>
+													<TouchableOpacity style={style.locationActionOption} disabled={loading} onPress={async() => {
+														setLoading(true)
+
+														const location = await Location.getCurrentPositionAsync({});
+														const { longitude, latitude } = location.coords
+														let address = await Location.reverseGeocodeAsync({
+															latitude,
+															longitude
+														});
+
+														for (let item of address) {
+															setLocationcoords({ 
+																longitude, 
+																latitude,
+																address: `${item.name}, ${item.subregion} ${item.region}, ${item.postalCode}`
+															})
+															setAddressone(item.name)
+															setCity(item.subregion)
+															setProvince(item.region)
+															setPostalcode(item.postalCode)
+														}
+
+														setLocationinfo('destination')
+														setLoading(false)
+														setErrormsg()
+													}}>
+														<Text style={style.locationActionOptionHeader}>Mark location instead</Text>
+													</TouchableOpacity>
+												</View>
+
+												<Text style={{ fontSize: 20, fontWeight: 'bold', marginVertical: 30 }}>Or</Text>
+
+												<Text style={style.boxMiniheader}>Enter your location information</Text>
+
+												<View style={style.inputContainer}>
+													<Text style={style.inputHeader}>Enter location name:</Text>
+													<TextInput style={style.input} onChangeText={(storeName) => setStorename(storeName)} value={storeName} autoCorrect={false} autoCapitalize="none"/>
+												</View>
+												<View style={style.inputContainer}>
+													<Text style={style.inputHeader}>Enter location address #1:</Text>
+													<TextInput style={style.input} onChangeText={(addressOne) => setAddressone(addressOne)} value={addressOne} autoCorrect={false} autoCapitalize="none"/>
+												</View>
+												<View style={style.inputContainer}>
+													<Text style={style.inputHeader}>Enter location address #2: (Optional)</Text>
+													<TextInput style={style.input} onChangeText={(addressTwo) => setAddresstwo(addressTwo)} value={addressTwo} autoCorrect={false} autoCapitalize="none"/>
+												</View>
+												<View style={style.inputContainer}>
+													<Text style={style.inputHeader}>Enter city:</Text>
+													<TextInput style={style.input} onChangeText={(city) => setCity(city)} value={city} autoCorrect={false} autoCapitalize="none"/>
+												</View>
+												<View style={style.inputContainer}>
+													<Text style={style.inputHeader}>Enter province:</Text>
+													<TextInput style={style.input} onChangeText={(province) => setProvince(province)} value={province} autoCorrect={false} autoCapitalize="none"/>
+												</View>
+												<View style={style.inputContainer}>
+													<Text style={style.inputHeader}>Enter postal code:</Text>
+													<TextInput style={style.input} onChangeText={(postalcode) => setPostalcode(postalcode)} value={postalcode} autoCorrect={false} autoCapitalize="none"/>
+												</View>
+
+												{loading && <ActivityIndicator color="black" size="large"/>}
+											</View>
+										</ScrollView>
 										:
-										<View style={{ alignItems: 'center', opacity: loading ? 0.5 : 1, width: '100%' }}>
-											<TouchableOpacity style={style.daysBack} disabled={loading} onPress={() => setDaysinfo({ working: ['', '', '', '', '', '', ''], done: false, step: 0 })}>
-												<Text style={style.daysBackHeader}>Go Back</Text>
+										<View style={{ alignItems: 'center', height: '100%', width: '100%' }}>
+											<Text style={style.locationHeader}>Your location is located at</Text>
+											<MapView
+												region={{
+													longitude: locationCoords.longitude,
+													latitude: locationCoords.latitude,
+													latitudeDelta: 0.003,
+													longitudeDelta: 0.003
+												}}
+												scrollEnabled={false}
+												zoomEnabled={false}
+												style={{ borderRadius: fsize(0.5) / 2, height: fsize(0.5), width: fsize(0.5) }}
+											>
+												<Marker coordinate={{ longitude: locationCoords.longitude, latitude: locationCoords.latitude }}/>
+											</MapView>
+											<Text style={style.locationAddressHeader}>{locationCoords.address}</Text>
+
+											<TouchableOpacity style={style.locationActionOption} onPress={() => {
+												setLocationcoords({ longitude: null, latitude: null })
+												setLocationinfo('away')
+											}}>
+												<Text style={style.locationActionOptionHeader}>Enter full address instead</Text>
 											</TouchableOpacity>
 
-											{days.map((info, index) => (
-												!info.close ?
-													<View key={index} style={style.day}>
-														<Text style={style.dayHeader}>Set the opening time for {info.header}</Text>
-														
-														<Text style={[style.dayHeader, { marginTop: 30 }]}>Use the arrow to set the time</Text>
+											{loading && <ActivityIndicator color="black" size="large"/>}
+										</View>
+								}
+							</View>
+						)}
 
-														<View style={style.timeSelectionContainer}>
-															<View style={style.timeSelection}>
-																<View style={style.selection}>
-																	<TouchableOpacity onPress={() => updateTime(index, "hour", "up", true)}>
-																		<AntDesign name="up" size={fsize(0.08)}/>
-																	</TouchableOpacity>
-																	<Text style={style.selectionHeader}>{info.opentime.hour}</Text>
-																	<TouchableOpacity onPress={() => updateTime(index, "hour", "down", true)}>
-																		<AntDesign name="down" size={fsize(0.08)}/>
-																	</TouchableOpacity>
+						{setupType == "phonenumber" && (
+							<TouchableWithoutFeedback style={{ height: '100%', width: '100%' }} onPress={() => Keyboard.dismiss()}>
+								<View style={{ alignItems: 'center', width: '100%' }}>
+									<View style={style.inputContainer}>
+										<Text style={style.inputHeader}>Enter {type == 'restaurant' ? 'restaurant' : type + ' salon'}'s phone number:</Text>
+										<TextInput style={style.input} onChangeText={(phonenumber) => setPhonenumber(phonenumber)} value={phonenumber} keyboardType="numeric" autoCorrect={false} autoCapitalize="none"/>
+									</View>
+
+									{loading && <ActivityIndicator color="black" size="large"/>}
+								</View>
+							</TouchableWithoutFeedback>
+						)}
+						
+						{(setupType == "logo" && (cameraPermission || pickingPermission)) && (
+							<View style={style.cameraContainer}>
+								<Text style={style.inputHeader}>Provide a photo for {type == 'restaurant' ? 'restaurant' : type + ' salon'}</Text>
+
+								{logo.uri ? (
+									<>
+										<Image style={style.camera} source={{ uri: logo.uri }}/>
+
+										<TouchableOpacity style={style.cameraAction} onPress={() => setLogo({ uri: '', name: '' })}>
+											<Text style={style.cameraActionHeader}>Cancel</Text>
+										</TouchableOpacity>
+									</>
+								) : (
+									<>
+										<Camera 
+											style={style.camera} 
+											type={Camera.Constants.Type.back} ref={r => {setCamcomp(r)}}
+											ratio="1:1"
+										/>
+
+										<View style={style.cameraActions}>
+											<TouchableOpacity style={style.cameraAction} onPress={snapPhoto.bind(this)}>
+												<Text style={style.cameraActionHeader}>Take{'\n'}this photo</Text>
+											</TouchableOpacity>
+											<TouchableOpacity style={style.cameraAction} onPress={() => choosePhoto()}>
+												<Text style={style.cameraActionHeader}>Choose{'\n'}from phone</Text>
+											</TouchableOpacity>
+										</View>
+									</>
+								)}
+
+								{loading && <ActivityIndicator color="black" size="large"/>}
+							</View>
+						)}
+
+						{setupType == "hours" && (
+							<ScrollView style={{ height: '100%', width: '100%' }}>
+								<View style={{ alignItems: 'center' }}>
+									<View style={style.days}>
+										<Text style={[style.inputHeader, { marginBottom: 20, textAlign: 'center' }]}>Set the {type == 'restaurant' ? 'restaurant' : type + ' salon'}'s opening hours</Text>
+
+										{!daysInfo.done ?
+											<View style={{ alignItems: 'center', width: '100%' }}>
+												<Text style={style.workingDayHeader}>What day is business open ?</Text>
+
+												{daysArr.map((day, index) => (
+													<TouchableOpacity key={index} style={daysInfo.working.indexOf(day) > -1 ? style.workingDayTouchSelected : style.workingDayTouch} onPress={() => {
+														const newWorking = [...daysInfo.working]
+
+														if (newWorking[index] == '') {
+															newWorking[index] = day
+														} else {
+															newWorking[index] = ''
+														}
+
+														setDaysinfo({ ...daysInfo, working: newWorking })
+													}}>
+														<Text style={style.workingDayTouchHeader}>{day}</Text>
+													</TouchableOpacity>
+												))}
+											</View>
+											:
+											<View style={{ alignItems: 'center', opacity: loading ? 0.5 : 1, width: '100%' }}>
+												<TouchableOpacity style={style.daysBack} disabled={loading} onPress={() => setDaysinfo({ working: ['', '', '', '', '', '', ''], done: false, step: 0 })}>
+													<Text style={style.daysBackHeader}>Go Back</Text>
+												</TouchableOpacity>
+
+												{days.map((info, index) => (
+													!info.close ?
+														<View key={index} style={style.day}>
+															<Text style={style.dayHeader}>Set the opening time for {info.header}</Text>
+															
+															<Text style={[style.dayHeader, { marginTop: 30 }]}>Use the arrow to set the time</Text>
+
+															<View style={style.timeSelectionContainer}>
+																<View style={style.timeSelection}>
+																	<View style={style.selection}>
+																		<TouchableOpacity onPress={() => updateTime(index, "hour", "up", true)}>
+																			<AntDesign name="up" size={fsize(0.08)}/>
+																		</TouchableOpacity>
+																		<Text style={style.selectionHeader}>{info.opentime.hour}</Text>
+																		<TouchableOpacity onPress={() => updateTime(index, "hour", "down", true)}>
+																			<AntDesign name="down" size={fsize(0.08)}/>
+																		</TouchableOpacity>
+																	</View>
+																	<Text style={style.selectionDiv}>:</Text>
+																	<View style={style.selection}>
+																		<TouchableOpacity onPress={() => updateTime(index, "minute", "up", true)}>
+																			<AntDesign name="up" size={fsize(0.08)}/>
+																		</TouchableOpacity>
+																		<Text style={style.selectionHeader}>{info.opentime.minute}</Text>
+																		<TouchableOpacity onPress={() => updateTime(index, "minute", "down", true)}>
+																			<AntDesign name="down" size={fsize(0.08)}/>
+																		</TouchableOpacity>
+																	</View>
+																	<View style={style.selection}>
+																		<TouchableOpacity onPress={() => updateTime(index, "period", "up", true)}>
+																			<AntDesign name="up" size={fsize(0.08)}/>
+																		</TouchableOpacity>
+																		<Text style={style.selectionHeader}>{info.opentime.period}</Text>
+																		<TouchableOpacity onPress={() => updateTime(index, "period", "down", true)}>
+																			<AntDesign name="down" size={fsize(0.08)}/>
+																		</TouchableOpacity>
+																	</View>
 																</View>
-																<Text style={style.selectionDiv}>:</Text>
-																<View style={style.selection}>
-																	<TouchableOpacity onPress={() => updateTime(index, "minute", "up", true)}>
-																		<AntDesign name="up" size={fsize(0.08)}/>
-																	</TouchableOpacity>
-																	<Text style={style.selectionHeader}>{info.opentime.minute}</Text>
-																	<TouchableOpacity onPress={() => updateTime(index, "minute", "down", true)}>
-																		<AntDesign name="down" size={fsize(0.08)}/>
-																	</TouchableOpacity>
-																</View>
-																<View style={style.selection}>
-																	<TouchableOpacity onPress={() => updateTime(index, "period", "up", true)}>
-																		<AntDesign name="up" size={fsize(0.08)}/>
-																	</TouchableOpacity>
-																	<Text style={style.selectionHeader}>{info.opentime.period}</Text>
-																	<TouchableOpacity onPress={() => updateTime(index, "period", "down", true)}>
-																		<AntDesign name="down" size={fsize(0.08)}/>
-																	</TouchableOpacity>
-																</View>
-															</View>
-															<Text style={style.timeSelectionHeader}>To</Text>
-															<View style={style.timeSelection}>
-																<View style={style.selection}>
-																	<TouchableOpacity onPress={() => updateTime(index, "hour", "up", false)}>
-																		<AntDesign name="up" size={fsize(0.08)}/>
-																	</TouchableOpacity>
-																	<Text style={style.selectionHeader}>{info.closetime.hour}</Text>
-																	<TouchableOpacity onPress={() => updateTime(index, "hour", "down", false)}>
-																		<AntDesign name="down" size={fsize(0.08)}/>
-																	</TouchableOpacity>
-																</View>
-																<Text style={style.selectionDiv}>:</Text>
-																<View style={style.selection}>
-																	<TouchableOpacity onPress={() => updateTime(index, "minute", "up", false)}>
-																		<AntDesign name="up" size={fsize(0.08)}/>
-																	</TouchableOpacity>
-																	<Text style={style.selectionHeader}>{info.closetime.minute}</Text>
-																	<TouchableOpacity onPress={() => updateTime(index, "minute", "down", false)}>
-																		<AntDesign name="down" size={fsize(0.08)}/>
-																	</TouchableOpacity>
-																</View>
-																<View style={style.selection}>
-																	<TouchableOpacity onPress={() => updateTime(index, "period", "up", false)}>
-																		<AntDesign name="up" size={fsize(0.08)}/>
-																	</TouchableOpacity>
-																	<Text style={style.selectionHeader}>{info.closetime.period}</Text>
-																	<TouchableOpacity onPress={() => updateTime(index, "period", "down", false)}>
-																		<AntDesign name="down" size={fsize(0.08)}/>
-																	</TouchableOpacity>
+																<Text style={style.timeSelectionHeader}>To</Text>
+																<View style={style.timeSelection}>
+																	<View style={style.selection}>
+																		<TouchableOpacity onPress={() => updateTime(index, "hour", "up", false)}>
+																			<AntDesign name="up" size={fsize(0.08)}/>
+																		</TouchableOpacity>
+																		<Text style={style.selectionHeader}>{info.closetime.hour}</Text>
+																		<TouchableOpacity onPress={() => updateTime(index, "hour", "down", false)}>
+																			<AntDesign name="down" size={fsize(0.08)}/>
+																		</TouchableOpacity>
+																	</View>
+																	<Text style={style.selectionDiv}>:</Text>
+																	<View style={style.selection}>
+																		<TouchableOpacity onPress={() => updateTime(index, "minute", "up", false)}>
+																			<AntDesign name="up" size={fsize(0.08)}/>
+																		</TouchableOpacity>
+																		<Text style={style.selectionHeader}>{info.closetime.minute}</Text>
+																		<TouchableOpacity onPress={() => updateTime(index, "minute", "down", false)}>
+																			<AntDesign name="down" size={fsize(0.08)}/>
+																		</TouchableOpacity>
+																	</View>
+																	<View style={style.selection}>
+																		<TouchableOpacity onPress={() => updateTime(index, "period", "up", false)}>
+																			<AntDesign name="up" size={fsize(0.08)}/>
+																		</TouchableOpacity>
+																		<Text style={style.selectionHeader}>{info.closetime.period}</Text>
+																		<TouchableOpacity onPress={() => updateTime(index, "period", "down", false)}>
+																			<AntDesign name="down" size={fsize(0.08)}/>
+																		</TouchableOpacity>
+																	</View>
 																</View>
 															</View>
 														</View>
-													</View>
-												: null
-											))}
-										</View>
-									}
+													: null
+												))}
+											</View>
+										}
+									</View>
+
+									{loading && <ActivityIndicator color="black" size="large"/>}
 								</View>
+							</ScrollView>
+						)}
+					</View>
 
-								{errorMsg ? <Text style={style.errorMsg}>{errorMsg}</Text> : null }
+					<View style={style.actionContainer}>
+						<Text style={style.errorMsg}>{errorMsg}</Text>
 
-								{loading && <ActivityIndicator size="large"/>}
+						<View style={style.actions}>
+							{setupType != "type" && (
+								<TouchableOpacity style={style.action} onPress={() => {
+									let index = steps.indexOf(setupType)
 
-								<TouchableOpacity style={style.submit} disabled={loading} onPress={() => setupType == "hours" && daysInfo.step == 1 ? setupYourLocation() : saveInfo()}>
-									<Text style={style.submitHeader}>{setupType == "" ? "Let's go" : "Next"}</Text>
+									index--
+
+									setSetuptype(steps[index])
+								}}>
+									<Text style={style.actionHeader}>Back</Text>
 								</TouchableOpacity>
-							</View>
-						</ScrollView>
-					)}
+							)}
+								
+							<TouchableOpacity style={style.action} disabled={loading} onPress={() => setupType == "hours" && daysInfo.step == 1 ? setupYourLocation() : saveInfo()}>
+								<Text style={style.actionHeader}>{setupType == "" ? "Let's go" : "Next"}</Text>
+							</TouchableOpacity>
+						</View>
+					</View>
 				</View>
 
 				<View style={style.bottomNavs}>
@@ -944,14 +956,16 @@ export default function locationsetup({ navigation }) {
 const style = StyleSheet.create({
 	locationsetup: { backgroundColor: 'white', height: '100%', paddingVertical: offsetPadding, width: '100%' },
 	box: { alignItems: 'center', backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
-	inputsBox: { alignItems: 'center', height: '90%', width: '100%' },
+	header: { flexDirection: 'column', height: '10%', justifyContent: 'space-around', width: '100%' },
+	boxHeader: { fontFamily: 'appFont', fontSize: fsize(0.06), textAlign: 'center' },
 
-	boxHeader: { fontFamily: 'appFont', fontSize: fsize(0.06), marginTop: 30, marginHorizontal: 20, textAlign: 'center' },
+	inputsBox: { height: '80%', width: '100%' },
+	inputsContainer: { alignItems: 'center', height: '90%' },
 
 	introBox: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	introHeader: { fontSize: fsize(0.05), fontWeight: 'bold', paddingHorizontal: 30, textAlign: 'center' },
 
-	boxMiniheader: { fontFamily: 'appFont', fontSize: fsize(0.05), fontWeight: 'bold', marginBottom: 10, marginTop: 30 },
+	boxMiniheader: { fontFamily: 'appFont', fontSize: fsize(0.05), fontWeight: 'bold', marginBottom: 20 },
 
 	inputContainer: { marginBottom: 50, width: '80%' },
 	inputHeader: { fontFamily: 'appFont', fontSize: fsize(0.05),  },
@@ -966,7 +980,7 @@ const style = StyleSheet.create({
 	locationFetchingHeader: { color: 'grey', fontSize: fsize(0.05), textAlign: 'center' },
 	locationActionOption: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 10, width: fsize(0.6) },
 	locationActionOptionHeader: { fontSize: fsize(0.05), textAlign: 'center' },
-	locationInfos: { alignItems: 'center', paddingBottom: 100 },
+	locationInfos: { alignItems: 'center', paddingBottom: 50 },
 
 	typeContainer: { alignItems: 'center', height: '100%', width: '100%' },
 	selections: { flexDirection: 'column', height: fsize(0.80), justifyContent: 'space-between', width: '90%' },
@@ -1012,8 +1026,10 @@ const style = StyleSheet.create({
 
 	errorMsg: { color: 'red', fontWeight: 'bold', textAlign: 'center' },
 
-	submit: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginBottom: 10, marginTop: 5, padding: 5, width: fsize(0.3) },
-	submitHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), textAlign: 'center' },
+	actionContainer: { flexDirection: 'column', height: '10%', justifyContent: 'space-around' },
+	actions: { flexDirection: 'row', justifyContent: 'space-around' },
+	action: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: fsize(0.3) },
+	actionHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), textAlign: 'center' },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'column', height: '10%', justifyContent: 'space-around', width: '100%' },
 	bottomNavsRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
