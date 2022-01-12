@@ -232,7 +232,9 @@ export default function register(props) {
 		<View style={style.register}>
 			<TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
 				<View style={[style.box, { opacity: loading ? 0.5 : 1 }]}>
-					<Text style={style.boxHeader}>Setup</Text>
+					<View style={style.header}>
+						<Text style={style.boxHeader}>Setup</Text>
+					</View>
 
 					<View style={style.inputsBox}>
 						{setupType == "nickname" && (
@@ -303,6 +305,10 @@ export default function register(props) {
 								<TouchableOpacity style={style.action} onPress={() => {
 									let index = steps.indexOf(setupType)
 
+									if (index == 1) {
+										setPasswordinfo({ password: ownerRegisterInfo.password, confirmPassword: ownerRegisterInfo.password, step: 0 })
+									}
+									
 									index--
 
 									setSetuptype(steps[index])
@@ -342,12 +348,13 @@ export default function register(props) {
 const style = StyleSheet.create({
 	register: { backgroundColor: 'white', height: '100%', paddingVertical: offsetPadding, width: '100%' },
 	box: { alignItems: 'center', backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
-	boxHeader: { color: 'black', fontFamily: 'appFont', fontSize: fsize(0.1), fontWeight: 'bold', marginTop: 20 },
+	header: { flexDirection: 'column', height: '10%', justifyContent: 'space-around' },
+	boxHeader: { color: 'black', fontFamily: 'appFont', fontSize: fsize(0.1), fontWeight: 'bold' },
 
-	inputsBox: { alignItems: 'center', width: '100%' },
+	inputsBox: { alignItems: 'center', height: '80%', width: '100%' },
 	inputContainer: { width: '80%' },
-	inputHeader: { fontFamily: 'appFont', fontSize: fsize(0.06) },
-	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: fsize(0.07), padding: 5, width: '100%' },
+	inputHeader: { fontFamily: 'appFont', fontSize: fsize(0.04) },
+	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: fsize(0.04), padding: 5, width: '100%' },
 
 	cameraContainer: { alignItems: 'center', width: '100%' },
 	camera: { height: fsize(0.7), width: fsize(0.7) },

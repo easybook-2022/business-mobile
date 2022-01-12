@@ -16,16 +16,16 @@ export default function auth({ navigation }) {
 			<View style={style.box}>
 				<Image style={{ height: fsize(0.5), width: fsize(0.5) }} source={require("../../assets/icon.png")}/>
 
-				<Text allowFontScaling={false} style={style.boxHeader}>Welcome to EasyGO (Business)</Text>
+				<Text style={style.boxHeader}>Welcome to EasyGO (Business)</Text>
 
 				<View style={style.boxNav}>
-					<Text allowFontScaling={false} style={style.boxActionsHeader}>Do you have an account ?</Text>
+					<Text style={style.boxActionsHeader}>Do you have an account ?</Text>
 					<View style={style.boxActions}>
 						<TouchableOpacity style={style.boxAction} onPress={() => navigation.navigate("verifyowner")}>
-							<Text allowFontScaling={false} style={style.boxActionHeader}>No</Text>
+							<Text style={style.boxActionHeader}>No</Text>
 						</TouchableOpacity>
 						<TouchableOpacity style={style.boxAction} onPress={() => navigation.navigate("login")}>
-							<Text allowFontScaling={false} style={style.boxActionHeader}>Yes</Text>
+							<Text style={style.boxActionHeader}>Yes</Text>
 						</TouchableOpacity>
 					</View>
 				</View>

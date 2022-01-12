@@ -48,6 +48,7 @@ export default function settings(props) {
 	const [province, setProvince] = useState(loginInfo.province)
 	const [postalcode, setPostalcode] = useState(loginInfo.postalcode)
 	const [logo, setLogo] = useState({ uri: '', name: '' })
+	const [type, setType] = useState('')
 	const [infoLoading, setInfoloading] = useState(true)
 
 	// location hours
@@ -892,7 +893,7 @@ export default function settings(props) {
 			})
 			.then((res) => {
 				if (res && isMounted.current == true) {
-					const { name, phonenumber, addressOne, addressTwo, city, province, postalcode, logo, hours } = res.info
+					const { name, phonenumber, addressOne, addressTwo, city, province, postalcode, logo, hours, type } = res.info
 
 					setStorename(name)
 					setPhonenumber(phonenumber)
@@ -902,6 +903,7 @@ export default function settings(props) {
 					setProvince(province)
 					setPostalcode(postalcode)
 					setLogo({ uri: logo_url + logo, name: logo })
+					setType(type)
 					setInfoloading(false)
 					setDays(hours)
 					setDaysloading(false)
@@ -1174,19 +1176,19 @@ export default function settings(props) {
 
 									<View style={style.inputsBox}>
 										<View style={style.inputContainer}>
-											<Text style={style.inputHeader}>Store Name:</Text>
+											<Text style={style.inputHeader}>{type}'s name:</Text>
 											<TextInput style={style.input} onChangeText={(storeName) => setStorename(storeName)} value={storeName} autoCorrect={false}/>
 										</View>
 										<View style={style.inputContainer}>
-											<Text style={style.inputHeader}>Store Phone number:</Text>
+											<Text style={style.inputHeader}>{type}'s Phone number:</Text>
 											<TextInput style={style.input} onChangeText={(phonenumber) => setPhonenumber(phonenumber)} value={phonenumber} keyboardType="numeric" autoCorrect={false}/>
 										</View>
 										<View style={style.inputContainer}>
-											<Text style={style.inputHeader}>Address #1:</Text>
+											<Text style={style.inputHeader}>{type}'s address #1:</Text>
 											<TextInput style={style.input} onChangeText={(addressOne) => setAddressone(addressOne)} value={addressOne} keyboardType="numeric" autoCorrect={false}/>
 										</View>
 										<View style={style.inputContainer}>
-											<Text style={style.inputHeader}>Address #2:</Text>
+											<Text style={style.inputHeader}>{type}'s address #2:</Text>
 											<TextInput style={style.input} onChangeText={(addressTwo) => setAddresstwo(addressTwo)} value={addressTwo} keyboardType="numeric" autoCorrect={false}/>
 										</View>
 										<View style={style.inputContainer}>
@@ -1762,11 +1764,11 @@ const style = StyleSheet.create({
 
 	inputsBox: { paddingHorizontal: 20, width: '100%' },
 	inputContainer: { marginVertical: 20 },
-	inputHeader: { fontFamily: 'appFont', fontSize: fsize(0.06) },
-	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: fsize(0.07), padding: 5 },
+	inputHeader: { fontFamily: 'appFont', fontSize: fsize(0.04) },
+	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: fsize(0.04), padding: 5 },
 	cameraContainer: { alignItems: 'center', width: '100%' },
-	cameraHeader: { fontSize: fsize(0.05), fontWeight: 'bold', paddingVertical: 5 },
-	camera: { height: width * 0.8, width: width * 0.8 },
+	cameraHeader: { fontSize: fsize(0.04), fontWeight: 'bold', paddingVertical: 5 },
+	camera: { height: fsize(0.8), width: fsize(0.8) },
 	cameraActions: { flexDirection: 'row' },
 	cameraAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginBottom: 50, margin: 5, padding: 5, width: fsize(0.3) },
 	cameraActionHeader: { fontSize: fsize(0.04), textAlign: 'center' },
@@ -1821,10 +1823,10 @@ const style = StyleSheet.create({
 
 	// account form
 	accountform: { backgroundColor: 'white', paddingVertical: 50 },
-	accountformHeader: { fontSize: fsize(0.05), fontWeight: 'bold', marginVertical: 50, textAlign: 'center' },
+	accountformHeader: { fontSize: fsize(0.04), fontWeight: 'bold', marginVertical: 50, textAlign: 'center' },
 	accountformInputField: { marginBottom: 20, marginHorizontal: '10%', width: '80%' },
-	accountformInputHeader: { fontSize: fsize(0.05), fontWeight: 'bold' },
-	accountformInputInput: { borderRadius: 2, borderStyle: 'solid', borderWidth: 3, fontSize: fsize(0.05), padding: 5, width: '100%' },
+	accountformInputHeader: { fontSize: fsize(0.04), fontWeight: 'bold' },
+	accountformInputInput: { borderRadius: 2, borderStyle: 'solid', borderWidth: 3, fontSize: fsize(0.04), padding: 5, width: '100%' },
 	accountformSubmit: { alignItems: 'center', borderRadius: 2, borderStyle: 'solid', borderWidth: 1, padding: 5, width: fsize(0.4) },
 	accountformSubmitHeader: { fontFamily: 'appFont', fontSize: fsize(0.04) },
 
@@ -1837,10 +1839,10 @@ const style = StyleSheet.create({
 	// form
 	bankaccountform: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	bankaccountformContainer: { backgroundColor: 'white', height: '90%', paddingVertical: 10, width: '90%' },
-	bankaccountformHeader: { fontSize: fsize(0.05), fontWeight: 'bold', marginVertical: 20, textAlign: 'center' },
+	bankaccountformHeader: { fontSize: fsize(0.04), fontWeight: 'bold', marginVertical: 20, textAlign: 'center' },
 	bankaccountformInputField: { marginBottom: 20, marginHorizontal: '10%', width: '80%' },
 	bankaccountformInputHeader: { fontSize: fsize(0.04), fontWeight: 'bold' },
 	bankaccountformInputInput: { borderRadius: 2, borderStyle: 'solid', borderWidth: 3, fontSize: fsize(0.04), padding: 5, width: '100%' },
-	bankaccountformSubmit: { alignItems: 'center', borderRadius: 2, borderStyle: 'solid', borderWidth: 1, padding: 5, width: fsize(0.5) },
+	bankaccountformSubmit: { alignItems: 'center', borderRadius: 2, borderStyle: 'solid', borderWidth: 1, padding: 5 },
 	bankaccountformSubmitHeader: { fontFamily: 'appFont', fontSize: fsize(0.04) },
 })

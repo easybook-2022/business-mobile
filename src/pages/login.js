@@ -71,7 +71,23 @@ export default function login({ navigation }) {
 					<View style={style.inputsBox}>
 						<View style={style.inputContainer}>
 							<Text style={style.inputHeader}>Phone number:</Text>
-							<TextInput style={style.input} onChangeText={(phonenumber) => setPhonenumber(phonenumber)} value={phonenumber} keyboardType="numeric" autoCorrect={false}/>
+							<TextInput style={style.input} onKeyPress={(e) => {
+								let newValue = e.nativeEvent.key
+
+								if (newValue >= "0" && newValue <= "9") {
+									if (phonenumber.length == 3) {
+										setPhonenumber("(" + phonenumber + ") " + newValue)
+									} else if (phonenumber.length == 9) {
+										setPhonenumber(phonenumber + "-" + newValue)
+									} else if (phonenumber.length == 14) {
+										Keyboard.dismiss()
+									} else {
+										setPhonenumber(phonenumber + newValue)
+									}
+								} else if (newValue == "Backspace") {
+									setPhonenumber(phonenumber.substr(0, phonenumber.length - 1))
+								}
+							}} value={phonenumber} keyboardType="numeric" autoCorrect={false}/>
 						</View>
 
 						<View style={style.inputContainer}>

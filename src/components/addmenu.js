@@ -27,6 +27,7 @@ export default function addmenu(props) {
 	const [cameraPermission, setCamerapermission] = useState(null);
 	const [pickingPermission, setPickingpermission] = useState(null);
 	const [camComp, setCamcomp] = useState(null)
+	
 	const [name, setName] = useState('')
 	const [info, setInfo] = useState('')
 	const [image, setImage] = useState({ uri: '', name: '' })

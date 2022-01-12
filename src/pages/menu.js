@@ -3,9 +3,13 @@ import { ActivityIndicator, Dimensions, View, FlatList, Text, TextInput, Image, 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
+import * as FileSystem from 'expo-file-system'
+import { Camera } from 'expo-camera';
+import * as ImageManipulator from 'expo-image-manipulator'
+import * as ImagePicker from 'expo-image-picker';
 import { logo_url } from '../../assets/info'
 import { getLocationProfile } from '../apis/locations'
-import { getMenus, addNewMenu, removeMenu, getMenuInfo, saveMenu } from '../apis/menus'
+import { getMenus, addNewMenu, removeMenu, getMenuInfo, saveMenu, uploadMenu, deleteMenu } from '../apis/menus'
 import { getProducts, getProductInfo, removeProduct } from '../apis/products'
 import { getServices, getServiceInfo, removeService } from '../apis/services'
 
@@ -14,8 +18,6 @@ import Entypo from 'react-native-vector-icons/Entypo'
 
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
-const screenHeight = height - offsetPadding
-const frameSize = width * 0.9
 
 const fsize = p => {
 	return width * p
@@ -24,34 +26,13 @@ const fsize = p => {
 export default function menu(props) {
 	const { refetch } = props.route.params
 
+	const [cameraPermission, setCamerapermission] = useState(null);
+	const [pickingPermission, setPickingpermission] = useState(null);
+	const [camComp, setCamcomp] = useState(null)
+
 	const [locationType, setLocationtype] = useState('')
 
-	const [menus, setMenus] = useState([
-		{
-			key: "menu-0",
-			id: 0,
-			name: "Menu #1",
-			info: "this is the info for hair",
-			listType: "list",
-			list: [
-				{ id: 1, name: "Service 1", info: "this is the info", listType: "info", price: 4.99, duration: "5 hours" },
-				{ id: 2, name: "Service 2", info: "this is the info", listType: "info", price: 4.99, duration: "5 hours" },
-				{ id: 3, name: "Service 3", info: "this is the info", listType: "info", price: 4.99, duration: "5 hours" }
-			]
-		},
-		{
-			key: "menu-1",
-			id: 4,
-			name: "Menu #2",
-			info: "this is the info for wash",
-			listType: "list",
-			list: [
-				{ id: 5, name: "Service 1", info: "this is the info", listType: "info", price: 4.99, duration: "5 hours" },
-				{ id: 6, name: "Service 1", info: "this is the info", listType: "info", price: 4.99, duration: "5 hours" },
-				{ id: 7, name: "Service 1", info: "this is the info", listType: "info", price: 4.99, duration: "5 hours" }
-			]
-		}
-	])
+	const [menuInfo, setMenuinfo] = useState({ type: '', items: [] })
 
 	const [loaded, setLoaded] = useState(false)
 
@@ -62,6 +43,8 @@ export default function menu(props) {
 	})
 
 	const [createOptionbox, setCreateoptionbox] = useState({ show: false, id: -1, allow: null })
+	const [uploadMenubox, setUploadmenubox] = useState({ show: false, action: '', uri: '', name: '' })
+	const [menuPhotooption, setMenuphotooption] = useState({ show: false, action: '', photo: '' })
 	const [removeMenuinfo, setRemovemenuinfo] = useState({ show: false, id: "", name: "" })
 	const [removeServiceinfo, setRemoveserviceinfo] = useState({ show: false, id: "", name: "", info: "", image: "", price: 0 })
 	const [removeProductinfo, setRemoveproductinfo] = useState({ show: false, id: "", name: "", info: "", image: "", sizes: [], others: [], options: [], price: 0 })
@@ -71,7 +54,6 @@ export default function menu(props) {
 		const data = { locationid }
 
 		setLoaded(false)
-		setMenus([])
 
 		getLocationProfile(data)
 			.then((res) => {
@@ -89,7 +71,7 @@ export default function menu(props) {
 			})
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
-					
+
 				} else {
 					alert("an error has occurred in server")
 				}
@@ -108,10 +90,9 @@ export default function menu(props) {
 			})
 			.then((res) => {
 				if (res) {
-					if (res.menus.length > 0) {
-						setMenus(res.menus)
-					}
+					const { type, menus } = res
 
+					setMenuinfo({ type, items: menus })
 					setLoaded(true)
 				}
 			})
@@ -384,8 +365,148 @@ export default function menu(props) {
 				})
 		}
 	}
+
+	const snapPhoto = async() => {
+		let letters = [
+			"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", 
+			"n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"
+		]
+		let photo_name_length = Math.floor(Math.random() * (15 - 10)) + 10
+		let char = "", captured, self = this
+
+		if (camComp) {
+			let options = { quality: 0, skipProcessing: true };
+			let photo = await camComp.takePictureAsync(options)
+			let photo_option = [{ resize: { width: width, height: width }}]
+			let photo_save_option = { format: ImageManipulator.SaveFormat.JPEG, base64: true }
+
+			photo = await ImageManipulator.manipulateAsync(
+				photo.localUri || photo.uri,
+				photo_option,
+				photo_save_option
+			)
+
+			for (let k = 0; k <= photo_name_length - 1; k++) {
+				if (k % 2 == 0) {
+	                char += "" + letters[Math.floor(Math.random() * letters.length)].toUpperCase();
+	            } else {
+	                char += "" + (Math.floor(Math.random() * 9) + 0);
+	            }
+			}
+
+			FileSystem.moveAsync({
+				from: photo.uri,
+				to: `${FileSystem.documentDirectory}/${char}.jpg`
+			})
+			.then(() => {
+				setUploadmenubox({ ...uploadMenubox, uri: `${FileSystem.documentDirectory}/${char}.jpg`, name: `${char}.jpg` })
+			})
+		}
+	}
+	const choosePhoto = async() => {
+		let letters = [
+			"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", 
+			"n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"
+		]
+		let photo_name_length = Math.floor(Math.random() * (15 - 10)) + 10
+		let char = "", captured, self = this
+		let photo = await ImagePicker.launchImageLibraryAsync({
+			mediaTypes: ImagePicker.MediaTypeOptions.Images,
+			aspect: [4, 3],
+			quality: 0.1,
+			base64: true
+		});
+
+		for (let k = 0; k <= photo_name_length - 1; k++) {
+			if (k % 2 == 0) {
+                char += "" + letters[Math.floor(Math.random() * letters.length)].toUpperCase();
+            } else {
+                char += "" + (Math.floor(Math.random() * 9) + 0);
+            }
+		}
+
+		if (!photo.cancelled) {
+			FileSystem.moveAsync({
+				from: photo.uri,
+				to: `${FileSystem.documentDirectory}/${char}.jpg`
+			})
+			.then(() => {
+				setUploadmenubox({ ...uploadMenubox, uri: `${FileSystem.documentDirectory}/${char}.jpg`, name: `${char}.jpg` })
+			})
+		}
+	}
+	const uploadMenuphoto = async() => {
+		const locationid = await AsyncStorage.getItem("locationid")
+		const { uri, name } = uploadMenubox
+		const image = { uri, name }
+		const data = { locationid, image, permission: cameraPermission || pickingPermission }
+
+		uploadMenu(data)
+			.then((res) => {
+				if (res.status == 200) {
+					return res.data
+				}
+			})
+			.then((res) => {
+				if (res) {
+					setMenuinfo({ ...menuInfo, type: "photos", items: res.menus })
+					setUploadmenubox({ show: false, action: '', uri: '', name: '' })
+				}
+			})
+			.catch((err) => {
+				if (err.response && err.response.status == 400) {
+					const { status, errormsg } = err.response.data
+
+
+				}
+			})
+	}
+	const deleteTheMenu = async() => {
+		const locationid = await AsyncStorage.getItem("locationid")
+		const { photo } = menuPhotooption
+		const data = { locationid, photo }
+
+		deleteMenu(data)
+			.then((res) => {
+				if (res.status == 200) {
+					return res.data
+				}
+			})
+			.then((res) => {
+				if (res) {
+					setMenuinfo({ ...menuInfo, items: res.menus })
+					setMenuphotooption({ show: false, action: '', photo: '' })
+				}
+			})
+	}
+	const allowCamera = async() => {
+		const { status } = await Camera.getCameraPermissionsAsync()
+
+		if (status == 'granted') {
+			setCamerapermission(status === 'granted')
+		} else {
+			const { status } = await Camera.requestCameraPermissionsAsync()
+
+			setCamerapermission(status === 'granted')
+		}
+	}
+	const allowChoosing = async() => {
+		const { status } = await ImagePicker.getMediaLibraryPermissionsAsync()
+        
+        if (status == 'granted') {
+        	setPickingpermission(status === 'granted')
+        } else {
+        	const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+        	setPickingpermission(status === 'granted')
+        }
+	}
 	
-	useEffect(() => getTheLocationProfile(), [])
+	useEffect(() => {
+		getTheLocationProfile()
+		allowCamera()
+		allowChoosing()
+	}, [])
 
 	return (
 		<View style={style.menuBox}>
@@ -393,18 +514,55 @@ export default function menu(props) {
 				<View style={style.box}>
 					<ScrollView style={{ height: '90%', width: '100%' }}>
 						<View style={{ paddingVertical: 10 }}>
-							{displayList({ name: "", image: "", list: menus, listType: "list", left: 0 })}
+							{menuInfo.type ? 
+								menuInfo.type == "photos" ? 
+									<ScrollView style={{ width: '100%' }}>
+										{menuInfo.items.map(info => (
+											<View key={info.key} style={style.menuRow}>
+												{info.row.map(item => (
+													<View key={item.key} style={style.menuPhoto}>
+														<Image style={{ height: '100%', width: '100%' }} source={{ uri: logo_url + item.photo }}/>
+
+														{item.photo && (
+															<View style={style.menuPhotoActions}>
+																<TouchableOpacity style={style.menuPhotoAction} onPress={() => setMenuphotooption({ ...menuPhotooption, show: true, action: 'delete', photo: item.photo })}>
+																	<Text style={style.menuPhotoActionHeader}>Delete</Text>
+																</TouchableOpacity>
+																<TouchableOpacity style={style.menuPhotoAction} onPress={() => setMenuphotooption({ ...menuPhotooption, show: true, action: '', photo: item.photo })}>
+																	<Text style={style.menuPhotoActionHeader}>See</Text>
+																</TouchableOpacity>
+															</View>
+														)}
+													</View>
+												))}
+											</View>
+										))}
+									</ScrollView>
+									:
+									displayList({ name: "", image: "", list: menuInfo.list, listType: "list", left: 0 })
+							: null }
 						</View>
 
 						<View style={{ alignItems: 'center', marginVertical: 20 }}>
-							{menus.length == 0 ? 
-								<TouchableOpacity style={style.menuStart} onPress={() => setCreateoptionbox({ show: true, id: "", allow: "both" })}>
-									<Text style={style.menuStartHeader}>Click to start</Text>
-								</TouchableOpacity>
+							{!menuInfo.type ? 
+								<>
+									<TouchableOpacity style={style.menuStart} onPress={() => setCreateoptionbox({ show: true, id: "", allow: "both" })}>
+										<Text style={style.menuStartHeader}>Click to add menu/{locationType == "salon" ? "service" : "food"}</Text>
+									</TouchableOpacity>
+									<Text style={{ fontSize: fsize(0.07), fontWeight: 'bold', marginVertical: 20 }}>Or</Text>
+									<TouchableOpacity style={style.menuStart} onPress={() => setUploadmenubox({ show: true, uri: '', name: '' })}>
+										<Text style={style.menuStartHeader}>Upload menu photo</Text>
+									</TouchableOpacity>
+								</>
 								:
-								<TouchableOpacity onPress={() => setCreateoptionbox({ show: true, id: "", allow: "both" })}>
-									<AntDesign name="pluscircleo" size={40}/>
-								</TouchableOpacity>
+								menuInfo.type == "list" ? 
+									<TouchableOpacity onPress={() => setCreateoptionbox({ show: true, id: "", allow: "both" })}>
+										<AntDesign name="pluscircleo" size={40}/>
+									</TouchableOpacity>
+									:
+									<TouchableOpacity onPress={() => setUploadmenubox({ show: true, uri: '', name: '' })}>
+										<AntDesign name="pluscircleo" size={40}/>
+									</TouchableOpacity>
 							}
 						</View>
 					</ScrollView>
@@ -477,10 +635,101 @@ export default function menu(props) {
 												)
 											}
 										}}>
-											<Text style={style.createOptionActionHeader}>Add {locationType == "salon" ? "service" : "product"}</Text>
+											<Text style={style.createOptionActionHeader}>Add {locationType == "salon" ? "service" : "food"}</Text>
 										</TouchableOpacity>
 									</View>
 								</View>
+							</View>
+						</Modal>
+					)}
+					{uploadMenubox.show && (
+						<Modal transparent={true}>
+							<View style={style.uploadMenuContainer}>
+								{!uploadMenubox.action ? 
+									<View style={style.uploadMenuBox}>
+										<TouchableOpacity style={style.uploadMenuClose} onPress={() => setUploadmenubox({ show: false, uri: '', name: '' })}>
+											<AntDesign name="close" size={30}/>
+										</TouchableOpacity>
+										<View style={style.uploadMenuActions}>
+											<TouchableOpacity style={style.uploadMenuAction} onPress={() => setUploadmenubox({ ...uploadMenubox, action: 'camera' })}>
+												<Text style={style.uploadMenuActionHeader}>Take a photo</Text>
+											</TouchableOpacity>
+											<TouchableOpacity style={style.uploadMenuAction} onPress={() => choosePhoto()}>
+												<Text style={style.uploadMenuActionHeader}>Choose from phone</Text>
+											</TouchableOpacity>
+										</View>
+									</View>
+									:
+									uploadMenubox.action == 'camera' ? 
+										<View style={style.uploadMenuCameraContainer}>
+											{!uploadMenubox.uri ? 
+												<Camera 
+													style={style.uploadMenuCamera} 
+													type={Camera.Constants.Type.back} ref={r => { setCamcomp(r) }}
+													ratio="1:1"
+												/>
+												:
+												<View style={style.uploadMenuCamera}>
+													<Image style={{ height: '100%', width: '100%' }} source={{ uri: uploadMenubox.uri }}/>
+												</View>
+											}
+
+											{!uploadMenubox.uri ? 
+												<View style={style.uploadMenuCameraActions}>
+													<TouchableOpacity style={style.uploadMenuCameraAction} onPress={() => choosePhoto()}>
+														<Text style={style.uploadMenuCameraActionHeader}>Choose instead</Text>
+													</TouchableOpacity>
+													<TouchableOpacity style={style.uploadMenuCameraAction} onPress={snapPhoto.bind(this)}>
+														<Text style={style.uploadMenuCameraActionHeader}>Take photo</Text>
+													</TouchableOpacity>
+												</View>
+												:
+												<View style={style.uploadMenuCameraActions}>
+													<TouchableOpacity style={style.uploadMenuCameraAction} onPress={() => setUploadmenubox({ ...uploadMenubox, action: '', uri: '', name: '' })}>
+														<Text style={style.uploadMenuCameraActionHeader}>Cancel</Text>
+													</TouchableOpacity>
+													<TouchableOpacity style={style.uploadMenuCameraAction} onPress={() => setUploadmenubox({ ...uploadMenubox, uri: '', name: '' })}>
+														<Text style={style.uploadMenuCameraActionHeader}>Retake</Text>
+													</TouchableOpacity>
+													<TouchableOpacity style={style.uploadMenuCameraAction} onPress={() => uploadMenuphoto()}>
+														<Text style={style.uploadMenuCameraActionHeader}>Done</Text>
+													</TouchableOpacity>
+												</View>
+											}
+										</View>
+									: null
+								}
+							</View>
+						</Modal>
+					)}
+					{menuPhotooption.show && (
+						<Modal transparent={true}>
+							<View style={style.menuPhotoOptionContainer}>
+								<View style={style.menuPhotoOptionPhoto}>
+									<Image style={{ height: '100%', width: '100%' }} source={{ uri: logo_url + menuPhotooption.photo }}/>
+								</View>
+
+								{menuPhotooption.action == "delete" ? 
+									<View style={style.menuPhotoOptionBottomContainer}>
+										<Text style={style.menuPhotoOptionActionsHeader}>
+											Are you sure you want to delete{'\n'}this menu ?
+										</Text>
+										<View style={style.menuPhotoOptionActions}>
+											<TouchableOpacity style={style.menuPhotoOptionAction} onPress={() => setMenuphotooption({ ...menuPhotooption, show: false, action: '', photo: '' })}>
+												<Text style={style.menuPhotoOptionActionHeader}>No</Text>
+											</TouchableOpacity>
+											<TouchableOpacity style={style.menuPhotoOptionAction} onPress={() => deleteTheMenu()}>
+												<Text style={style.menuPhotoOptionActionHeader}>Yes</Text>
+											</TouchableOpacity>
+										</View>
+									</View>
+									:
+									<View style={style.menuPhotoOptionBottomContainer}>
+										<TouchableOpacity style={style.menuPhotoOptionAction} onPress={() => setMenuphotooption({ ...menuPhotooption, show: false, action: '', photo: '' })}>
+											<Text style={style.menuPhotoOptionActionHeader}>Close</Text>
+										</TouchableOpacity>
+									</View>
+								}
 							</View>
 						</Modal>
 					)}
@@ -610,6 +859,11 @@ const style = StyleSheet.create({
 	menuBox: { backgroundColor: 'white', height: '100%', paddingBottom: offsetPadding, width: '100%' },
 	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 
+	menuRow: { flexDirection: 'row', justifyContent: 'space-between', padding: 5 },
+	menuPhoto: { height: height * 0.3, width: width * 0.3 },
+	menuPhotoActions: { flexDirection: 'row', justifyContent: 'space-around', marginTop: -30 },
+	menuPhotoAction: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 3 },
+	menuPhotoActionHeader: { textAlign: 'center' },
 	menuStart: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5 },
 	menuStartHeader: { fontSize: fsize(0.05), textAlign: 'center' },
 
@@ -652,6 +906,28 @@ const style = StyleSheet.create({
 	createOptionActions: { flexDirection: 'column', height: '50%', justifyContent: 'space-around' },
 	createOptionAction: { borderRadius: 3, borderStyle: 'solid', borderWidth: 1, padding: 10 },
 	createOptionActionHeader: { fontSize: fsize(0.08), textAlign: 'center' },
+
+	// menu photo option
+	menuPhotoOptionContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
+	menuPhotoOptionPhoto: { height: '80%', width: '80%' },
+	menuPhotoOptionBottomContainer: { alignItems: 'center', backgroundColor: 'white', width: '90%' },
+	menuPhotoOptionActionsHeader: { color: 'black', fontSize: fsize(0.05), textAlign: 'center' },
+	menuPhotoOptionActions: { flexDirection: 'row', justifyContent: 'space-around' },
+	menuPhotoOptionAction: { borderColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 3, width: 100 },
+	menuPhotoOptionActionHeader: { color: 'black', fontSize: fsize(0.05), textAlign: 'center' },
+
+	// upload menu
+	uploadMenuContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
+	uploadMenuBox: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', padding: 10, width: '80%' },
+	uploadMenuClose: { borderRadius: 18, borderStyle: 'solid', borderWidth: 2 },
+	uploadMenuActions: { flexDirection: 'column', height: '50%', justifyContent: 'space-around' },
+	uploadMenuAction: { borderRadius: 3, borderStyle: 'solid', borderWidth: 1, padding: 10 },
+	uploadMenuActionHeader: { fontSize: fsize(0.08), textAlign: 'center' },
+	uploadMenuCameraContainer: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
+	uploadMenuCamera: { height: '80%', width: '80%' },
+	uploadMenuCameraActions: { bottom: 0, flexDirection: 'row', justifyContent: 'space-around', position: 'absolute' },
+	uploadMenuCameraAction: { borderColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: fsize(0.2) },
+	uploadMenuCameraActionHeader: { color: 'black', textAlign: 'center' },
 
 	// remove menu confirmation
 	menuInfoContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },

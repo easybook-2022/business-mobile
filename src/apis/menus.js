@@ -56,3 +56,24 @@ export const saveMenu = data => {
 		form
 	)
 }
+
+export const uploadMenu = data => {
+	const form = new FormData()
+	const { uri, name, type = "image/jpeg" } = data.image
+
+	form.append("locationid", data.locationid)
+	form.append("image", { uri, name, type })
+	form.append("permission", data.permission)
+
+	return axios.post(
+		`${url}/menus/upload_menu`,
+		form
+	)
+}
+
+export const deleteMenu = data => {
+	return axios.post(
+		`${url}/menus/delete_menu`,
+		data
+	)
+}

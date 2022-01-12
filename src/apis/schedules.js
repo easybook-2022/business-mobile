@@ -104,6 +104,17 @@ export const cancelReservation = id => {
 	return axios.get(`${url}/schedules/cancel_reservation/${id}`)
 }
 
+export const cancelAppointment = id => {
+	return axios.get(`${url}/schedules/cancel_appointment/${id}`)
+}
+
+export const requestPayment = data => {
+	return axios.post(
+		`${url}/schedules/request_payment`,
+		data
+	)
+}
+
 export const doneDining = id => {
 	return axios.get(`${url}/schedules/done_dining/${id}`)
 }

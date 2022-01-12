@@ -373,7 +373,7 @@ const style = StyleSheet.create({
 	workinghours: { backgroundColor: 'white', height: '100%', paddingVertical: offsetPadding, width: '100%' },
 	box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 	boxHeader: { fontFamily: 'appFont', fontSize: fsize(0.1), paddingVertical: 30 },
-	boxMiniheader: { fontFamily: 'appFont', fontSize: fsize(0.07), marginBottom: 30, marginHorizontal: 20, textAlign: 'center' },
+	boxMiniheader: { fontFamily: 'appFont', fontSize: fsize(0.06), marginBottom: 30, marginHorizontal: 20, textAlign: 'center' },
 
 	introBox: { alignItems: 'center', flexDirection: 'column', height: '90%', justifyContent: 'space-around', paddingHorizontal: fsize(0.05), width: '100%' },
 	introHeader: { fontSize: fsize(0.07), textAlign: 'center' },
@@ -381,10 +381,10 @@ const style = StyleSheet.create({
 	workerHours: { alignItems: 'center', width: '100%' },
 
 	// select working days
-	workerDayHeader: { fontSize: fsize(0.06) },
+	workerDayHeader: { fontSize: fsize(0.05) },
 	workerDayTouch: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: fsize(0.7) },
 	workerDayTouchSelected: { backgroundColor: 'rgba(0, 0, 0, 0.6)', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: fsize(0.7) },
-	workerDayTouchHeader: { fontSize: fsize(0.06), textAlign: 'center' },
+	workerDayTouchHeader: { fontSize: fsize(0.04), textAlign: 'center' },
 
 	workerHoursBack: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, marginBottom: 20, padding: 10 },
 	workerHoursBackHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), textAlign: 'center' },

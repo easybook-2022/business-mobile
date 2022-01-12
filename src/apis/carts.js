@@ -14,3 +14,10 @@ export const receivePayment = data => {
 		data
 	)
 }
+
+export const setProductPrice = data => {
+	return axios.post(
+		`${url}/carts/set_product_price`,
+		data
+	)
+}

@@ -149,9 +149,12 @@ export default function cartorders(props) {
 					renderItem={({ item, index }) => 
 						<View style={style.item} key={item.key}>
 							<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-								<View style={style.itemImageHolder}>
-									<Image source={{ uri: logo_url + item.image }} style={style.itemImage}/>
-								</View>
+								{item.image && (
+									<View style={style.itemImageHolder}>
+										<Image source={{ uri: logo_url + item.image }} style={style.itemImage}/>
+									</View>
+								)}
+									
 								<View style={style.itemInfos}>
 									<Text style={style.itemName}>{item.name}</Text>
 
@@ -183,11 +186,19 @@ export default function cartorders(props) {
 								</View>
 								<View>
 									<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>Quantity:</Text> {item.quantity}</Text>
-									<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>Price:</Text> ${item.price.toFixed(2)}</Text>
-									{item.fee > 0 && <Text style={style.header}><Text style={{ fontWeight: 'bold' }}>E-pay fee:</Text> ${item.fee.toFixed(2)}</Text>}
-									{item.pst > 0 && <Text style={style.header}><Text style={{ fontWeight: 'bold' }}>PST:</Text> ${item.pst.toFixed(2)}</Text>}
-									{item.hst > 0 && <Text style={style.header}><Text style={{ fontWeight: 'bold' }}>HST:</Text> ${item.hst.toFixed(2)}</Text>}
-									<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>Total Cost:</Text> ${item.totalcost.toFixed(2)}</Text>
+
+									{item.productId ? 
+										<>
+											<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>Price:</Text> ${item.price.toFixed(2)}</Text>
+											{item.fee > 0 && <Text style={style.header}><Text style={{ fontWeight: 'bold' }}>E-pay fee:</Text> ${item.fee.toFixed(2)}</Text>}
+											{item.pst > 0 && <Text style={style.header}><Text style={{ fontWeight: 'bold' }}>PST:</Text> ${item.pst.toFixed(2)}</Text>}
+											{item.hst > 0 && <Text style={style.header}><Text style={{ fontWeight: 'bold' }}>HST:</Text> ${item.hst.toFixed(2)}</Text>}
+											<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>Total Cost:</Text> ${item.totalcost.toFixed(2)}</Text>
+										</>
+										:
+										<>
+										</>
+									}
 								</View>
 							</View>
 

@@ -561,7 +561,7 @@ export default function locationsetup({ navigation }) {
 						{setupType == "" && (
 							<View style={style.introBox}>
 								<Text style={style.introHeader}>Welcome to EasyGO Business</Text>
-								<Text style={style.introHeader}>We will bring the nearest customers to your door</Text>
+								<Text style={style.introHeader}>We will bring the nearest customers to your door{'\n'}VERY FAST</Text>
 								<Text style={style.introHeader}>Let's setup your business information</Text>
 							</View>
 						)}
@@ -601,44 +601,46 @@ export default function locationsetup({ navigation }) {
 						{(setupType == "location" && locationPermission) && (
 							<View style={style.locationContainer}>
 								{locationInfo == '' ?
-									<View style={{ height: '100%' }}>
-										<Text style={style.locationHeader}>Are you at the {type == 'restaurant' ? 'restaurant' : type + ' salon'} right now ?</Text>
-										<View style={style.locationActions}>
-											<TouchableOpacity style={style.locationAction} disabled={loading} onPress={() => {
-												setLocationinfo('away')
-												setErrormsg()
-											}}>
-												<Text style={style.locationActionHeader}>No</Text>
-											</TouchableOpacity>
-											<TouchableOpacity style={style.locationAction} disabled={loading} onPress={async() => {
-												setLoading(true)
+									<View style={{ alignItems: 'center', height: '100%' }}>
+										<Text style={style.locationHeader}>If you are at the {type == 'restaurant' ? 'restaurant' : type + ' salon'} right now,</Text>
 
-												const location = await Location.getCurrentPositionAsync({});
-												const { longitude, latitude } = location.coords
-												let address = await Location.reverseGeocodeAsync({
+										<TouchableOpacity style={[style.locationAction, { width: fsize(0.5) }]} disabled={loading} onPress={async() => {
+											setLoading(true)
+
+											const location = await Location.getCurrentPositionAsync({});
+											const { longitude, latitude } = location.coords
+											let address = await Location.reverseGeocodeAsync({
+												latitude,
+												longitude
+											});
+
+											for (let item of address) {
+												setLocationcoords({ 
+													longitude, 
 													latitude,
-													longitude
-												});
+													address: `${item.name}, ${item.subregion} ${item.region}, ${item.postalCode}`
+												})
+												setAddressone(item.name)
+												setCity(item.subregion)
+												setProvince(item.region)
+												setPostalcode(item.postalCode)
+											}
+											
+											setLocationinfo('destination')
+											setLoading(false)
+											setErrormsg()
+										}}>
+											<Text style={style.locationActionHeader}>Mark your location</Text>
+										</TouchableOpacity>
 
-												for (let item of address) {
-													setLocationcoords({ 
-														longitude, 
-														latitude,
-														address: `${item.name}, ${item.subregion} ${item.region}, ${item.postalCode}`
-													})
-													setAddressone(item.name)
-													setCity(item.subregion)
-													setProvince(item.region)
-													setPostalcode(item.postalCode)
-												}
-												
-												setLocationinfo('destination')
-												setLoading(false)
-												setErrormsg()
-											}}>
-												<Text style={style.locationActionHeader}>Yes</Text>
-											</TouchableOpacity>
-										</View>
+										<Text style={[style.locationHeader, { marginVertical: 20 }]}>Or</Text>
+
+										<TouchableOpacity style={[style.locationAction, { width: fsize(0.6) }]} disabled={loading} onPress={() => {
+											setLocationinfo('away')
+											setErrormsg()
+										}}>
+											<Text style={style.locationActionHeader}>Enter address instead</Text>
+										</TouchableOpacity>
 
 										{loading && (
 											<View style={{ marginVertical: 10 }}>
@@ -652,8 +654,8 @@ export default function locationsetup({ navigation }) {
 										<ScrollView style={{ height: '100%', width: '100%' }}>
 											<View style={style.locationInfos}>
 												<View style={{ alignItems: 'center', marginTop: 50 }}>
-													<Text style={style.locationHeader}>Are you at the restaurant/salon right now ?</Text>
-													<TouchableOpacity style={style.locationActionOption} disabled={loading} onPress={async() => {
+													<Text style={style.locationHeader}>If you are at the {type == 'restaurant' ? 'restaurant' : type + ' salon'} right now,</Text>
+													<TouchableOpacity style={[style.locationActionOption, { width: fsize(0.5) }]} disabled={loading} onPress={async() => {
 														setLoading(true)
 
 														const location = await Location.getCurrentPositionAsync({});
@@ -679,33 +681,33 @@ export default function locationsetup({ navigation }) {
 														setLoading(false)
 														setErrormsg()
 													}}>
-														<Text style={style.locationActionOptionHeader}>Mark location instead</Text>
+														<Text style={style.locationActionOptionHeader}>Mark your location</Text>
 													</TouchableOpacity>
 												</View>
 
 												<Text style={{ fontSize: 20, fontWeight: 'bold', marginVertical: 30 }}>Or</Text>
 
-												<Text style={style.boxMiniheader}>Enter your location information</Text>
+												<Text style={style.boxMiniheader}>Enter your {type == 'restaurant' ? 'restaurant' : type + ' salon'} information</Text>
 
 												<View style={style.inputContainer}>
-													<Text style={style.inputHeader}>Enter location name:</Text>
+													<Text style={style.inputHeader}>Enter {type == 'restaurant' ? 'restaurant' : type + ' salon'} name:</Text>
 													<TextInput style={style.input} onChangeText={(storeName) => setStorename(storeName)} value={storeName} autoCorrect={false} autoCapitalize="none"/>
 												</View>
 												<View style={style.inputContainer}>
-													<Text style={style.inputHeader}>Enter location address #1:</Text>
+													<Text style={style.inputHeader}>Enter {type == 'restaurant' ? 'restaurant' : type + ' salon'}{'\n'}address #1:</Text>
 													<TextInput style={style.input} onChangeText={(addressOne) => setAddressone(addressOne)} value={addressOne} autoCorrect={false} autoCapitalize="none"/>
 												</View>
 												<View style={style.inputContainer}>
-													<Text style={style.inputHeader}>Enter location address #2: (Optional)</Text>
+													<Text style={style.inputHeader}>Enter {type == 'restaurant' ? 'restaurant' : type + ' salon'}{'\n'}address #2: (Optional)</Text>
 													<TextInput style={style.input} onChangeText={(addressTwo) => setAddresstwo(addressTwo)} value={addressTwo} autoCorrect={false} autoCapitalize="none"/>
 												</View>
 												<View style={style.inputContainer}>
 													<Text style={style.inputHeader}>Enter city:</Text>
-													<TextInput style={style.input} onChangeText={(city) => setCity(city)} value={city} autoCorrect={false} autoCapitalize="none"/>
+													<TextInput style={style.input} onChangeText={(city) => setCity(city)} value={city} placeholder="example: Toronto" autoCorrect={false} autoCapitalize="none"/>
 												</View>
 												<View style={style.inputContainer}>
 													<Text style={style.inputHeader}>Enter province:</Text>
-													<TextInput style={style.input} onChangeText={(province) => setProvince(province)} value={province} autoCorrect={false} autoCapitalize="none"/>
+													<TextInput style={style.input} onChangeText={(province) => setProvince(province)} value={province} placeholder="example: ON" autoCorrect={false} autoCapitalize="none"/>
 												</View>
 												<View style={style.inputContainer}>
 													<Text style={style.inputHeader}>Enter postal code:</Text>
@@ -717,7 +719,7 @@ export default function locationsetup({ navigation }) {
 										</ScrollView>
 										:
 										<View style={{ alignItems: 'center', height: '100%', width: '100%' }}>
-											<Text style={style.locationHeader}>Your location is located at</Text>
+											<Text style={style.locationHeader}>Your {type == 'restaurant' ? 'restaurant' : type + ' salon'} is located at</Text>
 											<MapView
 												region={{
 													longitude: locationCoords.longitude,
@@ -727,17 +729,19 @@ export default function locationsetup({ navigation }) {
 												}}
 												scrollEnabled={false}
 												zoomEnabled={false}
-												style={{ borderRadius: fsize(0.5) / 2, height: fsize(0.5), width: fsize(0.5) }}
+												style={{ borderRadius: fsize(0.4) / 2, height: fsize(0.4), width: fsize(0.4) }}
 											>
 												<Marker coordinate={{ longitude: locationCoords.longitude, latitude: locationCoords.latitude }}/>
 											</MapView>
 											<Text style={style.locationAddressHeader}>{locationCoords.address}</Text>
 
+											<Text style={[style.locationHeader, { marginVertical: 10 }]}>Or</Text>
+
 											<TouchableOpacity style={style.locationActionOption} onPress={() => {
 												setLocationcoords({ longitude: null, latitude: null })
 												setLocationinfo('away')
 											}}>
-												<Text style={style.locationActionOptionHeader}>Enter full address instead</Text>
+												<Text style={style.locationActionOptionHeader}>Enter address instead</Text>
 											</TouchableOpacity>
 
 											{loading && <ActivityIndicator color="black" size="large"/>}
@@ -751,7 +755,23 @@ export default function locationsetup({ navigation }) {
 								<View style={{ alignItems: 'center', width: '100%' }}>
 									<View style={style.inputContainer}>
 										<Text style={style.inputHeader}>Enter {type == 'restaurant' ? 'restaurant' : type + ' salon'}'s phone number:</Text>
-										<TextInput style={style.input} onChangeText={(phonenumber) => setPhonenumber(phonenumber)} value={phonenumber} keyboardType="numeric" autoCorrect={false} autoCapitalize="none"/>
+										<TextInput style={style.input} onKeyPress={(e) => {
+											let newValue = e.nativeEvent.key
+
+											if (newValue >= "0" && newValue <= "9") {
+												if (phonenumber.length == 3) {
+													setPhonenumber("(" + phonenumber + ") " + newValue)
+												} else if (phonenumber.length == 9) {
+													setPhonenumber(phonenumber + "-" + newValue)
+												} else if (phonenumber.length == 14) {
+													Keyboard.dismiss()
+												} else {
+													setPhonenumber(phonenumber + newValue)
+												}
+											} else if (newValue == "Backspace") {
+												setPhonenumber(phonenumber.substr(0, phonenumber.length - 1))
+											}
+										}} value={phonenumber} keyboardType="numeric" autoCorrect={false} autoCapitalize="none"/>
 									</View>
 
 									{loading && <ActivityIndicator color="black" size="large"/>}
@@ -802,7 +822,7 @@ export default function locationsetup({ navigation }) {
 
 										{!daysInfo.done ?
 											<View style={{ alignItems: 'center', width: '100%' }}>
-												<Text style={style.workingDayHeader}>What day is business open ?</Text>
+												<Text style={style.workingDayHeader}>Tap on the days {type == 'restaurant' ? 'restaurant' : type + ' salon'} open ?</Text>
 
 												{daysArr.map((day, index) => (
 													<TouchableOpacity key={index} style={daysInfo.working.indexOf(day) > -1 ? style.workingDayTouchSelected : style.workingDayTouch} onPress={() => {
@@ -913,7 +933,7 @@ export default function locationsetup({ navigation }) {
 						<Text style={style.errorMsg}>{errorMsg}</Text>
 
 						<View style={style.actions}>
-							{setupType != "type" && (
+							{steps.indexOf(setupType) > 0 && (
 								<TouchableOpacity style={style.action} onPress={() => {
 									let index = steps.indexOf(setupType)
 
@@ -968,12 +988,12 @@ const style = StyleSheet.create({
 	boxMiniheader: { fontFamily: 'appFont', fontSize: fsize(0.05), fontWeight: 'bold', marginBottom: 20 },
 
 	inputContainer: { marginBottom: 50, width: '80%' },
-	inputHeader: { fontFamily: 'appFont', fontSize: fsize(0.05),  },
-	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: fsize(0.07), padding: 5, width: '100%' },
+	inputHeader: { fontFamily: 'appFont', fontSize: fsize(0.04),  },
+	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: fsize(0.04), padding: 5, width: '100%' },
 
 	locationContainer: { height: '100%', width: '100%' },
-	locationHeader: { fontFamily: 'appFont', fontSize: fsize(0.07), fontWeight: 'bold', marginHorizontal: 20, textAlign: 'center' },
-	locationAddressHeader: { fontSize: fsize(0.05), fontWeight: 'bold', margin: 20 },
+	locationHeader: { fontSize: fsize(0.05), fontWeight: 'bold', marginHorizontal: 20, textAlign: 'center' },
+	locationAddressHeader: { fontSize: fsize(0.05), fontWeight: 'bold', margin: 20, textAlign: 'center' },
 	locationActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	locationAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 10, width: 100 },
 	locationActionHeader: { fontSize: fsize(0.05), textAlign: 'center' },
@@ -1002,10 +1022,10 @@ const style = StyleSheet.create({
 	days: { alignItems: 'center', width: '100%' },
 
 	// select working days
-	workingDayHeader: { fontSize: fsize(0.06) },
+	workingDayHeader: { fontSize: fsize(0.05) },
 	workingDayTouch: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: fsize(0.7) },
 	workingDayTouchSelected: { backgroundColor: 'rgba(0, 0, 0, 0.6)', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: fsize(0.7) },
-	workingDayTouchHeader: { fontSize: fsize(0.06), textAlign: 'center' },
+	workingDayTouchHeader: { fontSize: fsize(0.04), textAlign: 'center' },
 
 	daysBack: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, marginBottom: 20, padding: 10 },
 	daysBackHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), textAlign: 'center' },

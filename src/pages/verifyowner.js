@@ -65,11 +65,21 @@ export default function verifyowner({ navigation }) {
 								<View style={{ alignItems: 'center' }}>
 									<View style={style.inputContainer}>
 										<Text style={style.inputHeader}>Enter a cell number:</Text>
-										<TextInput style={style.input} onChangeText={(cellnumber) => {
-											setCellnumber(cellnumber)
+										<TextInput style={style.input} onKeyPress={(e) => {
+											let newValue = e.nativeEvent.key
 
-											if (cellnumber.length == 10) {
-												Keyboard.dismiss()
+											if (newValue >= "0" && newValue <= "9") {
+												if (cellnumber.length == 3) {
+													setCellnumber("(" + cellnumber + ") " + newValue)
+												} else if (cellnumber.length == 9) {
+													setCellnumber(cellnumber + "-" + newValue)
+												} else if (cellnumber.length == 14) {
+													Keyboard.dismiss()
+												} else {
+													setCellnumber(cellnumber + newValue)
+												}
+											} else if (newValue == "Backspace") {
+												setCellnumber(cellnumber.substr(0, cellnumber.length - 1))
 											}
 										}} value={cellnumber} keyboardType="numeric" autoCorrect={false}/>
 									</View>
@@ -129,8 +139,8 @@ const style = StyleSheet.create({
 	
 	inputsBox: { flexDirection: 'column', height: screenHeight / 2, justifyContent: 'space-around', width: '100%' },
 	inputContainer: { marginBottom: 30, width: '80%' },
-	inputHeader: { fontFamily: 'appFont', fontSize: fsize(0.07) },
-	input: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: fsize(0.07), padding: 5, width: '100%' },
+	inputHeader: { fontFamily: 'appFont', fontSize: fsize(0.04) },
+	input: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: fsize(0.04), padding: 5, width: '100%' },
 	errorMsg: { color: 'darkred', fontSize: fsize(0.05), fontWeight: 'bold', textAlign: 'center' },
 	
 	submit: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontFamily: 'appFont', padding: 10, width: fsize(0.3) },
