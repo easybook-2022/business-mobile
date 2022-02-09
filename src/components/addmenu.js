@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react'
-import { Platform, ActivityIndicator, Dimensions, ScrollView, View, Text, TextInput, Image, Keyboard, TouchableOpacity, TouchableWithoutFeedback, StyleSheet } from 'react-native'
+import { SafeAreaView, Platform, ActivityIndicator, Dimensions, ScrollView, View, Text, TextInput, Image, Keyboard, TouchableOpacity, TouchableWithoutFeedback, StyleSheet } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
@@ -11,15 +11,15 @@ import { logo_url } from '../../assets/info'
 import { addNewMenu, getMenuInfo, saveMenu } from '../apis/menus'
 
 const { height, width } = Dimensions.get('window')
-const offsetPadding = Constants.statusBarHeight
-
+const wsize = p => {
+  return width * (p / 100)
+}
+const hsize = p => {
+  return height * (p / 100)
+}
 const steps = ['name', 'info', 'photo']
 
-const fsize = p => {
-	return width * p
-}
-
-export default function addmenu(props) {
+export default function Addmenu(props) {
 	const params = props.route.params
 	const { parentMenuid, menuid, refetch } = params
 
@@ -264,7 +264,7 @@ export default function addmenu(props) {
 	}, [])
 
 	return (
-		<View style={[style.addmenu, { opacity: loading ? 0.5 : 1 }]}>
+		<SafeAreaView style={[style.addmenu, { opacity: loading ? 0.5 : 1 }]}>
 			<TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
 				{loaded ? 
 					<View style={style.box}>
@@ -361,33 +361,34 @@ export default function addmenu(props) {
 						</View>
 					</View>
 					:
-					<View style={{ alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' }}>
-						<ActivityIndicator size="large"/>
+					<View style={styles.loading}>
+						<ActivityIndicator color="black" size="large"/>
 					</View>
 				}
 			</TouchableWithoutFeedback>
-		</View>
+		</SafeAreaView>
 	)
 }
 
 const style = StyleSheet.create({
-	addmenu: { height: '100%', paddingBottom: offsetPadding, width: '100%' },
+	addmenu: { height: '100%', width: '100%' },
 	box: { alignItems: 'center', height: '100%', width: '100%' },
 	inputContainer: { alignItems: 'center', width: '100%' },
-	addHeader: { fontSize: fsize(0.05), fontWeight: 'bold', paddingVertical: 5, textAlign: 'center' },
-	addInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, fontSize: fsize(0.05), padding: 10, width: '90%' },
-	infoInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, fontSize: fsize(0.05), height: 100, marginVertical: 5, padding: 10, width: '90%' },
+	addHeader: { fontSize: wsize(5), fontWeight: 'bold', paddingVertical: 5, textAlign: 'center' },
+	addInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, fontSize: wsize(5), padding: 10, width: '90%' },
+	infoInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, fontSize: wsize(5), height: 100, marginVertical: 5, padding: 10, width: '90%' },
 	
 	cameraContainer: { alignItems: 'center', width: '100%' },
-	cameraHeader: { fontSize: fsize(0.05), fontWeight: 'bold', paddingVertical: 5 },
-	camera: { height: fsize(0.7), width: fsize(0.7) },
+	cameraHeader: { fontSize: wsize(5), fontWeight: 'bold', paddingVertical: 5 },
+	camera: { height: wsize(70), width: wsize(70) },
 	cameraActions: { flexDirection: 'row' },
-	cameraAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginBottom: 50, margin: 5, padding: 5, width: fsize(0.3) },
-	cameraActionHeader: { fontSize: fsize(0.03), textAlign: 'center' },
-	
-	errorMsg: { color: 'red', fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
+	cameraAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginBottom: 50, margin: 5, padding: 5, width: wsize(30) },
+	cameraActionHeader: { fontSize: wsize(4), textAlign: 'center' },
 	
 	addActions: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 50, width: '100%' },
-	addAction: { alignItems: 'center', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: fsize(0.07), padding: 5, width: 100 },
-	addActionHeader: { fontSize: fsize(0.05) },
+	addAction: { alignItems: 'center', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(0.07), padding: 5, width: wsize(30) },
+	addActionHeader: { fontSize: wsize(5) },
+
+  loading: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
+  errorMsg: { color: 'darkred', fontSize: wsize(4), textAlign: 'center' },
 })

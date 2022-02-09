@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Platform, ActivityIndicator, Dimensions, ScrollView, View, Text, TextInput, Image, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet } from 'react-native';
+import { SafeAreaView, ActivityIndicator, Platform, Dimensions, ScrollView, View, Text, TextInput, Image, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
 import Constants from 'expo-constants';
@@ -18,15 +18,16 @@ import AntDesign from 'react-native-vector-icons/AntDesign'
 import Entypo from 'react-native-vector-icons/Entypo'
 
 const { height, width } = Dimensions.get('window')
-const offsetPadding = Constants.statusBarHeight
+const wsize = p => {
+  return width * (p / 100)
+}
+const hsize = p => {
+  return height * (p / 100)
+}
 const steps = ['type', 'location', 'phonenumber', 'logo', 'hours']
 const daysArr = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
-const fsize = p => {
-	return width * p
-}
-
-export default function locationsetup({ navigation }) {
+export default function Locationsetup({ navigation }) {
 	const [setupType, setSetuptype] = useState('')
 	const [cameraPermission, setCamerapermission] = useState(null);
 	const [pickingPermission, setPickingpermission] = useState(null);
@@ -71,50 +72,48 @@ export default function locationsetup({ navigation }) {
 				delete newOpentime.period
 				delete newClosetime.period
 
-				if (close == false) {
-					if (openperiod == "PM") {
-						if (openhour < 12) {
-							openhour += 12
-						}
+				if (close == false || close == true) {
+          if (openperiod == "PM") {
+            if (openhour < 12) {
+              openhour += 12
+            }
 
-						openhour = openhour < 10 ? 
-							"0" + openhour
-							:
-							openhour.toString()
-					} else {
-						if (openhour == 12) {
-							openhour = "00"
-						} else if (openhour < 10) {
-							openhour = "0" + openhour
-						} else {
-							openhour = openhour.toString()
-						}
-					}
+            openhour = openhour < 10 ? 
+              "0" + openhour
+              :
+              openhour.toString()
+          } else {
+            if (openhour == 12) {
+              openhour = "00"
+            } else if (openhour < 10) {
+              openhour = "0" + openhour
+            } else {
+              openhour = openhour.toString()
+            }
+          }
 
-					if (closeperiod == "PM") {
-						if (closehour < 12) {
-							closehour += 12
-						}
+          if (closeperiod == "PM") {
+            if (closehour < 12) {
+              closehour += 12
+            }
 
-						closehour = closehour < 10 ? 
-							"0" + closehour
-							:
-							closehour.toString()
-					} else {
-						if (closehour == 12) {
-							closehour = "00"
-						} else if (closehour < 10) {
-							closehour = "0" + closehour
-						} else {
-							closehour = closehour.toString()
-						}
-					}
+            closehour = closehour < 10 ? 
+              "0" + closehour
+              :
+              closehour.toString()
+          } else {
+            if (closehour == 12) {
+              closehour = "00"
+            } else if (closehour < 10) {
+              closehour = "0" + closehour
+            } else {
+              closehour = closehour.toString()
+            }
+          }
 
-					newOpentime.hour = openhour
-					newClosetime.hour = closehour
+          newOpentime.hour = openhour
+          newClosetime.hour = closehour
 
-					hours[day.header.substr(0, 3)] = { opentime: newOpentime, closetime: newClosetime, close }
-				} else if (close == true) {
 					hours[day.header.substr(0, 3)] = { opentime: newOpentime, closetime: newClosetime, close }
 				} else {
 					invalid = true
@@ -135,7 +134,7 @@ export default function locationsetup({ navigation }) {
 					latitude = registerInfo.latitude
 				}
 			}
-				
+
 			const time = (Date.now() / 1000).toString().split(".")[0]
 			const data = {
 				storeName, phonenumber, addressOne, addressTwo, city, province, postalcode, logo, hours, type, 
@@ -185,10 +184,11 @@ export default function locationsetup({ navigation }) {
 							const { errormsg, status } = err.response.data
 
 							setErrormsg(errormsg)
-							setLoading(false)
 						} else {
 							setErrormsg("an error has occurred in server")
 						}
+
+						setLoading(false)
 					})
 			} else {
 				setLoading(false)
@@ -550,46 +550,64 @@ export default function locationsetup({ navigation }) {
 	}
 		
 	return (
-		<View style={[style.locationsetup, { opacity: loading ? 0.5 : 1 }]}>
-			<View style={style.box}>
-				<View style={style.header}>
-					<Text style={style.boxHeader}>Setup</Text>
+		<SafeAreaView style={[styles.locationsetup, { opacity: loading ? 0.5 : 1 }]}>
+			<View style={styles.box}>
+				<View style={styles.header}>
+					<Text style={styles.boxHeader}>Setup</Text>
 				</View>
 
-				<View style={style.inputsBox}>
-					<View style={style.inputsContainer}>
+				<View style={styles.inputsBox}>
+					<View style={styles.inputsContainer}>
 						{setupType == "" && (
-							<View style={style.introBox}>
-								<Text style={style.introHeader}>Welcome to EasyGO Business</Text>
-								<Text style={style.introHeader}>We will bring the nearest customers to your door{'\n'}VERY FAST</Text>
-								<Text style={style.introHeader}>Let's setup your business information</Text>
+							<View style={styles.introBox}>
+								<Text style={styles.introHeader}>Welcome to EasyGO Business</Text>
+								<Text style={styles.introHeader}>We will bring the nearest customers to your door{'\n'}VERY FAST</Text>
+								<Text style={styles.introHeader}>Let's setup your business information</Text>
 							</View>
 						)}
 
 						{setupType == "type" && (
-							<View style={style.typeContainer}>
-								<Text style={style.inputHeader}>What business are you ?</Text>
+							<View style={styles.typeContainer}>
+								<Text style={styles.inputHeader}>What business are you ?</Text>
 
-								<View style={style.selections}>
-									<TouchableOpacity style={type == 'hair' ? style.typeSelectionSelected : style.typeSelection} onPress={() => setType('hair')}>
-										<View style={style.typeSelectionRow}>
-											<Text style={style.typeSelectionHeader}>Hair{'\n'}Salon</Text>
-											<Image source={require("../../assets/hairsalon.png")} style={style.typeSelectionIcon}/>
-											<Text style={style.typeSelectionAction}>Tap{'\n'}to choose</Text>
+								<View style={styles.selections}>
+									<TouchableOpacity style={[styles.typeSelection, { backgroundColor: type == 'hair' ? 'rgba(0, 0, 0, 0.5)' : null }]} onPress={() => setType('hair')}>
+										<View style={styles.typeSelectionRow}>
+                      <View style={styles.column}>
+  											<Text style={styles.typeSelectionHeader}>Hair{'\n'}Salon</Text>
+                      </View>
+                      <View style={styles.column}>
+  											<Image source={require("../../assets/hairsalon.png")} style={styles.typeSelectionIcon}/>
+                      </View>
+                      <View style={styles.column}>
+  											<Text style={styles.typeSelectionAction}>Tap{'\n'}to choose</Text>
+                      </View>
 										</View>
 									</TouchableOpacity>
-									<TouchableOpacity style={type == 'nail' ? style.typeSelectionSelected : style.typeSelection} onPress={() => setType('nail')}>
-										<View style={style.typeSelectionRow}>
-											<Text style={style.typeSelectionHeader}>Nail{'\n'}Salon</Text>
-											<Image source={require("../../assets/nailsalon.png")} style={style.typeSelectionIcon}/>
-											<Text style={style.typeSelectionAction}>Tap{'\n'}to choose</Text>
+									<TouchableOpacity style={[styles.typeSelection, { backgroundColor: type == 'nail' ? 'rgba(0, 0, 0, 0.5)' : null }]} onPress={() => setType('nail')}>
+										<View style={styles.typeSelectionRow}>
+  										<View style={styles.column}>
+                        <Text style={styles.typeSelectionHeader}>Nail{'\n'}Salon</Text>
+                      </View>
+  										<View style={styles.column}>
+                        <Image source={require("../../assets/nailsalon.png")} style={styles.typeSelectionIcon}/>
+                      </View>
+  										<View style={styles.column}>
+                        <Text style={styles.typeSelectionAction}>Tap{'\n'}to choose</Text>
+                      </View>
 										</View>
 									</TouchableOpacity>
-									<TouchableOpacity style={type == 'restaurant' ? style.typeSelectionSelected : style.typeSelection} onPress={() => setType('restaurant')}>
-										<View style={style.typeSelectionRow}>
-											<Text style={style.typeSelectionHeader}>Restaurant</Text>
-											<Image source={require("../../assets/food.png")} style={style.typeSelectionIcon}/>
-											<Text style={style.typeSelectionAction}>Tap{'\n'}to choose</Text>
+									<TouchableOpacity style={[styles.typeSelection, { backgroundColor: type == 'restaurant' ? 'rgba(0, 0, 0, 0.5)' : null }]} onPress={() => setType('restaurant')}>
+										<View style={styles.typeSelectionRow}>
+  										<View style={styles.column}>
+                        <Text style={styles.typeSelectionHeader}>Restaurant</Text>
+                      </View>
+  										<View style={styles.column}>
+                        <Image source={require("../../assets/food.png")} style={styles.typeSelectionIcon}/>
+                      </View>
+  										<View style={styles.column}>
+                        <Text style={styles.typeSelectionAction}>Tap{'\n'}to choose</Text>
+                      </View>
 										</View>
 									</TouchableOpacity>
 								</View>
@@ -599,12 +617,12 @@ export default function locationsetup({ navigation }) {
 						)}
 
 						{(setupType == "location" && locationPermission) && (
-							<View style={style.locationContainer}>
+							<View style={styles.locationContainer}>
 								{locationInfo == '' ?
 									<View style={{ alignItems: 'center', height: '100%' }}>
-										<Text style={style.locationHeader}>If you are at the {type == 'restaurant' ? 'restaurant' : type + ' salon'} right now,</Text>
+										<Text style={styles.locationHeader}>If you are at the {type == 'restaurant' ? 'restaurant' : type + ' salon'} right now,</Text>
 
-										<TouchableOpacity style={[style.locationAction, { width: fsize(0.5) }]} disabled={loading} onPress={async() => {
+										<TouchableOpacity style={[styles.locationAction, { width: width * 0.5 }]} disabled={loading} onPress={async() => {
 											setLoading(true)
 
 											const location = await Location.getCurrentPositionAsync({});
@@ -630,21 +648,21 @@ export default function locationsetup({ navigation }) {
 											setLoading(false)
 											setErrormsg()
 										}}>
-											<Text style={style.locationActionHeader}>Mark your location</Text>
+											<Text style={styles.locationActionHeader}>Mark your location</Text>
 										</TouchableOpacity>
 
-										<Text style={[style.locationHeader, { marginVertical: 20 }]}>Or</Text>
+										<Text style={[styles.locationHeader, { marginVertical: 20 }]}>Or</Text>
 
-										<TouchableOpacity style={[style.locationAction, { width: fsize(0.6) }]} disabled={loading} onPress={() => {
+										<TouchableOpacity style={[styles.locationAction, { width: width * 0.6 }]} disabled={loading} onPress={() => {
 											setLocationinfo('away')
 											setErrormsg()
 										}}>
-											<Text style={style.locationActionHeader}>Enter address instead</Text>
+											<Text style={styles.locationActionHeader}>Enter address instead</Text>
 										</TouchableOpacity>
 
 										{loading && (
 											<View style={{ marginVertical: 10 }}>
-												<Text style={style.locationFetchingHeader}>getting your location</Text>
+												<Text style={styles.locationFetchingHeader}>getting your location</Text>
 												<ActivityIndicator color="black" size="small"/>
 											</View>
 										)}
@@ -652,10 +670,10 @@ export default function locationsetup({ navigation }) {
 									:
 									locationInfo != 'destination' ? 
 										<ScrollView style={{ height: '100%', width: '100%' }}>
-											<View style={style.locationInfos}>
+											<View style={styles.locationInfos}>
 												<View style={{ alignItems: 'center', marginTop: 50 }}>
-													<Text style={style.locationHeader}>If you are at the {type == 'restaurant' ? 'restaurant' : type + ' salon'} right now,</Text>
-													<TouchableOpacity style={[style.locationActionOption, { width: fsize(0.5) }]} disabled={loading} onPress={async() => {
+													<Text style={styles.locationHeader}>If you are at the {type == 'restaurant' ? 'restaurant' : type + ' salon'} right now,</Text>
+													<TouchableOpacity style={[styles.locationActionOption, { width: width * 0.5 }]} disabled={loading} onPress={async() => {
 														setLoading(true)
 
 														const location = await Location.getCurrentPositionAsync({});
@@ -681,37 +699,37 @@ export default function locationsetup({ navigation }) {
 														setLoading(false)
 														setErrormsg()
 													}}>
-														<Text style={style.locationActionOptionHeader}>Mark your location</Text>
+														<Text style={styles.locationActionOptionHeader}>Mark your location</Text>
 													</TouchableOpacity>
 												</View>
 
 												<Text style={{ fontSize: 20, fontWeight: 'bold', marginVertical: 30 }}>Or</Text>
 
-												<Text style={style.boxMiniheader}>Enter your {type == 'restaurant' ? 'restaurant' : type + ' salon'} information</Text>
+												<Text style={styles.boxMiniheader}>Enter your {type == 'restaurant' ? 'restaurant' : type + ' salon'} information</Text>
 
-												<View style={style.inputContainer}>
-													<Text style={style.inputHeader}>Enter {type == 'restaurant' ? 'restaurant' : type + ' salon'} name:</Text>
-													<TextInput style={style.input} onChangeText={(storeName) => setStorename(storeName)} value={storeName} autoCorrect={false} autoCapitalize="none"/>
+												<View style={styles.inputContainer}>
+													<Text style={styles.inputHeader}>Enter {type == 'restaurant' ? 'restaurant' : type + ' salon'} name:</Text>
+													<TextInput style={styles.input} onChangeText={(storeName) => setStorename(storeName)} value={storeName} autoCorrect={false} autoCapitalize="none"/>
 												</View>
-												<View style={style.inputContainer}>
-													<Text style={style.inputHeader}>Enter {type == 'restaurant' ? 'restaurant' : type + ' salon'}{'\n'}address #1:</Text>
-													<TextInput style={style.input} onChangeText={(addressOne) => setAddressone(addressOne)} value={addressOne} autoCorrect={false} autoCapitalize="none"/>
+												<View style={styles.inputContainer}>
+													<Text style={styles.inputHeader}>Enter {type == 'restaurant' ? 'restaurant' : type + ' salon'}{'\n'}address #1:</Text>
+													<TextInput style={styles.input} onChangeText={(addressOne) => setAddressone(addressOne)} value={addressOne} autoCorrect={false} autoCapitalize="none"/>
 												</View>
-												<View style={style.inputContainer}>
-													<Text style={style.inputHeader}>Enter {type == 'restaurant' ? 'restaurant' : type + ' salon'}{'\n'}address #2: (Optional)</Text>
-													<TextInput style={style.input} onChangeText={(addressTwo) => setAddresstwo(addressTwo)} value={addressTwo} autoCorrect={false} autoCapitalize="none"/>
+												<View style={styles.inputContainer}>
+													<Text style={styles.inputHeader}>Enter {type == 'restaurant' ? 'restaurant' : type + ' salon'}{'\n'}address #2: (Optional)</Text>
+													<TextInput style={styles.input} onChangeText={(addressTwo) => setAddresstwo(addressTwo)} value={addressTwo} autoCorrect={false} autoCapitalize="none"/>
 												</View>
-												<View style={style.inputContainer}>
-													<Text style={style.inputHeader}>Enter city:</Text>
-													<TextInput style={style.input} onChangeText={(city) => setCity(city)} value={city} placeholder="example: Toronto" autoCorrect={false} autoCapitalize="none"/>
+												<View style={styles.inputContainer}>
+													<Text style={styles.inputHeader}>Enter city:</Text>
+													<TextInput style={styles.input} onChangeText={(city) => setCity(city)} value={city} placeholder="example: Toronto" autoCorrect={false} autoCapitalize="none"/>
 												</View>
-												<View style={style.inputContainer}>
-													<Text style={style.inputHeader}>Enter province:</Text>
-													<TextInput style={style.input} onChangeText={(province) => setProvince(province)} value={province} placeholder="example: ON" autoCorrect={false} autoCapitalize="none"/>
+												<View style={styles.inputContainer}>
+													<Text style={styles.inputHeader}>Enter province:</Text>
+													<TextInput style={styles.input} onChangeText={(province) => setProvince(province)} value={province} placeholder="example: ON" autoCorrect={false} autoCapitalize="none"/>
 												</View>
-												<View style={style.inputContainer}>
-													<Text style={style.inputHeader}>Enter postal code:</Text>
-													<TextInput style={style.input} onChangeText={(postalcode) => setPostalcode(postalcode)} value={postalcode} autoCorrect={false} autoCapitalize="none"/>
+												<View style={styles.inputContainer}>
+													<Text style={styles.inputHeader}>Enter postal code:</Text>
+													<TextInput style={styles.input} onChangeText={(postalcode) => setPostalcode(postalcode)} value={postalcode} autoCorrect={false} autoCapitalize="none"/>
 												</View>
 
 												{loading && <ActivityIndicator color="black" size="large"/>}
@@ -719,7 +737,7 @@ export default function locationsetup({ navigation }) {
 										</ScrollView>
 										:
 										<View style={{ alignItems: 'center', height: '100%', width: '100%' }}>
-											<Text style={style.locationHeader}>Your {type == 'restaurant' ? 'restaurant' : type + ' salon'} is located at</Text>
+											<Text style={styles.locationHeader}>Your {type == 'restaurant' ? 'restaurant' : type + ' salon'} is located at</Text>
 											<MapView
 												region={{
 													longitude: locationCoords.longitude,
@@ -729,19 +747,19 @@ export default function locationsetup({ navigation }) {
 												}}
 												scrollEnabled={false}
 												zoomEnabled={false}
-												style={{ borderRadius: fsize(0.4) / 2, height: fsize(0.4), width: fsize(0.4) }}
+												style={{ borderRadius: width * 0.4 / 2, height: width * 0.4, width: width * 0.4 }}
 											>
 												<Marker coordinate={{ longitude: locationCoords.longitude, latitude: locationCoords.latitude }}/>
 											</MapView>
-											<Text style={style.locationAddressHeader}>{locationCoords.address}</Text>
+											<Text style={styles.locationAddressHeader}>{locationCoords.address}</Text>
 
-											<Text style={[style.locationHeader, { marginVertical: 10 }]}>Or</Text>
+											<Text style={[styles.locationHeader, { marginVertical: 10 }]}>Or</Text>
 
-											<TouchableOpacity style={style.locationActionOption} onPress={() => {
+											<TouchableOpacity style={styles.locationActionOption} onPress={() => {
 												setLocationcoords({ longitude: null, latitude: null })
 												setLocationinfo('away')
 											}}>
-												<Text style={style.locationActionOptionHeader}>Enter address instead</Text>
+												<Text style={styles.locationActionOptionHeader}>Enter address instead</Text>
 											</TouchableOpacity>
 
 											{loading && <ActivityIndicator color="black" size="large"/>}
@@ -753,9 +771,9 @@ export default function locationsetup({ navigation }) {
 						{setupType == "phonenumber" && (
 							<TouchableWithoutFeedback style={{ height: '100%', width: '100%' }} onPress={() => Keyboard.dismiss()}>
 								<View style={{ alignItems: 'center', width: '100%' }}>
-									<View style={style.inputContainer}>
-										<Text style={style.inputHeader}>Enter {type == 'restaurant' ? 'restaurant' : type + ' salon'}'s phone number:</Text>
-										<TextInput style={style.input} onKeyPress={(e) => {
+									<View style={styles.inputContainer}>
+										<Text style={styles.inputHeader}>Enter {type == 'restaurant' ? 'restaurant' : type + ' salon'}'s phone number:</Text>
+										<TextInput style={styles.input} onKeyPress={(e) => {
 											let newValue = e.nativeEvent.key
 
 											if (newValue >= "0" && newValue <= "9") {
@@ -763,7 +781,9 @@ export default function locationsetup({ navigation }) {
 													setPhonenumber("(" + phonenumber + ") " + newValue)
 												} else if (phonenumber.length == 9) {
 													setPhonenumber(phonenumber + "-" + newValue)
-												} else if (phonenumber.length == 14) {
+												} else if (phonenumber.length == 13) {
+													setPhonenumber(phonenumber + newValue)
+
 													Keyboard.dismiss()
 												} else {
 													setPhonenumber(phonenumber + newValue)
@@ -778,33 +798,33 @@ export default function locationsetup({ navigation }) {
 								</View>
 							</TouchableWithoutFeedback>
 						)}
-						
+
 						{(setupType == "logo" && (cameraPermission || pickingPermission)) && (
-							<View style={style.cameraContainer}>
-								<Text style={style.inputHeader}>Provide a photo for {type == 'restaurant' ? 'restaurant' : type + ' salon'}</Text>
+							<View style={styles.cameraContainer}>
+								<Text style={styles.inputHeader}>Provide a photo for {type == 'restaurant' ? 'restaurant' : type + ' salon'}</Text>
 
 								{logo.uri ? (
 									<>
-										<Image style={style.camera} source={{ uri: logo.uri }}/>
+										<Image style={styles.camera} source={{ uri: logo.uri }}/>
 
-										<TouchableOpacity style={style.cameraAction} onPress={() => setLogo({ uri: '', name: '' })}>
-											<Text style={style.cameraActionHeader}>Cancel</Text>
+										<TouchableOpacity style={styles.cameraAction} onPress={() => setLogo({ uri: '', name: '' })}>
+											<Text style={styles.cameraActionHeader}>Cancel</Text>
 										</TouchableOpacity>
 									</>
 								) : (
 									<>
 										<Camera 
-											style={style.camera} 
+											style={styles.camera} 
 											type={Camera.Constants.Type.back} ref={r => {setCamcomp(r)}}
 											ratio="1:1"
 										/>
 
-										<View style={style.cameraActions}>
-											<TouchableOpacity style={style.cameraAction} onPress={snapPhoto.bind(this)}>
-												<Text style={style.cameraActionHeader}>Take{'\n'}this photo</Text>
+										<View style={styles.cameraActions}>
+											<TouchableOpacity style={styles.cameraAction} onPress={snapPhoto.bind(this)}>
+												<Text style={styles.cameraActionHeader}>Take{'\n'}this photo</Text>
 											</TouchableOpacity>
-											<TouchableOpacity style={style.cameraAction} onPress={() => choosePhoto()}>
-												<Text style={style.cameraActionHeader}>Choose{'\n'}from phone</Text>
+											<TouchableOpacity style={styles.cameraAction} onPress={() => choosePhoto()}>
+												<Text style={styles.cameraActionHeader}>Choose{'\n'}from phone</Text>
 											</TouchableOpacity>
 										</View>
 									</>
@@ -817,15 +837,15 @@ export default function locationsetup({ navigation }) {
 						{setupType == "hours" && (
 							<ScrollView style={{ height: '100%', width: '100%' }}>
 								<View style={{ alignItems: 'center' }}>
-									<View style={style.days}>
-										<Text style={[style.inputHeader, { marginBottom: 20, textAlign: 'center' }]}>Set the {type == 'restaurant' ? 'restaurant' : type + ' salon'}'s opening hours</Text>
+									<View style={styles.days}>
+										<Text style={[styles.inputHeader, { marginBottom: 20, textAlign: 'center' }]}>Set the {type == 'restaurant' ? 'restaurant' : type + ' salon'}'s opening hours</Text>
 
 										{!daysInfo.done ?
 											<View style={{ alignItems: 'center', width: '100%' }}>
-												<Text style={style.workingDayHeader}>Tap on the days {type == 'restaurant' ? 'restaurant' : type + ' salon'} open ?</Text>
+												<Text style={styles.openingDayHeader}>Tap on the days {type == 'restaurant' ? 'restaurant' : type + ' salon'} open ?</Text>
 
 												{daysArr.map((day, index) => (
-													<TouchableOpacity key={index} style={daysInfo.working.indexOf(day) > -1 ? style.workingDayTouchSelected : style.workingDayTouch} onPress={() => {
+													<TouchableOpacity key={index} style={daysInfo.working.indexOf(day) > -1 ? styles.openingDayTouchSelected : styles.openingDayTouch} onPress={() => {
 														const newWorking = [...daysInfo.working]
 
 														if (newWorking[index] == '') {
@@ -836,82 +856,88 @@ export default function locationsetup({ navigation }) {
 
 														setDaysinfo({ ...daysInfo, working: newWorking })
 													}}>
-														<Text style={style.workingDayTouchHeader}>{day}</Text>
+														<Text style={styles.openingDayTouchHeader}>{day}</Text>
 													</TouchableOpacity>
 												))}
 											</View>
 											:
 											<View style={{ alignItems: 'center', opacity: loading ? 0.5 : 1, width: '100%' }}>
-												<TouchableOpacity style={style.daysBack} disabled={loading} onPress={() => setDaysinfo({ working: ['', '', '', '', '', '', ''], done: false, step: 0 })}>
-													<Text style={style.daysBackHeader}>Go Back</Text>
+												<TouchableOpacity style={styles.daysBack} disabled={loading} onPress={() => setDaysinfo({ working: ['', '', '', '', '', '', ''], done: false, step: 0 })}>
+													<Text style={styles.daysBackHeader}>Go Back</Text>
 												</TouchableOpacity>
 
 												{days.map((info, index) => (
 													!info.close ?
-														<View key={index} style={style.day}>
-															<Text style={style.dayHeader}>Set the opening time for {info.header}</Text>
+														<View key={index} style={styles.day}>
+															<Text style={styles.dayHeader}>Set the opening time for {info.header}</Text>
 															
-															<Text style={[style.dayHeader, { marginTop: 30 }]}>Use the arrow to set the time</Text>
+															<Text style={[styles.dayHeader, { marginTop: 30 }]}>Use the arrow to set the time</Text>
 
-															<View style={style.timeSelectionContainer}>
-																<View style={style.timeSelection}>
-																	<View style={style.selection}>
+															<View style={styles.timeSelectionContainer}>
+																<View style={styles.timeSelection}>
+																	<View style={styles.selection}>
 																		<TouchableOpacity onPress={() => updateTime(index, "hour", "up", true)}>
-																			<AntDesign name="up" size={fsize(0.08)}/>
+																			<AntDesign name="up" size={wsize(7)}/>
 																		</TouchableOpacity>
-																		<Text style={style.selectionHeader}>{info.opentime.hour}</Text>
+																		<Text style={styles.selectionHeader}>{info.opentime.hour}</Text>
 																		<TouchableOpacity onPress={() => updateTime(index, "hour", "down", true)}>
-																			<AntDesign name="down" size={fsize(0.08)}/>
+																			<AntDesign name="down" size={wsize(7)}/>
 																		</TouchableOpacity>
 																	</View>
-																	<Text style={style.selectionDiv}>:</Text>
-																	<View style={style.selection}>
+                                  <View style={styles.selectionDivHolder}>
+                                    <Text style={styles.selectionDiv}>:</Text>
+                                  </View>
+																	<View style={styles.selection}>
 																		<TouchableOpacity onPress={() => updateTime(index, "minute", "up", true)}>
-																			<AntDesign name="up" size={fsize(0.08)}/>
+																			<AntDesign name="up" size={wsize(7)}/>
 																		</TouchableOpacity>
-																		<Text style={style.selectionHeader}>{info.opentime.minute}</Text>
+																		<Text style={styles.selectionHeader}>{info.opentime.minute}</Text>
 																		<TouchableOpacity onPress={() => updateTime(index, "minute", "down", true)}>
-																			<AntDesign name="down" size={fsize(0.08)}/>
+																			<AntDesign name="down" size={wsize(7)}/>
 																		</TouchableOpacity>
 																	</View>
-																	<View style={style.selection}>
+																	<View style={styles.selection}>
 																		<TouchableOpacity onPress={() => updateTime(index, "period", "up", true)}>
-																			<AntDesign name="up" size={fsize(0.08)}/>
+																			<AntDesign name="up" size={wsize(7)}/>
 																		</TouchableOpacity>
-																		<Text style={style.selectionHeader}>{info.opentime.period}</Text>
+																		<Text style={styles.selectionHeader}>{info.opentime.period}</Text>
 																		<TouchableOpacity onPress={() => updateTime(index, "period", "down", true)}>
-																			<AntDesign name="down" size={fsize(0.08)}/>
+																			<AntDesign name="down" size={wsize(7)}/>
 																		</TouchableOpacity>
 																	</View>
 																</View>
-																<Text style={style.timeSelectionHeader}>To</Text>
-																<View style={style.timeSelection}>
-																	<View style={style.selection}>
+                                <View style={styles.timeSelectionHeaderHolder}>
+																  <Text style={styles.timeSelectionHeader}>To</Text>
+                                </View>
+																<View style={styles.timeSelection}>
+																	<View style={styles.selection}>
 																		<TouchableOpacity onPress={() => updateTime(index, "hour", "up", false)}>
-																			<AntDesign name="up" size={fsize(0.08)}/>
+																			<AntDesign name="up" size={wsize(7)}/>
 																		</TouchableOpacity>
-																		<Text style={style.selectionHeader}>{info.closetime.hour}</Text>
+																		<Text style={styles.selectionHeader}>{info.closetime.hour}</Text>
 																		<TouchableOpacity onPress={() => updateTime(index, "hour", "down", false)}>
-																			<AntDesign name="down" size={fsize(0.08)}/>
+																			<AntDesign name="down" size={wsize(7)}/>
 																		</TouchableOpacity>
 																	</View>
-																	<Text style={style.selectionDiv}>:</Text>
-																	<View style={style.selection}>
+                                  <View style={styles.selectionDivHolder}>
+                                    <Text style={styles.selectionDiv}>:</Text>
+                                  </View>
+																	<View style={styles.selection}>
 																		<TouchableOpacity onPress={() => updateTime(index, "minute", "up", false)}>
-																			<AntDesign name="up" size={fsize(0.08)}/>
+																			<AntDesign name="up" size={wsize(7)}/>
 																		</TouchableOpacity>
-																		<Text style={style.selectionHeader}>{info.closetime.minute}</Text>
+																		<Text style={styles.selectionHeader}>{info.closetime.minute}</Text>
 																		<TouchableOpacity onPress={() => updateTime(index, "minute", "down", false)}>
-																			<AntDesign name="down" size={fsize(0.08)}/>
+																			<AntDesign name="down" size={wsize(7)}/>
 																		</TouchableOpacity>
 																	</View>
-																	<View style={style.selection}>
+																	<View style={styles.selection}>
 																		<TouchableOpacity onPress={() => updateTime(index, "period", "up", false)}>
-																			<AntDesign name="up" size={fsize(0.08)}/>
+																			<AntDesign name="up" size={wsize(7)}/>
 																		</TouchableOpacity>
-																		<Text style={style.selectionHeader}>{info.closetime.period}</Text>
+																		<Text style={styles.selectionHeader}>{info.closetime.period}</Text>
 																		<TouchableOpacity onPress={() => updateTime(index, "period", "down", false)}>
-																			<AntDesign name="down" size={fsize(0.08)}/>
+																			<AntDesign name="down" size={wsize(7)}/>
 																		</TouchableOpacity>
 																	</View>
 																</View>
@@ -929,32 +955,32 @@ export default function locationsetup({ navigation }) {
 						)}
 					</View>
 
-					<View style={style.actionContainer}>
-						<Text style={style.errorMsg}>{errorMsg}</Text>
+					<View style={styles.actionContainer}>
+						<Text style={styles.errorMsg}>{errorMsg}</Text>
 
-						<View style={style.actions}>
+						<View style={styles.actions}>
 							{steps.indexOf(setupType) > 0 && (
-								<TouchableOpacity style={style.action} onPress={() => {
+								<TouchableOpacity style={styles.action} onPress={() => {
 									let index = steps.indexOf(setupType)
 
 									index--
 
 									setSetuptype(steps[index])
 								}}>
-									<Text style={style.actionHeader}>Back</Text>
+									<Text style={styles.actionHeader}>Back</Text>
 								</TouchableOpacity>
 							)}
 								
-							<TouchableOpacity style={style.action} disabled={loading} onPress={() => setupType == "hours" && daysInfo.step == 1 ? setupYourLocation() : saveInfo()}>
-								<Text style={style.actionHeader}>{setupType == "" ? "Let's go" : "Next"}</Text>
+							<TouchableOpacity style={styles.action} disabled={loading} onPress={() => setupType == "hours" && daysInfo.step == 1 ? setupYourLocation() : saveInfo()}>
+								<Text style={styles.actionHeader}>{setupType == "" ? "Let's go" : "Next"}</Text>
 							</TouchableOpacity>
 						</View>
 					</View>
 				</View>
 
-				<View style={style.bottomNavs}>
-					<View style={style.bottomNavsRow}>
-						<TouchableOpacity style={style.bottomNav} onPress={() => {
+				<View style={styles.bottomNavs}>
+					<View style={styles.bottomNavsRow}>
+						<TouchableOpacity style={styles.bottomNav} onPress={() => {
 							AsyncStorage.clear()
 
 							navigation.dispatch(
@@ -964,95 +990,96 @@ export default function locationsetup({ navigation }) {
 								})
 							);
 						}}>
-							<Text style={style.bottomNavHeader}>Log-Out</Text>
+							<Text style={styles.bottomNavHeader}>Log-Out</Text>
 						</TouchableOpacity>
 					</View>
 				</View>
 			</View>
-		</View>
+		</SafeAreaView>
 	)
 }
 
-const style = StyleSheet.create({
-	locationsetup: { backgroundColor: 'white', height: '100%', paddingVertical: offsetPadding, width: '100%' },
+const styles = StyleSheet.create({
+	locationsetup: { backgroundColor: 'white', height: '100%', width: '100%' },
 	box: { alignItems: 'center', backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 	header: { flexDirection: 'column', height: '10%', justifyContent: 'space-around', width: '100%' },
-	boxHeader: { fontFamily: 'appFont', fontSize: fsize(0.06), textAlign: 'center' },
+	boxHeader: { fontFamily: 'appFont', fontSize: wsize(7), textAlign: 'center' },
 
 	inputsBox: { height: '80%', width: '100%' },
 	inputsContainer: { alignItems: 'center', height: '90%' },
 
 	introBox: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
-	introHeader: { fontSize: fsize(0.05), fontWeight: 'bold', paddingHorizontal: 30, textAlign: 'center' },
+	introHeader: { fontSize: wsize(5), fontWeight: 'bold', paddingHorizontal: 30, textAlign: 'center' },
 
-	boxMiniheader: { fontFamily: 'appFont', fontSize: fsize(0.05), fontWeight: 'bold', marginBottom: 20 },
+	boxMiniheader: { fontFamily: 'appFont', fontSize: wsize(5), fontWeight: 'bold', marginBottom: 20 },
 
 	inputContainer: { marginBottom: 50, width: '80%' },
-	inputHeader: { fontFamily: 'appFont', fontSize: fsize(0.04),  },
-	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: fsize(0.04), padding: 5, width: '100%' },
+	inputHeader: { fontFamily: 'appFont', fontSize: wsize(5),  },
+	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), padding: 5, width: '100%' },
 
 	locationContainer: { height: '100%', width: '100%' },
-	locationHeader: { fontSize: fsize(0.05), fontWeight: 'bold', marginHorizontal: 20, textAlign: 'center' },
-	locationAddressHeader: { fontSize: fsize(0.05), fontWeight: 'bold', margin: 20, textAlign: 'center' },
+	locationHeader: { fontSize: wsize(5), fontWeight: 'bold', marginHorizontal: 20, textAlign: 'center' },
+	locationAddressHeader: { fontSize: wsize(5), fontWeight: 'bold', margin: 20, textAlign: 'center' },
 	locationActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	locationAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 10, width: 100 },
-	locationActionHeader: { fontSize: fsize(0.05), textAlign: 'center' },
-	locationFetchingHeader: { color: 'grey', fontSize: fsize(0.05), textAlign: 'center' },
-	locationActionOption: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 10, width: fsize(0.6) },
-	locationActionOptionHeader: { fontSize: fsize(0.05), textAlign: 'center' },
+	locationActionHeader: { fontSize: wsize(5), textAlign: 'center' },
+	locationFetchingHeader: { color: 'grey', fontSize: wsize(5), textAlign: 'center' },
+	locationActionOption: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 10, width: wsize(50) },
+	locationActionOptionHeader: { fontSize: wsize(5), textAlign: 'center' },
 	locationInfos: { alignItems: 'center', paddingBottom: 50 },
 
 	typeContainer: { alignItems: 'center', height: '100%', width: '100%' },
-	selections: { flexDirection: 'column', height: fsize(0.80), justifyContent: 'space-between', width: '90%' },
-	
-	typeSelection: { backgroundColor: 'rgba(127, 127, 127, 0.05)', borderStyle: 'solid', borderWidth: 2, flexDirection: 'column', height: fsize(0.25), justifyContent: 'space-around', padding: 5, width: '100%' },
-	typeSelectionSelected: { backgroundColor: 'rgba(127, 127, 127, 0.8)', borderStyle: 'solid', borderWidth: 2, flexDirection: 'column', height: fsize(0.25), justifyContent: 'space-around', padding: 5, width: '100%' },
+	selections: { flexDirection: 'column', justifyContent: 'space-between', width: '90%' },
+	typeSelection: { backgroundColor: 'rgba(127, 127, 127, 0.05)', borderStyle: 'solid', borderWidth: 2, flexDirection: 'column', height: hsize(15), justifyContent: 'space-around', marginBottom: 10, padding: 5, width: '100%' },
 	typeSelectionRow: { flexDirection: 'row', justifyContent: 'space-between' },
-	typeSelectionHeader: { fontSize: fsize(0.05), fontWeight: 'bold' },
-	typeSelectionIcon: { height: fsize(0.15), width: fsize(0.15) },
-	typeSelectionAction: { fontSize: fsize(0.04), textAlign: 'center' },
+	typeSelectionHeader: { fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
+	typeSelectionIcon: { height: wsize(15), width: wsize(15) },
+	typeSelectionAction: { fontSize: wsize(5), textAlign: 'center' },
 
 	cameraContainer: { alignItems: 'center', height: '100%', width: '100%' },
 	cameraHeader: { fontFamily: 'appFont', fontWeight: 'bold', paddingVertical: 5 },
-	camera: { height: fsize(0.7), width: fsize(0.7) },
+	camera: { height: width * 0.7, width: width * 0.7 },
 	cameraActions: { flexDirection: 'row' },
-	cameraAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: fsize(0.25) },
-	cameraActionHeader: { fontSize: fsize(0.03), textAlign: 'center' },
+	cameraAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: wsize(30) },
+	cameraActionHeader: { fontSize: wsize(4), textAlign: 'center' },
 
 	days: { alignItems: 'center', width: '100%' },
 
-	// select working days
-	workingDayHeader: { fontSize: fsize(0.05) },
-	workingDayTouch: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: fsize(0.7) },
-	workingDayTouchSelected: { backgroundColor: 'rgba(0, 0, 0, 0.6)', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: fsize(0.7) },
-	workingDayTouchHeader: { fontSize: fsize(0.04), textAlign: 'center' },
+	// select opening days
+	openingDayHeader: { fontSize: wsize(5) },
+	openingDayTouch: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: '90%' },
+	openingDayTouchSelected: { backgroundColor: 'rgba(0, 0, 0, 0.6)', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: '90%' },
+	openingDayTouchHeader: { fontSize: wsize(5), textAlign: 'center' },
 
 	daysBack: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, marginBottom: 20, padding: 10 },
-	daysBackHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), textAlign: 'center' },
+	daysBackHeader: { fontFamily: 'appFont', fontSize: wsize(5), textAlign: 'center' },
 
 	// adjust working time for each day
 	day: { alignItems: 'center', backgroundColor: 'rgba(255, 255, 255, 0.8)', borderRadius: 10, marginTop: 30, padding: 5, width: '95%' },
-	dayHeader: { fontSize: fsize(0.05), fontWeight: 'bold', marginBottom: 10, marginHorizontal: 10, textAlign: 'center' },
+	dayHeader: { fontSize: wsize(5), fontWeight: 'bold', marginBottom: 10, marginHorizontal: 10, textAlign: 'center' },
 	dayAnswer: { alignItems: 'center' },
 	dayAnswerActions: { flexDirection: 'row', justifyContent: 'space-between' },
-	dayAnswerAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 10, width: fsize(0.15) },
-	dayAnswerActionHeader: { fontSize: fsize(0.04) },
+	dayAnswerAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 10, width: wsize(5) },
+	dayAnswerActionHeader: { fontSize: wsize(7) },
 	timeSelectionContainer: { flexDirection: 'row' },
 	timeSelection: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, flexDirection: 'row', marginHorizontal: 5 },
-	timeSelectionHeader: { fontSize: fsize(0.05), fontWeight: 'bold', paddingVertical: 38 },
+  timeSelectionHeaderHolder: { flexDirection: 'column', justifyContent: 'space-around' },
+	timeSelectionHeader: { fontSize: wsize(7), fontWeight: 'bold' },
 	selection: { alignItems: 'center', margin: 5 },
-	selectionHeader: { fontSize: fsize(0.05), textAlign: 'center' },
-	selectionDiv: { fontSize: fsize(0.07), marginVertical: fsize(0.07) },
-
-	errorMsg: { color: 'red', fontWeight: 'bold', textAlign: 'center' },
+	selectionHeader: { fontSize: wsize(7), textAlign: 'center' },
+  selectionDivHolder: { flexDirection: 'column', justifyContent: 'space-around' },
+	selectionDiv: { fontSize: wsize(7) },
 
 	actionContainer: { flexDirection: 'column', height: '10%', justifyContent: 'space-around' },
 	actions: { flexDirection: 'row', justifyContent: 'space-around' },
-	action: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: fsize(0.3) },
-	actionHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), textAlign: 'center' },
+	action: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: wsize(30) },
+	actionHeader: { fontFamily: 'appFont', fontSize: wsize(5), textAlign: 'center' },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'column', height: '10%', justifyContent: 'space-around', width: '100%' },
 	bottomNavsRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
 	bottomNav: { flexDirection: 'row', justifyContent: 'space-around', margin: 5 },
-	bottomNavHeader: { fontWeight: 'bold', paddingVertical: 5 },
+	bottomNavHeader: { fontSize: wsize(4), fontWeight: 'bold' },
+
+  column: { flexDirection: 'column', justifyContent: 'space-around' },
+  errorMsg: { color: 'darkred', fontSize: wsize(4), textAlign: 'center' },
 })

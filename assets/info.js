@@ -16,15 +16,15 @@ const testStores = [
 const emptyStore = { storeName: "", storeType: "", phonenumber: "", addressOne: "", addressTwo: "", city: "", province: "", postalcode: "", longitude: 0, latitude: 0 }
 
 const owners = [
-	{ id: 0, username: 'owner1', cellnumber: "(011)-011-0101", password: "password" },
-	{ id: 1, username: 'owner2', cellnumber: "(022)-022-0202", password: "password" },
-	{ id: 2, username: 'owner3', cellnumber: "(123)-123-1111", password: "password" },
-	{ id: 3, username: 'owner4', cellnumber: "(567)-567-5670", password: "password" },
-	{ id: 4, username: 'owner5', cellnumber: "(900)-000-0001", password: "password" },
-	{ id: 5, username: 'owner6', cellnumber: "(100)-000-0001", password: "password" },
-	{ id: 6, username: 'owner7', cellnumber: "(416)-770-7700", password: "password" },
-	{ id: 7, username: 'owner8', cellnumber: "(905)-000-0000", password: "password" },
-	{ id: 8, username: 'owner9', cellnumber: "(905)-000-0001", password: "password" }
+	{ id: 0, username: 'owner1', cellnumber: "(011) 011-0101", password: "password" },
+	{ id: 1, username: 'owner2', cellnumber: "(022) 022-0202", password: "password" },
+	{ id: 2, username: 'owner3', cellnumber: "(123) 123-1111", password: "password" },
+	{ id: 3, username: 'owner4', cellnumber: "(567) 567-5670", password: "password" },
+	{ id: 4, username: 'owner5', cellnumber: "(900) 000-0001", password: "password" },
+	{ id: 5, username: 'owner6', cellnumber: "(100) 000-0001", password: "password" },
+	{ id: 6, username: 'owner7', cellnumber: "(416) 770-7700", password: "password" },
+	{ id: 7, username: 'owner8', cellnumber: "(905) 000-0000", password: "password" },
+	{ id: 8, username: 'owner9', cellnumber: "(905) 000-0001", password: "password" }
 ]
 const emptyOwner = { username: "", cellnumber: "", password: "" }
 
@@ -78,8 +78,8 @@ const { accountNumber, countryCode, currency, routingNumber, accountHolderName }
 
 const login = test_input ? testStores[0] : emptyStore
 const ownerLogin = test_input ? owners[0] : emptyOwner
-const register = test_input ? testStores[0] : emptyStore
-const ownerRegister = test_input ? owners[0] : emptyOwner
+const register = test_input ? testStores[2] : emptyStore
+const ownerRegister = test_input ? owners[3] : emptyOwner
 const wifi_api_url = "http://192.168.0.172:5001/flask"
 const wifi_socket_url = "http://192.168.0.172:5002"
 const server_api_url = "https://www.easygo.tk/flask"
@@ -125,8 +125,11 @@ export const displayTime = unixtime => {
 	let timeStr = "", timeheader = "", diff
 
 	minute = minute < 10 ? '0' + minute : minute
-	period = hour > 12 ? 'pm' : 'am'
-	hour = hour > 12 ? hour - 12 : hour
+	period = hour < 12 ? 'am' : 'pm'
+	hour = hour > 12 ? 
+    hour - 12 
+    : 
+    hour == 0 ? 12 : hour
 
 	timeheader = hour + ":" + minute + " " + period
 

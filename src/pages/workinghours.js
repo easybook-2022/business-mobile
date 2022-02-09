@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { ActivityIndicator, Dimensions, ScrollView, View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { SafeAreaView, ActivityIndicator, Dimensions, ScrollView, View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
@@ -8,15 +8,15 @@ import { setOwnerHours } from '../apis/owners'
 import AntDesign from 'react-native-vector-icons/AntDesign'
 
 const { height, width } = Dimensions.get('window')
-const offsetPadding = Constants.statusBarHeight
-const screenHeight = height - (offsetPadding * 2)
+const wsize = p => {
+  return width * (p / 100)
+}
+const hsize = p => {
+  return height * (p / 100)
+}
 const daysArr = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
-const fsize = p => {
-	return width * p
-}
-
-export default function workinghours({ navigation }) {
+export default function Workinghours({ navigation }) {
 	const [type, setType] = useState('')
 
 	const [daysInfo, setDaysinfo] = useState({ working: ['', '', '', '', '', '', ''], done: false })
@@ -77,7 +77,7 @@ export default function workinghours({ navigation }) {
 			delete newOpentime.period
 			delete newClosetime.period
 
-			if (working == true) {
+			if (working == true || working == false) {
 				if (openperiod == "PM") {
 					if (openhour < 12) {
 						openhour += 12
@@ -119,8 +119,6 @@ export default function workinghours({ navigation }) {
 				newOpentime.hour = openhour
 				newClosetime.hour = closehour
 
-				hours[workerHour.header.substr(0, 3)] = { opentime: newOpentime, closetime: newClosetime, working }
-			} else if (working == false) {
 				hours[workerHour.header.substr(0, 3)] = { opentime: newOpentime, closetime: newClosetime, working }
 			} else {
 				invalid = true
@@ -223,7 +221,7 @@ export default function workinghours({ navigation }) {
 	}, [])
 
 	return (
-		<View style={[style.workinghours, { opacity: loading ? 0.5 : 1 }]}>
+		<SafeAreaView style={[style.workinghours, { opacity: loading ? 0.5 : 1 }]}>
 			{!type ? 
 				<View style={style.introBox}>
 					<Text style={style.introHeader}>The Final Step</Text>
@@ -233,7 +231,7 @@ export default function workinghours({ navigation }) {
 					</TouchableOpacity>
 				</View>
 				:
-				<ScrollView style={{ backgroundColor: '#EAEAEA', height: '90%', width: '100%' }}>
+				<ScrollView style={{ height: '90%', width: '100%' }}>
 					<View style={{ alignItems: 'center' }}>
 						<Text style={style.boxHeader}>Your time</Text>
 						<Text style={style.boxMiniheader}>Set your working days and hours</Text>
@@ -273,61 +271,67 @@ export default function workinghours({ navigation }) {
 												<View style={style.timeSelection}>
 													<View style={style.selection}>
 														<TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "up", true)}>
-															<AntDesign name="up" size={fsize(0.08)}/>
+															<AntDesign name="up" size={wsize(6)}/>
 														</TouchableOpacity>
 														<Text style={style.selectionHeader}>{info.opentime.hour}</Text>
 														<TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "down", true)}>
-															<AntDesign name="down" size={fsize(0.08)}/>
+															<AntDesign name="down" size={wsize(6)}/>
 														</TouchableOpacity>
 													</View>
-													<Text style={style.selectionDiv}>:</Text>
+													<View style={style.column}>
+                            <Text style={style.selectionDiv}>:</Text>
+                          </View>
 													<View style={style.selection}>
 														<TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "up", true)}>
-															<AntDesign name="up" size={fsize(0.08)}/>
+															<AntDesign name="up" size={wsize(6)}/>
 														</TouchableOpacity>
 														<Text style={style.selectionHeader}>{info.opentime.minute}</Text>
 														<TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "down", true)}>
-															<AntDesign name="down" size={fsize(0.08)}/>
+															<AntDesign name="down" size={wsize(6)}/>
 														</TouchableOpacity>
 													</View>
 													<View style={style.selection}>
 														<TouchableOpacity onPress={() => updateWorkingHour(index, "period", "up", true)}>
-															<AntDesign name="up" size={fsize(0.08)}/>
+															<AntDesign name="up" size={wsize(6)}/>
 														</TouchableOpacity>
 														<Text style={style.selectionHeader}>{info.opentime.period}</Text>
 														<TouchableOpacity onPress={() => updateWorkingHour(index, "period", "down", true)}>
-															<AntDesign name="down" size={fsize(0.08)}/>
+															<AntDesign name="down" size={wsize(6)}/>
 														</TouchableOpacity>
 													</View>
 												</View>
-												<Text style={style.timeSelectionHeader}>To</Text>
+                        <View style={style.column}>
+												  <Text style={style.timeSelectionHeader}>To</Text>
+                        </View>
 												<View style={style.timeSelection}>
 													<View style={style.selection}>
 														<TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "up", false)}>
-															<AntDesign name="up" size={fsize(0.08)}/>
+															<AntDesign name="up" size={wsize(6)}/>
 														</TouchableOpacity>
 														<Text style={style.selectionHeader}>{info.closetime.hour}</Text>
 														<TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "down", false)}>
-															<AntDesign name="down" size={fsize(0.08)}/>
+															<AntDesign name="down" size={wsize(6)}/>
 														</TouchableOpacity>
 													</View>
-													<Text style={style.selectionDiv}>:</Text>
+													<View style={style.column}>
+                              <Text style={style.selectionDiv}>:</Text>
+                            </View>
 													<View style={style.selection}>
 														<TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "up", false)}>
-															<AntDesign name="up" size={fsize(0.08)}/>
+															<AntDesign name="up" size={wsize(6)}/>
 														</TouchableOpacity>
 														<Text style={style.selectionHeader}>{info.closetime.minute}</Text>
 														<TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "down", false)}>
-															<AntDesign name="down" size={fsize(0.08)}/>
+															<AntDesign name="down" size={wsize(6)}/>
 														</TouchableOpacity>
 													</View>
 													<View style={style.selection}>
 														<TouchableOpacity onPress={() => updateWorkingHour(index, "period", "up", false)}>
-															<AntDesign name="up" size={fsize(0.08)}/>
+															<AntDesign name="up" size={wsize(6)}/>
 														</TouchableOpacity>
 														<Text style={style.selectionHeader}>{info.closetime.period}</Text>
 														<TouchableOpacity onPress={() => updateWorkingHour(index, "period", "down", false)}>
-															<AntDesign name="down" size={fsize(0.08)}/>
+															<AntDesign name="down" size={wsize(6)}/>
 														</TouchableOpacity>
 													</View>
 												</View>
@@ -365,51 +369,53 @@ export default function workinghours({ navigation }) {
 					</TouchableOpacity>
 				</View>
 			</View>
-		</View>
+		</SafeAreaView>
 	)
 }
 
 const style = StyleSheet.create({
-	workinghours: { backgroundColor: 'white', height: '100%', paddingVertical: offsetPadding, width: '100%' },
+	workinghours: { backgroundColor: '#EAEAEA', height: '100%', width: '100%' },
 	box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
-	boxHeader: { fontFamily: 'appFont', fontSize: fsize(0.1), paddingVertical: 30 },
-	boxMiniheader: { fontFamily: 'appFont', fontSize: fsize(0.06), marginBottom: 30, marginHorizontal: 20, textAlign: 'center' },
+	boxHeader: { fontFamily: 'appFont', fontSize: wsize(7), paddingVertical: 30 },
+	boxMiniheader: { fontFamily: 'appFont', fontSize: wsize(6), marginBottom: 30, marginHorizontal: 20, textAlign: 'center' },
 
-	introBox: { alignItems: 'center', flexDirection: 'column', height: '90%', justifyContent: 'space-around', paddingHorizontal: fsize(0.05), width: '100%' },
-	introHeader: { fontSize: fsize(0.07), textAlign: 'center' },
+	introBox: { alignItems: 'center', flexDirection: 'column', height: '90%', justifyContent: 'space-around', paddingHorizontal: 10, width: '100%' },
+	introHeader: { fontSize: wsize(6), paddingHorizontal: 10, textAlign: 'center' },
 
 	workerHours: { alignItems: 'center', width: '100%' },
 
 	// select working days
-	workerDayHeader: { fontSize: fsize(0.05) },
-	workerDayTouch: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: fsize(0.7) },
-	workerDayTouchSelected: { backgroundColor: 'rgba(0, 0, 0, 0.6)', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: fsize(0.7) },
-	workerDayTouchHeader: { fontSize: fsize(0.04), textAlign: 'center' },
+	workerDayHeader: { fontSize: wsize(6) },
+	workerDayTouch: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: '90%' },
+	workerDayTouchSelected: { backgroundColor: 'rgba(0, 0, 0, 0.6)', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: '90%' },
+	workerDayTouchHeader: { fontSize: wsize(6), textAlign: 'center' },
 
 	workerHoursBack: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, marginBottom: 20, padding: 10 },
-	workerHoursBackHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), textAlign: 'center' },
+	workerHoursBackHeader: { fontFamily: 'appFont', fontSize: wsize(6), textAlign: 'center' },
 
 	// adjust working time for each day
 	workerHour: { alignItems: 'center', backgroundColor: 'white', borderRadius: 10, marginTop: 30, padding: 5, width: '95%' },
-	workerHourHeader: { fontSize: fsize(0.05), fontWeight: 'bold', marginBottom: 10, marginHorizontal: 10, textAlign: 'center' },
+	workerHourHeader: { fontSize: wsize(6), fontWeight: 'bold', marginBottom: 10, marginHorizontal: 10, textAlign: 'center' },
 	workerHourAnswer: { alignItems: 'center' },
 	workerHourAnswerActions: { flexDirection: 'row', justifyContent: 'space-between' },
-	workerHourAnswerAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 10, width: fsize(0.15) },
-	workerHourAnswerActionHeader: { fontSize: fsize(0.04) },
+	workerHourAnswerAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 10, width: wsize(10) },
+	workerHourAnswerActionHeader: { fontSize: wsize(6) },
 	timeSelectionContainer: { flexDirection: 'row' },
 	timeSelection: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, flexDirection: 'row', marginHorizontal: 5 },
-	timeSelectionHeader: { fontSize: fsize(0.05), fontWeight: 'bold', paddingVertical: 38 },
+	timeSelectionHeader: { fontSize: wsize(7), fontWeight: 'bold' },
 	selection: { alignItems: 'center', margin: 5 },
-	selectionHeader: { fontSize: fsize(0.05), textAlign: 'center' },
-	selectionDiv: { fontSize: fsize(0.07), marginVertical: fsize(0.07) },
+	selectionHeader: { fontSize: wsize(7), textAlign: 'center' },
+	selectionDivHolder: { flexDirection: 'column', justifyContent: 'space-around' },
+  selectionDiv: { fontSize: wsize(7) },
 
-	errorMsg: { color: 'darkred', fontWeight: 'bold', textAlign: 'center' },
-
-	submit: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 30, padding: 5, width: fsize(0.3) },
-	submitHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), textAlign: 'center' },
+	submit: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 30, padding: 5 },
+	submitHeader: { fontFamily: 'appFont', fontSize: wsize(7), textAlign: 'center' },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'column', height: '10%', justifyContent: 'space-around', width: '100%' },
 	bottomNavsRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
 	bottomNav: { flexDirection: 'row', justifyContent: 'space-around', margin: 5 },
-	bottomNavHeader: { fontWeight: 'bold', paddingVertical: 5 },
+	bottomNavHeader: { fontSize: wsize(5), fontWeight: 'bold' },
+
+  column: { flexDirection: 'column', justifyContent: 'space-around' },
+  errorMsg: { color: 'darkred', fontSize: wsize(5), textAlign: 'center' },
 })

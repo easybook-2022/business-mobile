@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { ActivityIndicator, Dimensions, View, FlatList, Text, Image, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import { SafeAreaView, ActivityIndicator, Dimensions, View, FlatList, Text, Image, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { socket, logo_url } from '../../assets/info'
@@ -8,13 +8,14 @@ import { getDinersOrders, getDinersPayments } from '../apis/schedules'
 import AntDesign from 'react-native-vector-icons/AntDesign'
 
 const { height, width } = Dimensions.get('window')
-const offsetPadding = Constants.statusBarHeight
-
-const fsize = p => {
-	return width * p
+const wsize = p => {
+  return width * (p / 100)
+}
+const hsize = p => {
+  return height * (p / 100)
 }
 
-export default function dinersorders(props) {
+export default function Dinersorders(props) {
 	const { scheduleid, refetch } = props.route.params
 
 	const [ownerId, setOwnerid] = useState(null)
@@ -117,14 +118,19 @@ export default function dinersorders(props) {
 	const startWebsocket = () => {
 		socket.on("sendDiningPayment", data => {
 			const newDiners = [...diners]
+      let total = 0.00
 
 			newDiners.forEach(function (diner, index) {
 				if (diner.userId == data.userid) {
 					diner.allowpayment = true
+          diner.tip = parseFloat(data.tip)
 				}
+
+        total += parseFloat(diner.charge) + parseFloat(data.tip)
 			})
 
 			setDiners(newDiners)
+      setTotalpayment(total.toFixed(2))
 		})
 		socket.io.on("open", () => {
 			if (ownerId != null) {
@@ -151,59 +157,61 @@ export default function dinersorders(props) {
 	}, [diners.length])
 
 	return (
-		<View style={style.dinersorders}>
+		<SafeAreaView style={styles.dinersorders}>
 			{loaded ? 
-				<View style={style.box}>
-					<View style={style.header}>
-						<Text style={style.boxHeader}>({diners.length}) Diner(s) made order(s)</Text>
+				<View style={styles.box}>
+					<View style={styles.header}>
+						<Text style={styles.boxHeader}>({diners.length}) Diner(s) made order(s)</Text>
 					</View>
 
-					<View style={style.body}>
+					<View style={styles.body}>
 						<FlatList
 							data={diners}
 							renderItem={({ item, index }) => 
-								<View key={item.key} style={style.diner}>
-									<View style={style.dinerRow}>
-										<View style={style.dinerProfile}>
-											<Image source={{ uri: logo_url + item.profile }} style={{ height: fsize(0.2), width: fsize(0.2) }}/>
+								<View key={item.key} style={styles.diner}>
+									<View style={styles.dinerRow}>
+										<View style={styles.dinerProfile}>
+											<Image source={{ uri: logo_url + item.profile }} style={{ height: wsize(20), width: wsize(20) }}/>
 										</View>
-										<Text style={style.dinerHeader}>{item.username}</Text>
-										<Text style={style.dinerCharge}>
+										<Text style={styles.dinerHeader}>{item.username}</Text>
+										<Text style={styles.dinerCharge}>
 											{(item.paying || (!item.paying && !item.payed && !item.paid)) && 'Paying'}
 											{(item.payed || item.paid) && 'Paid'}
 											: 
 											$ {item.charge.toFixed(2)}
+
+                      {item.tip > 0 && '\nTipping: $' + item.tip.toFixed(2)}
 										</Text>
 
 										{(item.payed || item.paid) && <View style={{ marginRight: 10, marginTop: 18 }}><AntDesign name="checkcircleo" color="blue" size={30}/></View>}
 										{item.paying && <View style={{ marginRight: 10, marginTop: 18 }}><ActivityIndicator color="blue" size="large"/></View>}
 									</View>
-									<Text style={style.dinerStatus}>{item.allowpayment ? "Payment sent" : "Waiting for payment"}</Text>
+									<Text style={styles.dinerStatus}>{item.allowpayment ? "Payment sent" : "Waiting for payment"}</Text>
 								</View>
 							}
 						/>
 					</View>
 
-					<View style={style.footer}>
-						<Text style={style.totalHeader}>Total: $ {totalPayment}</Text>
+					<View style={styles.footer}>
+						<Text style={styles.totalHeader}>Total: $ {totalPayment}</Text>
 
-						<TouchableOpacity style={gettingPayment ? style.paymentDisabled : style.payment} disabled={gettingPayment} onPress={() => getTheDinersPayments()}>
-							<Text style={style.paymentHeader}>Receive now</Text>
+						<TouchableOpacity style={[styles.payment, { opacity: gettingPayment ? 0.3 : 1 }]} disabled={gettingPayment} onPress={() => getTheDinersPayments()}>
+							<Text style={styles.paymentHeader}>Receive now</Text>
 						</TouchableOpacity>
 					</View>
 				</View>
 				:
-				<View style={{ alignItems: 'center', flexDirection: 'column', justifyContent: 'space-around', width: '100%' }}>
-					<ActivityIndicator color="black" size="large"/>
-				</View>
+				<View style={styles.loading}>
+          <ActivityIndicator color="black" size="large"/>
+        </View>
 			}
 
 			{paymentConfirm.show && (
 				<Modal transparent={true}>
-					<View style={style.confirmBoxContainer}>
-						<View style={style.confirmBox}>
-							<View style={style.confirmContainer}>
-								<Text style={style.confirmHeader}>
+					<SafeAreaView style={styles.confirmBoxContainer}>
+						<View style={styles.confirmBox}>
+							<View style={styles.confirmContainer}>
+								<Text style={styles.confirmHeader}>
 									All diners have paid
 									{'\n\n'}
 									You have received a total payment of $ {totalPayment}
@@ -211,8 +219,8 @@ export default function dinersorders(props) {
 									Good Job
 								</Text>
 
-								<View style={style.confirmActions}>
-									<TouchableOpacity style={style.confirmAction} onPress={() => {
+								<View style={styles.confirmActions}>
+									<TouchableOpacity style={styles.confirmAction} onPress={() => {
 										socket.emit(
 											"socket/deleteReservation", 
 											{ id: scheduleid, type: "deleteReservation", receiver: paymentConfirm.receiver }, 
@@ -223,84 +231,83 @@ export default function dinersorders(props) {
 											}
 										)
 									}}>
-										<Text style={style.confirmActionHeader}>Ok</Text>
+										<Text style={styles.confirmActionHeader}>Ok</Text>
 									</TouchableOpacity>
 								</View>
 							</View>
 						</View>
-					</View>
+					</SafeAreaView>
 				</Modal>
 			)}
 			{showPaymentUnconfirmed.show && (
 				<Modal transparent={true}>
-					<View style={style.confirmBoxContainer}>
-						<View style={style.confirmBox}>
-							<View style={style.confirmContainer}>
-								<Text style={style.confirmHeader}>
+					<SafeAreaView style={styles.confirmBoxContainer}>
+						<View style={styles.confirmBox}>
+							<View style={styles.confirmContainer}>
+								<Text style={styles.confirmHeader}>
 									{showPaymentUnconfirmed.username} hasn't sent his/her payment yet.
 									{'\n\n'}
 									Please tell him/her to send the payment in their notification
 								</Text>
 
-								<View style={style.confirmActions}>
-									<TouchableOpacity style={style.confirmAction} onPress={() => setShowpaymentunconfirmed({ show: false, username: "" })}>
-										<Text style={style.confirmActionHeader}>Ok</Text>
+								<View style={styles.confirmActions}>
+									<TouchableOpacity style={styles.confirmAction} onPress={() => setShowpaymentunconfirmed({ show: false, username: "" })}>
+										<Text style={styles.confirmActionHeader}>Ok</Text>
 									</TouchableOpacity>
 								</View>
 							</View>
 						</View>
-					</View>
+					</SafeAreaView>
 				</Modal>
 			)}
 			{showDisabledScreen && (
 				<Modal transparent={true}>
-					<View style={style.disabled}>
-						<View style={style.disabledContainer}>
-							<Text style={style.disabledHeader}>
+					<SafeAreaView style={styles.disabled}>
+						<View style={styles.disabledContainer}>
+							<Text style={styles.disabledHeader}>
 								There is an update to the app{'\n\n'}
 								Please wait a moment{'\n\n'}
 								or tap 'Close'
 							</Text>
 
-							<TouchableOpacity style={style.disabledClose} onPress={() => socket.emit("socket/business/login", ownerId, () => setShowdisabledscreen(false))}>
-								<Text style={style.disabledCloseHeader}>Close</Text>
+							<TouchableOpacity style={styles.disabledClose} onPress={() => socket.emit("socket/business/login", ownerId, () => setShowdisabledscreen(false))}>
+								<Text style={styles.disabledCloseHeader}>Close</Text>
 							</TouchableOpacity>
 
 							<ActivityIndicator size="large"/>
 						</View>
-					</View>
+					</SafeAreaView>
 				</Modal>
 			)}
-		</View>
+		</SafeAreaView>
 	)
 }
 
-const style = StyleSheet.create({
-	dinersorders: { backgroundColor: 'white', height: '100%', paddingBottom: offsetPadding, width: '100%' },
+const styles = StyleSheet.create({
+	dinersorders: { backgroundColor: 'white', height: '100%', width: '100%' },
 	box: { backgroundColor: '#EAEAEA', height: '100%', width: '100%' },
 
 	header: { flexDirection: 'column', height: '10%', justifyContent: 'space-around', width: '100%' },
-	boxHeader: { fontSize: fsize(0.05), fontWeight: 'bold', textAlign: 'center' },
+	boxHeader: { fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
 
 	body: { alignItems: 'center', height: '80%' },
 
 	diner: { backgroundColor: 'white', marginBottom: 5, marginHorizontal: 5 },
 	dinerRow: { flexDirection: 'row', justifyContent: 'space-between', padding: 5, width: width - 10 },
-	dinerProfile: { borderRadius: fsize(0.2) / 2, height: fsize(0.2), overflow: 'hidden', width: fsize(0.2) },
-	dinerHeader: { fontSize: fsize(0.04), fontWeight: 'bold', marginVertical: 25 },
-	dinerCharge: { fontSize: fsize(0.04), marginVertical: 25 },
-	dinerStatus: { fontWeight: '100', marginBottom: 20, textAlign: 'center' },
+	dinerProfile: { borderRadius: wsize(20) / 2, height: wsize(20), overflow: 'hidden', width: wsize(20) },
+	dinerHeader: { fontSize: wsize(4), fontWeight: 'bold', marginVertical: 25 },
+	dinerCharge: { fontSize: wsize(4), marginVertical: 25 },
+	dinerStatus: { fontSize: wsize(5), fontWeight: '100', marginBottom: 20, textAlign: 'center' },
 
 	footer: { alignItems: 'center', flexDirection: 'column', height: '10%', justifyContent: 'space-around', width: '100%' },
-	totalHeader: { fontWeight: 'bold', textAlign: 'center' },
-	payment: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 10, padding: 5, width: 150 },
-	paymentDisabled: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 10, opacity: 0.3, padding: 5, width: 150 },
-	paymentHeader: { textAlign: 'center' },
+	totalHeader: { fontSize: wsize(4), fontWeight: 'bold', textAlign: 'center' },
+	payment: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 10, padding: 5, width: wsize(30) },
+	paymentHeader: { fontSize: wsize(4), textAlign: 'center' },
 
 	confirmBoxContainer: { backgroundColor: 'rgba(0, 0, 0, 0.7)' },
-	confirmBox: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', paddingVertical: offsetPadding, width: '100%' },
+	confirmBox: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	confirmContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },
-	confirmHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
+	confirmHeader: { fontFamily: 'appFont', fontSize: wsize(5), fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
 	confirmActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	confirmAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
 	confirmActionHeader: { },
@@ -309,5 +316,7 @@ const style = StyleSheet.create({
 	disabledContainer: { alignItems: 'center', width: '100%' },
 	disabledHeader: { color: 'white', fontWeight: 'bold', textAlign: 'center' },
 	disabledClose: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 50, padding: 10 },
-	disabledCloseHeader: {  }
+	disabledCloseHeader: {  },
+
+  loading: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 })

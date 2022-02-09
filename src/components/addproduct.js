@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react'
-import { ActivityIndicator, Dimensions, ScrollView, View, Text, TextInput, Image, Keyboard, TouchableOpacity, TouchableWithoutFeedback, StyleSheet } from 'react-native'
+import { SafeAreaView, ActivityIndicator, Dimensions, ScrollView, View, Text, TextInput, Image, Keyboard, TouchableOpacity, TouchableWithoutFeedback, StyleSheet } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
@@ -15,15 +15,15 @@ import AntDesign from 'react-native-vector-icons/AntDesign'
 import Entypo from 'react-native-vector-icons/Entypo'
 
 const { height, width } = Dimensions.get('window')
-const offsetPadding = Constants.statusBarHeight
-
+const wsize = p => {
+  return width * (p / 100)
+}
+const hsize = p => {
+  return height * (p / 100)
+}
 const steps = ['name', 'info', 'photo', 'options', 'others', 'sizes']
 
-const fsize = p => {
-	return width * p
-}
-
-export default function addproduct(props) {
+export default function Addproduct(props) {
 	const params = props.route.params
 	const { parentMenuid, productid, refetch } = params
 	
@@ -330,7 +330,6 @@ export default function addproduct(props) {
 
 		setLoading(false)
 	}
-
 	const snapPhoto = async() => {
 		let letters = [
 			"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", 
@@ -424,7 +423,6 @@ export default function addproduct(props) {
         	setPickingpermission(status === 'granted')
         }
 	}
-
 	const getTheProductInfo = async() => {
 		getProductInfo(productid)
 			.then((res) => {
@@ -493,7 +491,7 @@ export default function addproduct(props) {
 	}, [])
 
 	return (
-		<View style={[style.addproduct, { opacity: loading ? 0.5 : 1 }]}>
+		<SafeAreaView style={[style.addproduct, { opacity: loading ? 0.5 : 1 }]}>
 			<TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
 				{loaded ? 
 					<View style={style.box}>
@@ -762,7 +760,7 @@ export default function addproduct(props) {
 										<Text style={style.addOptionHeader}>Add Size</Text>
 									</TouchableOpacity>
 
-									<Text style={{ fontSize: fsize(0.06), fontWeight: 'bold' }}>or</Text>
+									<Text style={{ fontSize: wsize(6), fontWeight: 'bold' }}>or</Text>
 
 									<View style={style.priceBox}>
 										<Text style={style.priceHeader}>Enter product (one) price</Text>
@@ -814,66 +812,67 @@ export default function addproduct(props) {
 						</View>
 					</View>
 					:
-					<View style={{ alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' }}>
-						<ActivityIndicator size="large"/>
+					<View style={styles.loading}>
+						<ActivityIndicator color="black" size="large"/>
 					</View>
 				}
 			</TouchableWithoutFeedback>
-		</View>
+		</SafeAreaView>
 	)
 }
 
 const style = StyleSheet.create({
-	addproduct: { height: '100%', paddingBottom: offsetPadding, width: '100%' },
+	addproduct: { height: '100%', width: '100%' },
 	box: { alignItems: 'center', paddingTop: 10, width: '100%' },
 	inputContainer: { alignItems: 'center', width: '100%' },
-	addHeader: { fontSize: fsize(0.05), fontWeight: 'bold', paddingVertical: 5, textAlign: 'center' },
-	addInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, fontSize: fsize(0.05), padding: 10, width: '90%' },
-	infoInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, fontSize: fsize(0.05), height: 100, marginVertical: 5, padding: 10, width: '90%' },
+	addHeader: { fontSize: wsize(5), fontWeight: 'bold', paddingVertical: 5, textAlign: 'center' },
+	addInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, fontSize: wsize(5), padding: 10, width: '90%' },
+	infoInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, fontSize: wsize(5), height: 100, marginVertical: 5, padding: 10, width: '90%' },
 	
 	cameraContainer: { alignItems: 'center', width: '100%' },
-	cameraHeader: { fontSize: fsize(0.05), fontWeight: 'bold', paddingVertical: 5 },
-	camera: { height: fsize(0.7), width: fsize(0.7) },
+	cameraHeader: { fontSize: wsize(5), fontWeight: 'bold', paddingVertical: 5 },
+	camera: { height: wsize(70), width: wsize(70) },
 	cameraActions: { flexDirection: 'row' },
-	cameraAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginBottom: 50, margin: 5, padding: 5, width: fsize(0.3) },
-	cameraActionHeader: { fontSize: fsize(0.03), textAlign: 'center' },
+	cameraAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginBottom: 50, margin: 5, padding: 5, width: wsize(30) },
+	cameraActionHeader: { fontSize: wsize(3), textAlign: 'center' },
 
 	addOption: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 10 },
-	addOptionHeader: { fontSize: fsize(0.06) },
+	addOptionHeader: { fontSize: wsize(6) },
 
 	options: { marginBottom: 10, width: '95%' },
 	option: { flexDirection: 'row', justifyContent: 'space-between' },
 	optionRemove: { alignItems: 'center', borderRadius: 27.5, borderStyle: 'solid', borderWidth: 2, paddingHorizontal: 8 },
-	optionInput: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: fsize(0.05), padding: 3, width: '50%' }, 
+	optionInput: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), padding: 3, width: '50%' }, 
 	optionTypesBox: { alignItems: 'center' },
-	optionTypesHeader: { fontSize: fsize(0.04), fontWeight: 'bold' },
+	optionTypesHeader: { fontSize: wsize(4), fontWeight: 'bold' },
 	optionTypes: { flexDirection: 'row' },
 	optionType: { alignItems: 'center', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 2, padding: 8 },
 	optionTypeSelected: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.4)', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 2, padding: 8 },
 
 	other: { flexDirection: 'row', justifyContent: 'space-between' },
 	otherRemove: { alignItems: 'center', borderRadius: 27.5, borderStyle: 'solid', borderWidth: 2, height: 45, marginTop: 30, width: 45 },
-	otherInput: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: fsize(0.05), height: 50, marginTop: 30, padding: 3, width: '50%' }, 
-	otherPrice: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: fsize(0.05), height: 50, marginTop: 30, padding: 3, width: 80 }, 
+	otherInput: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), height: 50, marginTop: 30, padding: 3, width: '50%' }, 
+	otherPrice: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), height: 50, marginTop: 30, padding: 3, width: 80 }, 
 
 	size: { alignItems: 'center' },
 	sizeRemove: { alignItems: 'center', borderRadius: 27.5, borderStyle: 'solid', borderWidth: 2, height: 45, marginTop: 30, width: 45 },
 	sizeTypesBox: { alignItems: 'center' },
-	sizeTypesHeader: { fontSize: fsize(0.05), fontWeight: 'bold', margin: 5 },
+	sizeTypesHeader: { fontSize: wsize(5), fontWeight: 'bold', margin: 5 },
 	sizeTypes: { flexDirection: 'row' },
 	sizeType: { alignItems: 'center', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, margin: 2, padding: 10 },
 	sizeTypeSelected: { alignItems: 'center', backgroundColor: 'black', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, margin: 2, padding: 10 },
-	sizeTypeHeader: { fontSize: fsize(0.04) },
-	sizeTypeHeaderSelected: { color: 'white', fontSize: fsize(0.04) },
-	sizeInput: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: fsize(0.09), height: 50, padding: 3, textAlign: 'center', width: 150 }, 
+	sizeTypeHeader: { fontSize: wsize(4) },
+	sizeTypeHeaderSelected: { color: 'white', fontSize: wsize(4) },
+	sizeInput: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(9), height: 50, padding: 3, textAlign: 'center', width: 150 }, 
 	
 	priceBox: { alignItems: 'center', marginBottom: 30 },
-	priceHeader: { fontSize: fsize(0.06), fontWeight: 'bold', padding: 5 },
-	priceInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: fsize(0.09), padding: 5, textAlign: 'center', width: 150 },
-	
-	errorMsg: { color: 'red', fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
+	priceHeader: { fontSize: wsize(6), fontWeight: 'bold', padding: 5 },
+	priceInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(9), padding: 5, textAlign: 'center', width: 150 },
 	
 	addActions: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
-	addAction: { alignItems: 'center', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: fsize(0.06), padding: 5, width: 100 },
-	addActionHeader: { fontSize: fsize(0.05) },
+	addAction: { alignItems: 'center', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(6), padding: 5, width: wsize(30) },
+	addActionHeader: { fontSize: wsize(5) },
+
+  loading: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
+  errorMsg: { color: 'darkred', fontSize: wsize(4), textAlign: 'center' },
 })

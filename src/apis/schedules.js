@@ -37,9 +37,13 @@ export const acceptRequest = data => {
 	)
 }
 
-export const cancelRequest = data => {
+export const closeSchedule = id => {
+  return axios.get(`${url}/schedules/close_schedule/${id}`)
+}
+
+export const cancelSchedule = data => {
 	return axios.post(
-		`${url}/schedules/cancel_request`,
+		`${url}/schedules/cancel_schedule`,
 		data
 	)
 }
@@ -93,19 +97,18 @@ export const seeUserOrders = data => {
 	)
 }
 
-export const deliverRound = data => {
+export const serveRound = data => {
 	return axios.post(
-		`${url}/schedules/deliver_round`,
+		`${url}/schedules/serve_round`,
 		data
 	)
 }
 
-export const cancelReservation = id => {
-	return axios.get(`${url}/schedules/cancel_reservation/${id}`)
-}
-
-export const cancelAppointment = id => {
-	return axios.get(`${url}/schedules/cancel_appointment/${id}`)
+export const setOrderPrice = data => {
+  return axios.post(
+    `${url}/schedules/set_order_price`,
+    data
+  )
 }
 
 export const requestPayment = data => {

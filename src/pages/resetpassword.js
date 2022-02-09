@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Dimensions, View, ImageBackground, Text, TextInput, Image, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet } from 'react-native';
+import { SafeAreaView, Dimensions, View, ImageBackground, Text, TextInput, Image, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
@@ -7,12 +7,14 @@ import { resetPassword } from '../apis/owners'
 import { userInfo } from '../../assets/info'
 
 const { height, width } = Dimensions.get('window')
-
-const fsize = p => {
-	return width * p
+const wsize = p => {
+  return width * (p / 100)
+}
+const hsize = p => {
+  return height * (p / 100)
 }
 
-export default function resetpassword(props) {
+export default function Resetpassword(props) {
 	const offsetPadding = Constants.statusBarHeight
 	const screenHeight = height - (offsetPadding * 2)
 	const { cellnumber } = props.route.params
@@ -59,7 +61,7 @@ export default function resetpassword(props) {
 	}
 
 	return (
-		<View style={style.resetpassword}>
+		<SafeAreaView style={style.resetpassword}>
 			<TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
 				<View style={style.box}>
 					<View style={style.inputsBox}>
@@ -94,7 +96,7 @@ export default function resetpassword(props) {
 					</View>
 				</View>
 			</TouchableWithoutFeedback>
-		</View>
+		</SafeAreaView>
 	);
 }
 
@@ -105,13 +107,15 @@ const style = StyleSheet.create({
 	
 	inputsBox: { alignItems: 'center', backgroundColor: 'rgba(2, 136, 255, 0.1)', paddingHorizontal: 20, width: '80%' },
 	inputContainer: { marginVertical: 5 },
-	inputHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), fontWeight: 'bold' },
-	input: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: fsize(0.05), padding: 10, width: width - 100 },
-	errorMsg: { color: 'red', fontWeight: 'bold', marginVertical: 20, textAlign: 'center' },
+	inputHeader: { fontFamily: 'appFont', fontSize: wsize(5), fontWeight: 'bold' },
+	input: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), padding: 10, width: width - 100 },
+	
 	submit: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontFamily: 'appFont', marginVertical: 40, padding: 10, width: 100 },
 	submitHeader: { fontWeight: 'bold', textAlign: 'center' },
 	
 	options: {  },
 	option: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, marginVertical: 10, padding: 5 },
-	optionHeader: {  },
+	optionHeader: { fontSize: wsize(4) },
+
+  errorMsg: { color: 'darkred', fontSize: wsize(4), textAlign: 'center' },
 })

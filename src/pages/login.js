@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios'
 import { 
-	Dimensions, View, ImageBackground, Text, TextInput, Image, 
+	SafeAreaView, Dimensions, View, ImageBackground, Text, TextInput, Image, 
 	TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -11,14 +11,14 @@ import { loginUser } from '../apis/owners'
 import { loginInfo } from '../../assets/info'
 
 const { height, width } = Dimensions.get('window')
-const offsetPadding = Constants.statusBarHeight
-const screenHeight = height - (offsetPadding * 2)
-
-const fsize = p => {
-	return width * p
+const wsize = p => {
+  return width * (p / 100)
+}
+const hsize = p => {
+  return height * (p / 100)
 }
 
-export default function login({ navigation }) {
+export default function Login({ navigation }) {
 	const [phonenumber, setPhonenumber] = useState(loginInfo.cellnumber)
 	const [password, setPassword] = useState(loginInfo.password)
 	const [errorMsg, setErrormsg] = useState('')
@@ -61,7 +61,7 @@ export default function login({ navigation }) {
 	}
 
 	return (
-		<View style={style.login}>
+		<SafeAreaView style={style.login}>
 			<TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
 				<View style={style.box}>
 					<View style={style.background}>
@@ -79,7 +79,9 @@ export default function login({ navigation }) {
 										setPhonenumber("(" + phonenumber + ") " + newValue)
 									} else if (phonenumber.length == 9) {
 										setPhonenumber(phonenumber + "-" + newValue)
-									} else if (phonenumber.length == 14) {
+									} else if (phonenumber.length == 13) {
+										setPhonenumber(phonenumber + newValue)
+
 										Keyboard.dismiss()
 									} else {
 										setPhonenumber(phonenumber + newValue)
@@ -107,24 +109,25 @@ export default function login({ navigation }) {
 					</TouchableOpacity>
 				</View>
 			</TouchableWithoutFeedback>
-		</View>
+		</SafeAreaView>
 	);
 }
 
 const style = StyleSheet.create({
 	login: { backgroundColor: 'white', height: '100%', width: '100%' },
-	box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-between', paddingVertical: offsetPadding, width: '100%' },
-	background: { alignItems: 'center', flexDirection: 'column', height: screenHeight, justifyContent: 'space-around', position: 'absolute', top: 0, width: width },
+	box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
+	background: { alignItems: 'center', flexDirection: 'column', height, justifyContent: 'space-around', position: 'absolute', top: 0, width: width },
 	
 	inputsBox: { alignItems: 'center', width: '80%' },
 	inputContainer: { marginBottom: 30, width: '100%' },
-	inputHeader: { fontFamily: 'appFont', fontSize: fsize(0.07) },
-	input: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: fsize(0.07), padding: 5, width: '100%' },
-	errorMsg: { color: 'darkred', fontSize: fsize(0.05), fontWeight: 'bold', textAlign: 'center' },
+	inputHeader: { fontFamily: 'appFont', fontSize: wsize(7) },
+	input: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(7), padding: 5, width: '100%' },
 
-	submit: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontFamily: 'appFont', padding: 10, width: fsize(0.3) },
-	submitHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), fontWeight: 'bold', textAlign: 'center' },
+	submit: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontFamily: 'appFont', padding: 10, width: wsize(30) },
+	submitHeader: { fontFamily: 'appFont', fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
 	
 	option: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, marginVertical: 10, padding: 5 },
-	optionHeader: { fontSize: fsize(0.04), fontWeight: 'bold' },
+	optionHeader: { fontSize: wsize(4), fontWeight: 'bold' },
+
+  errorMsg: { color: 'darkred', fontSize: wsize(4), textAlign: 'center' }
 })

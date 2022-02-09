@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react'
-import { ActivityIndicator, Dimensions, ScrollView, View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import { SafeAreaView, ActivityIndicator, Dimensions, ScrollView, View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { getServiceInfo } from '../apis/services'
@@ -11,559 +11,589 @@ import AntDesign from 'react-native-vector-icons/AntDesign'
 import Entypo from 'react-native-vector-icons/Entypo'
 
 const { height, width } = Dimensions.get('window')
-const offsetPadding = Constants.statusBarHeight
-
-const fsize = p => {
-	return width * p
+const wsize = p => {
+  return width * (p / 100)
+}
+const hsize = p => {
+  return height * (p / 100)
 }
 
-export default function booktime(props) {
-	const months = ['January', 'February', 'March', 'April', 'May', 'Jun', 'July', 'August', 'September', 'October', 'November', 'December']
-	const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-	const pushtime = 1000 * (60 * 10)
+export default function Booktime(props) {
+  const { appointmentid, refetch } = props.route.params
 
-	const { appointmentid, refetch } = props.route.params
+  const months = ['January', 'February', 'March', 'April', 'May', 'Jun', 'July', 'August', 'September', 'October', 'November', 'December']
+  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+  const pushtime = 1000 * (60 * 10)
 
-	const [ownerId, setOwnerid] = useState(null)
-	const [name, setName] = useState('')
-	const [serviceId, setServiceid] = useState(0)
+  const [ownerId, setOwnerid] = useState(null)
+  const [name, setName] = useState('')
+  const [serviceId, setServiceid] = useState(0)
 
-	const [openTime, setOpentime] = useState({ hour: 0, minute: 0 })
-	const [closeTime, setClosetime] = useState({ hour: 0, minute: 0 })
-	const [selectedDateInfo, setSelecteddateinfo] = useState({ month: '', year: 0, day: '', date: 0, time: 0 })
-	const [calendar, setCalendar] = useState({ firstDay: 0, numDays: 30, data: [
-		{ key: "day-row-0", row: [
-	    	{ key: "day-0-0", num: 0, passed: false }, { key: "day-0-1", num: 0, passed: false }, { key: "day-0-2", num: 0, passed: false }, 
-	    	{ key: "day-0-3", num: 0, passed: false }, { key: "day-0-4", num: 0, passed: false }, { key: "day-0-5", num: 0, passed: false }, 
-	    	{ key: "day-0-6", num: 0, passed: false }
-    	]}, 
-  		{ key: "day-row-1", row: [
-	    	{ key: "day-1-0", num: 0, passed: false }, { key: "day-1-1", num: 0, passed: false }, { key: "day-1-2", num: 0, passed: false }, 
-	    	{ key: "day-1-3", num: 0, passed: false }, { key: "day-1-4", num: 0, passed: false }, { key: "day-1-5", num: 0, passed: false }, 
-	    	{ key: "day-1-6", num: 0, passed: false }
-    	]}, 
-    	{ key: "day-row-2", row: [
-	    	{ key: "day-2-0", num: 0, passed: false }, { key: "day-2-1", num: 0, passed: false }, { key: "day-2-2", num: 0, passed: false }, 
-	    	{ key: "day-2-3", num: 0, passed: false }, { key: "day-2-4", num: 0, passed: false }, { key: "day-2-5", num: 0, passed: false }, 
-	    	{ key: "day-2-6", num: 0, passed: false }
-    	]}, 
-	  	{ key: "day-row-3", row: [
-	    	{ key: "day-3-0", num: 0, passed: false }, { key: "day-3-1", num: 0, passed: false }, { key: "day-3-2", num: 0, passed: false }, 
-	    	{ key: "day-3-3", num: 0, passed: false }, { key: "day-3-4", num: 0, passed: false }, { key: "day-3-5", num: 0, passed: false }, 
-	    	{ key: "day-3-6", num: 0, passed: false }
-	    ]}, 
-	    { key: "day-row-4", row: [
-	    	{ key: "day-4-0", num: 0, passed: false }, { key: "day-4-1", num: 0, passed: false }, { key: "day-4-2", num: 0, passed: false }, 
-	    	{ key: "day-4-3", num: 0, passed: false }, { key: "day-4-4", num: 0, passed: false }, { key: "day-4-5", num: 0, passed: false }, 
-	    	{ key: "day-4-6", num: 0, passed: false }
-	    ]}, 
-	    { key: "day-row-5", row: [
-	    	{ key: "day-5-0", num: 0, passed: false }, { key: "day-5-1", num: 0, passed: false }, { key: "day-5-2", num: 0, passed: false }, 
-	    	{ key: "day-5-3", num: 0, passed: false }, { key: "day-5-4", num: 0, passed: false }, { key: "day-5-5", num: 0, passed: false }, 
-	    	{ key: "day-5-6", num: 0, passed: false }
-	    ]}
-	]})
-	const [times, setTimes] = useState([])
-	const [scheduledTimes, setScheduledtimes] = useState([])
-	const [loaded, setLoaded] = useState(false)
+  const [openTime, setOpentime] = useState({ hour: 0, minute: 0 })
+  const [closeTime, setClosetime] = useState({ hour: 0, minute: 0 })
+  const [selectedDateinfo, setSelecteddateinfo] = useState({ month: '', year: 0, day: '', date: 0, time: 0 })
+  const [calendar, setCalendar] = useState({ firstDay: 0, numDays: 30, data: [
+    { key: "day-row-0", row: [
+        { key: "day-0-0", num: 0, passed: false }, { key: "day-0-1", num: 0, passed: false }, { key: "day-0-2", num: 0, passed: false }, 
+        { key: "day-0-3", num: 0, passed: false }, { key: "day-0-4", num: 0, passed: false }, { key: "day-0-5", num: 0, passed: false }, 
+        { key: "day-0-6", num: 0, passed: false }
+      ]}, 
+      { key: "day-row-1", row: [
+        { key: "day-1-0", num: 0, passed: false }, { key: "day-1-1", num: 0, passed: false }, { key: "day-1-2", num: 0, passed: false }, 
+        { key: "day-1-3", num: 0, passed: false }, { key: "day-1-4", num: 0, passed: false }, { key: "day-1-5", num: 0, passed: false }, 
+        { key: "day-1-6", num: 0, passed: false }
+      ]}, 
+      { key: "day-row-2", row: [
+        { key: "day-2-0", num: 0, passed: false }, { key: "day-2-1", num: 0, passed: false }, { key: "day-2-2", num: 0, passed: false }, 
+        { key: "day-2-3", num: 0, passed: false }, { key: "day-2-4", num: 0, passed: false }, { key: "day-2-5", num: 0, passed: false }, 
+        { key: "day-2-6", num: 0, passed: false }
+      ]}, 
+      { key: "day-row-3", row: [
+        { key: "day-3-0", num: 0, passed: false }, { key: "day-3-1", num: 0, passed: false }, { key: "day-3-2", num: 0, passed: false }, 
+        { key: "day-3-3", num: 0, passed: false }, { key: "day-3-4", num: 0, passed: false }, { key: "day-3-5", num: 0, passed: false }, 
+        { key: "day-3-6", num: 0, passed: false }
+      ]}, 
+      { key: "day-row-4", row: [
+        { key: "day-4-0", num: 0, passed: false }, { key: "day-4-1", num: 0, passed: false }, { key: "day-4-2", num: 0, passed: false }, 
+        { key: "day-4-3", num: 0, passed: false }, { key: "day-4-4", num: 0, passed: false }, { key: "day-4-5", num: 0, passed: false }, 
+        { key: "day-4-6", num: 0, passed: false }
+      ]}, 
+      { key: "day-row-5", row: [
+        { key: "day-5-0", num: 0, passed: false }, { key: "day-5-1", num: 0, passed: false }, { key: "day-5-2", num: 0, passed: false }, 
+        { key: "day-5-3", num: 0, passed: false }, { key: "day-5-4", num: 0, passed: false }, { key: "day-5-5", num: 0, passed: false }, 
+        { key: "day-5-6", num: 0, passed: false }
+      ]}
+  ]})
+  const [times, setTimes] = useState([])
+  const [scheduledTimes, setScheduledtimes] = useState([])
+  const [loaded, setLoaded] = useState(false)
 
-	const [confirm, setConfirm] = useState({ show: false, timeheader: "", requested: false })
+  const [confirm, setConfirm] = useState({ show: false, timeheader: "", loading: false, requested: false })
 
-	const isMounted = useRef(null)
-	
-	const getTheAppointmentInfo = async() => {
-		const ownerid = await AsyncStorage.getItem("ownerid")
+  const isMounted = useRef(null)
+  
+  const getTheAppointmentInfo = async() => {
+    const ownerid = await AsyncStorage.getItem("ownerid")
 
-		getAppointmentInfo(appointmentid)
-			.then((res) => {
-				if (res.status == 200) {
-					return res.data
-				}
-			})
-			.then((res) => {
-				if (res && isMounted.current == true) {
-					const { locationId, name } = res.appointmentInfo
+    getAppointmentInfo(appointmentid)
+      .then((res) => {
+        if (res.status == 200) {
+          return res.data
+        }
+      })
+      .then((res) => {
+        if (res && isMounted.current == true) {
+          const { locationId, name, time } = res.appointmentInfo
 
-					setOwnerid(ownerid)
-					setName(name)
-					getTheLocationHours(locationId)
-				}
-			})
-			.catch((err) => {
-				if (err.response && err.response.status == 400) {
+          setOwnerid(ownerid)
+          setName(name)
+          getTheLocationHours(locationId, time)
+        }
+      })
+      .catch((err) => {
+        if (err.response && err.response.status == 400) {
 
-				} else {
-					alert("an error has occurred in server")
-				}
-			})
-	}
-	const getTheLocationHours = async(locationid) => {
-		const day = new Date(Date.now()).toString().split(" ")[0]
-		const data = { locationid, day }
+        } else {
+          alert("an error has occurred in server")
+        }
+      })
+  }
+  const getTheLocationHours = async(locationid, time) => {
+    const day = new Date(Date.now()).toString().split(" ")[0]
+    const data = { locationid, day }
 
-		getLocationHours(data)
-			.then((res) => {
-				if (res.status == 200) {
-					return res.data
-				}
-			})
-			.then((res) => {
-				if (res) {
-					const { openTime, closeTime, scheduled } = res
+    getLocationHours(data)
+      .then((res) => {
+        if (res.status == 200) {
+          return res.data
+        }
+      })
+      .then((res) => {
+        if (res) {
+          const { openTime, closeTime, scheduled } = res
 
-					let openHour = openTime.hour, openMinute = openTime.minute, openPeriod = openTime.period
-					let closeHour = closeTime.hour, closeMinute = closeTime.minute, closePeriod = closeTime.period
+          let openHour = openTime.hour, openMinute = openTime.minute, openPeriod = openTime.period
+          let closeHour = closeTime.hour, closeMinute = closeTime.minute, closePeriod = closeTime.period
 
-					const currTime = new Date(Date.now())
-					const currDay = days[currTime.getDay()]
-					const currDate = currTime.getDate()
-					const currMonth = months[currTime.getMonth()]
+          let currTime = new Date(Date.now())
+          let currDay = days[currTime.getDay()]
+          let currDate = currTime.getDate()
+          let currMonth = months[currTime.getMonth()]
 
-					let openStr = currDay + " " + currMonth + " " + currTime.getDate() + " " + currTime.getFullYear() + " " + openHour + ":" + openMinute
-					let closeStr = currDay + " " + currMonth + " " + currTime.getDate() + " " + currTime.getFullYear() + " " + closeHour + ":" + closeMinute
-					let openDateStr = Date.parse(openStr), closeDateStr = Date.parse(closeStr)
-					let newTimes = [], currenttime = Date.now(), currDateStr = openDateStr
-					let firstDay = (new Date(currTime.getFullYear(), currTime.getMonth())).getDay()
-					let numDays = 32 - new Date(currTime.getFullYear(), currTime.getMonth(), 32).getDate()
-					let daynum = 1, data = calendar.data, datetime = 0, datenow = Date.parse(currDay + " " + currMonth + " " + currTime.getDate() + " " + currTime.getFullYear())
+          let selectedTime = time > 0 && time > Date.now() ? new Date(time) : null
+          let selectedDay = null, selectedDate = null, selectedMonth = null
 
-					data.forEach(function (info, rowindex) {
-						info.row.forEach(function (day, dayindex) {
-							day.num = 0
+          if (selectedTime) {
+            selectedDay = days[selectedTime.getDay()]
+            selectedDate = selectedTime.getDate()
+            selectedMonth = months[selectedTime.getMonth()]
+          }
 
-							if (rowindex == 0) {
-								if (dayindex >= firstDay) {
-									datetime = Date.parse(days[dayindex] + " " + currMonth + " " + daynum + " " + currTime.getFullYear())
+          let openStr = currDay + " " + currMonth + " " + currTime.getDate() + " " + currTime.getFullYear() + " " + openHour + ":" + openMinute
+          let closeStr = currDay + " " + currMonth + " " + currTime.getDate() + " " + currTime.getFullYear() + " " + closeHour + ":" + closeMinute
+          let openDateStr = Date.parse(openStr), closeDateStr = Date.parse(closeStr)
+          let newTimes = [], currenttime = Date.now(), currDateStr = openDateStr
+          let firstDay = (new Date(currTime.getFullYear(), currTime.getMonth())).getDay()
+          let numDays = 32 - new Date(currTime.getFullYear(), currTime.getMonth(), 32).getDate()
+          let daynum = 1, data = calendar.data, datetime = 0, datenow = Date.parse(currDay + " " + currMonth + " " + currTime.getDate() + " " + currTime.getFullYear())
 
-									day.passed = datenow > datetime
-									day.num = daynum
-									daynum++
-								}
-							} else if (daynum <= numDays) {
-								datetime = Date.parse(days[dayindex] + " " + currMonth + " " + daynum + " " + currTime.getFullYear())
+          data.forEach(function (info, rowindex) {
+            info.row.forEach(function (day, dayindex) {
+              day.num = 0
 
-								day.passed = datenow > datetime
-								day.num = daynum
-								daynum++
-							}
-						})
-					})
+              if (rowindex == 0) {
+                if (dayindex >= firstDay) {
+                  datetime = Date.parse(days[dayindex] + " " + currMonth + " " + daynum + " " + currTime.getFullYear())
 
-					while (currDateStr < (closeDateStr - pushtime)) {
-						currDateStr += pushtime
+                  day.passed = datenow > datetime
+                  day.num = daynum
+                  daynum++
+                }
+              } else if (daynum <= numDays) {
+                datetime = Date.parse(days[dayindex] + " " + currMonth + " " + daynum + " " + currTime.getFullYear())
 
-						let timestr = new Date(currDateStr)
-						let hour = timestr.getHours()
-						let minute = timestr.getMinutes()
-						let period = hour < 12 ? "am" : "pm"
+                day.passed = datenow > datetime
+                day.num = daynum
+                daynum++
+              }
+            })
+          })
 
-						let timedisplay = (hour <= 12 ? (hour == 0 ? "12" : hour) : hour - 12) + ":" + (minute < 10 ? '0' + minute : minute) + " " + period
-						let timepassed = currenttime > currDateStr
-						let timetaken = scheduled.indexOf(currDateStr) > -1
-						
-						newTimes.push({ 
-							key: newTimes.length, header: timedisplay, 
-							time: currDateStr, timetaken, timepassed
-						})
-					}
+          if (selectedTime) {
+            openStr = selectedDay + " " + selectedMonth + " " + selectedTime.getDate() + " " + selectedTime.getFullYear() + " " + openHour + ":" + openMinute
+            closeStr = selectedDay + " " + selectedMonth + " " + selectedTime.getDate() + " " + selectedTime.getFullYear() + " " + closeHour + ":" + closeMinute
+            openDateStr = Date.parse(openStr)
+            closeDateStr = Date.parse(closeStr)
 
-					setOpentime({ hour: openHour, minute: openMinute })
-					setClosetime({ hour: closeHour, minute: closeMinute })
-					setSelecteddateinfo({ month: currMonth, year: currTime.getFullYear(), day: currDay, date: currDate, time: 0 })
-					setCalendar({ firstDay, numDays, data })
-					setTimes(newTimes)
-					setScheduledtimes(scheduled)
-					setLoaded(true)
-				}
-			})
-			.catch((err) => {
-				if (err.response && err.response.status == 400) {
-					
-				} else {
-					alert("an error has occurred in server")
-				}
-			})
-	}
-	const dateNavigate = (dir) => {
-		setLoaded(false)
+            currDateStr = openDateStr
+          }
 
-		const currTime = new Date(Date.now())
-		const currDay = days[currTime.getDay()]
-		const currMonth = months[currTime.getMonth()]
+          while (currDateStr < (closeDateStr - pushtime)) {
+            currDateStr += pushtime
 
-		let month = months.indexOf(selectedDateInfo.month), year = selectedDateInfo.year
+            let timestr = new Date(currDateStr)
+            let hour = timestr.getHours()
+            let minute = timestr.getMinutes()
+            let period = hour < 12 ? "am" : "pm"
 
-		month = dir == 'left' ? month - 1 : month + 1
+            let timedisplay = (hour <= 12 ? (hour == 0 ? "12" : hour) : hour - 12) + ":" + (minute < 10 ? '0' + minute : minute) + " " + period
+            let timepassed = currenttime > currDateStr
+            let timetaken = scheduled.indexOf(currDateStr) > -1
 
-		if (month < 0) {
-			month = 11
-			year--
-		} else if (month > 11) {
-			month = 0
-			year++
-		}
+            if (!timepassed) {
+              newTimes.push({ 
+                key: newTimes.length, header: timedisplay, 
+                time: currDateStr, timetaken
+              })
+            }
+          }
 
-		let firstDay, numDays, daynum = 1, data = calendar.data, datetime
-		let datenow = Date.parse(currDay + " " + currMonth + " " + currTime.getDate() + " " + currTime.getFullYear())
+          setOpentime({ hour: openHour, minute: openMinute })
+          setClosetime({ hour: closeHour, minute: closeMinute })
 
-		firstDay = (new Date(year, month)).getDay()
-		numDays = 32 - new Date(year, month, 32).getDate()
-		data.forEach(function (info, rowindex) {
-			info.row.forEach(function (day, dayindex) {
-				day.num = 0
-				day.passed = false
+          if (selectedTime) {
+            setSelecteddateinfo({ month: currMonth, year: selectedTime.getFullYear(), day: selectedDay, date: selectedDate, time: 0 })
+          } else {
+            setSelecteddateinfo({ month: currMonth, year: currTime.getFullYear(), day: currDay, date: currDate, time: 0 })
+          }
 
-				if (rowindex == 0) {
-					if (dayindex >= firstDay) {
-						datetime = Date.parse(days[dayindex] + " " + months[month] + " " + daynum + " " + year)
+          setCalendar({ firstDay, numDays, data })
+          setTimes(newTimes)
+          setScheduledtimes(scheduled)
+          setLoaded(true)
+        }
+      })
+      .catch((err) => {
+        if (err.response && err.response.status == 400) {
+          
+        } else {
+          alert("an error has occurred in server")
+        }
+      })
+  }
+  const dateNavigate = (dir) => {
+    setLoaded(false)
 
-						day.passed = datenow > datetime
-						day.num = daynum
-						daynum++
-					}
-				} else if (daynum <= numDays) {
-					datetime = Date.parse(days[dayindex] + " " + months[month] + " " + daynum + " " + year)
+    const currTime = new Date(Date.now())
+    const currDay = days[currTime.getDay()]
+    const currMonth = months[currTime.getMonth()]
 
-					day.passed = datenow > datetime
-					day.num = daynum
-					daynum++
-				}
-			})
-		})
+    let month = months.indexOf(selectedDateinfo.month), year = selectedDateinfo.year
 
-		let date = month == currTime.getMonth() && year == currTime.getFullYear() ? currTime.getDate() : 1
-		let openStr = months[month] + " " + date + ", " + year + " " + openTime.hour + ":" + openTime.minute
-		let closeStr = months[month] + " " + date + ", " + year + " " + closeTime.hour + ":" + closeTime.minute
-		let openDateStr = Date.parse(openStr), closeDateStr = Date.parse(closeStr), currDateStr = openDateStr
-		let currenttime = Date.now(), newTimes = []
+    month = dir == 'left' ? month - 1 : month + 1
 
-		while (currDateStr < (closeDateStr - pushtime)) {
-			currDateStr += pushtime
+    if (month < 0) {
+      month = 11
+      year--
+    } else if (month > 11) {
+      month = 0
+      year++
+    }
 
-			let timestr = new Date(currDateStr)
-			let hour = timestr.getHours()
-			let minute = timestr.getMinutes()
-			let period = hour < 12 ? "am" : "pm"
+    let firstDay, numDays, daynum = 1, data = calendar.data, datetime
+    let datenow = Date.parse(currDay + " " + currMonth + " " + currTime.getDate() + " " + currTime.getFullYear())
 
-			let timedisplay = (hour <= 12 ? (hour == 0 ? "12" : hour) : hour - 12) + ":" + (minute < 10 ? '0' + minute : minute) + " " + period
-			let timepassed = currenttime > currDateStr
+    firstDay = (new Date(year, month)).getDay()
+    numDays = 32 - new Date(year, month, 32).getDate()
+    data.forEach(function (info, rowindex) {
+      info.row.forEach(function (day, dayindex) {
+        day.num = 0
+        day.passed = false
 
-			newTimes.push({ 
-				key: newTimes.length, header: timedisplay, 
-				time: currDateStr, timetaken: false, timepassed,
-				disable: true
-			})
-		}
+        if (rowindex == 0) {
+          if (dayindex >= firstDay) {
+            datetime = Date.parse(days[dayindex] + " " + months[month] + " " + daynum + " " + year)
 
-		setSelecteddateinfo({ ...selectedDateInfo, month: months[month], date: null, year })
-		setCalendar({ firstDay, numDays, data })
-		setTimes(newTimes)
-		setLoaded(true)
-	}
-	const selectDate = (date) => {
-		const { month, year } = selectedDateInfo
+            day.passed = datenow > datetime
+            day.num = daynum
+            daynum++
+          }
+        } else if (daynum <= numDays) {
+          datetime = Date.parse(days[dayindex] + " " + months[month] + " " + daynum + " " + year)
 
-		let openStr = month + " " + date + ", " + year + " " + openTime.hour + ":" + openTime.minute
-		let closeStr = month + " " + date + ", " + year + " " + closeTime.hour + ":" + closeTime.minute
-		let openDateStr = Date.parse(openStr), closeDateStr = Date.parse(closeStr), currDateStr = openDateStr
-		let currenttime = Date.now(), newTimes = []
+          day.passed = datenow > datetime
+          day.num = daynum
+          daynum++
+        }
+      })
+    })
 
-		while (currDateStr < (closeDateStr - pushtime)) {
-			currDateStr += pushtime
+    let date = month == currTime.getMonth() && year == currTime.getFullYear() ? currTime.getDate() : 1
+    let openStr = months[month] + " " + date + ", " + year + " " + openTime.hour + ":" + openTime.minute
+    let closeStr = months[month] + " " + date + ", " + year + " " + closeTime.hour + ":" + closeTime.minute
+    let openDateStr = Date.parse(openStr), closeDateStr = Date.parse(closeStr), currDateStr = openDateStr
+    let currenttime = Date.now(), newTimes = []
 
-			let timestr = new Date(currDateStr)
-			let hour = timestr.getHours()
-			let minute = timestr.getMinutes()
-			let period = hour < 12 ? "am" : "pm"
+    while (currDateStr < (closeDateStr - pushtime)) {
+      currDateStr += pushtime
 
-			let timedisplay = (hour <= 12 ? (hour == 0 ? "12" : hour) : hour - 12) + ":" + (minute < 10 ? '0' + minute : minute) + " " + period
-			let timepassed = currenttime > currDateStr
-			let timetaken = scheduledTimes.indexOf(currDateStr) > -1
+      let timestr = new Date(currDateStr)
+      let hour = timestr.getHours()
+      let minute = timestr.getMinutes()
+      let period = hour < 12 ? "am" : "pm"
 
-			newTimes.push({ 
-				key: newTimes.length, header: timedisplay, 
-				time: currDateStr, timetaken, timepassed
-			})
-		}
+      let timedisplay = (hour <= 12 ? (hour == 0 ? "12" : hour) : hour - 12) + ":" + (minute < 10 ? '0' + minute : minute) + " " + period
+      let timepassed = currenttime > currDateStr
 
-		setSelecteddateinfo({ ...selectedDateInfo, date })
-		setTimes(newTimes)
-	}
-	const selectTime = (name, timeheader, time) => {
-		const { month, date, year } = selectedDateInfo
-		const currTime = new Date(Date.now())
+      newTimes.push({ 
+        key: newTimes.length, header: timedisplay, 
+        time: currDateStr, timetaken: false, timepassed,
+        disable: true
+      })
+    }
 
-		const sTime = Date.parse(month + " " + date + " " + year + " " + timeheader)
-		const eTime = Date.parse(months[currTime.getMonth()] + " " + currTime.getDate() + ", " + currTime.getFullYear() + " 23:59")
-		let timedisplay = "", diff
+    setSelecteddateinfo({ ...selectedDateinfo, month: months[month], date: null, year })
+    setCalendar({ firstDay, numDays, data })
+    setTimes(newTimes)
+    setLoaded(true)
+  }
+  const selectDate = (date) => {
+    const { month, year } = selectedDateinfo
 
-		setSelecteddateinfo({ ...selectedDateInfo, name, time })
+    let openStr = month + " " + date + ", " + year + " " + openTime.hour + ":" + openTime.minute
+    let closeStr = month + " " + date + ", " + year + " " + closeTime.hour + ":" + closeTime.minute
+    let openDateStr = Date.parse(openStr), closeDateStr = Date.parse(closeStr), currDateStr = openDateStr
+    let currenttime = Date.now(), newTimes = []
 
-		if (selectedDateInfo.date) {
-			if (sTime < eTime) {
-				timedisplay = "today at " + timeheader
-			} else if (sTime > eTime) {
-				if (sTime - eTime > 86400000) { // tomorrow or more
-					diff = sTime - eTime
+    while (currDateStr < (closeDateStr - pushtime)) {
+      currDateStr += pushtime
 
-					if (diff <= 604800000) { // this week
-						let sDay = new Date(sTime)
-						let eDay = new Date(eTime)
+      let timestr = new Date(currDateStr)
+      let hour = timestr.getHours()
+      let minute = timestr.getMinutes()
+      let period = hour < 12 ? "am" : "pm"
 
-						if (sDay.getDay() == eDay.getDay()) {
-							timedisplay = " next " + days[sDay.getDay()] + " at " + timeheader
-						} else {
-							timedisplay = " on " + days[sDay.getDay()] + " at " + timeheader
-						}
-					} else if (diff > 604800000 && diff <= 1210000000) { // next week
-						let sDay = new Date(sTime)
-						let eDay = new Date(eTime)
+      let timedisplay = (hour <= 12 ? (hour == 0 ? "12" : hour) : hour - 12) + ":" + (minute < 10 ? '0' + minute : minute) + " " + period
+      let timepassed = currenttime > currDateStr
+      let timetaken = scheduledTimes.indexOf(currDateStr) > -1
 
-						if (sDay.getDay() != eDay.getDay()) {
-							timedisplay = " next " + days[sDay.getDay()] + " at " + timeheader
-						} else {
-							timedisplay = " on " + days[sDay.getDay()] + ", " + months[sDay.getMonth()] + " " + date + " at " + timeheader
-						}
-					} else {
-						let sDay = new Date(sTime)
-						let eDay = new Date(eTime)
+      if (!timepassed) {
+        newTimes.push({ 
+          key: newTimes.length, header: timedisplay, 
+          time: currDateStr, timetaken
+        })
+      }
+    }
 
-						if (sDay.getMonth() != eDay.getMonth()) {
-							timedisplay = " on " + days[sDay.getDay()] + ", " + months[sDay.getMonth()] + " " + date + " at " + timeheader
-						} else {
-							timedisplay = " on " + days[sDay.getDay()] + ", " + date + " at " + timeheader
-						}
-					}
-				} else {
-					timedisplay = "tomorrow at " + timeheader
-				}
-			}
+    setSelecteddateinfo({ ...selectedDateinfo, date })
+    setTimes(newTimes)
+  }
+  const selectTime = (name, timeheader, time) => {
+    const { month, date, year } = selectedDateinfo
+    const currTime = new Date(Date.now())
 
-			setConfirm({ ...confirm, show: true, service: name, timeheader: timedisplay, time })
-		}
-	}
-	const rescheduleTheAppointment = async() => {
-		const ownerid = await AsyncStorage.getItem("ownerid")
-		const { month, date, year, time } = selectedDateInfo
-		const { service } = confirm
-		const selecteddate = new Date(time)
-		const selectedtime = selecteddate.getHours() + ":" + selecteddate.getMinutes()
-		const dateInfo = Date.parse(month + " " + date + ", " + year + " " + selectedtime).toString()
-		let data = { ownerid, appointmentid, time: dateInfo, type: "rescheduleAppointment" }
+    const sTime = Date.parse(month + " " + date + " " + year + " " + timeheader)
+    const eTime = Date.parse(months[currTime.getMonth()] + " " + currTime.getDate() + ", " + currTime.getFullYear() + " 23:59")
+    let timedisplay = "", diff
 
-		rescheduleAppointment(data)
-			.then((res) => {
-				if (res.status == 200) {
-					return res.data
-				}
-			})
-			.then((res) => {
-				if (res) {
-					data = { ...data, receiver: res.receiver, worker: res.worker }
-					socket.emit("socket/rescheduleAppointment", data, () => setConfirm({ ...confirm, requested: true }))
-				}
-			})
-			.catch((err) => {
-				if (err.response && err.response.status == 400) {
-					
-				} else {
-					alert("an error has occurred in server")
-				}
-			})
-	}
-	
-	useEffect(() => {
-		isMounted.current = true
+    setSelecteddateinfo({ ...selectedDateinfo, name, time })
 
-		getTheAppointmentInfo()
+    if (selectedDateinfo.date) {
+      if (sTime < eTime) {
+        timedisplay = "today at " + timeheader
+      } else if (sTime > eTime) {
+        if (sTime - eTime > 86400000) { // tomorrow or more
+          diff = sTime - eTime
 
-		return () => isMounted.current = false
-	}, [])
-	
-	return (
-		<View style={style.booktime}>
-			{loaded ? 
-				<View style={style.box}>
-					<View style={style.headers}>
-						<Text style={style.serviceHeader}><Text style={{ fontSize: fsize(0.04) }}>for</Text> client</Text>
-						<Text style={style.serviceHeader}><Text style={{ fontSize: fsize(0.04) }}>requesting for</Text> {name}</Text>
-					</View>
-		
-					<ScrollView style={style.body}>
-						<View style={style.dateHeaders}>
-							<View style={style.date}>
-								<TouchableOpacity style={style.dateNav} onPress={() => dateNavigate('left')}><AntDesign name="left" size={25}/></TouchableOpacity>
-								<Text style={style.dateHeader}>{selectedDateInfo.month}, {selectedDateInfo.year}</Text>
-								<TouchableOpacity style={style.dateNav} onPress={() => dateNavigate('right')}><AntDesign name="right" size={25}/></TouchableOpacity>
-							</View>
+          if (diff <= 604800000) { // this week
+            let sDay = new Date(sTime)
+            let eDay = new Date(eTime)
 
-							<View style={style.dateDays}>
-								<View style={style.dateDaysRow}>
-									{days.map((day, index) => (
-										<TouchableOpacity key={"day-header-" + index} style={style.dateDayTouchDisabled}>
-											<Text style={{ fontWeight: 'bold', textAlign: 'center' }}>{day.substr(0, 3)}</Text>
-										</TouchableOpacity>
-									))}
-								</View>
-								{calendar.data.map((info, rowindex) => (
-									<View key={info.key} style={style.dateDaysRow}>
-										{info.row.map((day, dayindex) => (
-											day.num > 0 ?
-												day.passed ? 
-													<TouchableOpacity key={day.key} disabled={true} style={style.dateDayTouchPassed}>
-														<Text style={style.dateDayTouchHeader}>{day.num}</Text>
-													</TouchableOpacity>
-													:
-													selectedDateInfo.date == day.num ?
-														<TouchableOpacity key={day.key} style={style.dateDayTouchSelected} onPress={() => selectDate(day.num)}>
-															<Text style={style.dateDayTouchSelectedHeader}>{day.num}</Text>
-														</TouchableOpacity>
-														:
-														<TouchableOpacity key={day.key} style={style.dateDayTouch} onPress={() => selectDate(day.num)}>
-															<Text style={style.dateDayTouchHeader}>{day.num}</Text>
-														</TouchableOpacity>
-												:
-												<TouchableOpacity key={"calender-header-" + rowindex + "-" + dayindex} style={style.dateDayTouchDisabled}></TouchableOpacity>
-										))}
-									</View>
-								))}
-							</View>
-						</View>
-						<Text style={style.timesHeader}>Pick a time</Text>
-						<View style={style.timesContainer}>
-							<View style={style.times}>
-								{times.map(info => (
-									<View key={info.key}>
-										{(!info.timetaken && !info.timepassed) && (
-											<TouchableOpacity style={style.unselect} onPress={() => selectTime(name, info.header, info.time)}>
-												<Text style={{ color: 'black' }}>{info.header}</Text>
-											</TouchableOpacity>
-										)}
+            if (sDay.getDay() == eDay.getDay()) {
+              timedisplay = " next " + days[sDay.getDay()] + " at " + timeheader
+            } else {
+              timedisplay = " on " + days[sDay.getDay()] + " at " + timeheader
+            }
+          } else if (diff > 604800000 && diff <= 1210000000) { // next week
+            let sDay = new Date(sTime)
+            let eDay = new Date(eTime)
 
-										{(info.timetaken && !info.timepassed) && (
-											<TouchableOpacity style={style.selected} disabled={true} onPress={() => {}}>
-												<Text style={{ color: 'white' }}>{info.header}</Text>
-											</TouchableOpacity>
-										)}
+            if (sDay.getDay() != eDay.getDay()) {
+              timedisplay = " next " + days[sDay.getDay()] + " at " + timeheader
+            } else {
+              timedisplay = " on " + days[sDay.getDay()] + ", " + months[sDay.getMonth()] + " " + date + " at " + timeheader
+            }
+          } else {
+            let sDay = new Date(sTime)
+            let eDay = new Date(eTime)
 
-										{(!info.timetaken && info.timepassed) && (
-											<TouchableOpacity style={style.selectedPassed} disabled={true} onPress={() => {}}>
-												<Text style={{ color: 'black' }}>{info.header}</Text>
-											</TouchableOpacity>
-										)}
-									</View>
-								))}
-							</View>
-						</View>
-					</ScrollView>
-				</View>
-				:
-				<View style={{ alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' }}>
-					<ActivityIndicator color="black" size="small"/>
-				</View>
-			}
-			
-			{confirm.show && (
-				<Modal transparent={true}>
-					<View style={{ paddingVertical: offsetPadding }}>
-						<View style={style.confirmBox}>
-							<View style={style.confirmContainer}>
-								{!confirm.requested ? 
-									<>
-										<Text style={style.confirmHeader}>
-											<Text style={{ fontFamily: 'appFont' }}>Select this time for client</Text>
-											{'\n' + confirm.timeheader}
-											<Text style={{ fontFamily: 'appFont', fontSize: fsize(0.07) }}>{'\n\n for ' + confirm.service}</Text>
-										</Text>
+            if (sDay.getMonth() != eDay.getMonth()) {
+              timedisplay = " on " + days[sDay.getDay()] + ", " + months[sDay.getMonth()] + " " + date + " at " + timeheader
+            } else {
+              timedisplay = " on " + days[sDay.getDay()] + ", " + date + " at " + timeheader
+            }
+          }
+        } else {
+          timedisplay = "tomorrow at " + timeheader
+        }
+      }
 
-										<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-											<View style={style.confirmOptions}>
-												<TouchableOpacity style={style.confirmOption} onPress={() => setConfirm({ show: false, timeheader: "", requested: false })}>
-													<Text style={style.confirmOptionHeader}>No</Text>
-												</TouchableOpacity>
-												<TouchableOpacity style={style.confirmOption} onPress={() => rescheduleTheAppointment()}>
-													<Text style={style.confirmOptionHeader}>Yes</Text>
-												</TouchableOpacity>
-											</View>
-										</View>
-									</>
-									:
-									<>
-										<View style={style.requestedHeaders}>
-											<Text style={style.requestedHeader}>Time requested {'\n'}</Text>
-											<Text style={style.requestedHeaderInfo}>at {confirm.timeheader} {'\n'}</Text>
-											<Text style={style.requestedHeaderInfo}>You will get notify by the client</Text>
+      setConfirm({ ...confirm, show: true, service: name, timeheader: timedisplay, time })
+    }
+  }
+  const rescheduleTheAppointment = async() => {
+    const ownerid = await AsyncStorage.getItem("ownerid")
+    const { month, date, year, time } = selectedDateinfo
+    const { service } = confirm
+    const selecteddate = new Date(time)
+    const selectedtime = selecteddate.getHours() + ":" + selecteddate.getMinutes()
+    const dateInfo = Date.parse(month + " " + date + ", " + year + " " + selectedtime).toString()
+    let data = { ownerid, appointmentid, time: dateInfo, type: "rescheduleAppointment" }
 
-											<TouchableOpacity style={style.requestedClose} onPress={() => {
-												setConfirm({ ...confirm, show: false, requested: false, errormsg: "" })
-												refetch()
-												props.navigation.goBack()
-											}}>
-												<Text style={style.requestedCloseHeader}>Ok</Text>
-											</TouchableOpacity>
-										</View>
-									</>
-								}
-							</View>
-						</View>
-					</View>
-				</Modal>
-			)}
-		</View>
-	)
+    setConfirm({ ...confirm, loading: true })
+
+    rescheduleAppointment(data)
+      .then((res) => {
+        if (res.status == 200) {
+          return res.data
+        }
+      })
+      .then((res) => {
+        if (res) {
+          data = { ...data, receiver: res.receiver, worker: res.worker }
+          socket.emit("socket/rescheduleAppointment", data, () => {
+            setConfirm({ ...confirm, requested: true })
+
+            setTimeout(function () {
+              setConfirm({ ...confirm, show: false, errormsg: "" })
+
+              refetch()
+              props.navigation.goBack()
+            }, 3000)
+          })
+        }
+      })
+      .catch((err) => {
+        if (err.response && err.response.status == 400) {
+          
+        } else {
+          alert("an error has occurred in server")
+        }
+      })
+  }
+  
+  useEffect(() => {
+    isMounted.current = true
+
+    getTheAppointmentInfo()
+
+    return () => isMounted.current = false
+  }, [])
+  
+  return (
+    <SafeAreaView style={styles.booktime}>
+      {loaded ? 
+        <View style={styles.box}>
+          <View style={styles.headers}>
+            <Text style={styles.serviceHeader}><Text style={{ fontSize: wsize(4) }}>for</Text> client</Text>
+            <Text style={styles.serviceHeader}><Text style={{ fontSize: wsize(4) }}>requesting for</Text> {name}</Text>
+          </View>
+    
+          <ScrollView style={styles.body}>
+            <View style={styles.dateSelection}>
+              <Text style={styles.dateSelectionHeader}>Tap a date below</Text>
+
+              <View style={styles.dateHeaders}>
+                <View style={styles.column}>
+                  <TouchableOpacity onPress={() => dateNavigate('left')}><AntDesign name="left" size={wsize(7)}/></TouchableOpacity>
+                </View>
+                <View style={styles.column}>
+                  <Text style={styles.dateHeader}>{selectedDateinfo.month}, {selectedDateinfo.year}</Text>
+                </View>
+                <View style={styles.column}>
+                  <TouchableOpacity onPress={() => dateNavigate('right')}><AntDesign name="right" size={wsize(7)}/></TouchableOpacity>
+                </View>
+              </View>
+              <View style={styles.days}>
+                <View style={styles.daysHeaderRow}>
+                  {days.map((day, index) => (
+                    <Text key={"day-header-" + index} style={styles.daysHeader}>{day.substr(0, 3)}</Text>
+                  ))}
+                </View>
+                {calendar.data.map((info, rowindex) => (
+                  <View key={info.key} style={styles.daysDataRow}>
+                    {info.row.map((day, dayindex) => (
+                      day.num > 0 ?
+                        day.passed ? 
+                          <TouchableOpacity key={day.key} disabled={true} style={[styles.dayTouch, { backgroundColor: 'rgba(0, 0, 0, 0.5)' }]}>
+                            <Text style={styles.dayTouchHeader}>{day.num}</Text>
+                          </TouchableOpacity>
+                          :
+                          selectedDateinfo.date == day.num ?
+                            <TouchableOpacity key={day.key} style={[styles.dayTouch, { backgroundColor: 'black' }]} onPress={() => selectDate(day.num)}>
+                              <Text style={[styles.dayTouchHeader, { color: 'white' }]}>{day.num}</Text>
+                            </TouchableOpacity>
+                            :
+                            <TouchableOpacity key={day.key} style={styles.dayTouch} onPress={() => selectDate(day.num)}>
+                              <Text style={styles.dayTouchHeader}>{day.num}</Text>
+                            </TouchableOpacity>
+                        :
+                        <TouchableOpacity key={"calender-header-" + rowindex + "-" + dayindex} style={styles.dayTouchDisabled}></TouchableOpacity>
+                    ))}
+                  </View>
+                ))}
+              </View>
+            </View>
+            
+            <View style={styles.timesContainer}>
+              <Text style={styles.timesHeader}>Tap a time below</Text>
+
+              <View style={styles.times}>
+                {times.map(info => (
+                  <View key={info.key}>
+                    {!info.timetaken ?
+                      <TouchableOpacity style={styles.unselect} onPress={() => selectTime(name, info.header, info.time)}>
+                        <Text style={styles.unselectHeader}>{info.header}</Text>
+                      </TouchableOpacity>
+                      :
+                      <TouchableOpacity style={[styles.unselect, { backgroundColor: 'black' }]} disabled={true} onPress={() => {}}>
+                        <Text style={[styles.unselectHeader, { color: 'white' }]}>{info.header}</Text>
+                      </TouchableOpacity>
+                    }
+                  </View>
+                ))}
+              </View>
+            </View>
+          </ScrollView>
+        </View>
+        :
+        <View style={styles.loading}>
+          <ActivityIndicator color="black" size="small"/>
+        </View>
+      }
+      
+      {confirm.show && (
+        <Modal transparent={true}>
+          <SafeAreaView style={styles.confirmBox}>
+            <View style={styles.confirmContainer}>
+              {!confirm.requested ? 
+                <>
+                  <Text style={styles.confirmHeader}>
+                    <Text style={{ fontFamily: 'appFont' }}>Select this time for client</Text>
+                    {'\n' + confirm.timeheader}
+                    <Text style={{ fontFamily: 'appFont', fontSize: wsize(7) }}>{'\n\n for ' + confirm.service}</Text>
+                  </Text>
+
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+                    <View style={styles.confirmOptions}>
+                      <TouchableOpacity style={[styles.confirmOption, { opacity: confirm.loading ? 0.3 : 1 }]} disabled={confirm.loading} onPress={() => setConfirm({ show: false, timeheader: "" })}>
+                        <Text style={styles.confirmOptionHeader}>No</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity style={[styles.confirmOption, { opacity: confirm.loading ? 0.3 : 1 }]} disabled={confirm.loading} onPress={() => rescheduleTheAppointment()}>
+                        <Text style={styles.confirmOptionHeader}>Yes</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+
+                  {confirm.loading && (
+                    <View style={{ alignItems: 'center' }}>
+                      <ActivityIndicator color="black" size="small"/>
+                    </View>
+                  )}
+                </>
+                :
+                <View style={styles.requestedHeaders}>
+                  <Text style={styles.requestedHeader}>Time requested {'\n'}</Text>
+                  <Text style={styles.requestedHeaderInfo}>
+                    at {confirm.timeheader} {'\n'}
+
+                    You will get notify by the client
+                  </Text>
+                </View>
+              }
+            </View>
+          </SafeAreaView>
+        </Modal>
+      )}
+    </SafeAreaView>
+  )
 }
 
-const style = StyleSheet.create({
-	booktime: { backgroundColor: 'white', height: '100%', paddingBottom: offsetPadding, width: '100%' },
-	box: { backgroundColor: '#EAEAEA', height: '100%', width: '100%' },
+const styles = StyleSheet.create({
+  booktime: { backgroundColor: 'white', height: '100%', width: '100%' },
+  box: { backgroundColor: '#EAEAEA', height: '100%', width: '100%' },
 
-	headers: { flexDirection: 'column', height: '15%', justifyContent: 'space-around', width: '100%' },
-	serviceHeader: { fontSize: fsize(0.06), fontWeight: 'bold', textAlign: 'center' },
+  headers: { flexDirection: 'column', height: '15%', justifyContent: 'space-around', width: '100%' },
+  serviceHeader: { fontSize: wsize(6), fontWeight: 'bold', textAlign: 'center' },
 
-	body: { height: '85%' },
+  body: { height: '85%' },
 
-	dateHeaders: { alignItems: 'center', marginVertical: 50 },
-	date: { flexDirection: 'row', margin: 10 },
-	dateNav: { marginHorizontal: 20 },
-	dateHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), marginVertical: 5, textAlign: 'center', width: fsize(0.5) },
-	dateDays: { alignItems: 'center' },
-	dateDaysRow: { flexDirection: 'row' },
+  dateSelection: { alignItems: 'center', marginVertical: 50, width: '100%' },
+  dateSelectionHeader: { fontSize: wsize(8), fontWeight: 'bold', textAlign: 'center' },
+  dateHeaders: { flexDirection: 'row', justifyContent: 'space-between', width: '70%' },
+  column: { flexDirection: 'column', justifyContent: 'space-around' },
+  dateHeader: { fontSize: wsize(6), marginVertical: 5, textAlign: 'center', width: wsize(50) },
+  days: { alignItems: 'center', width: '100%' },
 
-	dateDayTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, paddingVertical: 10, width: fsize(0.1) },
-	dateDayTouchHeader: { color: 'black', fontSize: fsize(0.038), textAlign: 'center' },
+  daysHeaderRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
+  daysHeader: { fontSize: wsize(12) * 0.4, fontWeight: 'bold', marginVertical: 1, textAlign: 'center', width: wsize(12) },
 
-	dateDayTouchSelected: { backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, paddingVertical: 10, width: fsize(0.1) },
-	dateDayTouchSelectedHeader: { color: 'white', fontSize: fsize(0.038), textAlign: 'center' },
+  daysDataRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
+  dayTouch: { borderStyle: 'solid', borderWidth: 2, marginVertical: 1, paddingVertical: 10, width: wsize(12) },
+  dayTouchHeader: { color: 'black', fontSize: wsize(12) * 0.4, textAlign: 'center' },
 
-	dateDayTouchPassed: { backgroundColor: 'rgba(0, 0, 0, 0.5)', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, paddingVertical: 10, width: fsize(0.1) },
-	dateDayTouchPassedHeader: { color: 'black', fontSize: fsize(0.038), textAlign: 'center' },
+  dayTouchDisabled: { paddingVertical: 10, width: wsize(12) },
+  dayTouchDisabledHeader: { fontSize: wsize(12) * 0.4, fontWeight: 'bold' },
 
-	dateDayTouchDisabled: { margin: 3, paddingVertical: 10, width: fsize(0.1) },
-	dateDayTouchDisabledHeader: { fontSize: fsize(0.038), fontWeight: 'bold' },
+  timesContainer: { alignItems: 'center', marginVertical: 50 },
+  timesHeader: { fontSize: wsize(8), fontWeight: 'bold', textAlign: 'center' },
+  times: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', width: wsize(79) },
+  
+  unselect: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, paddingVertical: 10, width: wsize(25) },
+  unselectHeader: { color: 'black', fontSize: wsize(4) },
 
-	timesContainer: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 10, width: '100%' },
-	timesHeader: { fontFamily: 'appFont', fontSize: fsize(0.07), fontWeight: 'bold', textAlign: 'center' },
-	times: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', width: fsize(0.79) },
-	
-	unselect: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, paddingVertical: 10, width: fsize(0.25) },
-	unselectHeader: { color: 'black', fontSize: fsize(0.04) },
-	
-	selected: { alignItems: 'center', backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, paddingVertical: 10, width: fsize(0.25) },
-	selectedHeader: { color: 'white', fontSize: fsize(0.04) },
+  // confirm & requeseted box
+  confirmBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
+  confirmContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },
+  confirmHeader: { fontSize: wsize(5), fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
+  confirmOptions: { flexDirection: 'row' },
+  confirmOption: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: wsize(30) },
+  confirmOptionHeader: { fontSize: wsize(4), textAlign: 'center' },
+  requestedHeaders: { alignItems: 'center', paddingHorizontal: 10 },
+  requestedClose: { borderRadius: 5, borderStyle: 'solid', borderWidth: 1, marginVertical: 10, padding: 5, width: 100 },
+  requestedCloseHeader: { fontFamily: 'appFont', fontSize: wsize(5), textAlign: 'center' },
+  requestedHeader: { fontFamily: 'appFont', fontSize: wsize(6) },
+  requestedHeaderInfo: { fontSize: wsize(5), textAlign: 'center' },
 
-	selectedPassed: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, opacity: 0.3, paddingVertical: 10, width: fsize(0.25) },
-	selectedPassedHeader: { color: 'black', fontSize: fsize(0.04) },
-
-	// confirm & requested box
-	confirmBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
-	confirmContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },
-	confirmHeader: { fontSize: fsize(0.05), fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
-	confirmOptions: { flexDirection: 'row' },
-	confirmOption: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 60 },
-	confirmOptionHeader: { textAlign: 'center' },
-	requestedHeaders: { alignItems: 'center', paddingHorizontal: 10 },
-	requestedClose: { borderRadius: 5, borderStyle: 'solid', borderWidth: 1, marginVertical: 10, padding: 5, width: 100 },
-	requestedCloseHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), textAlign: 'center' },
-	requestedHeader: { fontFamily: 'appFont', fontSize: fsize(0.06) },
-	requestedHeaderInfo: { fontSize: fsize(0.05), textAlign: 'center' },
+  loading: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 })

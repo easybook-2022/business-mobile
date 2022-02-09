@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { ActivityIndicator, Dimensions, View, FlatList, Text, TextInput, Image, TouchableOpacity, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, ScrollView, StyleSheet, Modal } from 'react-native'
+import { SafeAreaView, ActivityIndicator, Platform, Dimensions, View, FlatList, Text, TextInput, Image, TouchableOpacity, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, ScrollView, StyleSheet, Modal } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
@@ -17,13 +17,14 @@ import AntDesign from 'react-native-vector-icons/AntDesign'
 import Entypo from 'react-native-vector-icons/Entypo'
 
 const { height, width } = Dimensions.get('window')
-const offsetPadding = Constants.statusBarHeight
-
-const fsize = p => {
-	return width * p
+const wsize = p => {
+  return width * (p / 100)
+}
+const hsize = p => {
+  return height * (p / 100)
 }
 
-export default function menu(props) {
+export default function Menu(props) {
 	const { refetch } = props.route.params
 
 	const [cameraPermission, setCamerapermission] = useState(null);
@@ -111,71 +112,81 @@ export default function menu(props) {
 		return (
 			<View style={{ marginLeft: left }}>
 				{name ? 
-					<View style={style.menu}>
+					<View style={styles.menu}>
 						<View style={{ flexDirection: 'row' }}>
-							<View style={style.menuImageHolder}>
-								<Image style={style.menuImage} source={{ uri: logo_url + image }}/>
+							<View style={styles.menuImageHolder}>
+								<Image style={styles.menuImage} source={{ uri: logo_url + image }}/>
 							</View>
-							<Text style={style.menuName}>{name} (Menu)</Text>
-							<View style={style.menuActions}>
-								<TouchableOpacity style={style.menuAction} onPress={() => props.navigation.navigate("addmenu", { parentMenuid: id, menuid: id, refetch: () => getAllMenus() })}>
-									<Text style={style.menuActionHeader}>Change</Text>
-								</TouchableOpacity>
-								<TouchableOpacity style={style.menuAction} onPress={() => removeTheMenu(info.id)}>
-									<Text style={style.menuActionHeader}>Delete</Text>
-								</TouchableOpacity>
-							</View>
+              <View style={styles.column}>
+							 <Text style={styles.menuName}>{name} (Menu)</Text>
+              </View>
+              <View style={styles.column}>
+  							<View style={styles.menuActions}>
+  								<TouchableOpacity style={styles.menuAction} onPress={() => props.navigation.navigate("addmenu", { parentMenuid: id, menuid: id, refetch: () => getAllMenus() })}>
+  									<Text style={styles.menuActionHeader}>Change</Text>
+  								</TouchableOpacity>
+  								<TouchableOpacity style={styles.menuAction} onPress={() => removeTheMenu(info.id)}>
+  									<Text style={styles.menuActionHeader}>Delete</Text>
+  								</TouchableOpacity>
+  							</View>
+              </View>
 						</View>
-						{info.info ? <Text style={style.itemInfo}><Text style={{ fontWeight: 'bold' }}>More Info</Text>: {info.info}</Text> : null}
+						{info.info ? <Text style={[styles.itemInfo, { marginLeft: left }]}><Text style={{ fontWeight: 'bold' }}>More Info</Text>: {info.info}</Text> : null}
 						{list.length == 0 ?
 							<View style={{ alignItems: 'center', marginTop: 10 }}>
 								<TouchableOpacity onPress={() => setCreateoptionbox({ show: true, id, allow: "both" })}>
-									<AntDesign name="pluscircleo" size={30}/>
+									<AntDesign name="pluscircleo" size={wsize(7)}/>
 								</TouchableOpacity>
 							</View>
 							:
 							list.map((info, index) => (
-								<View key={"list-" + index} style={{ marginBottom: (list.length - 1 == index && info.listType != "list") ? 50 : 0 }}>
+								<View key={"list-" + index}>
 									{info.listType == "list" ? 
 										displayList({ id: info.id, name: info.name, image: info.image, list: info.list, listType: info.listType, left: left + 10 })
 										:
-										<View style={style.item}>
-											<View style={{ flexDirection: 'row', }}>
-												<View style={style.itemImageHolder}>
-													<Image style={style.itemImage} source={{ uri: logo_url + info.image }}/>
+										<View style={styles.item}>
+											<View style={{ flexDirection: 'row' }}>
+												<View style={styles.itemImageHolder}>
+													<Image style={styles.itemImage} source={{ uri: logo_url + info.image }}/>
 												</View>
-												<Text style={style.itemHeader}>{info.name}</Text>
-												<Text style={style.itemHeader}>{info.price ? '$' + info.price : info.sizes.length + ' size(s)'}</Text>
-												{info.listType == "service" && <Text style={style.itemHeader}>{info.duration}</Text>}
+                        <View style={styles.column}>
+												  <Text style={styles.itemHeader}>{info.name}</Text>
+                        </View>
+                        <View style={styles.column}>
+												  <Text style={styles.itemHeader}>{info.price ? '$' + info.price : info.sizes.length + ' size(s)'}</Text>
+                        </View>
+                        <View style={styles.column}>
+												  {info.listType == "service" && <Text style={styles.itemHeader}>{info.duration}</Text>}
+                        </View>
 											</View>
-											{info.info ? <Text style={style.itemInfo}><Text style={{ fontWeight: 'bold' }}>More Info</Text>: {info.info}</Text> : null}
-											<View style={style.itemActions}>
-												<TouchableOpacity style={style.itemAction} onPress={() => {
+											{info.info ? <Text style={[styles.itemInfo, { marginLeft: left }]}><Text style={{ fontWeight: 'bold' }}>More Info</Text>: {info.info}</Text> : null}
+											<View style={styles.itemActions}>
+												<TouchableOpacity style={styles.itemAction} onPress={() => {
 													if (locationType == "salon") {
 														props.navigation.navigate("addservice", { parentMenuid: id, serviceid: info.id, refetch: () => getAllMenus() })
 													} else {
 														props.navigation.navigate("addproduct", { parentMenuid: id, productid: info.id, refetch: () => getAllMenus() })
 													}
 												}}>
-													<Text style={style.itemActionHeader}>Change</Text>
+													<Text style={styles.itemActionHeader}>Change</Text>
 												</TouchableOpacity>
-												<TouchableOpacity style={style.itemAction} onPress={() => {
+												<TouchableOpacity style={styles.itemAction} onPress={() => {
 													if (locationType == "salon") {
 														removeTheService(info.id)
 													} else {
 														removeTheProduct(info.id)
 													}
 												}}>
-													<Text style={style.itemActionHeader}>Delete</Text>
+													<Text style={styles.itemActionHeader}>Delete</Text>
 												</TouchableOpacity>
 											</View>
 										</View>
 									}
 
 									{(list.length - 1 == index && info.listType != "list") && (
-										<View style={{ alignItems: 'center', backgroundColor: 'white', paddingVertical: 10 }}>
+										<View style={{ alignItems: 'center', backgroundColor: 'white' }}>
 											<TouchableOpacity onPress={() => setCreateoptionbox({ show: true, id, allow: "one" })}>
-												<AntDesign name="pluscircleo" size={30}/>
+												<AntDesign name="pluscircleo" size={wsize(7)}/>
 											</TouchableOpacity>
 										</View>
 									)}
@@ -185,38 +196,38 @@ export default function menu(props) {
 					</View>
 					:
 					list.map((info, index) => (
-						<View key={"list-" + index} style={{ marginBottom: (list.length - 1 == index && info.listType != "list") ? 50 : 0 }}>
+						<View key={"list-" + index}>
 							{info.listType == "list" ? 
 								displayList({ id: info.id, name: info.name, image: info.image, list: info.list, listType: info.listType, left: left + 10 })
 								:
-								<View style={style.item}>
+								<View style={styles.item}>
 									<View style={{ flexDirection: 'row', }}>
-										<View style={style.itemImageHolder}>
-											<Image style={style.itemImage} source={{ uri: logo_url + info.image }}/>
+										<View style={styles.itemImageHolder}>
+											<Image style={styles.itemImage} source={{ uri: logo_url + info.image }}/>
 										</View>
-										<Text style={style.itemHeader}>{info.name}</Text>
-										<Text style={style.itemHeader}>{info.price ? '$' + info.price : info.sizes.length + ' size(s)'}</Text>
-										{info.listType == "service" && <Text style={style.itemHeader}>{info.duration}</Text>}
+										<Text style={styles.itemHeader}>{info.name}</Text>
+										<Text style={styles.itemHeader}>{info.price ? '$' + info.price : info.sizes.length + ' size(s)'}</Text>
+										{info.listType == "service" && <Text style={styles.itemHeader}>{info.duration}</Text>}
 									</View>
-									{info.info ? <Text style={style.itemInfo}><Text style={{ fontWeight: 'bold' }}>More Info</Text>: {info.info}</Text> : null}
-									<View style={style.itemActions}>
-										<TouchableOpacity style={style.itemAction} onPress={() => {
+									{info.info ? <Text style={[styles.itemInfo, { marginLeft: left }]}><Text style={{ fontWeight: 'bold' }}>More Info</Text>: {info.info}</Text> : null}
+									<View style={styles.itemActions}>
+										<TouchableOpacity style={styles.itemAction} onPress={() => {
 											if (locationType == "salon") {
 												props.navigation.navigate("addservice", { parentMenuid: id, serviceid: info.id, refetch: () => getAllMenus() })
 											} else {
 												props.navigation.navigate("addproduct", { parentMenuid: id, productid: info.id, refetch: () => getAllMenus() })
 											}
 										}}>
-											<Text style={style.itemActionHeader}>Change</Text>
+											<Text style={styles.itemActionHeader}>Change</Text>
 										</TouchableOpacity>
-										<TouchableOpacity style={style.itemAction} onPress={() => {
+										<TouchableOpacity style={styles.itemAction} onPress={() => {
 											if (locationType == "salon") {
 												removeTheService(info.id)
 											} else {
 												removeTheProduct(info.id)
 											}
 										}}>
-											<Text style={style.itemActionHeader}>Delete</Text>
+											<Text style={styles.itemActionHeader}>Delete</Text>
 										</TouchableOpacity>
 									</View>
 								</View>
@@ -225,7 +236,7 @@ export default function menu(props) {
 							{(list.length - 1 == index && info.listType != "list") && (
 								<View style={{ alignItems: 'center', backgroundColor: 'white', paddingVertical: 10 }}>
 									<TouchableOpacity onPress={() => setCreateoptionbox({ show: true, id, allow: "one" })}>
-										<AntDesign name="pluscircleo" size={30}/>
+										<AntDesign name="pluscircleo" size={wsize(7)}/>
 									</TouchableOpacity>
 								</View>
 							)}
@@ -377,7 +388,7 @@ export default function menu(props) {
 		if (camComp) {
 			let options = { quality: 0, skipProcessing: true };
 			let photo = await camComp.takePictureAsync(options)
-			let photo_option = [{ resize: { width: width, height: width }}]
+			let photo_option = [{ resize: { height, width }}]
 			let photo_save_option = { format: ImageManipulator.SaveFormat.JPEG, base64: true }
 
 			photo = await ImageManipulator.manipulateAsync(
@@ -456,9 +467,9 @@ export default function menu(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					const { status, errormsg } = err.response.data
-
-
-				}
+				} else {
+          alert("server error")
+        }
 			})
 	}
 	const deleteTheMenu = async() => {
@@ -509,27 +520,27 @@ export default function menu(props) {
 	}, [])
 
 	return (
-		<View style={style.menuBox}>
+		<SafeAreaView style={styles.menuBox}>
 			{loaded ? 
-				<View style={style.box}>
+				<View style={styles.box}>
 					<ScrollView style={{ height: '90%', width: '100%' }}>
 						<View style={{ paddingVertical: 10 }}>
 							{menuInfo.type ? 
 								menuInfo.type == "photos" ? 
 									<ScrollView style={{ width: '100%' }}>
 										{menuInfo.items.map(info => (
-											<View key={info.key} style={style.menuRow}>
+											<View key={info.key} style={styles.menuRow}>
 												{info.row.map(item => (
-													<View key={item.key} style={style.menuPhoto}>
+													<View key={item.key} style={styles.menuPhoto}>
 														<Image style={{ height: '100%', width: '100%' }} source={{ uri: logo_url + item.photo }}/>
 
 														{item.photo && (
-															<View style={style.menuPhotoActions}>
-																<TouchableOpacity style={style.menuPhotoAction} onPress={() => setMenuphotooption({ ...menuPhotooption, show: true, action: 'delete', photo: item.photo })}>
-																	<Text style={style.menuPhotoActionHeader}>Delete</Text>
+															<View style={styles.menuPhotoActions}>
+																<TouchableOpacity style={styles.menuPhotoAction} onPress={() => setMenuphotooption({ ...menuPhotooption, show: true, action: 'delete', photo: item.photo })}>
+																	<Text style={styles.menuPhotoActionHeader}>Delete</Text>
 																</TouchableOpacity>
-																<TouchableOpacity style={style.menuPhotoAction} onPress={() => setMenuphotooption({ ...menuPhotooption, show: true, action: '', photo: item.photo })}>
-																	<Text style={style.menuPhotoActionHeader}>See</Text>
+																<TouchableOpacity style={styles.menuPhotoAction} onPress={() => setMenuphotooption({ ...menuPhotooption, show: true, action: '', photo: item.photo })}>
+																	<Text style={styles.menuPhotoActionHeader}>See</Text>
 																</TouchableOpacity>
 															</View>
 														)}
@@ -539,19 +550,19 @@ export default function menu(props) {
 										))}
 									</ScrollView>
 									:
-									displayList({ name: "", image: "", list: menuInfo.list, listType: "list", left: 0 })
+									displayList({ name: "", image: "", list: menuInfo.items, listType: "list", left: 0 })
 							: null }
 						</View>
 
 						<View style={{ alignItems: 'center', marginVertical: 20 }}>
 							{!menuInfo.type ? 
 								<>
-									<TouchableOpacity style={style.menuStart} onPress={() => setCreateoptionbox({ show: true, id: "", allow: "both" })}>
-										<Text style={style.menuStartHeader}>Click to add menu/{locationType == "salon" ? "service" : "food"}</Text>
+									<TouchableOpacity style={styles.menuStart} onPress={() => setCreateoptionbox({ show: true, id: "", allow: "both" })}>
+										<Text style={styles.menuStartHeader}>Click to add menu/{locationType == "salon" ? "service" : "food"}</Text>
 									</TouchableOpacity>
-									<Text style={{ fontSize: fsize(0.07), fontWeight: 'bold', marginVertical: 20 }}>Or</Text>
-									<TouchableOpacity style={style.menuStart} onPress={() => setUploadmenubox({ show: true, uri: '', name: '' })}>
-										<Text style={style.menuStartHeader}>Upload menu photo</Text>
+									<Text style={styles.menuStartDiv}>Or</Text>
+									<TouchableOpacity style={styles.menuStart} onPress={() => setUploadmenubox({ show: true, uri: '', name: '' })}>
+										<Text style={styles.menuStartHeader}>Upload menu photo</Text>
 									</TouchableOpacity>
 								</>
 								:
@@ -567,13 +578,13 @@ export default function menu(props) {
 						</View>
 					</ScrollView>
 
-					<View style={style.bottomNavs}>
-						<View style={style.bottomNavsRow}>
-							<TouchableOpacity style={style.bottomNav} onPress={() => props.navigation.navigate("settings", { refetch: () => getTheLocationProfile() })}>
-								<AntDesign name="setting" size={30}/>
+					<View style={styles.bottomNavs}>
+						<View style={styles.bottomNavsRow}>
+							<TouchableOpacity style={styles.bottomNav} onPress={() => props.navigation.navigate("settings", { refetch: () => getTheLocationProfile() })}>
+								<AntDesign name="setting" size={wsize(7)}/>
 							</TouchableOpacity>
 
-							<TouchableOpacity style={style.bottomNav} onPress={() => {
+							<TouchableOpacity style={styles.bottomNav} onPress={() => {
 								props.navigation.dispatch(
 									CommonActions.reset({
 										index: 1,
@@ -581,10 +592,10 @@ export default function menu(props) {
 									})
 								);
 							}}>
-								<Entypo name="home" size={30}/>
+								<Entypo name="home" size={wsize(7)}/>
 							</TouchableOpacity>
 
-							<TouchableOpacity style={style.bottomNav} onPress={() => {
+							<TouchableOpacity style={styles.bottomNav} onPress={() => {
 								AsyncStorage.clear()
 
 								props.navigation.dispatch(
@@ -594,21 +605,21 @@ export default function menu(props) {
 									})
 								);
 							}}>
-								<Text style={style.bottomNavHeader}>Log-Out</Text>
+								<Text style={styles.bottomNavHeader}>Log-Out</Text>
 							</TouchableOpacity>
 						</View>
 					</View>
 
 					{createOptionbox.show && (
 						<Modal transparent={true}>
-							<View style={style.createOptionContainer}>
-								<View style={style.createOptionBox}>
-									<TouchableOpacity style={style.createOptionClose} onPress={() => setCreateoptionbox({ show: false, id: -1 })}>
-										<AntDesign name="close" size={30}/>
+							<SafeAreaView style={styles.createOptionContainer}>
+								<View style={styles.createOptionBox}>
+									<TouchableOpacity style={styles.createOptionClose} onPress={() => setCreateoptionbox({ show: false, id: -1 })}>
+										<AntDesign name="close" size={wsize(7)}/>
 									</TouchableOpacity>
-									<View style={style.createOptionActions}>
+									<View style={styles.createOptionActions}>
 										{createOptionbox.allow == "both" && (
-											<TouchableOpacity style={style.createOptionAction} onPress={() => {
+											<TouchableOpacity style={styles.createOptionAction} onPress={() => {
 												setCreateoptionbox({ show: false, id: -1 })
 
 												props.navigation.navigate(
@@ -616,11 +627,11 @@ export default function menu(props) {
 													{ parentMenuid: createOptionbox.id, menuid: null, refetch: () => getAllMenus() }
 												)
 											}}>
-												<Text style={style.createOptionActionHeader}>Add menu</Text>
+												<Text style={styles.createOptionActionHeader}>Add menu</Text>
 											</TouchableOpacity>
 										)}
 											
-										<TouchableOpacity style={style.createOptionAction} onPress={() => {
+										<TouchableOpacity style={styles.createOptionAction} onPress={() => {
 											setCreateoptionbox({ show: false, id: -1 })
 
 											if (locationType == "salon") {
@@ -635,153 +646,156 @@ export default function menu(props) {
 												)
 											}
 										}}>
-											<Text style={style.createOptionActionHeader}>Add {locationType == "salon" ? "service" : "food"}</Text>
+											<Text style={styles.createOptionActionHeader}>Add {locationType == "salon" ? "service" : "food"}</Text>
 										</TouchableOpacity>
 									</View>
 								</View>
-							</View>
+							</SafeAreaView>
 						</Modal>
 					)}
 					{uploadMenubox.show && (
 						<Modal transparent={true}>
-							<View style={style.uploadMenuContainer}>
+							<SafeAreaView style={styles.uploadMenuContainer}>
 								{!uploadMenubox.action ? 
-									<View style={style.uploadMenuBox}>
-										<TouchableOpacity style={style.uploadMenuClose} onPress={() => setUploadmenubox({ show: false, uri: '', name: '' })}>
-											<AntDesign name="close" size={30}/>
+									<View style={styles.uploadMenuBox}>
+										<TouchableOpacity style={styles.uploadMenuClose} onPress={() => setUploadmenubox({ show: false, uri: '', name: '' })}>
+											<AntDesign name="close" size={wsize(7)}/>
 										</TouchableOpacity>
-										<View style={style.uploadMenuActions}>
-											<TouchableOpacity style={style.uploadMenuAction} onPress={() => setUploadmenubox({ ...uploadMenubox, action: 'camera' })}>
-												<Text style={style.uploadMenuActionHeader}>Take a photo</Text>
+										<View style={styles.uploadMenuActions}>
+											<TouchableOpacity style={styles.uploadMenuAction} onPress={() => setUploadmenubox({ ...uploadMenubox, action: 'camera' })}>
+												<Text style={styles.uploadMenuActionHeader}>Take a photo</Text>
 											</TouchableOpacity>
-											<TouchableOpacity style={style.uploadMenuAction} onPress={() => choosePhoto()}>
-												<Text style={style.uploadMenuActionHeader}>Choose from phone</Text>
+											<TouchableOpacity style={styles.uploadMenuAction} onPress={() => choosePhoto()}>
+												<Text style={styles.uploadMenuActionHeader}>Choose from phone</Text>
 											</TouchableOpacity>
 										</View>
 									</View>
 									:
 									uploadMenubox.action == 'camera' ? 
-										<View style={style.uploadMenuCameraContainer}>
+										<View style={styles.uploadMenuCameraContainer}>
 											{!uploadMenubox.uri ? 
 												<Camera 
-													style={style.uploadMenuCamera} 
+													style={styles.uploadMenuCamera} 
 													type={Camera.Constants.Type.back} ref={r => { setCamcomp(r) }}
-													ratio="1:1"
+													ratio={Platform.OS === 'ios' ? "4:3" : "1:1"}
 												/>
 												:
-												<View style={style.uploadMenuCamera}>
+												<View style={styles.uploadMenuCamera}>
 													<Image style={{ height: '100%', width: '100%' }} source={{ uri: uploadMenubox.uri }}/>
 												</View>
 											}
 
 											{!uploadMenubox.uri ? 
-												<View style={style.uploadMenuCameraActions}>
-													<TouchableOpacity style={style.uploadMenuCameraAction} onPress={() => choosePhoto()}>
-														<Text style={style.uploadMenuCameraActionHeader}>Choose instead</Text>
+												<View style={styles.uploadMenuCameraActions}>
+                          <TouchableOpacity style={styles.uploadMenuCameraAction} onPress={() => setUploadmenubox({ ...uploadMenubox, action: '' })}>
+                            <Text style={styles.uploadMenuCameraActionHeader}>Cancel</Text>
+                          </TouchableOpacity>
+													<TouchableOpacity style={styles.uploadMenuCameraAction} onPress={() => choosePhoto()}>
+														<Text style={styles.uploadMenuCameraActionHeader}>Choose instead</Text>
 													</TouchableOpacity>
-													<TouchableOpacity style={style.uploadMenuCameraAction} onPress={snapPhoto.bind(this)}>
-														<Text style={style.uploadMenuCameraActionHeader}>Take photo</Text>
+													<TouchableOpacity style={styles.uploadMenuCameraAction} onPress={snapPhoto.bind(this)}>
+														<Text style={styles.uploadMenuCameraActionHeader}>Take photo</Text>
 													</TouchableOpacity>
 												</View>
 												:
-												<View style={style.uploadMenuCameraActions}>
-													<TouchableOpacity style={style.uploadMenuCameraAction} onPress={() => setUploadmenubox({ ...uploadMenubox, action: '', uri: '', name: '' })}>
-														<Text style={style.uploadMenuCameraActionHeader}>Cancel</Text>
+												<View style={styles.uploadMenuCameraActions}>
+													<TouchableOpacity style={styles.uploadMenuCameraAction} onPress={() => setUploadmenubox({ ...uploadMenubox, action: '', uri: '', name: '' })}>
+														<Text style={styles.uploadMenuCameraActionHeader}>Cancel</Text>
 													</TouchableOpacity>
-													<TouchableOpacity style={style.uploadMenuCameraAction} onPress={() => setUploadmenubox({ ...uploadMenubox, uri: '', name: '' })}>
-														<Text style={style.uploadMenuCameraActionHeader}>Retake</Text>
+													<TouchableOpacity style={styles.uploadMenuCameraAction} onPress={() => setUploadmenubox({ ...uploadMenubox, uri: '', name: '' })}>
+														<Text style={styles.uploadMenuCameraActionHeader}>Retake</Text>
 													</TouchableOpacity>
-													<TouchableOpacity style={style.uploadMenuCameraAction} onPress={() => uploadMenuphoto()}>
-														<Text style={style.uploadMenuCameraActionHeader}>Done</Text>
+													<TouchableOpacity style={styles.uploadMenuCameraAction} onPress={() => uploadMenuphoto()}>
+														<Text style={styles.uploadMenuCameraActionHeader}>Done</Text>
 													</TouchableOpacity>
 												</View>
 											}
 										</View>
 									: null
 								}
-							</View>
+							</SafeAreaView>
 						</Modal>
 					)}
 					{menuPhotooption.show && (
 						<Modal transparent={true}>
-							<View style={style.menuPhotoOptionContainer}>
-								<View style={style.menuPhotoOptionPhoto}>
+							<SafeAreaView style={styles.menuPhotoOptionContainer}>
+								<View style={styles.menuPhotoOptionPhoto}>
 									<Image style={{ height: '100%', width: '100%' }} source={{ uri: logo_url + menuPhotooption.photo }}/>
 								</View>
 
 								{menuPhotooption.action == "delete" ? 
-									<View style={style.menuPhotoOptionBottomContainer}>
-										<Text style={style.menuPhotoOptionActionsHeader}>
+									<View style={styles.menuPhotoOptionBottomContainer}>
+										<Text style={styles.menuPhotoOptionActionsHeader}>
 											Are you sure you want to delete{'\n'}this menu ?
 										</Text>
-										<View style={style.menuPhotoOptionActions}>
-											<TouchableOpacity style={style.menuPhotoOptionAction} onPress={() => setMenuphotooption({ ...menuPhotooption, show: false, action: '', photo: '' })}>
-												<Text style={style.menuPhotoOptionActionHeader}>No</Text>
+										<View style={styles.menuPhotoOptionActions}>
+											<TouchableOpacity style={styles.menuPhotoOptionAction} onPress={() => setMenuphotooption({ ...menuPhotooption, show: false, action: '', photo: '' })}>
+												<Text style={styles.menuPhotoOptionActionHeader}>No</Text>
 											</TouchableOpacity>
-											<TouchableOpacity style={style.menuPhotoOptionAction} onPress={() => deleteTheMenu()}>
-												<Text style={style.menuPhotoOptionActionHeader}>Yes</Text>
+											<TouchableOpacity style={styles.menuPhotoOptionAction} onPress={() => deleteTheMenu()}>
+												<Text style={styles.menuPhotoOptionActionHeader}>Yes</Text>
 											</TouchableOpacity>
 										</View>
 									</View>
 									:
-									<View style={style.menuPhotoOptionBottomContainer}>
-										<TouchableOpacity style={style.menuPhotoOptionAction} onPress={() => setMenuphotooption({ ...menuPhotooption, show: false, action: '', photo: '' })}>
-											<Text style={style.menuPhotoOptionActionHeader}>Close</Text>
+									<View style={styles.menuPhotoOptionBottomContainer}>
+										<TouchableOpacity style={styles.menuPhotoOptionAction} onPress={() => setMenuphotooption({ ...menuPhotooption, show: false, action: '', photo: '' })}>
+											<Text style={styles.menuPhotoOptionActionHeader}>Close</Text>
 										</TouchableOpacity>
 									</View>
 								}
-							</View>
+							</SafeAreaView>
 						</Modal>
 					)}
 					{removeMenuinfo.show && (
 						<Modal transparent={true}>
-							<View style={style.menuInfoContainer}>
-								<View style={style.menuInfoBox}>
-									<Text style={style.menuInfoBoxHeader}>Delete menu confirmation</Text>
+							<SafeAreaView style={styles.menuInfoContainer}>
+								<View style={styles.menuInfoBox}>
+									<Text style={styles.menuInfoBoxHeader}>Delete menu confirmation</Text>
 
 									<View style={{ alignItems: 'center' }}>
-										<View style={style.menuInfoImageHolder}>
-											<Image source={{ uri: logo_url + removeMenuinfo.image }} style={style.menuInfoImage}/>
+										<View style={styles.menuInfoImageHolder}>
+											<Image source={{ uri: logo_url + removeMenuinfo.image }} style={styles.menuInfoImage}/>
 										</View>
-										<Text style={style.menuInfoName}>{removeMenuinfo.name}</Text>
-										<Text style={style.menuInfoInfo}>{removeMenuinfo.info}</Text>
+										<Text style={styles.menuInfoName}>{removeMenuinfo.name}</Text>
+										<Text style={styles.menuInfoInfo}>{removeMenuinfo.info}</Text>
 									</View>
 
-									<Text style={style.menuInfoHeader}>Are you sure you want to delete this menu and its items</Text>
+									<Text style={styles.menuInfoHeader}>Are you sure you want to delete{'\n'}this menu and its items</Text>
 
-									<View style={style.menuInfoActions}>
-										<TouchableOpacity style={style.menuInfoAction} onPress={() => setRemovemenuinfo({ ...removeMenuinfo, show: false })}>
-											<Text style={style.menuInfoActionHeader}>Cancel</Text>
+									<View style={styles.menuInfoActions}>
+										<TouchableOpacity style={styles.menuInfoAction} onPress={() => setRemovemenuinfo({ ...removeMenuinfo, show: false })}>
+											<Text style={styles.menuInfoActionHeader}>Cancel</Text>
 										</TouchableOpacity>
-										<TouchableOpacity style={style.menuInfoAction} onPress={() => removeTheMenu(removeMenuinfo.id)}>
-											<Text style={style.menuInfoActionHeader}>Yes</Text>
+										<TouchableOpacity style={styles.menuInfoAction} onPress={() => removeTheMenu(removeMenuinfo.id)}>
+											<Text style={styles.menuInfoActionHeader}>Yes</Text>
 										</TouchableOpacity>
 									</View>
 								</View>
-							</View>
+							</SafeAreaView>
 						</Modal>
 					)}
 					{removeProductinfo.show && (
 						<Modal transparent={true}>
-							<View style={style.productInfoContainer}>
-								<View style={style.productInfoBox}>
-									<Text style={style.productInfoBoxHeader}>Delete product confirmation</Text>
+							<SafeAreaView style={styles.productInfoContainer}>
+								<View style={styles.productInfoBox}>
+									<Text style={styles.productInfoBoxHeader}>Delete product confirmation</Text>
 
-									<View style={style.productInfoImageHolder}>
-										<Image source={{ uri: logo_url + removeProductinfo.image }} style={style.productInfoImage}/>
+									<View style={styles.productInfoImageHolder}>
+										<Image source={{ uri: logo_url + removeProductinfo.image }} style={styles.productInfoImage}/>
 									</View>
-									<Text style={style.productInfoName}>{removeProductinfo.name}</Text>
+									<Text style={styles.productInfoName}>{removeProductinfo.name}</Text>
 
 									<View>
 										{removeProductinfo.options.map((option, infoindex) => (
-											<Text key={option.key} style={style.itemInfo}>
+											<Text key={option.key} style={styles.itemInfo}>
 												<Text style={{ fontWeight: 'bold' }}>{option.header}: </Text> 
 												{option.type == 'percentage' && '%'}
 											</Text>
 										))}
 
 										{removeProductinfo.others.map((other, otherindex) => (
-											<Text key={other.key} style={style.itemInfo}>
+											<Text key={other.key} style={styles.itemInfo}>
 												<Text style={{ fontWeight: 'bold' }}>{other.name}: </Text>
 												<Text>{other.input}</Text>
 												<Text> ($ {other.price.toFixed(2)})</Text>
@@ -789,7 +803,7 @@ export default function menu(props) {
 										))}
 
 										{removeProductinfo.sizes.map((size, sizeindex) => (
-											<Text key={size.key} style={style.itemInfo}>
+											<Text key={size.key} style={styles.itemInfo}>
 												<Text style={{ fontWeight: 'bold' }}>Size #{sizeindex + 1}: </Text>
 												<Text>{size.name} ($ {size.price.toFixed(2)})</Text>
 											</Text>
@@ -797,66 +811,66 @@ export default function menu(props) {
 									</View>
 
 									{removeProductinfo.price ? 
-										<Text style={style.productInfoPrice}><Text style={{ fontWeight: 'bold' }}>Price: </Text>$ {(removeProductinfo.price).toFixed(2)}</Text>
+										<Text style={styles.productInfoPrice}><Text style={{ fontWeight: 'bold' }}>Price: </Text>$ {(removeProductinfo.price).toFixed(2)}</Text>
 									: null }
 
 									{removeProductinfo.numorderers > 0 && (
 										<View>
-											<Text style={style.productInfoOrderers}>Calling for {removeProductinfo.numorderers} {removeProductinfo.numorderers == 1 ? 'person' : 'people'}</Text>
+											<Text style={styles.productInfoOrderers}>Calling for {removeProductinfo.numorderers} {removeProductinfo.numorderers == 1 ? 'person' : 'people'}</Text>
 										</View>
 									)}
 
-									<Text style={style.productInfoHeader}>Are you sure you want to delete this product</Text>
+									<Text style={styles.productInfoHeader}>Are you sure you want to delete this product</Text>
 
-									<View style={style.productInfoActions}>
-										<TouchableOpacity style={style.productInfoAction} onPress={() => setRemoveproductinfo({ ...removeProductinfo, show: false })}>
-											<Text style={style.productInfoActionHeader}>Cancel</Text>
+									<View style={styles.productInfoActions}>
+										<TouchableOpacity style={styles.productInfoAction} onPress={() => setRemoveproductinfo({ ...removeProductinfo, show: false })}>
+											<Text style={styles.productInfoActionHeader}>Cancel</Text>
 										</TouchableOpacity>
-										<TouchableOpacity style={style.productInfoAction} onPress={() => removeTheProduct(removeProductinfo.id)}>
-											<Text style={style.productInfoActionHeader}>Yes</Text>
+										<TouchableOpacity style={styles.productInfoAction} onPress={() => removeTheProduct(removeProductinfo.id)}>
+											<Text style={styles.productInfoActionHeader}>Yes</Text>
 										</TouchableOpacity>
 									</View>
 								</View>
-							</View>
+							</SafeAreaView>
 						</Modal>
 					)}
 					{removeServiceinfo.show && (
 						<Modal transparent={true}>
-							<View style={style.serviceInfoContainer}>
-								<View style={style.serviceInfoBox}>
-									<Text style={style.serviceInfoBoxHeader}>Delete service confirmation</Text>
+							<SafeAreaView style={styles.serviceInfoContainer}>
+								<View style={styles.serviceInfoBox}>
+									<Text style={styles.serviceInfoBoxHeader}>Delete service confirmation</Text>
 
-									<View style={style.serviceInfoImageHolder}>
-										<Image source={{ uri: logo_url + removeServiceinfo.image }} style={style.serviceInfoImage}/>
+									<View style={styles.serviceInfoImageHolder}>
+										<Image source={{ uri: logo_url + removeServiceinfo.image }} style={styles.serviceInfoImage}/>
 									</View>
-									<Text style={style.serviceInfoName}>{removeServiceinfo.name}</Text>
-									<Text style={style.serviceInfoPrice}><Text style={{ fontWeight: 'bold' }}>Price: </Text>$ {(removeServiceinfo.price).toFixed(2)}</Text>
-									<Text style={style.serviceInfoHeader}>Are you sure you want to delete this service</Text>
+									<Text style={styles.serviceInfoName}>{removeServiceinfo.name}</Text>
+									<Text style={styles.serviceInfoPrice}><Text style={{ fontWeight: 'bold' }}>Price: </Text>$ {(removeServiceinfo.price).toFixed(2)}</Text>
+									<Text style={styles.serviceInfoHeader}>Are you sure you want to delete this service</Text>
 
-									<View style={style.serviceInfoActions}>
-										<TouchableOpacity style={style.serviceInfoAction} onPress={() => setRemoveserviceinfo({ ...removeServiceinfo, show: false })}>
-											<Text style={style.serviceInfoActionHeader}>Cancel</Text>
+									<View style={styles.serviceInfoActions}>
+										<TouchableOpacity style={styles.serviceInfoAction} onPress={() => setRemoveserviceinfo({ ...removeServiceinfo, show: false })}>
+											<Text style={styles.serviceInfoActionHeader}>Cancel</Text>
 										</TouchableOpacity>
-										<TouchableOpacity style={style.serviceInfoAction} onPress={() => removeTheService(removeServiceinfo.id)}>
-											<Text style={style.serviceInfoActionHeader}>Yes</Text>
+										<TouchableOpacity style={styles.serviceInfoAction} onPress={() => removeTheService(removeServiceinfo.id)}>
+											<Text style={styles.serviceInfoActionHeader}>Yes</Text>
 										</TouchableOpacity>
 									</View>
 								</View>
-							</View>
+							</SafeAreaView>
 						</Modal>
 					)}
 				</View>
 				:
-				<View style={{ alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' }}>
+				<View style={styles.loading}>
 					<ActivityIndicator color="black" size="large"/>
 				</View>
 			}
-		</View>
+		</SafeAreaView>
 	)
 }
 
-const style = StyleSheet.create({
-	menuBox: { backgroundColor: 'white', height: '100%', paddingBottom: offsetPadding, width: '100%' },
+const styles = StyleSheet.create({
+	menuBox: { backgroundColor: 'white', height: '100%', width: '100%' },
 	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 
 	menuRow: { flexDirection: 'row', justifyContent: 'space-between', padding: 5 },
@@ -865,37 +879,38 @@ const style = StyleSheet.create({
 	menuPhotoAction: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 3 },
 	menuPhotoActionHeader: { textAlign: 'center' },
 	menuStart: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5 },
-	menuStartHeader: { fontSize: fsize(0.05), textAlign: 'center' },
+	menuStartHeader: { fontSize: wsize(7), textAlign: 'center' },
+  menuStartDiv: { fontSize: wsize(7), fontWeight: 'bold', marginVertical: 20 },
 
 	menu: { backgroundColor: 'white', padding: 3, width: '98%' },
-	menuImageHolder: { borderRadius: fsize(0.1) / 2, height: fsize(0.1), overflow: 'hidden', width: fsize(0.1) },
-	menuImage: { height: fsize(0.1), width: fsize(0.1) },
-	menuName: { fontSize: fsize(0.04), fontWeight: 'bold', marginLeft: 5, textDecorationLine: 'underline' },
+	menuImageHolder: { borderRadius: wsize(10) / 2, height: wsize(10), overflow: 'hidden', width: wsize(10) },
+	menuImage: { height: wsize(10), width: wsize(10) },
+  column: { flexDirection: 'column', justifyContent: 'space-around' },
+	menuName: { fontSize: wsize(5), fontWeight: 'bold', marginLeft: 5, textDecorationLine: 'underline' },
 	menuActions: { flexDirection: 'row' },
 	menuAction: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, marginLeft: 10, padding: 3 },
-	menuActionHeader: { fontSize: fsize(0.04), textAlign: 'center' },
+	menuActionHeader: { fontSize: wsize(4), textAlign: 'center' },
 	item: { backgroundColor: 'white', paddingHorizontal: 3, paddingVertical: 10, width: '98%' },
-	itemImageHolder: { borderRadius: fsize(0.1) / 2, height: fsize(0.1), margin: 5, overflow: 'hidden', width: fsize(0.1) },
-	itemImage: { height: fsize(0.1), width: fsize(0.1) },
-	itemHeader: { fontSize: fsize(0.04), fontWeight: 'bold', marginRight: 20, paddingTop: fsize(0.04), textDecorationStyle: 'solid' },
-	itemInfo: { marginLeft: 10, marginVertical: 10 },
+	itemImageHolder: { borderRadius: wsize(10) / 2, height: wsize(10), margin: 5, overflow: 'hidden', width: wsize(10) },
+	itemImage: { height: wsize(10), width: wsize(10) },
+	itemHeader: { fontSize: wsize(5), fontWeight: 'bold', marginHorizontal: 10, textDecorationStyle: 'solid' },
 	itemActions: { flexDirection: 'row' },
 	itemAction: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, marginLeft: 10, padding: 3 },
-	itemActionHeader: { fontSize: fsize(0.04), textAlign: 'center' },
+	itemActionHeader: { fontSize: wsize(4), textAlign: 'center' },
 
 	actionsHolder: { flexDirection: 'column', height: '100%', justifyContent: 'space-around' },
 	actions: { alignItems: 'center', width: '100%' },
 	action: { alignItems: 'center', backgroundColor: 'white', borderRadius: 15, borderStyle: 'solid', borderWidth: 1, marginHorizontal: 5, marginVertical: 30, padding: 10, width: 200 },
-	actionHeader: { color: 'black', fontFamily: 'appFont', fontSize: fsize(0.06) },
+	actionHeader: { color: 'black', fontFamily: 'appFont', fontSize: wsize(15) },
 
 	addTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 1, padding: 5, width: 200 },
-	addTouchHeader: { fontSize: fsize(0.05), textAlign: 'center' },
+	addTouchHeader: { fontSize: wsize(5), textAlign: 'center' },
 	row: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'column', height: '10%', justifyContent: 'space-around', width: '100%' },
 	bottomNavsRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
-	bottomNav: { flexDirection: 'row', justifyContent: 'space-around', margin: 5 },
-	bottomNavHeader: { fontWeight: 'bold', paddingVertical: 5 },
+	bottomNav: { flexDirection: 'row', justifyContent: 'space-around', margin: 5, width: wsize(30) },
+	bottomNavHeader: { fontSize: wsize(5), fontWeight: 'bold' },
 
 	// hidden boxes
 
@@ -905,70 +920,72 @@ const style = StyleSheet.create({
 	createOptionClose: { borderRadius: 18, borderStyle: 'solid', borderWidth: 2 },
 	createOptionActions: { flexDirection: 'column', height: '50%', justifyContent: 'space-around' },
 	createOptionAction: { borderRadius: 3, borderStyle: 'solid', borderWidth: 1, padding: 10 },
-	createOptionActionHeader: { fontSize: fsize(0.08), textAlign: 'center' },
+	createOptionActionHeader: { fontSize: wsize(7), textAlign: 'center' },
 
 	// menu photo option
 	menuPhotoOptionContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	menuPhotoOptionPhoto: { height: '80%', width: '80%' },
 	menuPhotoOptionBottomContainer: { alignItems: 'center', backgroundColor: 'white', width: '90%' },
-	menuPhotoOptionActionsHeader: { color: 'black', fontSize: fsize(0.05), textAlign: 'center' },
+	menuPhotoOptionActionsHeader: { color: 'black', fontSize: wsize(4), textAlign: 'center' },
 	menuPhotoOptionActions: { flexDirection: 'row', justifyContent: 'space-around' },
-	menuPhotoOptionAction: { borderColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 3, width: 100 },
-	menuPhotoOptionActionHeader: { color: 'black', fontSize: fsize(0.05), textAlign: 'center' },
+	menuPhotoOptionAction: { borderColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 3, width: wsize(30) },
+	menuPhotoOptionActionHeader: { color: 'black', fontSize: wsize(4), textAlign: 'center' },
 
 	// upload menu
 	uploadMenuContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	uploadMenuBox: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', padding: 10, width: '80%' },
 	uploadMenuClose: { borderRadius: 18, borderStyle: 'solid', borderWidth: 2 },
 	uploadMenuActions: { flexDirection: 'column', height: '50%', justifyContent: 'space-around' },
-	uploadMenuAction: { borderRadius: 3, borderStyle: 'solid', borderWidth: 1, padding: 10 },
-	uploadMenuActionHeader: { fontSize: fsize(0.08), textAlign: 'center' },
+	uploadMenuAction: { borderRadius: 3, borderStyle: 'solid', borderWidth: 1, padding: 5 },
+	uploadMenuActionHeader: { fontSize: wsize(4), textAlign: 'center' },
 	uploadMenuCameraContainer: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	uploadMenuCamera: { height: '80%', width: '80%' },
 	uploadMenuCameraActions: { bottom: 0, flexDirection: 'row', justifyContent: 'space-around', position: 'absolute' },
-	uploadMenuCameraAction: { borderColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: fsize(0.2) },
-	uploadMenuCameraActionHeader: { color: 'black', textAlign: 'center' },
+	uploadMenuCameraAction: { borderColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: wsize(30) },
+	uploadMenuCameraActionHeader: { color: 'black', fontSize: wsize(4), textAlign: 'center' },
 
 	// remove menu confirmation
 	menuInfoContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	menuInfoBox: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '80%', justifyContent: 'space-between', padding: 10, width: '80%' },
-	menuInfoBoxHeader: { fontSize: fsize(0.05), textAlign: 'center' },
-	menuInfoImageHolder: { borderRadius: 100, height: fsize(0.5), overflow: 'hidden', width: fsize(0.5) },
-	menuInfoImage: { height: fsize(0.5), width: fsize(0.5) },
-	menuInfoName: { fontSize: fsize(0.07), fontWeight: 'bold' },
-	menuInfoInfo: { fontSize: fsize(0.05) },
-	menuInfoHeader: { fontSize: fsize(0.04), fontWeight: 'bold', paddingHorizontal: 10, textAlign: 'center' },
+	menuInfoBoxHeader: { fontSize: wsize(6), textAlign: 'center' },
+	menuInfoImageHolder: { borderRadius: wsize(50) / 2, height: wsize(50), overflow: 'hidden', width: wsize(50) },
+	menuInfoImage: { height: wsize(50), width: wsize(50) },
+	menuInfoName: { fontSize: wsize(5), fontWeight: 'bold' },
+	menuInfoInfo: { fontSize: wsize(5), textAlign: 'center' },
+	menuInfoHeader: { fontSize: wsize(4), fontWeight: 'bold', paddingHorizontal: 10, textAlign: 'center' },
 	menuInfoActions: { flexDirection: 'row', justifyContent: 'space-around' },
-	menuInfoAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 10, padding: 5, width: fsize(0.2) },
-	menuInfoActionHeader: { textAlign: 'center' },
+	menuInfoAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 10, padding: 5, width: wsize(30) },
+	menuInfoActionHeader: { fontSize: wsize(4), textAlign: 'center' },
 
 	// remove product confirmation
 	productInfoContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	productInfoBox: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '80%', justifyContent: 'space-between', padding: 10, width: '80%' },
-	productInfoBoxHeader: { fontSize: fsize(0.05), textAlign: 'center' },
-	productInfoImageHolder: { borderRadius: 100, height: 200, overflow: 'hidden', width: 200 },
-	productInfoImage: { height: 200, width: 200 },
-	productInfoName: { fontSize: fsize(0.06), fontWeight: 'bold' },
+	productInfoBoxHeader: { fontSize: wsize(6), textAlign: 'center' },
+	productInfoImageHolder: { borderRadius: wsize(50) / 2, height: wsize(50), overflow: 'hidden', width: wsize(50) },
+	productInfoImage: { height: wsize(50), width: wsize(50) },
+	productInfoName: { fontSize: wsize(5), fontWeight: 'bold' },
 	productInfoQuantity: {  },
-	productInfoPrice: { fontSize: fsize(0.06) },
+	productInfoPrice: { fontSize: wsize(5) },
 	productInfoOrderers: { fontWeight: 'bold' },
-	productInfoHeader: { fontSize: fsize(0.04), fontWeight: 'bold', paddingHorizontal: 10, textAlign: 'center' },
+	productInfoHeader: { fontSize: wsize(5), fontWeight: 'bold', paddingHorizontal: 10, textAlign: 'center' },
 	productInfoActions: { flexDirection: 'row', justifyContent: 'space-around' },
-	productInfoAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 10, padding: 5, width: 70 },
-	productInfoActionHeader: { textAlign: 'center' },
+	productInfoAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 10, padding: 5, width: wsize(30) },
+	productInfoActionHeader: { fontSize: wsize(4), textAlign: 'center' },
 
 	// remove service confirmation
 	serviceInfoContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	serviceInfoBox: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '80%', justifyContent: 'space-between', padding: 10, width: '80%' },
-	serviceInfoBoxHeader: { fontSize: fsize(0.05), textAlign: 'center' },
-	serviceInfoImageHolder: { borderRadius: 100, height: 200, overflow: 'hidden', width: 200 },
-	serviceInfoImage: { height: 200, width: 200 },
-	serviceInfoName: { fontSize: fsize(0.06), fontWeight: 'bold' },
-	serviceInfoQuantity: { fontSize: fsize(0.06) },
-	serviceInfoPrice: { fontSize: fsize(0.06) },
+	serviceInfoBoxHeader: { fontSize: wsize(6), textAlign: 'center' },
+	serviceInfoImageHolder: { borderRadius: wsize(50) / 2, height: wsize(50), overflow: 'hidden', width: wsize(50) },
+	serviceInfoImage: { height: wsize(50), width: wsize(50) },
+	serviceInfoName: { fontSize: wsize(5), fontWeight: 'bold' },
+	serviceInfoQuantity: { fontSize: wsize(5) },
+	serviceInfoPrice: { fontSize: wsize(5) },
 	serviceInfoOrderers: { fontWeight: 'bold' },
-	serviceInfoHeader: { fontSize: fsize(0.04), fontWeight: 'bold', paddingHorizontal: 10, textAlign: 'center' },
+	serviceInfoHeader: { fontSize: wsize(5), fontWeight: 'bold', paddingHorizontal: 10, textAlign: 'center' },
 	serviceInfoActions: { flexDirection: 'row', justifyContent: 'space-around' },
-	serviceInfoAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 10, padding: 5, width: 70 },
-	serviceInfoActionHeader: { textAlign: 'center' },
+	serviceInfoAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 10, padding: 5, width: wsize(30) },
+	serviceInfoActionHeader: { fontSize: wsize(4), textAlign: 'center' },
+
+  loading: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 })

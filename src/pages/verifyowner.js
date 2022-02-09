@@ -1,19 +1,20 @@
 import React, { useState } from 'react';
-import { ActivityIndicator, Dimensions, View, ImageBackground, Text, TextInput, Image, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet } from 'react-native';
+import { SafeAreaView, ActivityIndicator, Dimensions, View, ImageBackground, Text, TextInput, Image, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import { verifyUser } from '../apis/owners'
 import { ownerRegisterInfo, registerInfo, isLocal } from '../../assets/info'
-const { height, width } = Dimensions.get('window')
-const offsetPadding = Constants.statusBarHeight
-const screenHeight = height - (offsetPadding * 2)
 
-const fsize = p => {
-	return width * p
+const { height, width } = Dimensions.get('window')
+const wsize = p => {
+  return width * (p / 100)
+}
+const hsize = p => {
+  return height * (p / 100)
 }
 
-export default function verifyowner({ navigation }) {
+export default function Verifyowner({ navigation }) {
 	const [cellnumber, setCellnumber] = useState(ownerRegisterInfo.cellnumber)
 	const [verifyCode, setVerifycode] = useState('')
 	const [userCode, setUsercode] = useState(isLocal ? '111111' : '')
@@ -52,12 +53,12 @@ export default function verifyowner({ navigation }) {
 	}
 
 	return (
-		<View style={style.register}>
+		<SafeAreaView style={style.register}>
 			<TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
 				<View style={{ opacity: loading ? 0.5 : 1 }}>
 					<View style={style.box}>
 						<View style={style.background}>
-							<Image source={require("../../assets/background.jpg")} style={{ height: fsize(1), width: fsize(1) }}/>
+							<Image source={require("../../assets/background.jpg")} style={{ height: width, width: width }}/>
 						</View>
 
 						<View style={style.inputsBox}>
@@ -73,7 +74,9 @@ export default function verifyowner({ navigation }) {
 													setCellnumber("(" + cellnumber + ") " + newValue)
 												} else if (cellnumber.length == 9) {
 													setCellnumber(cellnumber + "-" + newValue)
-												} else if (cellnumber.length == 14) {
+												} else if (cellnumber.length == 13) {
+													setCellnumber(cellnumber + newValue)
+													
 													Keyboard.dismiss()
 												} else {
 													setCellnumber(cellnumber + newValue)
@@ -83,7 +86,7 @@ export default function verifyowner({ navigation }) {
 											}
 										}} value={cellnumber} keyboardType="numeric" autoCorrect={false}/>
 									</View>
-									<TouchableOpacity style={style.submit} onPress={verify} disabled={loading}>
+									<TouchableOpacity style={[style.submit, { opacity: loading ? 0.3 : 1 }]} onPress={verify} disabled={loading}>
 										<Text style={style.submitHeader}>Register</Text>
 									</TouchableOpacity>
 								</View>
@@ -99,19 +102,21 @@ export default function verifyowner({ navigation }) {
 											}
 										}} value={userCode} keyboardType="numeric" autoCorrect={false}/>
 									</View>
-									<View style={{ flexDirection: 'row', justifyContent: 'space-between', width: fsize(0.61) }}>
-										<TouchableOpacity style={style.submit} disabled={loading} onPress={() => setVerifycode('')}>
-											<Text style={style.submitHeader}>Back</Text>
-										</TouchableOpacity>
-										<TouchableOpacity style={style.submit} disabled={loading} onPress={() => {
-											if (verifyCode == userCode || userCode == '111111') {
-												navigation.navigate("register", { cellnumber })
-											} else {
-												setErrormsg("The verify code is wrong")
-											}
-										}}>
-											<Text style={style.submitHeader}>Verify</Text>
-										</TouchableOpacity>
+									<View style={{ flexDirection: 'row', justifyContent: 'space-around', width: '100%' }}>
+                    <View style={{ flexDirection: 'row' }}>
+  										<TouchableOpacity style={[style.submit, { opacity: loading ? 0.3 : 1 }]} disabled={loading} onPress={() => setVerifycode('')}>
+  											<Text style={style.submitHeader}>Back</Text>
+  										</TouchableOpacity>
+  										<TouchableOpacity style={[style.submit, { opacity: loading ? 0.3 : 1 }]} disabled={loading} onPress={() => {
+  											if (verifyCode == userCode || userCode == '111111') {
+  												navigation.navigate("register", { cellnumber })
+  											} else {
+  												setErrormsg("The verify code is wrong")
+  											}
+  										}}>
+  											<Text style={style.submitHeader}>Verify</Text>
+  										</TouchableOpacity>
+                    </View>
 									</View>
 								</View>
 							}
@@ -127,25 +132,24 @@ export default function verifyowner({ navigation }) {
 					</View>
 				</View>
 			</TouchableWithoutFeedback>
-		</View>
+		</SafeAreaView>
 	);
 }
 
 const style = StyleSheet.create({
-	register: { backgroundColor: 'white', height: '100%', paddingVertical: offsetPadding, width: '100%' },
+	register: { backgroundColor: 'white', height: '100%', width: '100%' },
 	box: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
-	background: { alignItems: 'center', flexDirection: 'column', height: screenHeight, justifyContent: 'space-around', position: 'absolute', top: 0, width: width },
-	boxHeader: { color: 'black', fontFamily: 'appFont', fontSize: fsize(0.15), fontWeight: 'bold', marginTop: 20 },
+	background: { alignItems: 'center', flexDirection: 'column', height, justifyContent: 'space-around', position: 'absolute', top: 0, width: width },
 	
-	inputsBox: { flexDirection: 'column', height: screenHeight / 2, justifyContent: 'space-around', width: '100%' },
+	inputsBox: { flexDirection: 'column', height: height / 2, justifyContent: 'space-around', width: '100%' },
 	inputContainer: { marginBottom: 30, width: '80%' },
-	inputHeader: { fontFamily: 'appFont', fontSize: fsize(0.04) },
-	input: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: fsize(0.04), padding: 5, width: '100%' },
-	errorMsg: { color: 'darkred', fontSize: fsize(0.05), fontWeight: 'bold', textAlign: 'center' },
+	inputHeader: { fontFamily: 'appFont', fontSize: wsize(7) },
+	input: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(7), padding: 5, width: '100%' },
+	errorMsg: { color: 'darkred', fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
 	
-	submit: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontFamily: 'appFont', padding: 10, width: fsize(0.3) },
-	submitHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), fontWeight: 'bold', textAlign: 'center' },
+	submit: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontFamily: 'appFont', margin: 5, padding: 10 },
+	submitHeader: { fontFamily: 'appFont', fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
 	
-	option: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, marginVertical: 10, padding: 5 },
-	optionHeader: { fontSize: fsize(0.035), fontWeight: 'bold' },
+	option: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, marginVertical: 10, paddingHorizontal: 10 },
+	optionHeader: { fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
 })

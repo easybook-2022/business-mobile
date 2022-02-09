@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ActivityIndicator, Dimensions, ScrollView, View, Text, TextInput, Image, TouchableOpacity, TouchableWithoutFeedback, Keyboard, PermissionsAndroid, StyleSheet } from 'react-native';
+import { SafeAreaView, ActivityIndicator, Platform, Dimensions, ScrollView, View, Text, TextInput, Image, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import * as FileSystem from 'expo-file-system'
@@ -14,16 +14,15 @@ import AntDesign from 'react-native-vector-icons/AntDesign'
 import Entypo from 'react-native-vector-icons/Entypo'
 
 const { height, width } = Dimensions.get('window')
-const offsetPadding = Constants.statusBarHeight
-const screenHeight = height - (offsetPadding * 2)
-const steps = ['nickname', 'password', 'profile']
-const screenRatio = width / height
-
-const fsize = p => {
-	return width * p
+const wsize = p => {
+  return width * (p / 100)
 }
+const hsize = p => {
+  return height * (p / 100)
+}
+const steps = ['nickname', 'password', 'profile']
 
-export default function register(props) {
+export default function Register(props) {
 	const cellnumber = props.route.params.cellnumber
 
 	const [setupType, setSetuptype] = useState('nickname')
@@ -38,10 +37,10 @@ export default function register(props) {
 	const [errorMsg, setErrormsg] = useState('')
 
 	const register = () => {
-		setLoading(true)
-
 		const { password, confirmPassword } = passwordInfo
 		const data = { cellnumber, username, password, confirmPassword, profile, permission: cameraPermission || pickingPermission }
+
+    setLoading(true)
 
 		registerUser(data)
 			.then((res) => {
@@ -63,14 +62,14 @@ export default function register(props) {
 				if (err.response && err.response.status == 400) {
 					const { errormsg, status } = err.response.data
 
-					setLoading(false)
 					setErrormsg(errormsg)
 				} else {
-					setErrormsg("an error has occurred in server")
+          alert("server error")
 				}
+
+        setLoading(false)
 			})
 	}
-
 	const saveInfo = () => {
 		const index = steps.indexOf(setupType)
 		let nextStep, msg = ""
@@ -126,7 +125,6 @@ export default function register(props) {
 
 		setLoading(false)
 	}
-
 	const snapPhoto = async() => {
 		let letters = [
 			"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", 
@@ -229,7 +227,7 @@ export default function register(props) {
 	}
 
 	return (
-		<View style={style.register}>
+		<SafeAreaView style={style.register}>
 			<TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
 				<View style={[style.box, { opacity: loading ? 0.5 : 1 }]}>
 					<View style={style.header}>
@@ -295,14 +293,14 @@ export default function register(props) {
 								)}	
 							</View>
 						)}
-
+						
 						<Text style={style.errorMsg}>{errorMsg}</Text>
 
 						{loading ? <ActivityIndicator color="black" size="small"/> : null}
 
 						<View style={style.actions}>
 							{setupType != 'nickname' && (
-								<TouchableOpacity style={style.action} onPress={() => {
+								<TouchableOpacity style={[style.action, { opacity: loading ? 0.3 : 1 }]} onPress={() => {
 									let index = steps.indexOf(setupType)
 
 									if (index == 1) {
@@ -317,7 +315,7 @@ export default function register(props) {
 								</TouchableOpacity>
 							)}
 
-							<TouchableOpacity style={style.action} disabled={loading} onPress={() => setupType == "profile" ? register() : saveInfo()}>
+							<TouchableOpacity style={[style.action, { opacity: loading ? 0.3 : 1 }]} disabled={loading} onPress={() => setupType == "profile" ? register() : saveInfo()}>
 								<Text style={style.actionHeader}>{setupType == "profile" ? "Done" : "Next"}</Text>
 							</TouchableOpacity>
 						</View>
@@ -341,35 +339,35 @@ export default function register(props) {
 					</View>
 				</View>
 			</TouchableWithoutFeedback>
-		</View>
+		</SafeAreaView>
 	);
 }
 
 const style = StyleSheet.create({
-	register: { backgroundColor: 'white', height: '100%', paddingVertical: offsetPadding, width: '100%' },
+	register: { backgroundColor: 'white', height: '100%', width: '100%' },
 	box: { alignItems: 'center', backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 	header: { flexDirection: 'column', height: '10%', justifyContent: 'space-around' },
-	boxHeader: { color: 'black', fontFamily: 'appFont', fontSize: fsize(0.1), fontWeight: 'bold' },
+	boxHeader: { color: 'black', fontFamily: 'appFont', fontSize: wsize(7), fontWeight: 'bold' },
 
 	inputsBox: { alignItems: 'center', height: '80%', width: '100%' },
 	inputContainer: { width: '80%' },
-	inputHeader: { fontFamily: 'appFont', fontSize: fsize(0.04) },
-	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: fsize(0.04), padding: 5, width: '100%' },
+	inputHeader: { fontFamily: 'appFont', fontSize: wsize(5) },
+	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), padding: 5, width: '100%' },
 
 	cameraContainer: { alignItems: 'center', width: '100%' },
-	camera: { height: fsize(0.7), width: fsize(0.7) },
+	camera: { height: width * 0.7, width: width * 0.7 },
 	cameraActions: { flexDirection: 'row' },
-	cameraAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: fsize(0.3) },
-	cameraActionHeader: { fontSize: fsize(0.03), textAlign: 'center' },
-
-	errorMsg: { color: 'darkred', fontSize: fsize(0.05), fontWeight: 'bold', textAlign: 'center' },
+	cameraAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: wsize(30) },
+	cameraActionHeader: { fontSize: wsize(4), textAlign: 'center' },
 
 	actions: { flexDirection: 'row', justifyContent: 'space-around' },
-	action: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 10, width: fsize(0.3) },
-	actionHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), textAlign: 'center' },
+	action: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 10, width: wsize(30) },
+	actionHeader: { fontFamily: 'appFont', fontSize: wsize(5), textAlign: 'center' },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'column', height: '10%', justifyContent: 'space-around', width: '100%' },
 	bottomNavsRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
 	bottomNav: { flexDirection: 'row', justifyContent: 'space-around', margin: 5 },
-	bottomNavHeader: { fontWeight: 'bold', paddingVertical: 5 },
+	bottomNavHeader: { fontSize: wsize(4), fontWeight: 'bold' },
+
+  errorMsg: { color: 'darkred', fontSize: wsize(5), textAlign: 'center' },
 })

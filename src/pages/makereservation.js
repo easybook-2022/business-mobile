@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react'
-import { ActivityIndicator, Dimensions, ScrollView, View, Text, TextInput, Image, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet, Modal } from 'react-native';
+import { SafeAreaView, ActivityIndicator, Dimensions, ScrollView, View, Text, TextInput, Image, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet, Modal } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { socket, logo_url, displayTime } from '../../assets/info'
@@ -10,16 +10,17 @@ import AntDesign from 'react-native-vector-icons/AntDesign'
 import SimpleLineIcons from 'react-native-vector-icons/SimpleLineIcons'
 
 const { height, width } = Dimensions.get('window')
-const offsetPadding = Constants.statusBarHeight
+const wsize = p => {
+  return width * (p / 100)
+}
+const hsize = p => {
+  return height * (p / 100)
+}
+
 const dinerFrameSize = (width / 3) - 30
 const dinerProfileSize = 80
 
-const fsize = p => {
-	return width * p
-}
-
-export default function booktime(props) {
-	const offsetPadding = Constants.statusBarHeight
+export default function Makereservation(props) {
 	const months = ['January', 'February', 'March', 'April', 'May', 'Jun', 'July', 'August', 'September', 'October', 'November', 'December']
 	const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 	const pushtime = 1000 * (60 * 10)
@@ -71,7 +72,7 @@ export default function booktime(props) {
 	const [times, setTimes] = useState([])
 	const [loaded, setLoaded] = useState(false)
 
-	const [confirmRequest, setConfirmrequest] = useState({ show: false, service: "", oldtime: 0, time: 0, note: "", tablenum: "", requested: false, errorMsg: "" })
+	const [confirm, setConfirm] = useState({ show: false, service: "", oldtime: 0, time: 0, note: "", tablenum: "", requested: false, errorMsg: "", loading: false })
 
 	const isMounted = useRef(null)
 	
@@ -86,14 +87,14 @@ export default function booktime(props) {
 			})
 			.then((res) => {
 				if (res && isMounted.current == true) {
-					const { locationId, name, numdiners, diners, table } = res.reservationInfo
+					const { locationId, name, numdiners, diners, table, time } = res.reservationInfo
 
 					setOwnerid(ownerid)
 					setName(name)
 					setNumdiners(numdiners)
 					setSelecteddiners(diners)
 					setTable(table)
-					getTheLocationHours(locationId)
+					getTheLocationHours(locationId, time)
 				}
 			})
 			.catch((err) => {
@@ -104,7 +105,7 @@ export default function booktime(props) {
 				}
 			})
 	}
-	const getTheLocationHours = async(locationid) => {
+	const getTheLocationHours = async(locationid, time) => {
 		const day = new Date(Date.now()).toString().split(" ")[0]
 		const data = { locationid, day }
 
@@ -122,9 +123,18 @@ export default function booktime(props) {
 					let closeHour = closeTime.hour, closeMinute = closeTime.minute, closePeriod = closeTime.period
 
 					const currTime = new Date(Date.now())
-					const currDay = days[currTime.getDay()]
-					const currDate = currTime.getDate()
-					const currMonth = months[currTime.getMonth()]
+          const currDay = days[currTime.getDay()]
+          const currDate = currTime.getDate()
+          const currMonth = months[currTime.getMonth()]
+
+          let selectedTime = time > 0 && time > Date.now() ? new Date(time) : null
+          let selectedDay = null, selectedDate = null, selectedMonth = null
+
+          if (selectedTime) {
+            selectedDay = days[selectedTime.getDay()]
+            selectedDate = selectedTime.getDate()
+            selectedMonth = months[selectedTime.getMonth()]
+          }
 
 					let openStr = currDay + " " + currMonth + " " + currTime.getDate() + " " + currTime.getFullYear() + " " + openHour + ":" + openMinute
 					let closeStr = currDay + " " + currMonth + " " + currTime.getDate() + " " + currTime.getFullYear() + " " + closeHour + ":" + closeMinute
@@ -156,6 +166,15 @@ export default function booktime(props) {
 						})
 					})
 
+          if (selectedTime) {
+            openStr = selectedDay + " " + selectedMonth + " " + selectedTime.getDate() + " " + selectedTime.getFullYear() + " " + openHour + ":" + openMinute
+            closeStr = selectedDay + " " + selectedMonth + " " + selectedTime.getDate() + " " + selectedTime.getFullYear() + " " + closeHour + ":" + closeMinute
+            openDateStr = Date.parse(openStr)
+            closeDateStr = Date.parse(closeStr)
+
+            currDateStr = openDateStr
+          }
+
 					while (currDateStr < (closeDateStr - pushtime)) {
 						currDateStr += pushtime
 
@@ -168,15 +187,23 @@ export default function booktime(props) {
 						let timepassed = currenttime > currDateStr
 						let timetaken = scheduled.indexOf(currDateStr) > -1
 
-						newTimes.push({ 
-							key: newTimes.length, header: timedisplay, 
-							time: currDateStr, timetaken, timepassed
-						})
+            if (!timepassed) {
+              newTimes.push({ 
+                key: newTimes.length, header: timedisplay, 
+                time: currDateStr, timetaken
+              })
+            }
 					}
 
 					setOpentime({ hour: openHour, minute: openMinute })
 					setClosetime({ hour: closeHour, minute: closeMinute })
-					setSelecteddateinfo({ month: currMonth, year: currTime.getFullYear(), day: currDay, date: currDate, time: 0 })
+
+          if (selectedTime) {
+            setSelecteddateinfo({ month: currMonth, year: selectedTime.getFullYear(), day: selectedDay, date: selectedDate, time: 0 })
+          } else {
+            setSelecteddateinfo({ month: currMonth, year: currTime.getFullYear(), day: currDay, date: currDate, time: 0 })
+          }
+					
 					setCalendar({ firstDay, numDays, data })
 					setScheduledtimes(scheduled)
 					setTimes(newTimes)
@@ -302,18 +329,20 @@ export default function booktime(props) {
 		setSelecteddateinfo({ ...selectedDateInfo, name, time })
 
 		if (selectedDateInfo.date) {
-			setConfirmrequest({ ...confirmRequest, show: true, service: name, time })
+			setConfirm({ ...confirm, show: true, service: name, time })
 		}
 	}
 
 	const rescheduleTheReservation = async() => {
-		const { time, tablenum } = confirmRequest
+		const { time, tablenum } = confirm
 
 		if (table || tablenum) {
 			let data = { 
 				scheduleid, time, table: tablenum ? tablenum : table, 
 				type: "rescheduleReservation"
 			}
+
+      setConfirm({ ...confirm, loading: true })
 
 			rescheduleReservation(data)
 				.then((res) => {
@@ -323,10 +352,17 @@ export default function booktime(props) {
 				})
 				.then((res) => {
 					if (res) {
-						setConfirmrequest({ ...confirmRequest, requested: true })
-
 						data = { ...data, receiver: res.receiver }
-						socket.emit("socket/business/rescheduleReservation", data)
+						socket.emit("socket/business/rescheduleReservation", data, () => {
+              setConfirm({ ...confirm, loading: false, requested: true })
+
+              setTimeout(function () {
+                setConfirm({ ...confirm, show: false })
+
+                refetch()
+                props.navigation.goBack()
+              }, 3000)
+            })
 					}
 				})
 				.catch((err) => {
@@ -337,7 +373,7 @@ export default function booktime(props) {
 					}
 				})
 		} else {
-			setConfirmrequest({ ...confirmRequest, errorMsg: "Please enter a table # for the diner(s)" })
+			setConfirm({ ...confirm, errorMsg: "Please enter a table # for the diner(s)" })
 		}
 	}
 
@@ -350,175 +386,165 @@ export default function booktime(props) {
 	}, [])
 
 	return (
-		<View style={style.makereservation}>
+		<SafeAreaView style={styles.makereservation}>
 			{loaded ? 
-				<View style={style.box}>
-					<View style={style.header}>
-						<Text style={style.boxHeader}>
+				<View style={styles.box}>
+					<View style={styles.header}>
+						<Text style={styles.boxHeader}>
 							Request another time for 
 							{numDiners > 0 ? '\n' + numDiners + ' ' + (numDiners == 1 ? 'person' : 'people') : "1 person"}
 						</Text>
 					</View>
 
-					<View style={style.body}>
-						<ScrollView style={{ height: '100%' }}>
-							<View style={style.dinersList}>
-								{selectedDiners.map(item => (
-									<View key={item.key} style={style.row}>
-										{item.row.map(diner => (
-											diner.id ? 
-												<View key={diner.key} style={style.diner}>
-													<View style={style.dinerProfileHolder}>
-														<Image source={{ uri: logo_url + diner.profile }} style={{ height: dinerProfileSize, width: dinerProfileSize }}/>
-													</View>
-													<Text style={style.dinerName}>{diner.username}</Text>
+					<ScrollView style={{ height: '90%' }}>
+						<View style={styles.dinersList}>
+							{selectedDiners.map(item => (
+								<View key={item.key} style={styles.row}>
+									{item.row.map(diner => (
+										diner.id ? 
+											<View key={diner.key} style={styles.diner}>
+												<View style={styles.dinerProfileHolder}>
+													<Image source={{ uri: logo_url + diner.profile }} style={{ height: dinerProfileSize, width: dinerProfileSize }}/>
 												</View>
+												<Text style={styles.dinerName}>{diner.username}</Text>
+											</View>
+											:
+											<View key={diner.key} style={styles.diner}>
+											</View>
+									))}
+								</View>
+							))}
+						</View>
+						<View style={styles.dateSelection}>
+              <Text style={styles.dateSelectionHeader}>Tap a date below</Text>
+
+							<View style={styles.dateHeaders}>
+                <View style={styles.column}>
+  								<TouchableOpacity onPress={() => dateNavigate('left')}><AntDesign name="left" size={wsize(7)}/></TouchableOpacity>
+                </View>
+                <View style={styles.column}>
+  								<Text style={styles.dateHeader}>{selectedDateInfo.month}, {selectedDateInfo.year}</Text>
+                </View>
+                <View style={styles.column}>
+  								<TouchableOpacity onPress={() => dateNavigate('right')}><AntDesign name="right" size={wsize(7)}/></TouchableOpacity>
+                </View>
+							</View>
+							<View style={styles.days}>
+								<View style={styles.daysHeaderRow}>
+									{days.map((day, index) => (
+										<Text key={"day-header-" + index} style={styles.daysHeader}>{day.substr(0, 3)}</Text>
+									))}
+								</View>
+								{calendar.data.map((info, rowindex) => (
+									<View key={info.key} style={styles.daysDataRow}>
+										{info.row.map((day, dayindex) => (
+											day.num > 0 ?
+												day.passed ? 
+													<TouchableOpacity key={day.key} disabled={true} style={[styles.dayTouch, { backgroundColor: 'rgba(0, 0, 0, 0.5)' }]}>
+														<Text style={styles.dayTouchHeader}>{day.num}</Text>
+													</TouchableOpacity>
+													:
+													selectedDateInfo.date == day.num ?
+														<TouchableOpacity key={day.key} style={[styles.dayTouch, { backgroundColor: 'black' }]} onPress={() => selectDate(day.num)}>
+                              <Text style={[styles.dayTouchHeader, { color: 'white' }]}>{day.num}</Text>
+                            </TouchableOpacity>
+                            :
+                            <TouchableOpacity key={day.key} style={styles.dayTouch} onPress={() => selectDate(day.num)}>
+                              <Text style={styles.dayTouchHeader}>{day.num}</Text>
+                            </TouchableOpacity>
 												:
-												<View key={diner.key} style={style.diner}>
-												</View>
+												<TouchableOpacity key={"calender-header-" + rowindex + "-" + dayindex} style={styles.dayTouchDisabled}></TouchableOpacity>
 										))}
 									</View>
 								))}
 							</View>
-							<View style={style.dateHeaders}>
-								<View style={style.date}>
-									<TouchableOpacity style={style.dateNav} onPress={() => dateNavigate('left')}><AntDesign name="left" size={25}/></TouchableOpacity>
-									<Text style={style.dateHeader}>{selectedDateInfo.month}, {selectedDateInfo.year}</Text>
-									<TouchableOpacity style={style.dateNav} onPress={() => dateNavigate('right')}><AntDesign name="right" size={25}/></TouchableOpacity>
-								</View>
-
-								<View style={style.dateDays}>
-									<View style={style.dateDaysRow}>
-										{days.map((day, index) => (
-											<TouchableOpacity key={"day-header-" + index} style={style.dateDayTouchDisabled}>
-												<Text style={{ fontWeight: 'bold', textAlign: 'center' }}>{day.substr(0, 3)}</Text>
+						</View>
+						<View style={styles.timesSelection}>
+              <Text style={styles.timesHeader}>Pick a time below</Text>
+							<View style={styles.times}>
+								{times.map(info => (
+									<View key={info.key}>
+										{!info.timetaken ?
+											<TouchableOpacity style={styles.unselect} onPress={() => selectTime(name, info.header, info.time)}>
+												<Text style={styles.unselectHeader}>{info.header}</Text>
 											</TouchableOpacity>
-										))}
+										  :
+                      <TouchableOpacity style={[styles.unselect, { backgroundColor: 'black' }]} disabled={true} onPress={() => {}}>
+                        <Text style={[styles.unselectHeader, { color: 'white' }]}>{info.header}</Text>
+                      </TouchableOpacity>
+                    }
 									</View>
-									{calendar.data.map((info, rowindex) => (
-										<View key={info.key} style={style.dateDaysRow}>
-											{info.row.map((day, dayindex) => (
-												day.num > 0 ?
-													day.passed ? 
-														<TouchableOpacity key={day.key} disabled={true} style={style.dateDayTouchPassed}>
-															<Text style={style.dateDayTouchHeader}>{day.num}</Text>
-														</TouchableOpacity>
-														:
-														selectedDateInfo.date == day.num ?
-															<TouchableOpacity key={day.key} style={style.dateDayTouchSelected} onPress={() => selectDate(day.num)}>
-																<Text style={style.dateDayTouchSelectedHeader}>{day.num}</Text>
-															</TouchableOpacity>
-															:
-															<TouchableOpacity key={day.key} style={style.dateDayTouch} onPress={() => selectDate(day.num)}>
-																<Text style={style.dateDayTouchHeader}>{day.num}</Text>
-															</TouchableOpacity>
-													:
-													<TouchableOpacity key={"calender-header-" + rowindex + "-" + dayindex} style={style.dateDayTouchDisabled}></TouchableOpacity>
-											))}
-										</View>
-									))}
-								</View>
-							</View>
-							<Text style={style.timesHeader}>Pick a time</Text>
-							<View style={{ flexDirection: 'row', justifyContent: 'space-around', marginBottom: 50, width: '100%' }}>
-								<View style={style.times}>
-									{times.map(info => (
-										<View key={info.key}>
-											{(!info.timetaken && !info.timepassed) && (
-												<TouchableOpacity style={style.unselect} onPress={() => selectTime(name, info.header, info.time)}>
-													<Text style={{ color: 'black' }}>{info.header}</Text>
-												</TouchableOpacity>
-											)}
-
-											{(info.timetaken && !info.timepassed) && (
-												<TouchableOpacity style={style.selected} disabled={true} onPress={() => {}}>
-													<Text style={{ color: 'white' }}>{info.header}</Text>
-												</TouchableOpacity>
-											)}
-
-											{(!info.timetaken && info.timepassed) && (
-												<TouchableOpacity style={style.selectedPassed} disabled={true} onPress={() => {}}>
-													<Text style={{ color: 'black' }}>{info.header}</Text>
-												</TouchableOpacity>
-											)}
-										</View>
-									))}
-								</View>
-							</View>
-						</ScrollView>
-					</View>
-				</View>
-				:
-				<View style={{ alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' }}>
-					<ActivityIndicator color="black" size="large"/>
-				</View>
-			}
-
-			{confirmRequest.show && (
-				<Modal transparent={true}>
-					<TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
-						<View style={style.confirmBox}>
-							<View style={style.confirmContainer}>
-								{!confirmRequest.requested ? 
-									<>
-										<Text style={style.confirmHeader}>
-											<Text style={{ fontFamily: 'appFont' }}>Request a different time for {numDiners > 0 ? '\n' + numDiners + ' ' + (numDiners == 1 ? 'person' : 'people') : '1 person'}</Text>
-											{'\n at ' + confirmRequest.service}
-											{'\n' + displayTime(confirmRequest.time)}
-										</Text>
-
-										<View style={{ alignItems: 'center' }}>
-											<Text style={style.confirmHeader}>Tell the diner the table #?</Text>
-
-											<TextInput placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder={table ? table + "? If not, please re-enter" : 'What table will be available'} style={style.confirmInput} onChangeText={(tablenum) => setConfirmrequest({ ...confirmRequest, tablenum })} autoCorrect={false} autoCapitalize="none"/>
-										</View>
-
-										{confirmRequest.errorMsg ? <Text style={style.errorMsg}>{confirmRequest.errorMsg}</Text> : null}
-
-										<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-											<View style={style.confirmOptions}>
-												<TouchableOpacity style={style.confirmOption} onPress={() => setConfirmrequest({ show: false, service: "", oldtime: 0, time: 0, note: "", tablenum: "", requested: false, errorMsg: "" })}>
-													<Text style={style.confirmOptionHeader}>No</Text>
-												</TouchableOpacity>
-												<TouchableOpacity style={style.confirmOption} onPress={() => rescheduleTheReservation()}>
-													<Text style={style.confirmOptionHeader}>Yes</Text>
-												</TouchableOpacity>
-											</View>
-										</View>
-									</>
-									:
-									<View style={style.requestedHeaders}>
-										<Text style={style.requestedHeader}>Reservation requested at</Text>
-										<Text style={style.requestedHeaderInfo}>{confirmRequest.service}</Text>
-										<Text style={style.requestedHeaderInfo}>{displayTime(confirmRequest.time)}</Text>
-										<Text style={style.requestedHeaderInfo}>for {numDiners} diner{numDiners > 1 ? "s" : ""}{'\n'}</Text>
-										<Text style={style.requestedHeaderInfo}>You will get notify by the diners</Text>
-										<TouchableOpacity style={style.requestedClose} onPress={() => {
-											setConfirmrequest({ ...confirmRequest, show: false, requested: false })
-
-											refetch()
-											props.navigation.goBack()
-										}}>
-											<Text style={style.requestedCloseHeader}>Ok</Text>
-										</TouchableOpacity>
-									</View>
-								}
+								))}
 							</View>
 						</View>
+					</ScrollView>
+				</View>
+				:
+				<View style={styles.loading}>
+          <ActivityIndicator color="black" size="large"/>
+        </View>
+			}
+
+			{confirm.show && (
+				<Modal transparent={true}>
+					<TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+						<SafeAreaView style={styles.confirmBox}>
+							<View style={styles.confirmContainer}>
+                {!confirm.requested ? 
+                  <>
+                    <Text style={styles.confirmHeader}>
+                      <Text style={{ fontFamily: 'appFont' }}>Request a different time</Text>
+                      {'\n for ' + (numDiners > 0 ? numDiners + ' ' + (numDiners == 1 ? 'person' : 'people') : '1 person')}
+                      {'\n at ' + confirm.service}
+                    </Text>
+
+                    <Text style={styles.confirmHeader}>Tell the diner the table #?</Text>
+                    <TextInput placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder={table ? table + "? If not, please re-enter" : 'What table will be available'} style={styles.confirmInput} onChangeText={(tablenum) => setConfirm({ ...confirm, tablenum })} autoCorrect={false} autoCapitalize="none"/>
+
+                    {confirm.errorMsg ? <Text style={styles.errorMsg}>{confirm.errorMsg}</Text> : null}
+
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+                      <View style={styles.confirmOptions}>
+                        <TouchableOpacity style={[styles.confirmOption, { opacity: confirm.loading ? 0.3 : 1 }]} disabled={confirm.loading} onPress={() => setConfirm({ show: false, service: "", oldtime: 0, time: 0, note: "", tablenum: "", errorMsg: "" })}>
+                          <Text style={styles.confirmOptionHeader}>No</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={[styles.confirmOption, { opacity: confirm.loading ? 0.3 : 1 }]} disabled={confirm.loading} onPress={() => rescheduleTheReservation()}>
+                          <Text style={styles.confirmOptionHeader}>Yes</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+
+                    {confirm.loading && (
+                      <View style={{ alignItems: 'center' }}>
+                        <ActivityIndicator color="black" size="small"/>
+                      </View>
+                    )}
+                  </>
+                  :
+                  <View style={styles.requestedHeaders}>
+                    <Text style={styles.requestedHeader}>Reservation requested</Text>
+                    <Text style={styles.requestedHeaderInfo}>
+                      {'\nat ' + confirm.service}
+                      {'\n' + displayTime(confirm.time)}
+                      {'\n'}for {numDiners} diner{numDiners > 1 ? "s" : ""}
+                      {'\n\n'}You will get notify by the diners
+                    </Text>
+                  </View>
+                }
+							</View>
+						</SafeAreaView>
 					</TouchableWithoutFeedback>
 				</Modal>
 			)}
-		</View>
+		</SafeAreaView>
 	)
 }
 
-const style = StyleSheet.create({
-	makereservation: { backgroundColor: 'white', height: '100%', paddingBottom: offsetPadding, width: '100%' }, 
+const styles = StyleSheet.create({
+	makereservation: { backgroundColor: 'white', height: '100%', width: '100%' }, 
 	box: { height: '100%', width: '100%' },
 	header: { flexDirection: 'column', height: '10%', justifyContent: 'space-around', width: '100%' },
-	boxHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), fontWeight: 'bold', textAlign: 'center' },
-
-	body: { height: '90%' },
+	boxHeader: { fontFamily: 'appFont', fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
 
 	dinersList: { alignItems: 'center', width: '100%' },
 	row: { flexDirection: 'row', justifyContent: 'space-between' },
@@ -526,49 +552,43 @@ const style = StyleSheet.create({
 	dinerProfileHolder: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: dinerProfileSize / 2, height: dinerProfileSize, overflow: 'hidden', width: dinerProfileSize },
 	dinerName: { textAlign: 'center' },
 
-	dateHeaders: { alignItems: 'center', marginVertical: 50 },
-	date: { flexDirection: 'row', margin: 10 },
-	dateNav: { marginHorizontal: 20 },
-	dateHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), marginVertical: 5, textAlign: 'center', width: fsize(0.5) },
-	dateDays: { alignItems: 'center' },
-	dateDaysRow: { flexDirection: 'row' },
+	dateSelection: { alignItems: 'center', marginVertical: 50, width: '100%' },
+  dateSelectionHeader: { fontSize: wsize(8), fontWeight: 'bold', textAlign: 'center' },
+  dateHeaders: { flexDirection: 'row', justifyContent: 'space-between', width: '70%' },
+  column: { flexDirection: 'column', justifyContent: 'space-around' },
+  dateHeader: { fontSize: wsize(6), marginVertical: 5, textAlign: 'center', width: wsize(50) },
+  days: { alignItems: 'center', width: '100%' },
 
-	dateDayTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, paddingVertical: 10, width: fsize(0.1) },
-	dateDayTouchHeader: { color: 'black', fontSize: fsize(0.038), textAlign: 'center' },
+  daysHeaderRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
+  daysHeader: { fontSize: wsize(12) * 0.4, fontWeight: 'bold', marginVertical: 1, textAlign: 'center', width: wsize(12) },
 
-	dateDayTouchSelected: { backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, paddingVertical: 10, width: fsize(0.1) },
-	dateDayTouchSelectedHeader: { color: 'white', fontSize: fsize(0.038), textAlign: 'center' },
+  daysDataRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
+  dayTouch: { borderStyle: 'solid', borderWidth: 2, marginVertical: 1, paddingVertical: 10, width: wsize(12) },
+  dayTouchHeader: { color: 'black', fontSize: wsize(12) * 0.4, textAlign: 'center' },
 
-	dateDayTouchPassed: { backgroundColor: 'rgba(0, 0, 0, 0.5)', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, paddingVertical: 10, width: fsize(0.1) },
-	dateDayTouchPassedHeader: { color: 'black', fontSize: fsize(0.038), textAlign: 'center' },
+  dayTouchDisabled: { paddingVertical: 10, width: wsize(12) },
+  dayTouchDisabledHeader: { fontSize: wsize(12) * 0.4, fontWeight: 'bold' },
 
-	dateDayTouchDisabled: { margin: 3, paddingVertical: 10, width: fsize(0.1) },
-	dateDayTouchDisabledHeader: { fontSize: fsize(0.038), fontWeight: 'bold' },
-
-	timesHeader: { fontFamily: 'appFont', fontSize: fsize(0.07), fontWeight: 'bold', textAlign: 'center' },
-	times: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', width: fsize(0.79) },
+	timesSelection: { alignItems: 'center', marginVertical: 50 },
+  timesHeader: { fontSize: wsize(8), fontWeight: 'bold', textAlign: 'center' },
+	times: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', width: wsize(79) },
 	
-	unselect: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, paddingVertical: 10, width: fsize(0.25) },
-	unselectHeader: { color: 'black', fontSize: fsize(0.04) },
-	
-	selected: { alignItems: 'center', backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, paddingVertical: 10, width: fsize(0.25) },
-	selectedHeader: { color: 'white', fontSize: fsize(0.04) },
-	
-	selectedPassed: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, opacity: 0.3, paddingVertical: 10, width: fsize(0.25) },
-	selectedPassedHeader: { color: 'black', fontSize: fsize(0.04) },
+	unselect: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, paddingVertical: 10, width: wsize(25) },
+  unselectHeader: { color: 'black', fontSize: wsize(4) },
 
-	// confirm & requested box
-	confirmBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', paddingVertical: offsetPadding, width: '100%' },
+	confirmBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	confirmContainer: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },
-	confirmHeader: { fontSize: fsize(0.05), fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
-	confirmInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: (width * 0.8) - 50 },
-	errorMsg: { color: 'red', fontWeight: 'bold' },
+	confirmHeader: { fontSize: wsize(4), fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
+	confirmInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(4), padding: 5, width: '80%' },
 	confirmOptions: { flexDirection: 'row' },
-	confirmOption: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
-	confirmOptionHeader: { },
-	requestedHeaders: { alignItems: 'center', paddingHorizontal: 10 },
-	requestedClose: { borderRadius: 5, borderStyle: 'solid', borderWidth: 1, marginVertical: 10, padding: 5, width: 100 },
-	requestedCloseHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), textAlign: 'center' },
-	requestedHeader: { fontFamily: 'appFont', fontSize: fsize(0.06), textAlign: 'center' },
-	requestedHeaderInfo: { fontSize: fsize(0.05), textAlign: 'center' },
+	confirmOption: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: wsize(30) },
+	confirmOptionHeader: { fontSize: wsize(5) },
+  requestedHeaders: { alignItems: 'center', paddingHorizontal: 10 },
+  requestedClose: { borderRadius: 5, borderStyle: 'solid', borderWidth: 1, marginVertical: 10, padding: 5, width: 100 },
+  requestedCloseHeader: { fontFamily: 'appFont', fontSize: wsize(5), textAlign: 'center' },
+  requestedHeader: { fontFamily: 'appFont', fontSize: wsize(6), textAlign: 'center' },
+  requestedHeaderInfo: { fontSize: wsize(5), textAlign: 'center' },
+
+  loading: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
+  errorMsg: { color: 'darkred', fontSize: wsize(4), textAlign: 'center' },
 })
