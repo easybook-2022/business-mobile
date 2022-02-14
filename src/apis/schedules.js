@@ -2,10 +2,10 @@ import axios from 'axios'
 import { url } from '../../assets/info'
 
 export const getRequests = data => {
-	return axios.post(
-		`${url}/schedules/get_requests`,
-		data
-	)
+  return axios.post(
+    `${url}/schedules/get_requests`,
+    data
+  )
 }
 
 export const getAppointmentInfo = id => {
@@ -122,9 +122,9 @@ export const doneDining = id => {
 	return axios.get(`${url}/schedules/done_dining/${id}`)
 }
 
-export const getDinersPayments = data => {
+export const receiveDinersPayments = data => {
 	return axios.post(
-		`${url}/schedules/get_diners_payments`,
+		`${url}/schedules/receive_diners_payments`,
 		data
 	)
 }

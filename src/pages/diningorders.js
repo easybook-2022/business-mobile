@@ -62,7 +62,7 @@ export default function Diningorders(props) {
 				if (err.response && err.response.status == 400) {
 					
 				} else {
-					alert("an error has occurred in server")
+					alert("server error")
 				}
 			})
 	}
@@ -83,7 +83,7 @@ export default function Diningorders(props) {
 				if (err.response && err.response.status == 400) {
 					
 				} else {
-					alert("an error has occurred in server")
+					alert("server error")
 				}
 			})
 	}
@@ -124,7 +124,7 @@ export default function Diningorders(props) {
             default:
           }
 				} else {
-					alert("an error has occurred in server")
+					alert("server error")
 				}
 			})
 	}
@@ -148,7 +148,7 @@ export default function Diningorders(props) {
           if (err.response && err.response.status == 400) {
 
           } else {
-            alert("an error has occurred in server")
+            alert("server error")
           }
         })
     } else {

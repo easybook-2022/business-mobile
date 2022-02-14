@@ -34,7 +34,7 @@ export default function Settings(props) {
 	const { refetch } = props.route.params
 	const required = props.route.params ? props.route.params.required : ""
 
-	const [ownerid, setOwnerid] = useState('')
+	const [ownerId, setOwnerid] = useState('')
 	const [cameraPermission, setCamerapermission] = useState(null);
 	const [pickingPermission, setPickingpermission] = useState(null);
 	const [camComp, setCamcomp] = useState(null)
@@ -85,14 +85,12 @@ export default function Settings(props) {
 	const [loading, setLoading] = useState(false)
 	const [accountForm, setAccountform] = useState({
 		show: false,
-		type: '',
-		id: -1,
-		username: ownerRegisterInfo.username,
-		cellnumber: ownerRegisterInfo.cellnumber, 
-		password: ownerRegisterInfo.password, 
-		confirmPassword: ownerRegisterInfo.password,
-		profile: { uri: '', name: '' },
-
+		type: '', editType: '', addStep: 0, id: -1,
+		username: ownerRegisterInfo.username, editUsername: false,
+		cellnumber: ownerRegisterInfo.cellnumber, editCellnumber: false,
+		currentPassword: '', newPassword: '', confirmPassword: '', editPassword: false,
+		profile: { uri: '', name: '' }, editProfile: false,
+    editHours: false,
 		loading: false,
 		errorMsg: ''
 	})
@@ -119,7 +117,6 @@ export default function Settings(props) {
 	const isMounted = useRef(null)
 
 	const updateYourLocation = async() => {
-		const ownerid = await AsyncStorage.getItem("ownerid")
 		const { details } = await NetInfo.fetch()
 		const ipAddress = details.ipAddress
 
@@ -128,7 +125,7 @@ export default function Settings(props) {
 			const time = (Date.now() / 1000).toString().split(".")[0]
 			const data = {
 				storeName, phonenumber, addressOne, addressTwo, city, province, postalcode, logo,
-				longitude, latitude, ownerid, time, ipAddress
+				longitude, latitude, ownerid: ownerId, time, ipAddress
 			}
 
 			setLoading(true)
@@ -154,7 +151,7 @@ export default function Settings(props) {
 						setErrormsg(errormsg)
 						setLoading(false)
 					} else {
-						setErrormsg("an error has occurred in server")
+						alert("server error")
 					}
 				})
 		} else {
@@ -265,7 +262,6 @@ export default function Settings(props) {
 		setDays(newDays)
 	}
 	const updateLocationHours = async() => {
-		const ownerid = await AsyncStorage.getItem("ownerid")
 		const locationid = await AsyncStorage.getItem("locationid")
 		const hours = {}
 
@@ -342,7 +338,7 @@ export default function Settings(props) {
 				if (err.response && err.response.status == 400) {
 					setLoading(false)
 				} else {
-					setErrormsg("an error has occurred in server")
+					alert("server error")
 				}
 			})
 	}
@@ -403,8 +399,8 @@ export default function Settings(props) {
 			hours[workerHour.header.substr(0, 3)] = { opentime: newOpentime, closetime: newClosetime, working }
 		})
 
-		const { cellnumber, username, password, confirmPassword, profile } = accountForm
-		const data = { ownerid, cellnumber, username, password, confirmPassword, hours, profile }
+		const { cellnumber, username, newPassword, confirmPassword, profile } = accountForm
+		const data = { ownerid: ownerId, cellnumber, username, password: newPassword, confirmPassword, hours, profile }
 
 		setAccountform({ ...accountForm, loading: true, errorMsg: "" })
 
@@ -432,7 +428,7 @@ export default function Settings(props) {
 
 					setAccountform({ ...accountForm, errormsg })
 				} else {
-					setErrormsg("an error has occurred in server")
+					alert("server error")
 				}
 			})
 	}
@@ -499,93 +495,115 @@ export default function Settings(props) {
 		setWorkerhours(newWorkerhours)
 	}
 	const updateTheOwner = async() => {
-		const hours = {}
+    const { cellnumber, username, profile, currentPassword, newPassword, confirmPassword } = accountForm
+    let data = { ownerid: accountForm.id, type: accountForm.editType }
 
-		workerHours.forEach(function (workerHour) {
-			let { opentime, closetime, working } = workerHour
-			let newOpentime = {...opentime}, newClosetime = {...closetime}
-			let openhour = parseInt(newOpentime.hour), closehour = parseInt(newClosetime.hour)
-			let openperiod = newOpentime.period, closeperiod = newClosetime.period
+    switch (accountForm.editType) {
+      case "cellnumber":
+        data = { ...data, cellnumber }
 
-			if (openperiod == "PM") {
-				if (openhour < 12) {
-					openhour += 12
-				}
+        break;
+      case "username":
+        data = { ...data, username }
 
-				openhour = openhour < 10 ? 
-					"0" + openhour
-					:
-					openhour.toString()
-			} else {
-				if (openhour == 12) {
-					openhour = "00"
-				} else if (openhour < 10) {
-					openhour = "0" + openhour
-				} else {
-					openhour = openhour.toString()
-				}
-			}
+        break;
+      case "profile":
+        data = { ...data, profile }
 
-			if (closeperiod == "PM") {
-				if (closehour < 12) {
-					closehour += 12
-				}
+        break;
+      case "password":
+        data = { ...data, currentPassword, newPassword, confirmPassword }
 
-				closehour = closehour < 10 ? 
-					"0" + closehour
-					:
-					closehour.toString()
-			} else {
-				if (closehour == 12) {
-					closehour = "00"
-				} else if (closehour < 10) {
-					closehour = "0" + closehour
-				} else {
-					closehour = closehour.toString()
-				}
-			}
+        break;
+      case "hours":
+        const hours = {}
 
-			newOpentime.hour = openhour
-			newClosetime.hour = closehour
+        workerHours.forEach(function (workerHour) {
+          let { opentime, closetime, working } = workerHour
+          let newOpentime = {...opentime}, newClosetime = {...closetime}
+          let openhour = parseInt(newOpentime.hour), closehour = parseInt(newClosetime.hour)
+          let openperiod = newOpentime.period, closeperiod = newClosetime.period
 
-			delete newOpentime.period
-			delete newClosetime.period
+          if (openperiod == "PM") {
+            if (openhour < 12) {
+              openhour += 12
+            }
 
-			hours[workerHour.header.substr(0, 3)] = { opentime: newOpentime, closetime: newClosetime, working }
-		})
+            openhour = openhour < 10 ? 
+              "0" + openhour
+              :
+              openhour.toString()
+          } else {
+            if (openhour == 12) {
+              openhour = "00"
+            } else if (openhour < 10) {
+              openhour = "0" + openhour
+            } else {
+              openhour = openhour.toString()
+            }
+          }
 
-		const { id, cellnumber, username, password, confirmPassword, profile } = accountForm
-		const data = { ownerid: id, cellnumber, username, password, hours, confirmPassword, profile }
+          if (closeperiod == "PM") {
+            if (closehour < 12) {
+              closehour += 12
+            }
+
+            closehour = closehour < 10 ? 
+              "0" + closehour
+              :
+              closehour.toString()
+          } else {
+            if (closehour == 12) {
+              closehour = "00"
+            } else if (closehour < 10) {
+              closehour = "0" + closehour
+            } else {
+              closehour = closehour.toString()
+            }
+          }
+
+          newOpentime.hour = openhour
+          newClosetime.hour = closehour
+
+          delete newOpentime.period
+          delete newClosetime.period
+
+          hours[workerHour.header.substr(0, 3)] = { opentime: newOpentime, closetime: newClosetime, working }
+        })
+
+        data = { ...data, hours }
+
+        break;
+      default:
+    }
 
 		updateOwner(data)
 			.then((res) => {
 				if (res.status == 200) {
 					return res.data
 				}
-
-				return
 			})
 			.then((res) => {
 				if (res) {
 					setAccountform({
 						...accountForm,
 						show: false,
-						type: '',
-						username: '',
-						cellnumber: '',
-						password: '',
-						confirmPassword: '',
-						profile: { uri: '', name: '' },
+						type: '', editType: '', 
+						username: "", editUsername: false, 
+            cellnumber: "", editCellnumber: false,
+						currentPassword: "", newPassword: "", confirmPassword: "", editPassword: false, 
+            profile: { name: "", uri: "" }, editProfile: false, 
 						errorMsg: ""
 					})
-					getAllAccounts()
 				}
 			})
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
-					
+					const { errormsg, status } = err.response.data
+
+          setAccountform({ ...accountForm, errorMsg: errormsg })
 				} else {
-					setErrormsg("an error has occurred in server")
+					alert("server error")
 				}
 			})
 	}
@@ -671,7 +689,7 @@ export default function Settings(props) {
 					if (err.response && err.response.status == 400) {
 						
 					} else {
-						setErrormsg("an error has occurred in server")
+						alert("server error")
 					}
 				})
 		} else {
@@ -751,7 +769,7 @@ export default function Settings(props) {
 				if (err.response && err.response.status == 400) {
 					
 				} else {
-					setErrormsg("an error has occurred in server")
+					alert("server error")
 				}
 			})
 	}
@@ -787,7 +805,7 @@ export default function Settings(props) {
 				if (err.response && err.response.status == 400) {
 					
 				} else {
-					setErrormsg("an error has occurred in server")
+					alert("server error")
 				}
 			})
 	}
@@ -850,7 +868,7 @@ export default function Settings(props) {
 				if (err.response && err.response.status == 400) {
 					
 				} else {
-					setErrormsg("an error has occurred in server")
+					alert("server error")
 				}
 			})
 	}
@@ -877,7 +895,7 @@ export default function Settings(props) {
 				if (err.response && err.response.status == 400) {
 					
 				} else {
-					setErrormsg("an error has occurred in server")
+					alert("server error")
 				}
 			})
 	}
@@ -914,7 +932,7 @@ export default function Settings(props) {
 				if (err.response && err.response.status == 400) {
 					
 				} else {
-					setErrormsg("an error has occurred in server")
+					alert("server error")
 				}
 			})
 	}
@@ -939,7 +957,7 @@ export default function Settings(props) {
 				if (err.response && err.response.status == 400) {
 					
 				} else {
-					setErrormsg("an error has occurred in server")
+					alert("server error")
 				}
 			})
 	}
@@ -1046,7 +1064,7 @@ export default function Settings(props) {
 				if (err.response && err.response.status == 400) {
 					
 				} else {
-					setErrormsg("an error has occurred in server")
+					alert("server error")
 				}
 			})
 	}
@@ -1264,15 +1282,17 @@ export default function Settings(props) {
 									<Text style={styles.editButtonHeader}>Edit Location Info</Text>
 								</TouchableOpacity>
 							:
-              <View style={styles.loading}>
-                <ActivityIndicator color="black" size="small"/>
+              <View>
+                <View style={styles.loading}>
+                  <ActivityIndicator color="black" size="small"/>
+                </View>
               </View>
 						}
 
 						{!daysLoading ?
 							editType == 'hours' ? 
 								<>
-									<Text style={styles.header}>Edit Store Hour(s)</Text>
+									<Text style={styles.header}>Edit {type == "salon" ? "Salon" : "Restaurant"} Hour(s)</Text>
 
 									{days.map((info, index) => (
 										<View key={index} style={styles.day}>
@@ -1384,18 +1404,20 @@ export default function Settings(props) {
 								</>
 								:
 								<TouchableOpacity style={styles.editButton} onPress={() => setEdittype('hours')}>
-									<Text style={styles.editButtonHeader}>Edit Store Hour(s)</Text>
+									<Text style={styles.editButtonHeader}>Edit {type == "salon" ? "Salon" : "Restaurant"} Hour(s)</Text>
 								</TouchableOpacity>
 							:
-              <View style={styles.loading}>
-                <ActivityIndicator color="black" size="small"/>
+              <View>
+                <View style={styles.loading}>
+                  <ActivityIndicator color="black" size="small"/>
+                </View>
               </View>
 						}
 
 						{!accountHoldersloading ?
 							editType == 'users' ? 
 								<View style={styles.accountHolders}>
-									<Text style={styles.header}>Edit Worker(s)</Text>
+									<Text style={styles.header}>Edit Stylist(s)</Text>
 
 									<TouchableOpacity style={styles.accountHoldersAdd} onPress={() => {
 										setAccountform({
@@ -1404,7 +1426,7 @@ export default function Settings(props) {
 											type: 'add'
 										})
 									}}>
-										<Text style={styles.accountHoldersAddHeader}>Add a worker</Text>
+										<Text style={styles.accountHoldersAddHeader}>Add a new stylist</Text>
 									</TouchableOpacity>
 
 									{accountHolders.map((info, index) => (
@@ -1413,35 +1435,46 @@ export default function Settings(props) {
 
 											<View style={styles.accountEdit}>
 												<Text style={styles.accountEditHeader}>{info.username}</Text>
-                        <View style={styles.column}>
-  												<TouchableOpacity style={styles.accountEditTouch} onPress={() => {
-  													setAccountform({
-  														...accountForm,
-  														show: true,
-  														type: 'edit',
-  														id: info.id,
-  														username: info.username,
-  														cellnumber: info.cellnumber,
-  														password: '',
-  														confirmPassword: '',
-  														profile: { uri: logo_url + info.profile, name: info.profile },
-  													})
-  													setWorkerhours(info.hours)
-  												}}>
-  													<Text style={styles.accountEditTouchHeader}>Change Info</Text>
-  												</TouchableOpacity>
-                        </View>
+
+                        {type == "salon" && (
+                          <View style={styles.column}>
+                            <TouchableOpacity style={styles.accountEditTouch} onPress={() => {
+                              if (info.id == ownerId) {
+                                setAccountform({
+                                  ...accountForm,
+                                  show: true,
+                                  type: 'edit',
+                                  id: info.id,
+                                  username: info.username,
+                                  cellnumber: info.cellnumber,
+                                  password: '',
+                                  confirmPassword: '',
+                                  profile: { uri: logo_url + info.profile, name: info.profile },
+                                })
+                              } else {
+                                setAccountform({ ...accountForm, show: true, type: 'edit', editType: 'hours', id: info.id })
+                              }
+
+                              setWorkerhours(info.hours)
+                            }}>
+                              <Text style={styles.accountEditTouchHeader}>Change Info {ownerId == info.id && "(your)"}</Text>
+                            </TouchableOpacity>
+                          </View>
+                        )}
+                          
 											</View>
 										</View>
 									))}
 								</View>
 								:
 								<TouchableOpacity style={styles.editButton} onPress={() => setEdittype('users')}>
-									<Text style={styles.editButtonHeader}>Edit Worker(s)</Text>
+									<Text style={styles.editButtonHeader}>Edit Stylist(s) Info</Text>
 								</TouchableOpacity>
 							:
-							<View style={styles.loading}>
-                <ActivityIndicator color="black" size="small"/>
+              <View>
+  							<View style={styles.loading}>
+                  <ActivityIndicator color="black" size="small"/>
+                </View>
               </View>
 						}
 
@@ -1478,11 +1511,13 @@ export default function Settings(props) {
 								</View>
 								:
 								<TouchableOpacity style={styles.editButton} onPress={() => setEdittype('bankaccounts')}>
-									<Text style={styles.editButtonHeader}>Edit Bank account(s)</Text>
+									<Text style={styles.editButtonHeader}>Edit Bank account(s) Info</Text>
 								</TouchableOpacity>
 							:
-							<View style={styles.loading}>
-                <ActivityIndicator color="black" size="small"/>
+              <View>
+  							<View style={styles.loading}>
+                  <ActivityIndicator color="black" size="small"/>
+                </View>
               </View>
 						}
 					</View>
@@ -1491,236 +1526,551 @@ export default function Settings(props) {
 				{accountForm.show && (
 					<Modal transparent={true}>
 						<SafeAreaView style={styles.accountform}>
-							<TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
-								<ScrollView>
-									<View style={{ alignItems: 'center', marginVertical: 10 }}>
-										<TouchableOpacity onPress={() => {
-											setAccountform({
-												...accountForm,
+              <ScrollView style={{ height: '100%', width: '100%' }}>
+                {(!accountForm.editCellnumber && !accountForm.editUsername && !accountForm.editProfile && !accountForm.editPassword && !accountForm.editHours && accountForm.type != 'add') ? 
+    							<>
+                    <View style={{ alignItems: 'center', marginVertical: 10 }}>
+    									<TouchableOpacity onPress={() => {
+    										setAccountform({
+    											...accountForm,
 
-												show: false,
-												username: '',
-												cellnumber: '', password: '', confirmPassword: '',
-												profile: { uri: '', name: '' },
-												errorMsg: ""
-											})
-										}}>
-											<AntDesign name="closecircleo" size={wsize(7)}/>
-										</TouchableOpacity>
-									</View>
+    											show: false,
+    											username: '',
+    											cellnumber: '', password: '', confirmPassword: '',
+    											profile: { uri: '', name: '' },
+    											errorMsg: ""
+    										})
+    									}}>
+    										<AntDesign name="closecircleo" size={wsize(7)}/>
+    									</TouchableOpacity>
+    								</View>
 
-									<Text style={styles.accountformHeader}>{accountForm.type == 'add' ? 'Add' : 'Editing'} worker info</Text>
+    								<Text style={styles.accountformHeader}>{accountForm.type == 'add' ? 'Add' : 'Editing'} stylist info</Text>
 
-									<View style={styles.accountformInputField}>
-										<Text style={styles.accountformInputHeader}>Cell number:</Text>
-										<TextInput style={styles.accountformInputInput} onKeyPress={(e) => {
-											let newValue = e.nativeEvent.key
-											let newCellnumber = accountForm.cellnumber
+                    {accountForm.id == ownerId ? 
+                      <>
+                        <View style={{ alignItems: 'center' }}>
+                          <TouchableOpacity style={styles.accountInfoEdit} onPress={() => setAccountform({ ...accountForm, editCellnumber: true, editType: 'cellnumber' })}>
+                            <Text style={styles.accountInfoEditHeader}>Change Cell number</Text>
+                          </TouchableOpacity>
+                        </View>
 
-											if (newValue >= "0" && newValue <= "9") {
-												if (newCellnumber.length == 3) {
-													setAccountform({ ...accountForm, cellnumber: "(" + newCellnumber + ") " + newValue })
-												} else if (newCellnumber.length == 9) {
-													setAccountform({ ...accountForm, cellnumber: newCellnumber + "-" + newValue })
-												} else if (newCellnumber.length == 13) {
-													setAccountform({ ...accountForm, cellnumber: newCellnumber + newValue })
+        								<View style={{ alignItems: 'center' }}>
+                          <TouchableOpacity style={styles.accountInfoEdit} onPress={() => setAccountform({ ...accountForm, editUsername: true, editType: 'username' })}>
+                            <Text style={styles.accountInfoEditHeader}>Change your name</Text>
+                          </TouchableOpacity>
+                        </View>
 
-													Keyboard.dismiss()
-												} else {
-													setAccountform({ ...accountForm, cellnumber: newCellnumber + newValue })
-												}
-											} else if (newValue == "Backspace") {
-												setAccountform({ ...accountForm, cellnumber: newCellnumber.substr(0, newCellnumber.length - 1) })
-											}
-										}} value={accountForm.cellnumber} autoCorrect={false}/>
-									</View>
+        								<View style={{ alignItems: 'center' }}>
+                          <TouchableOpacity style={styles.accountInfoEdit} onPress={() => setAccountform({ ...accountForm, editProfile: true, editType: 'profile' })}>
+                            <Text style={styles.accountInfoEditHeader}>Change your profile</Text>
+                          </TouchableOpacity>
+                        </View>
 
-									<View style={styles.accountformInputField}>
-										<Text style={styles.accountformInputHeader}>Username:</Text>
-										<TextInput style={styles.accountformInputInput} onChangeText={(username) => setAccountform({ ...accountForm, username })} value={accountForm.username} autoCorrect={false}/>
-									</View>
+                        <View style={{ alignItems: 'center' }}>
+                          <TouchableOpacity style={styles.accountInfoEdit} onPress={() => setAccountform({ ...accountForm, editPassword: true, editType: 'password' })}>
+                            <Text style={styles.accountInfoEditHeader}>Change your password</Text>
+                          </TouchableOpacity>
+                        </View>
 
-									<View style={styles.cameraContainer}>
-										<Text style={styles.cameraHeader}>Profile Picture</Text>
-
-										{accountForm.profile.uri ? 
-											<>
-												<Image style={styles.camera} source={{ uri: accountForm.profile.uri }}/>
-
-												<TouchableOpacity style={styles.cameraAction} onPress={() => setAccountform({ ...accountForm, profile: { uri: '', name: '' }})}>
-													<Text style={styles.cameraActionHeader}>Cancel</Text>
-												</TouchableOpacity>
-											</>
-											:
-											<>
-												<Camera style={styles.camera} type={Camera.Constants.Type.front} ref={r => {setCamcomp(r)}}/>
-
-												<View style={styles.cameraActions}>
-													<TouchableOpacity style={styles.cameraAction} onPress={snapProfile.bind(this)}>
-														<Text style={styles.cameraActionHeader}>Take this photo</Text>
-													</TouchableOpacity>
-													<TouchableOpacity style={styles.cameraAction} onPress={() => chooseProfile()}>
-														<Text style={styles.cameraActionHeader}>Choose from phone</Text>
-													</TouchableOpacity>
-												</View>
-											</>
-										}	
-									</View>
-
-									<View style={styles.accountformInputField}>
-										<Text style={styles.accountformInputHeader}>Password:</Text>
-										<TextInput style={styles.accountformInputInput} secureTextEntry={true} onChangeText={(password) => setAccountform({
-											...accountForm,
-											password: password
-										})} value={accountForm.password} autoCorrect={false}/>
-									</View>
-
-									<View style={styles.accountformInputField}>
-										<Text style={styles.accountformInputHeader}>Confirm password:</Text>
-										<TextInput style={styles.accountformInputInput} secureTextEntry={true} onChangeText={(password) => setAccountform({
-											...accountForm,
-											confirmPassword: password
-										})} value={accountForm.confirmPassword} autoCorrect={false}/>
-									</View>
-
-									{workerHours.map((info, index) => (
-										<View key={index} style={styles.workerHour}>
-											{info.working == true ? 
-												<>
-													<View style={{ opacity: info.working ? 1 : 0.1 }}>
-														<Text style={styles.workerHourHeader}>You are working on {info.header}</Text>
-														<Text style={styles.workerHourHeader}>Edit your time</Text>
-														<View style={styles.timeSelectionContainer}>
-															<View style={styles.timeSelection}>
-																<View style={styles.selection}>
-																	<TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "up", true)}>
-																		<AntDesign name="up" size={wsize(7)}/>
-																	</TouchableOpacity>
-																	<Text style={styles.selectionHeader}>{info.opentime.hour}</Text>
-																	<TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "down", true)}>
-																		<AntDesign name="down" size={wsize(7)}/>
-																	</TouchableOpacity>
-																</View>
-																<View style={styles.column}>
-                                  <Text style={styles.selectionDiv}>:</Text>
+                        {type  == "salon" && (
+                          <View style={{ alignItems: 'center' }}>
+                            <TouchableOpacity style={styles.accountInfoEdit} onPress={() => setAccountform({ ...accountForm, editHours: true, editType: 'hours' })}>
+                              <Text style={styles.accountInfoEditHeader}>Change your days and hours</Text>
+                            </TouchableOpacity>
+                          </View>
+                        )}
+                      </>
+                      :
+                      <>
+                        {workerHours.map((info, index) => (
+                          <View key={index} style={styles.workerHour}>
+                            {info.working == true ? 
+                              <>
+                                <View>
+                                  <Text style={styles.workerHourHeader}>You are working on {info.header}</Text>
+                                  <Text style={styles.workerHourHeader}>Edit your time</Text>
+                                  <View style={styles.timeSelectionContainer}>
+                                    <View style={styles.timeSelection}>
+                                      <View style={styles.selection}>
+                                        <TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "up", true)}>
+                                          <AntDesign name="up" size={wsize(7)}/>
+                                        </TouchableOpacity>
+                                        <Text style={styles.selectionHeader}>{info.opentime.hour}</Text>
+                                        <TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "down", true)}>
+                                          <AntDesign name="down" size={wsize(7)}/>
+                                        </TouchableOpacity>
+                                      </View>
+                                      <View style={styles.column}>
+                                        <Text style={styles.selectionDiv}>:</Text>
+                                      </View>
+                                      <View style={styles.selection}>
+                                        <TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "up", true)}>
+                                          <AntDesign name="up" size={wsize(7)}/>
+                                        </TouchableOpacity>
+                                        <Text style={styles.selectionHeader}>{info.opentime.minute}</Text>
+                                        <TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "down", true)}>
+                                          <AntDesign name="down" size={wsize(7)}/>
+                                        </TouchableOpacity>
+                                      </View>
+                                      <View style={styles.selection}>
+                                        <TouchableOpacity onPress={() => updateWorkingHour(index, "period", "up", true)}>
+                                          <AntDesign name="up" size={wsize(7)}/>
+                                        </TouchableOpacity>
+                                        <Text style={styles.selectionHeader}>{info.opentime.period}</Text>
+                                        <TouchableOpacity onPress={() => updateWorkingHour(index, "period", "down", true)}>
+                                          <AntDesign name="down" size={wsize(7)}/>
+                                        </TouchableOpacity>
+                                      </View>
+                                    </View>
+                                    <View style={styles.column}>
+                                      <Text style={styles.timeSelectionHeader}>To</Text>
+                                    </View>
+                                    <View style={styles.timeSelection}>
+                                      <View style={styles.selection}>
+                                        <TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "up", false)}>
+                                          <AntDesign name="up" size={wsize(7)}/>
+                                        </TouchableOpacity>
+                                        <Text style={styles.selectionHeader}>{info.closetime.hour}</Text>
+                                        <TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "down", false)}>
+                                          <AntDesign name="down" size={wsize(7)}/>
+                                        </TouchableOpacity>
+                                      </View>
+                                      <View style={styles.column}>
+                                        <Text style={styles.selectionDiv}>:</Text>
+                                      </View>
+                                      <View style={styles.selection}>
+                                        <TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "up", false)}>
+                                          <AntDesign name="up" size={wsize(7)}/>
+                                        </TouchableOpacity>
+                                        <Text style={styles.selectionHeader}>{info.closetime.minute}</Text>
+                                        <TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "down", false)}>
+                                          <AntDesign name="down" size={wsize(7)}/>
+                                        </TouchableOpacity>
+                                      </View>
+                                      <View style={styles.selection}>
+                                        <TouchableOpacity onPress={() => updateWorkingHour(index, "period", "up", false)}>
+                                          <AntDesign name="up" size={wsize(7)}/>
+                                        </TouchableOpacity>
+                                        <Text style={styles.selectionHeader}>{info.closetime.period}</Text>
+                                        <TouchableOpacity onPress={() => updateWorkingHour(index, "period", "down", false)}>
+                                          <AntDesign name="down" size={wsize(7)}/>
+                                        </TouchableOpacity>
+                                      </View>
+                                    </View>
+                                  </View>
                                 </View>
-																<View style={styles.selection}>
-																	<TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "up", true)}>
-																		<AntDesign name="up" size={wsize(7)}/>
-																	</TouchableOpacity>
-																	<Text style={styles.selectionHeader}>{info.opentime.minute}</Text>
-																	<TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "down", true)}>
-																		<AntDesign name="down" size={wsize(7)}/>
-																	</TouchableOpacity>
-																</View>
-																<View style={styles.selection}>
-																	<TouchableOpacity onPress={() => updateWorkingHour(index, "period", "up", true)}>
-																		<AntDesign name="up" size={wsize(7)}/>
-																	</TouchableOpacity>
-																	<Text style={styles.selectionHeader}>{info.opentime.period}</Text>
-																	<TouchableOpacity onPress={() => updateWorkingHour(index, "period", "down", true)}>
-																		<AntDesign name="down" size={wsize(7)}/>
-																	</TouchableOpacity>
-																</View>
-															</View>
-															<View style={styles.column}>
-                                <Text style={styles.timeSelectionHeader}>To</Text>
-                              </View>
-															<View style={styles.timeSelection}>
-																<View style={styles.selection}>
-																	<TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "up", false)}>
-																		<AntDesign name="up" size={wsize(7)}/>
-																	</TouchableOpacity>
-																	<Text style={styles.selectionHeader}>{info.closetime.hour}</Text>
-																	<TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "down", false)}>
-																		<AntDesign name="down" size={wsize(7)}/>
-																	</TouchableOpacity>
-																</View>
-																<View style={styles.column}>
-                                  <Text style={styles.selectionDiv}>:</Text>
+                                <TouchableOpacity style={styles.workerHourTouch} onPress={() => {
+                                  const newWorkerhours = [...workerHours]
+
+                                  newWorkerhours[index].working = false
+
+                                  setWorkerhours(newWorkerhours)
+                                }}>
+                                  <Text style={styles.workerHourTouchHeader}>Change to not working</Text>
+                                </TouchableOpacity>
+                              </>
+                              :
+                              <>
+                                <Text style={styles.workerHourHeader}>You are not working on {info.header}</Text>
+
+                                <TouchableOpacity style={styles.workerHourTouch} onPress={() => {
+                                  const newWorkerhours = [...workerHours]
+
+                                  newWorkerhours[index].working = true
+
+                                  setWorkerhours(newWorkerhours)
+                                }}>
+                                  <Text style={styles.workerHourTouchHeader}>Change to working</Text>
+                                </TouchableOpacity>
+                              </>
+                            }
+                          </View>
+                        ))}
+
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+                          <View style={{ flexDirection: 'row' }}>
+                            <TouchableOpacity style={[styles.accountformSubmit, { opacity: accountForm.loading ? 0.3 : 1 }]} disabled={accountForm.loading} onPress={() => setAccountform({ ...accountForm, show: false, type: 'edit', editType: '', id: -1, editHours: false })}>
+                              <Text style={styles.accountformSubmitHeader}>Cancel</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={[styles.accountformSubmit, { opacity: accountForm.loading ? 0.3 : 1 }]} disabled={accountForm.loading} onPress={() => {
+                              if (accountForm.type == 'add') {
+                                addNewOwner()
+                              } else {
+                                updateTheOwner()
+                              }
+
+                              getAllAccounts()
+                            }}>
+                              <Text style={styles.accountformSubmitHeader}>{accountForm.type == 'add' ? 'Add' : 'Save'} Account</Text>
+                            </TouchableOpacity>
+                          </View>
+                        </View>
+                      </>
+                    }
+
+    								{accountForm.errormsg ? <Text style={styles.errorMsg}>{accountForm.errormsg}</Text> : null}
+    								{accountForm.loading ? <ActivityIndicator marginBottom={10} size="small"/> : null}
+    							</>
+                  :
+                  <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+                    {accountForm.type == 'add' ? 
+                      <View style={styles.accountformEdit}>
+                        {accountForm.addStep == 0 && (
+                          <View style={styles.accountformInputField}>
+                            <Text style={styles.accountformInputHeader}>Cell number:</Text>
+                            <TextInput style={styles.accountformInputInput} onKeyPress={(e) => {
+                              let newValue = e.nativeEvent.key
+                              let newCellnumber = accountForm.cellnumber
+
+                              if (newValue >= "0" && newValue <= "9") {
+                                if (newCellnumber.length == 3) {
+                                  setAccountform({ ...accountForm, cellnumber: "(" + newCellnumber + ") " + newValue })
+                                } else if (newCellnumber.length == 9) {
+                                  setAccountform({ ...accountForm, cellnumber: newCellnumber + "-" + newValue })
+                                } else if (newCellnumber.length == 13) {
+                                  setAccountform({ ...accountForm, cellnumber: newCellnumber + newValue })
+
+                                  Keyboard.dismiss()
+                                } else {
+                                  setAccountform({ ...accountForm, cellnumber: newCellnumber + newValue })
+                                }
+                              } else if (newValue == "Backspace") {
+                                setAccountform({ ...accountForm, cellnumber: newCellnumber.substr(0, newCellnumber.length - 1) })
+                              }
+                            }} value={accountForm.cellnumber} autoCorrect={false}/>
+                          </View>
+                        )}
+
+                        {accountForm.addStep == 1 && (
+                          <View style={styles.accountformInputField}>
+                            <Text style={styles.accountformInputHeader}>Your name:</Text>
+                            <TextInput style={styles.accountformInputInput} onChangeText={(username) => setAccountform({ ...accountForm, username })} value={accountForm.username} autoCorrect={false}/>
+                          </View>
+                        )}
+
+                        {accountForm.addStep == 2 && (
+                          <View style={styles.cameraContainer}>
+                            <Text style={styles.cameraHeader}>Profile Picture</Text>
+
+                            {accountForm.profile.uri ? 
+                              <>
+                                <Image style={styles.camera} source={{ uri: accountForm.profile.uri }}/>
+
+                                <TouchableOpacity style={styles.cameraAction} onPress={() => setAccountform({ ...accountForm, profile: { uri: '', name: '' }})}>
+                                  <Text style={styles.cameraActionHeader}>Cancel</Text>
+                                </TouchableOpacity>
+                              </>
+                              :
+                              <>
+                                <Camera style={styles.camera} type={Camera.Constants.Type.front} ref={r => {setCamcomp(r)}}/>
+
+                                <View style={styles.cameraActions}>
+                                  <TouchableOpacity style={styles.cameraAction} onPress={snapProfile.bind(this)}>
+                                    <Text style={styles.cameraActionHeader}>Take this photo</Text>
+                                  </TouchableOpacity>
+                                  <TouchableOpacity style={styles.cameraAction} onPress={() => chooseProfile()}>
+                                    <Text style={styles.cameraActionHeader}>Choose from phone</Text>
+                                  </TouchableOpacity>
                                 </View>
-																<View style={styles.selection}>
-																	<TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "up", false)}>
-																		<AntDesign name="up" size={wsize(7)}/>
-																	</TouchableOpacity>
-																	<Text style={styles.selectionHeader}>{info.closetime.minute}</Text>
-																	<TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "down", false)}>
-																		<AntDesign name="down" size={wsize(7)}/>
-																	</TouchableOpacity>
-																</View>
-																<View style={styles.selection}>
-																	<TouchableOpacity onPress={() => updateWorkingHour(index, "period", "up", false)}>
-																		<AntDesign name="up" size={wsize(7)}/>
-																	</TouchableOpacity>
-																	<Text style={styles.selectionHeader}>{info.closetime.period}</Text>
-																	<TouchableOpacity onPress={() => updateWorkingHour(index, "period", "down", false)}>
-																		<AntDesign name="down" size={wsize(7)}/>
-																	</TouchableOpacity>
-																</View>
-															</View>
-														</View>
-													</View>
-													<TouchableOpacity style={styles.workerHourTouch} onPress={() => {
-														const newWorkerhours = [...workerHours]
+                              </>
+                            } 
+                          </View>
+                        )}
 
-														newWorkerhours[index].working = false
+                        {accountForm.addStep == 3 && (
+                          <View>
+                            <View style={styles.accountformInputField}>
+                              <Text style={styles.accountformInputHeader}>Password:</Text>
+                              <TextInput style={styles.accountformInputInput} secureTextEntry={true} onChangeText={(newPassword) => setAccountform({
+                                ...accountForm,
+                                newPassword
+                              })} value={accountForm.newPassword} autoCorrect={false}/>
+                            </View>
 
-														setWorkerhours(newWorkerhours)
-													}}>
-														<Text style={styles.workerHourTouchHeader}>Change to not working</Text>
-													</TouchableOpacity>
-												</>
-												:
-												<>
-													<Text style={styles.workerHourHeader}>You are not working on {info.header}</Text>
+                            <View style={styles.accountformInputField}>
+                              <Text style={styles.accountformInputHeader}>Confirm password:</Text>
+                              <TextInput style={styles.accountformInputInput} secureTextEntry={true} onChangeText={(confirmPassword) => setAccountform({
+                                ...accountForm,
+                                confirmPassword
+                              })} value={accountForm.confirmPassword} autoCorrect={false}/>
+                            </View>
+                          </View>
+                        )}
 
-													<TouchableOpacity style={styles.workerHourTouch} onPress={() => {
-														const newWorkerhours = [...workerHours]
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+                          <View style={{ flexDirection: 'row' }}>
+                            <TouchableOpacity style={[styles.accountformSubmit, { opacity: accountForm.loading ? 0.3 : 1 }]} disabled={accountForm.loading} onPress={() => {
+                              setAccountform({ ...accountForm, 
+                                show: false,
+                                type: '', editType: '', addStep: 0, 
+                                username: '', editUsername: false,
+                                cellnumber: '', editCellnumber: false,
+                                currentPassword: '', newPassword: '', confirmPassword: '', editPassword: false,
+                                profile: { uri: '', name: '' }, editProfile: false,
+                                editHours: false,
+                                errorMsg: ""
+                              })
+                            }}>
+                              <Text style={styles.accountformSubmitHeader}>Cancel</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={[styles.accountformSubmit, { opacity: accountForm.loading ? 0.3 : 1 }]} disabled={accountForm.loading} onPress={() => {
+                              if (accountForm.addStep == 3) {
+                                addNewOwner()
+                                getAllAccounts()
+                              } else {
+                                setAccountform({ ...accountForm, addStep: accountForm.addStep + 1 })
+                              }
+                            }}>
+                              <Text style={styles.accountformSubmitHeader}>
+                                {accountForm.addStep == 3 ? 
+                                  (accountForm.type == 'add' ? 'Add' : 'Save') + ' Account'
+                                  :
+                                  'Next'
+                                }
+                              </Text>
+                            </TouchableOpacity>
+                          </View>
+                        </View>
+                      </View>
+                      :
+                      <View style={styles.accountformEdit}>
+                        {accountForm.editCellnumber && (
+                          <View style={styles.accountformInputField}>
+                            <Text style={styles.accountformInputHeader}>Cell number:</Text>
+                            <TextInput style={styles.accountformInputInput} onKeyPress={(e) => {
+                              let newValue = e.nativeEvent.key
+                              let newCellnumber = accountForm.cellnumber
 
-														newWorkerhours[index].working = true
+                              if (newValue >= "0" && newValue <= "9") {
+                                if (newCellnumber.length == 3) {
+                                  setAccountform({ ...accountForm, cellnumber: "(" + newCellnumber + ") " + newValue })
+                                } else if (newCellnumber.length == 9) {
+                                  setAccountform({ ...accountForm, cellnumber: newCellnumber + "-" + newValue })
+                                } else if (newCellnumber.length == 13) {
+                                  setAccountform({ ...accountForm, cellnumber: newCellnumber + newValue })
 
-														setWorkerhours(newWorkerhours)
-													}}>
-														<Text style={styles.workerHourTouchHeader}>Change to working</Text>
-													</TouchableOpacity>
-												</>
-											}
-										</View>
-									))}
+                                  Keyboard.dismiss()
+                                } else {
+                                  setAccountform({ ...accountForm, cellnumber: newCellnumber + newValue })
+                                }
+                              } else if (newValue == "Backspace") {
+                                setAccountform({ ...accountForm, cellnumber: newCellnumber.substr(0, newCellnumber.length - 1) })
+                              }
+                            }} value={accountForm.cellnumber} autoCorrect={false}/>
+                          </View>
+                        )}
 
-									{accountForm.errormsg ? <Text style={styles.errorMsg}>{accountForm.errormsg}</Text> : null}
-									{accountForm.loading ? <ActivityIndicator marginBottom={10} size="small"/> : null}
+                        {accountForm.editUsername && (
+                          <View style={styles.accountformInputField}>
+                            <Text style={styles.accountformInputHeader}>Your name:</Text>
+                            <TextInput style={styles.accountformInputInput} onChangeText={(username) => setAccountform({ ...accountForm, username })} value={accountForm.username} autoCorrect={false}/>
+                          </View>
+                        )}
 
-									<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-                    <View style={{ flexDirection: 'row' }}>
-  										<TouchableOpacity style={[styles.accountformSubmit, { opacity: accountForm.loading ? 0.3 : 1 }]} disabled={accountForm.loading} onPress={() => {
-  											setAccountform({
-  												...accountForm,
+                        {accountForm.editProfile && (
+                          <View style={styles.cameraContainer}>
+                            <Text style={styles.cameraHeader}>Profile Picture</Text>
 
-  												show: false,
-  												username: '',
-  												cellnumber: '', password: '', confirmPassword: '',
-  												profile: { uri: '', name: '' },
-  												errorMsg: ""
-  											})
-  										}}>
-  											<Text style={styles.accountformSubmitHeader}>Cancel</Text>
-  										</TouchableOpacity>
-  										<TouchableOpacity style={[styles.accountformSubmit, { opacity: accountForm.loading ? 0.3 : 1 }]} disabled={accountForm.loading} onPress={() => {
-  											if (accountForm.type == 'add') {
-  												addNewOwner()
-  											} else {
-  												updateTheOwner()
-  											}
+                            {accountForm.profile.uri ? 
+                              <>
+                                <Image style={styles.camera} source={{ uri: accountForm.profile.uri }}/>
 
-  											getAllAccounts()
-  										}}>
-  											<Text style={styles.accountformSubmitHeader}>{accountForm.type == 'add' ? 'Add' : 'Save'} Account</Text>
-  										</TouchableOpacity>
-                    </View>
-									</View>
-								</ScrollView>
-							</TouchableWithoutFeedback>
+                                <TouchableOpacity style={styles.cameraAction} onPress={() => setAccountform({ ...accountForm, profile: { uri: '', name: '' }})}>
+                                  <Text style={styles.cameraActionHeader}>Cancel</Text>
+                                </TouchableOpacity>
+                              </>
+                              :
+                              <>
+                                <Camera style={styles.camera} type={Camera.Constants.Type.front} ref={r => {setCamcomp(r)}}/>
+
+                                <View style={styles.cameraActions}>
+                                  <TouchableOpacity style={styles.cameraAction} onPress={snapProfile.bind(this)}>
+                                    <Text style={styles.cameraActionHeader}>Take this photo</Text>
+                                  </TouchableOpacity>
+                                  <TouchableOpacity style={styles.cameraAction} onPress={() => chooseProfile()}>
+                                    <Text style={styles.cameraActionHeader}>Choose from phone</Text>
+                                  </TouchableOpacity>
+                                </View>
+                              </>
+                            } 
+                          </View>
+                        )}
+
+                        {accountForm.editPassword && (
+                          <View>
+                            <View style={styles.accountformInputField}>
+                              <Text style={styles.accountformInputHeader}>Current Password:</Text>
+                              <TextInput style={styles.accountformInputInput} secureTextEntry={true} onChangeText={(currentPassword) => setAccountform({
+                                ...accountForm,
+                                currentPassword
+                              })} value={accountForm.currentPassword} autoCorrect={false}/>
+                            </View>
+
+                            <View style={styles.accountformInputField}>
+                              <Text style={styles.accountformInputHeader}>New Password:</Text>
+                              <TextInput style={styles.accountformInputInput} secureTextEntry={true} onChangeText={(newPassword) => setAccountform({
+                                ...accountForm,
+                                newPassword
+                              })} value={accountForm.newPassword} autoCorrect={false}/>
+                            </View>
+
+                            <View style={styles.accountformInputField}>
+                              <Text style={styles.accountformInputHeader}>Confirm password:</Text>
+                              <TextInput style={styles.accountformInputInput} secureTextEntry={true} onChangeText={(confirmPassword) => setAccountform({
+                                ...accountForm,
+                                confirmPassword
+                              })} value={accountForm.confirmPassword} autoCorrect={false}/>
+                            </View>
+                          </View>
+                        )}
+
+                        {accountForm.editHours && (
+                          workerHours.map((info, index) => (
+                            <View key={index} style={styles.workerHour}>
+                              {info.working == true ? 
+                                <>
+                                  <View style={{ opacity: info.working ? 1 : 0.1 }}>
+                                    <Text style={styles.workerHourHeader}>You are working on {info.header}</Text>
+                                    <Text style={styles.workerHourHeader}>Edit your time</Text>
+                                    <View style={styles.timeSelectionContainer}>
+                                      <View style={styles.timeSelection}>
+                                        <View style={styles.selection}>
+                                          <TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "up", true)}>
+                                            <AntDesign name="up" size={wsize(7)}/>
+                                          </TouchableOpacity>
+                                          <Text style={styles.selectionHeader}>{info.opentime.hour}</Text>
+                                          <TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "down", true)}>
+                                            <AntDesign name="down" size={wsize(7)}/>
+                                          </TouchableOpacity>
+                                        </View>
+                                        <View style={styles.column}>
+                                          <Text style={styles.selectionDiv}>:</Text>
+                                        </View>
+                                        <View style={styles.selection}>
+                                          <TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "up", true)}>
+                                            <AntDesign name="up" size={wsize(7)}/>
+                                          </TouchableOpacity>
+                                          <Text style={styles.selectionHeader}>{info.opentime.minute}</Text>
+                                          <TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "down", true)}>
+                                            <AntDesign name="down" size={wsize(7)}/>
+                                          </TouchableOpacity>
+                                        </View>
+                                        <View style={styles.selection}>
+                                          <TouchableOpacity onPress={() => updateWorkingHour(index, "period", "up", true)}>
+                                            <AntDesign name="up" size={wsize(7)}/>
+                                          </TouchableOpacity>
+                                          <Text style={styles.selectionHeader}>{info.opentime.period}</Text>
+                                          <TouchableOpacity onPress={() => updateWorkingHour(index, "period", "down", true)}>
+                                            <AntDesign name="down" size={wsize(7)}/>
+                                          </TouchableOpacity>
+                                        </View>
+                                      </View>
+                                      <View style={styles.column}>
+                                        <Text style={styles.timeSelectionHeader}>To</Text>
+                                      </View>
+                                      <View style={styles.timeSelection}>
+                                        <View style={styles.selection}>
+                                          <TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "up", false)}>
+                                            <AntDesign name="up" size={wsize(7)}/>
+                                          </TouchableOpacity>
+                                          <Text style={styles.selectionHeader}>{info.closetime.hour}</Text>
+                                          <TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "down", false)}>
+                                            <AntDesign name="down" size={wsize(7)}/>
+                                          </TouchableOpacity>
+                                        </View>
+                                        <View style={styles.column}>
+                                          <Text style={styles.selectionDiv}>:</Text>
+                                        </View>
+                                        <View style={styles.selection}>
+                                          <TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "up", false)}>
+                                            <AntDesign name="up" size={wsize(7)}/>
+                                          </TouchableOpacity>
+                                          <Text style={styles.selectionHeader}>{info.closetime.minute}</Text>
+                                          <TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "down", false)}>
+                                            <AntDesign name="down" size={wsize(7)}/>
+                                          </TouchableOpacity>
+                                        </View>
+                                        <View style={styles.selection}>
+                                          <TouchableOpacity onPress={() => updateWorkingHour(index, "period", "up", false)}>
+                                            <AntDesign name="up" size={wsize(7)}/>
+                                          </TouchableOpacity>
+                                          <Text style={styles.selectionHeader}>{info.closetime.period}</Text>
+                                          <TouchableOpacity onPress={() => updateWorkingHour(index, "period", "down", false)}>
+                                            <AntDesign name="down" size={wsize(7)}/>
+                                          </TouchableOpacity>
+                                        </View>
+                                      </View>
+                                    </View>
+                                  </View>
+                                  <TouchableOpacity style={styles.workerHourTouch} onPress={() => {
+                                    const newWorkerhours = [...workerHours]
+
+                                    newWorkerhours[index].working = false
+
+                                    setWorkerhours(newWorkerhours)
+                                  }}>
+                                    <Text style={styles.workerHourTouchHeader}>Change to not working</Text>
+                                  </TouchableOpacity>
+                                </>
+                                :
+                                <>
+                                  <Text style={styles.workerHourHeader}>You are not working on {info.header}</Text>
+
+                                  <TouchableOpacity style={styles.workerHourTouch} onPress={() => {
+                                    const newWorkerhours = [...workerHours]
+
+                                    newWorkerhours[index].working = true
+
+                                    setWorkerhours(newWorkerhours)
+                                  }}>
+                                    <Text style={styles.workerHourTouchHeader}>Change to working</Text>
+                                  </TouchableOpacity>
+                                </>
+                              }
+                            </View>
+                          ))
+                        )}
+
+                        {accountForm.errorMsg ? <Text style={styles.errorMsg}>{accountForm.errorMsg}</Text> : null}
+
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+                          <View style={{ flexDirection: 'row' }}>
+                            <TouchableOpacity style={[styles.accountformSubmit, { opacity: accountForm.loading ? 0.3 : 1 }]} disabled={accountForm.loading} onPress={() => {
+                              accountHolders.forEach(function (info) {
+                                if (info.id == accountForm.id) {
+                                  setAccountform({ ...accountForm, 
+                                    editType: '',
+                                    username: info.username, editUsername: false,
+                                    cellnumber: info.cellnumber, editCellnumber: false,
+                                    currentPassword: '', newPassword: '', confirmPassword: '', editPassword: false,
+                                    profile: { uri: logo_url + info.profile, name: info.profile }, editProfile: false,
+                                    editHours: false,
+                                    errorMsg: ""
+                                  })
+                                }
+                              })
+                            }}>
+                              <Text style={styles.accountformSubmitHeader}>Cancel</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={[styles.accountformSubmit, { opacity: accountForm.loading ? 0.3 : 1 }]} disabled={accountForm.loading} onPress={() => {
+                              if (accountForm.type == 'add') {
+                                addNewOwner()
+                              } else {
+                                updateTheOwner()
+                              }
+
+                              getAllAccounts()
+                            }}>
+                              <Text style={styles.accountformSubmitHeader}>{accountForm.type == 'add' ? 'Add' : 'Save'} Account</Text>
+                            </TouchableOpacity>
+                          </View>
+                        </View>
+                      </View>
+                    }
+                  </TouchableWithoutFeedback>
+                }
+              </ScrollView>
 						</SafeAreaView>
 					</Modal>
 				)}
@@ -1839,7 +2189,7 @@ const styles = StyleSheet.create({
 	dayAnswerAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 10, width: 100 },
 	dayAnswerActionHeader: {  },
 	timeSelectionContainer: { flexDirection: 'row' },
-	timeSelection: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, flexDirection: 'row', marginHorizontal: 5 },
+	timeSelection: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 3, flexDirection: 'row', marginHorizontal: 5 },
 	timeSelectionHeader: { fontSize: wsize(7), fontWeight: 'bold' },
 	selection: { alignItems: 'center', margin: 5 },
 	selectionHeader: { fontSize: wsize(7), textAlign: 'center' },
@@ -1858,6 +2208,11 @@ const styles = StyleSheet.create({
 	accountEditTouch: { borderRadius: 2, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: wsize(30) },
   accountEditTouchHeader: { fontSize: wsize(4), textAlign: 'center' },
 
+  accountInfoEdit: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 10, padding: 5, width: '70%' },
+  accountInfoEditHeader: { fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
+
+  accountformEdit: { flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
+
 	bankaccountHolders: { alignItems: 'center', marginHorizontal: 10, marginTop: 20 },
 	bankaccountHolderHeader: { fontFamily: 'appFont', fontSize: wsize(30), textAlign: 'center' },
 	bankaccountHolderAdd: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 3, padding: 5 },
@@ -1875,16 +2230,16 @@ const styles = StyleSheet.create({
 	editButtonHeader: { fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
 
 	// account form
-	accountform: { backgroundColor: 'white', paddingVertical: 50 },
+	accountform: { backgroundColor: 'white', height: '100%', paddingVertical: 50 },
 	accountformHeader: { fontSize: wsize(6), fontWeight: 'bold', marginVertical: 50, textAlign: 'center' },
 	accountformInputField: { marginBottom: 20, marginHorizontal: '10%', width: '80%' },
 	accountformInputHeader: { fontSize: wsize(5), fontWeight: 'bold' },
 	accountformInputInput: { borderRadius: 2, borderStyle: 'solid', borderWidth: 3, fontSize: wsize(5), padding: 5, width: '100%' },
-	accountformSubmit: { alignItems: 'center', borderRadius: 2, borderStyle: 'solid', borderWidth: 1, margin: 5, padding: 5, width: wsize(30) },
-	accountformSubmitHeader: { fontFamily: 'appFont', fontSize: wsize(4) },
-	workerHour: { alignItems: 'center', marginVertical: 40, padding: 5 },
+	accountformSubmit: { alignItems: 'center', borderRadius: 2, borderStyle: 'solid', borderWidth: 1, margin: 5, padding: 5, width: wsize(35) },
+	accountformSubmitHeader: { fontFamily: 'appFont', fontSize: wsize(5) },
+	workerHour: { alignItems: 'center', backgroundColor: 'rgba(127, 127, 127, 0.3)', borderRadius: 10, marginVertical: 40, marginHorizontal: '5%', padding: 5, width: '90%' },
 	workerHourHeader: { fontSize: wsize(5), fontWeight: 'bold', marginHorizontal: 10, textAlign: 'center' },
-	workerHourTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5 },
+	workerHourTouch: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5 },
 	workerHourTouchHeader: { fontSize: wsize(5), textAlign: 'center' },
 
 	// form

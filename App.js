@@ -29,9 +29,6 @@ import Dinersorders from './src/pages/dinersorders'
 // restaurants
 import Makereservation from './src/pages/makereservation'
 
-// salons
-import Booktime from './src/pages/booktime'
-
 // salons' components
 import Addmenu from './src/components/addmenu'
 import Addproduct from './src/components/addproduct'
@@ -174,16 +171,6 @@ export default function App() {
 
                     navigation.goBack()
                   }}>
-                    <Text style={styles.backHeader}>Go Back</Text>
-                  </TouchableOpacity>
-                )
-              )
-            })}/>
-            <Stack.Screen name="booktime" component={Booktime} options={({ navigation, route }) => ({
-              headerTitle: () => <Text style={styles.header}>Request another time</Text>,
-              headerLeft: () => (
-                Platform.OS == 'ios' && (
-                  <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>
                     <Text style={styles.backHeader}>Go Back</Text>
                   </TouchableOpacity>
                 )

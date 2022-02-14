@@ -55,7 +55,7 @@ export default function Login({ navigation }) {
 
 					setErrormsg(errormsg)
 				} else {
-					setErrormsg("an error has occurred in server")
+          alert("server error")
 				}
 			})
 	}

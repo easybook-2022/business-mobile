@@ -3,7 +3,7 @@ import { SafeAreaView, ActivityIndicator, Dimensions, View, FlatList, Text, Imag
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { socket, logo_url } from '../../assets/info'
-import { getDinersOrders, getDinersPayments } from '../apis/schedules'
+import { getDinersOrders, receiveDinersPayments } from '../apis/schedules'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
 
@@ -52,11 +52,11 @@ export default function Dinersorders(props) {
 				if (err.response && err.response.status == 400) {
 					
 				} else {
-					alert("an error has occurred in server")
+					alert("server error")
 				}
 			})
 	}
-	const getTheDinersPayments = async() => {
+	const receiveTheDinersPayment = async() => {
 		setGettingpayment(true)
 
 		let k = 0, newDiners = [...diners]
@@ -73,7 +73,7 @@ export default function Dinersorders(props) {
 				receiver.push("user" + newDiners[k].userId)
 
 				try {
-					let res = await getDinersPayments(data)
+					let res = await receiveDinersPayments(data)
 
 					if (res.status == 200 && isMounted.current == true) { // user payment passed
 						newDiners[k].paying = false
@@ -97,7 +97,7 @@ export default function Dinersorders(props) {
 							default:
 						}
 					} else {
-						alert("an error has occurred in server")
+						alert("server error")
 					}
 
 					allpaid = false
@@ -108,8 +108,8 @@ export default function Dinersorders(props) {
 		}
 
 		if (allpaid) {
-			data = { type: "getDinersPayments", scheduleid, receiver }
-			socket.emit("socket/getDinersPayments", data, () => setPaymentconfirm({ show: true, receiver }))
+			data = { type: "receiveDinersPayments", scheduleid, receiver }
+			socket.emit("socket/receiveDinersPayments", data, () => setPaymentconfirm({ show: true, receiver }))
 		}
 
 		setGettingpayment(false)
@@ -195,7 +195,7 @@ export default function Dinersorders(props) {
 					<View style={styles.footer}>
 						<Text style={styles.totalHeader}>Total: $ {totalPayment}</Text>
 
-						<TouchableOpacity style={[styles.payment, { opacity: gettingPayment ? 0.3 : 1 }]} disabled={gettingPayment} onPress={() => getTheDinersPayments()}>
+						<TouchableOpacity style={[styles.payment, { opacity: gettingPayment ? 0.3 : 1 }]} disabled={gettingPayment} onPress={() => receiveTheDinersPayment()}>
 							<Text style={styles.paymentHeader}>Receive now</Text>
 						</TouchableOpacity>
 					</View>

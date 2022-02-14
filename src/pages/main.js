@@ -96,7 +96,7 @@ export default function Main(props) {
 						if (err.response && err.response.status == 400) {
 
 						} else {
-							alert("an error has occurred in server")
+							alert("server error")
 						}
 					})
 			}
@@ -126,7 +126,7 @@ export default function Main(props) {
 							if (err.response && err.response.status == 400) {
 								
 							} else {
-								alert("an error has occurred in server")
+								alert("server error")
 							}
 						})
 				}
@@ -134,28 +134,28 @@ export default function Main(props) {
 		}
 	}
 	
-	const fetchTheNumRequests = async() => {
-		const locationid = await AsyncStorage.getItem("locationid")
+  const fetchTheNumRequests = async() => {
+    const locationid = await AsyncStorage.getItem("locationid")
 
-		fetchNumRequests(locationid)
-			.then((res) => {
-				if (res.status == 200) {
-					return res.data
-				}
-			})
-			.then((res) => {
-				if (res) {
-					setNumrequests(res.numRequests)
-				}
-			})
-			.catch((err) => {
-				if (err.response && err.response.status == 400) {
-					
-				} else {
-					alert("an error has occurred in server")
-				}
-			})
-	}
+    fetchNumRequests(locationid)
+      .then((res) => {
+        if (res.status == 200) {
+          return res.data
+        }
+      })
+      .then((res) => {
+        if (res) {
+          setNumrequests(res.numRequests)
+        }
+      })
+      .catch((err) => {
+        if (err.response && err.response.status == 400) {
+          
+        } else {
+          alert("server error")
+        }
+      })
+  }
 	const fetchTheNumAppointments = async() => {
     const ownerid = await AsyncStorage.getItem("ownerid")
 
@@ -173,7 +173,7 @@ export default function Main(props) {
 					if (err.response && err.response.status == 400) {
 						
 					} else {
-						alert("an error has occurred in server")
+						alert("server error")
 					}
 				})
 		}
@@ -195,7 +195,7 @@ export default function Main(props) {
 					if (err.response && err.response.status == 400) {
 						
 					} else {
-						alert("an error has occurred in server")
+						alert("server error")
 					}
 				})
 		}
@@ -216,7 +216,7 @@ export default function Main(props) {
 				if (err.response && err.response.status == 400) {
 
 				} else {
-					alert("an error has occurred in server")
+					alert("server error")
 				}
 			})
 	}
@@ -243,8 +243,6 @@ export default function Main(props) {
 						setLocationtype(type)
 						setLocationlisted(listed)
 
-						fetchTheNumRequests()
-
 						if (type == 'restaurant') {
 							fetchTheNumCartOrderers()
 							getAllReservations()
@@ -259,7 +257,7 @@ export default function Main(props) {
 				if (err.response && err.response.status == 400) {
 					
 				} else {
-					alert("an error has occurred in server")
+					alert("server error")
 				}
 			})
 	}
@@ -289,35 +287,36 @@ export default function Main(props) {
 						}
 					}
 				} else {
-					alert("an error has occurred in server")
+					alert("server error")
 				}
 			})
 	}
-	const getAllRequests = async() => {
-		const locationid = await AsyncStorage.getItem("locationid")
-		const data = { ownerid: ownerId, locationid }
 
-		getRequests(data)
-			.then((res) => {
-				if (res.status == 200) {
-					return res.data
-				}
-			})
-			.then((res) => {
-				if (res) {
-					setRequests(res.requests)
-					setNumrequests(res.numrequests)
-					setViewtype('requests')
-				}
-			})
-			.catch((err) => {
-				if (err.response && err.response.status == 400) {
+  const getAllRequests = async() => {
+    const locationid = await AsyncStorage.getItem("locationid")
+    const data = { ownerid: ownerId, locationid }
 
-				} else {
-					alert("an error has occurred in server")
-				}
-			})
-	}
+    getRequests(data)
+      .then((res) => {
+        if (res.status == 200) {
+          return res.data
+        }
+      })
+      .then((res) => {
+        if (res) {
+          setRequests(res.requests)
+          setNumrequests(res.numrequests)
+          setViewtype('requests')
+        }
+      })
+      .catch((err) => {
+        if (err.response && err.response.status == 400) {
+
+        } else {
+          alert("server error")
+        }
+      })
+  }
 	const getAllAppointments = async() => {
 		const ownerid = await AsyncStorage.getItem("ownerid")
 		const locationid = await AsyncStorage.getItem("locationid")
@@ -340,7 +339,7 @@ export default function Main(props) {
 				if (err.response && err.response.status == 400) {
 
 				} else {
-					alert("an error has occurred in server")
+					alert("server error")
 				}
 			})
 	}
@@ -364,7 +363,7 @@ export default function Main(props) {
 				if (err.response && err.response.status == 400) {
 
 				} else {
-					alert("an error has occurred in server")
+					alert("server error")
 				}
 			})
 	}
@@ -388,7 +387,7 @@ export default function Main(props) {
 				if (err.response && err.response.status == 400) {
 					
 				} else {
-					alert("an error has occurred in server")
+					alert("server error")
 				}
 			})
 	}
@@ -412,7 +411,7 @@ export default function Main(props) {
           if (err.response && err.response.status == 400) {
 
           } else {
-            alert("an error has occurred in server")
+            alert("server error")
           }
         })
     } else {
@@ -476,7 +475,7 @@ export default function Main(props) {
 			setCancelinfo({ ...cancelInfo, show: true, type, requestType, id, index })
 		} else {
 			const { reason, id, index } = cancelInfo
-			let data = { id, reason, type: "cancelRequest" }
+			let data = { scheduleid: id, reason, type: "cancelRequest" }
 
 			cancelSchedule(data)
 				.then((res) => {
@@ -527,7 +526,7 @@ export default function Main(props) {
 					if (err.response && err.response.status == 400) {
 						const { errormsg, status } = err.response.data
 					} else {
-						alert("an error has occurred in server")
+						alert("server error")
 					}
 				})
 		}
@@ -569,7 +568,7 @@ export default function Main(props) {
 							if (err.response && err.response.status == 400) {
 								
 							} else {
-								alert("an error has occurred in server")
+								alert("server error")
 							}
 						})
 				} else {
@@ -602,7 +601,7 @@ export default function Main(props) {
 					if (err.response && err.response.status == 400) {
 						
 					} else {
-						alert("an error has occurred in server")
+						alert("server error")
 					}
 				})
 		}
@@ -627,7 +626,7 @@ export default function Main(props) {
           if (err.response && err.response.status == 400) {
 
           } else {
-            alert("an error has occurred in server")
+            alert("server error")
           }
         })
 		} else {
@@ -700,7 +699,7 @@ export default function Main(props) {
 						default:
 					}
 				} else {
-					alert("an error has occurred in server")
+					alert("server error")
 				}
 			})
 	}
@@ -726,7 +725,7 @@ export default function Main(props) {
 				if (err.response && err.response.status == 400) {
 					
 				} else {
-					alert("an error has occurred in server")
+					alert("server error")
 				}
 			})
 	}
@@ -795,7 +794,7 @@ export default function Main(props) {
 						default:
 					}
 				} else {
-					alert("an error has occurred in server")
+					alert("server error")
 				}
 			})
 	}
@@ -860,7 +859,7 @@ export default function Main(props) {
 						default:
 					}
 				} else {
-					alert("an error has occurred in server")
+					alert("server error")
 				}
 			})
 	}
@@ -929,10 +928,24 @@ export default function Main(props) {
 				if (err.response && err.response.status == 400) {
 
 				} else {
-					alert("an error has occurred in server")
+					alert("server error")
 				}
 			})
 	}
+  const logout = async() => {
+    const ownerid = await AsyncStorage.getItem("ownerid")
+
+    socket.emit("socket/business/logout", ownerid, () => {
+      AsyncStorage.clear()
+
+      props.navigation.dispatch(
+        CommonActions.reset({
+          index: 1,
+          routes: [{ name: 'auth' }]
+        })
+      );
+    })
+  }
 	const startWebsocket = () => {
 		socket.on("updateRequests", data => {
 			if (data.type == "makeReservation") {
@@ -947,19 +960,6 @@ export default function Main(props) {
 				setReservations(newReservations)
 
 				fetchTheNumReservations()
-				fetchTheNumRequests()
-			} else if (data.type == "requestAppointment") {
-				const newAppointments = [...appointments]
-
-        newAppointments.forEach(function (item, index) {
-          if (item.id == data.id) {
-            newAppointments.splice(index, 1)
-          }
-        })
-
-				setAppointments(newAppointments)
-
-				fetchTheNumAppointments()
 				fetchTheNumRequests()
 			} else if (data.type == "cancelSchedule") {
 				const newAppointments = [...appointments]
@@ -995,7 +995,29 @@ export default function Main(props) {
 			}
 		})
 		socket.on("updateSchedules", data => {
-			if (data.type == "confirmRequest") {
+      if (data.type == "makeAppointment") {
+        const newAppointments = [...appointments]
+
+        newAppointments.forEach(function (item) {
+          if (item.id == data.id) {
+            item.time = data.time
+          }
+        })
+
+        setAppointments(newAppointments)
+        fetchTheNumAppointments()
+      } else if (data.type == "cancelRequest") {
+        const newAppointments = [...appointments]
+
+        newAppointments.forEach(function (item, index) {
+          if (item.id == data.scheduleid) {
+            newAppointments.splice(index, 1)
+          }
+        })
+
+        setAppointments(newAppointments)
+        fetchTheNumAppointments()
+			} else if (data.type == "confirmRequest") {
 				const newRequests = [...requests]
 
 				fetchTheNumRequests()
@@ -1102,19 +1124,17 @@ export default function Main(props) {
 			Notifications.addNotificationResponseReceivedListener(res => {
 				const { data } = res.notification.request.content
 
-				if (data.type == "requestAppointment") {
+				if (data.type == "makeAppointment") {
 					const newAppointments = [...appointments]
 
-          newAppointments.forEach(function (item, index) {
-            if (item.id == data.scheduleid) {
-              newAppointments.splice(index, 1)
+          newAppointments.forEach(function (item) {
+            if (item.id == data.id) {
+              item.time = data.time
             }
           })
 
-					setAppointments(newAppointments)
-
-					fetchTheNumAppointments()
-					fetchTheNumRequests()
+          setAppointments(newAppointments)
+          fetchTheNumAppointments()
 				} else if (data.type == "sendServicePayment") {
 					const newAppointments = [...appointments]
 
@@ -1151,144 +1171,139 @@ export default function Main(props) {
 				<View style={styles.body}>
 					<View style={styles.navs}>
             <View style={styles.navsRow}>
-  						{locationType != '' && (
-  							<TouchableOpacity style={[styles.nav, { backgroundColor: viewType == "requests" ? 'black' : 'transparent' }]} onPress={() => getAllRequests()}>
-                  <Text style={[styles.navHeader, { color: viewType == "requests" ? 'white' : 'black' }]}>{numRequests + '\nRequest(s)'}</Text>
-  							</TouchableOpacity>
-  						)}
-
   						{locationType == 'salon' && (
-  							<TouchableOpacity style={[styles.nav, { backgroundColor: viewType == "appointments" ? 'black' : 'transparent' }]} onPress={() => getAllAppointments()}>
-                  <Text style={[styles.navHeader, { color: viewType == "appointments" ? 'white' : 'black' }]}>{numAppointments + '\nAppointment(s)'}</Text>
+  							<TouchableOpacity style={[styles.nav, { backgroundColor: viewType == "appointments" ? 'black' : 'transparent', width: wsize(33) }]} onPress={() => getAllAppointments()}>
+                  <Text style={[styles.navHeader, { color: viewType == "appointments" ? 'white' : 'black' }]}>{'Refresh\nAppointment(s)' + (numAppointments > 0 ? '\n' + numAppointments : '')}</Text>
   							</TouchableOpacity>
   						)}
 
   						{locationType == 'restaurant' && (
-  							<TouchableOpacity style={[styles.nav, { backgroundColor: viewType == "cartorderers" ? 'black' : 'transparent' }]} onPress={() => getAllCartOrderers()}>
-  								<Text style={[styles.navHeader, { color: viewType == "cartorderers" ? 'white' : 'black' }]}>{numCartorderers + '\nOrderer(s)'}</Text>
-  							</TouchableOpacity>
-  						)}
-
-  						{locationType == 'restaurant' && (
-  							<TouchableOpacity style={[styles.nav, { backgroundColor: viewType == "reservations" ? 'black' : 'transparent' }]} onPress={() => getAllReservations()}>
-  								<Text style={[styles.navHeader, { color: viewType == "reservations" ? 'white' : 'black' }]}>{numReservations + '\nReservation(s)'}</Text>
-  							</TouchableOpacity>
+                <>
+                  <TouchableOpacity style={[styles.nav, { backgroundColor: viewType == "requests" ? 'black' : 'transparent', width: wsize(30) }]} onPress={() => getAllRequests()}>
+                    <Text style={[styles.navHeader, { color: viewType == "requests" ? 'white' : 'black' }]}>{numRequests + '\nRequest(s)'}</Text>
+                  </TouchableOpacity>
+    							<TouchableOpacity style={[styles.nav, { backgroundColor: viewType == "cartorderers" ? 'black' : 'transparent', width: wsize(30) }]} onPress={() => getAllCartOrderers()}>
+    								<Text style={[styles.navHeader, { color: viewType == "cartorderers" ? 'white' : 'black' }]}>{numCartorderers + '\nOrderer(s)'}</Text>
+    							</TouchableOpacity>
+                  <TouchableOpacity style={[styles.nav, { backgroundColor: viewType == "reservations" ? 'black' : 'transparent', width: wsize(30) }]} onPress={() => getAllReservations()}>
+                    <Text style={[styles.navHeader, { color: viewType == "reservations" ? 'white' : 'black' }]}>{numReservations + '\nReservation(s)'}</Text>
+                  </TouchableOpacity>
+                </>
   						)}
             </View>
 					</View>
 
-					{viewType == "requests" && (
-						requests.length > 0 ? 
-							<FlatList
-								data={requests}
-								renderItem={({ item, index }) => 
-									item.product ? 
-										<View key={item.key} style={styles.orderRequest}>
-											<View style={styles.orderRequestRow}>
-												<View>
-													<Text style={styles.orderRequestHeader}>{item.product}</Text>
-													<Text style={styles.orderRequestQuantity}>Quantity: {item.quantity}</Text>
-												</View>
-                        <View style={styles.column}>
-  												<TouchableOpacity style={styles.orderRequestSetPrice} onPress={() => setTheProductPrice(index, item.id)}>
-  													<Text style={styles.orderRequestSetPriceHeader}>Set price{'\n'}for customer</Text>
-  												</TouchableOpacity>
+          {viewType == "requests" && (
+            requests.length > 0 ? 
+              <FlatList
+                data={requests}
+                renderItem={({ item, index }) => 
+                  item.product ? 
+                    <View key={item.key} style={styles.orderRequest}>
+                      <View style={styles.orderRequestRow}>
+                        <View>
+                          <Text style={styles.orderRequestHeader}>{item.product}</Text>
+                          <Text style={styles.orderRequestQuantity}>Quantity: {item.quantity}</Text>
                         </View>
-											</View>
-										</View>
-										:
-										<View key={item.key} style={styles.request}>
-											<View style={{ flexDirection: 'row' }}>
-												{item.image && (
-													<View style={styles.requestImageHolder}>
-														<Image style={styles.requestImage} source={{ uri: logo_url + item.image }}/>
-													</View>
-												)}
-													
-												<View style={styles.requestInfo}>
-													<Text>
-														{locationType == 'salon' ? 
-															(item.status == "requested" || item.status == "change") ? 
-																<>
+                        <View style={styles.column}>
+                          <TouchableOpacity style={styles.orderRequestSetPrice} onPress={() => setTheProductPrice(index, item.id)}>
+                            <Text style={styles.orderRequestSetPriceHeader}>Set price{'\n'}for customer</Text>
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                    </View>
+                    :
+                    <View key={item.key} style={styles.request}>
+                      <View style={{ flexDirection: 'row' }}>
+                        {item.image && (
+                          <View style={styles.requestImageHolder}>
+                            <Image style={styles.requestImage} source={{ uri: logo_url + item.image }}/>
+                          </View>
+                        )}
+                          
+                        <View style={styles.requestInfo}>
+                          <Text>
+                            {locationType == 'salon' ? 
+                              (item.status == "requested" || item.status == "change") ? 
+                                <>
                                   <Text style={styles.requestInfoHeader}>
                                     Client: {item.username}
-                                    {'\n\n' + (item.status == 'change' ? 'Rebooking' : 'Booking')} for: {item.name}
-                                    {'\n\n' + displayTime(item.time)}
+                                    {'\n' + (item.status == 'change' ? 'Rebooking' : 'Booking')} for: {item.name}
+                                    {'\n' + displayTime(item.time)}
                                     {item.worker != null && '\n\nwith worker: ' + item.worker.username}
                                   </Text>
-																</>
-																:
-																<>
-																	<Text style={styles.requestInfoHeader}>
+                                </>
+                                :
+                                <>
+                                  <Text style={styles.requestInfoHeader}>
                                     Client: {item.username}
                                     {'\n\n'}Booking for: {item.name}
-                                    {'\n\n' + displayTime(item.time)}
-
+                                    {'\n' + displayTime(item.time)}
                                     {item.worker != null && '\n\nwith worker: ' + item.worker.username}
                                   </Text>
-																	
-																	<Text style={styles.requestInfoStatus}>{'\n\n'}waiting for client to confirm</Text>
-																</>
-															:
-															<>
+                                  
+                                  <Text style={styles.requestInfoStatus}>{'\n\n'}waiting for client to confirm</Text>
+                                </>
+                              :
+                              <>
                                 <Text style={styles.requestInfoHeader}>
                                   Customer: {item.username}
-                                  {'\n\n' + (item.status == 'change' ? 'Rebooking' : 'Booking')} a reservation
-                                  {'\n\n' + displayTime(item.time)}
-                                  {item.diners > 0 ? '\n\n for ' + item.diners + ' ' + (item.diners == 1 ? 'person' : 'people') : ' for 1 person'}
+                                  {'\n' + (item.status == 'change' ? 'Rebooking' : 'Booking')} a reservation
+                                  {'\n' + displayTime(item.time)}
+                                  {item.diners > 0 ? '\nfor ' + item.diners + ' ' + (item.diners == 1 ? 'person' : 'people') : ' for 1 person'}
                                 </Text>                                
 
                                 {(item.status == "rebook" || item.status == "accepted") && <Text style={styles.requestInfoStatus}>{'\n\n'}waiting for client to confirm</Text>}
-															</>
-														}
-													</Text>
-													{item.note ? <Text style={{ fontWeight: 'bold', marginTop: 20 }}>Customer's note: {item.note}</Text> : null}
-												</View>
-											</View>
+                              </>
+                            }
+                          </Text>
+                          {item.note ? <Text style={{ fontWeight: 'bold', marginTop: 20 }}>Customer's note: {item.note}</Text> : null}
+                        </View>
+                      </View>
 
-											{(item.status == "requested" || item.status == "change") && (
-												<View style={styles.requestActions}>
-													<View style={{ flexDirection: 'row' }}>
+                      {(item.status == "requested" || item.status == "change") && (
+                        <View style={styles.requestActions}>
+                          <View style={{ flexDirection: 'row' }}>
                             <View style={styles.column}>
-  														<TouchableOpacity style={styles.requestAction} onPress={() => {
-  															if (locationType == 'salon') {
-  																props.navigation.navigate("booktime", { appointmentid: item.id, refetch: () => {
-  																	fetchTheNumRequests()
-  																	removeFromList(item.id, "requests")
-  																}})
-  															} else {
-  																props.navigation.navigate("makereservation", { userid: item.userId, scheduleid: item.id, refetch: () => {
-  																	fetchTheNumRequests()
-  																	removeFromList(item.id, "requests")
-  																}})
-  															}
-  														}}>
-  															<Text style={styles.requestActionHeader}>Request{'\n'}another time</Text>
-  														</TouchableOpacity>
+                              <TouchableOpacity style={styles.requestAction} onPress={() => {
+                                if (locationType == 'salon') {
+                                  props.navigation.navigate("booktime", { appointmentid: item.id, refetch: () => {
+                                    fetchTheNumRequests()
+                                    removeFromList(item.id, "requests")
+                                  }})
+                                } else {
+                                  props.navigation.navigate("makereservation", { userid: item.userId, scheduleid: item.id, refetch: () => {
+                                    fetchTheNumRequests()
+                                    removeFromList(item.id, "requests")
+                                  }})
+                                }
+                              }}>
+                                <Text style={styles.requestActionHeader}>Too busy?{'\n'}Request another time</Text>
+                              </TouchableOpacity>
                             </View>
                             <View style={styles.column}>
-  														<TouchableOpacity style={styles.requestAction} onPress={() => cancelTheSchedule(index, "request")}>
-  															<Text style={styles.requestActionHeader}>Cancel{'\n'}Request</Text>
-  														</TouchableOpacity>
+                              <TouchableOpacity style={styles.requestAction} onPress={() => cancelTheSchedule(index, "request")}>
+                                <Text style={styles.requestActionHeader}>Cancel{'\n'}Request</Text>
+                              </TouchableOpacity>
                             </View>
                             <View style={styles.column}>
-  														<TouchableOpacity style={styles.requestAction} onPress={() => acceptTheRequest(index)}>
-  															<Text style={styles.requestActionHeader}>Accept{'\n'}Request</Text>
-  														</TouchableOpacity>
+                              <TouchableOpacity style={styles.requestAction} onPress={() => acceptTheRequest(index)}>
+                                <Text style={styles.requestActionHeader}>Accept{'\n'}Request</Text>
+                              </TouchableOpacity>
                             </View>
-													</View>
-												</View>
+                          </View>
+                        </View>
                       )}
-										</View>
-								}
-							/>
-							:
-							<View style={styles.bodyResult}>
+                    </View>
+                }
+              />
+              :
+              <View style={styles.bodyResult}>
                 <Text style={styles.bodyResultHeader}>
-  								{numRequests == 0 ? "No request(s) yet" : numRequests + " request(s)"}
+                  {numRequests == 0 ? "No request(s) yet" : numRequests + " request(s)"}
                 </Text>
-							</View>
-					)}
+              </View>
+          )}
 
 					{viewType == "appointments" && (
 						appointments.length > 0 ? 
@@ -1334,7 +1349,7 @@ export default function Main(props) {
                           </View>
                           <View style={styles.column}>
   													<TouchableOpacity style={styles.scheduleAction} onPress={() => requestThePayment(index, item.id)}>
-  														<Text style={styles.scheduleActionHeader}>Ask client to{'\n'}payment</Text>
+  														<Text style={styles.scheduleActionHeader}>Get payment</Text>
   													</TouchableOpacity>
                           </View>
 												</View>
@@ -1472,20 +1487,7 @@ export default function Main(props) {
 							<Text style={styles.bottomNavButtonHeader}>{locationListed ? "Unlist" : "List"} Public</Text>
 						</TouchableOpacity>
 
-						<TouchableOpacity style={styles.bottomNav} onPress={async() => {
-							const ownerid = await AsyncStorage.getItem("ownerid")
-
-							socket.emit("socket/business/logout", ownerid, () => {
-								AsyncStorage.clear()
-
-								props.navigation.dispatch(
-									CommonActions.reset({
-										index: 1,
-										routes: [{ name: 'auth' }]
-									})
-								);
-							})
-						}}>
+						<TouchableOpacity style={styles.bottomNav} onPress={() => logout()}>
 							<Text style={styles.bottomNavHeader}>Log-Out</Text>
 						</TouchableOpacity>
 					</View>
@@ -1920,8 +1922,8 @@ const styles = StyleSheet.create({
 	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 
 	navs: { alignItems: 'center', flexDirection: 'row', height: '15%', justifyContent: 'space-around', width: '100%' },
-	navsRow: { flexDirection: 'row' },
-  nav: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, flexDirection: 'column', justifyContent: 'space-around', marginHorizontal: 5, width: wsize(30) },
+	navsRow: { flexDirection: 'row', justifyContent: 'space-around' },
+  nav: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, flexDirection: 'column', justifyContent: 'space-around', marginHorizontal: 5 },
 	navHeader: { color: 'black', fontSize: wsize(4), paddingVertical: 5, textAlign: 'center' },
 
 	// body
@@ -1935,16 +1937,16 @@ const styles = StyleSheet.create({
 	orderRequestSetPrice: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: wsize(30) },
 	orderRequestSetPriceHeader: { fontSize: wsize(4), textAlign: 'center' },
 
-	request: { borderRadius: 5, backgroundColor: 'white', marginHorizontal: 5, marginVertical: 2.5 },
-	requestRow: { flexDirection: 'row', justifyContent: 'space-between' },
-	requestImageHolder: { borderRadius: wsize(20) / 2, height: wsize(20), margin: 5, overflow: 'hidden', width: wsize(20) },
-	requestImage: { height: wsize(20), width: wsize(20) },
-	requestInfo: { fontFamily: 'appFont', fontSize: wsize(4), padding: 10, width: width - 100 },
-	requestInfoHeader: { fontSize: wsize(4), fontWeight: 'bold' },
+  request: { borderRadius: 5, backgroundColor: 'white', marginHorizontal: 5, marginVertical: 2.5 },
+  requestRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  requestImageHolder: { borderRadius: wsize(20) / 2, height: wsize(20), margin: 5, overflow: 'hidden', width: wsize(20) },
+  requestImage: { height: wsize(20), width: wsize(20) },
+  requestInfo: { fontFamily: 'appFont', fontSize: wsize(4), padding: 10, width: width - 100 },
+  requestInfoHeader: { fontSize: wsize(4), fontWeight: 'bold' },
   requestInfoStatus: { color: 'darkgrey', fontStyle: 'italic', fontSize: wsize(4) },
-	requestActions: { flexDirection: 'row', justifyContent: 'space-around', marginVertical: 10 },
-	requestAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 5, width: wsize(30) },
-	requestActionHeader: { fontSize: wsize(4), textAlign: 'center' },
+  requestActions: { flexDirection: 'row', justifyContent: 'space-around', marginVertical: 10 },
+  requestAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 5, width: wsize(30) },
+  requestActionHeader: { fontSize: wsize(4), textAlign: 'center' },
 
 	// client's schedule
 	schedule: { alignItems: 'center', borderRadius: 5, backgroundColor: 'white', marginHorizontal: 5, marginVertical: 2.5 },

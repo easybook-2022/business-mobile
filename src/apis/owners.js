@@ -57,19 +57,41 @@ export const addOwner = data => {
 
 export const updateOwner = data => {
 	const form = new FormData()
-	const { uri, name, type = "image/jpeg" } = data.profile
 
-	form.append("ownerid", data.ownerid)
-	form.append("cellnumber", data.cellnumber)
-	form.append("username", data.username)
-	form.append("password", data.password)
-	form.append("confirmPassword", data.confirmPassword)
-	form.append("hours", JSON.stringify(data.hours))
-	form.append("permission", data.permission)
+  form.append("ownerid", data.ownerid)
+  form.append("type", data.type)
 
-	if (data.profile.uri) {
-		form.append("profile", { uri, name, type })
-	}
+  switch (data.type) {
+    case "cellnumber":
+      form.append("cellnumber", data.cellnumber)
+
+      break;
+    case "username":
+      form.append("username", data.username)
+
+      break;
+    case "profile":
+      const { uri, name, type = "image/jpeg" } = data.profile
+
+      if (data.profile.uri) {
+        form.append("profile", { uri, name, type })
+      }
+
+      form.append("permission", data.permission)
+
+      break;
+    case "password":
+      form.append("currentPassword", data.currentPassword)
+      form.append("newPassword", data.newPassword)
+      form.append("confirmPassword", data.confirmPassword)
+
+      break;
+    case "hours":
+      form.append("hours", JSON.stringify(data.hours))
+
+      break;
+    default:
+  }
 
 	return axios.post(
 		`${url}/owners/update_owner`,
