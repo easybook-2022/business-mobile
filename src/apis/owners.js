@@ -99,6 +99,21 @@ export const updateOwner = data => {
 	)
 }
 
+export const deleteOwner = id => {
+  return axios.get(`${url}/owners/delete_owner/${id}`)
+}
+
+export const getWorkerInfo = id => {
+  return axios.get(`${url}/owners/get_worker_info/${id}`)
+}
+
+export const getOtherWorkers = data => {
+  return axios.post(
+    `${url}/owners/get_other_workers`,
+    data
+  )
+}
+
 export const setOwnerHours = data => {
 	return axios.post(
 		`${url}/owners/set_hours`,

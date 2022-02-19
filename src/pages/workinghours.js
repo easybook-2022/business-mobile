@@ -119,7 +119,7 @@ export default function Workinghours({ navigation }) {
 				newOpentime.hour = openhour
 				newClosetime.hour = closehour
 
-				hours[workerHour.header.substr(0, 3)] = { opentime: newOpentime, closetime: newClosetime, working }
+				hours[workerHour.header.substr(0, 3)] = { opentime: newOpentime, closetime: newClosetime, working, takeShift: "" }
 			} else {
 				invalid = true
 			}

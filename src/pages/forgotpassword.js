@@ -113,13 +113,13 @@ const styles = StyleSheet.create({
 	
 	inputsBox: { flexDirection: 'column', height: height / 2, justifyContent: 'space-around', width: '80%' },
 	inputContainer: { marginBottom: 30, width: '100%' },
-	inputHeader: { fontFamily: 'appFont', fontSize: wsize(20) },
-	input: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(25), padding: 5, width: '100%' },
+	inputHeader: { fontFamily: 'appFont', fontSize: wsize(7) },
+	input: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(7), padding: 5, width: '100%' },
 	errorMsg: { color: 'darkred', fontSize: wsize(10), fontWeight: 'bold', textAlign: 'center' },
 	
-	submit: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontFamily: 'appFont', padding: 10, width: wsize(100) },
-	submitHeader: { fontFamily: 'appFont', fontSize: wsize(20), fontWeight: 'bold', textAlign: 'center' },
+	submit: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontFamily: 'appFont', margin: 5, padding: 10 },
+  submitHeader: { fontFamily: 'appFont', fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
 	
-	option: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, marginVertical: 10, padding: 5 },
-	optionHeader: { fontSize: wsize(20), fontWeight: 'bold' },
+	option: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, marginVertical: 10, paddingHorizontal: 10 },
+  optionHeader: { fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
 })

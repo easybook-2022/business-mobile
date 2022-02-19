@@ -379,7 +379,7 @@ export default function Makereservation(props) {
         })
         .catch((err) => {
           if (err.response && err.response.status == 400) {
-            
+            const { errormsg, status } = err.response.data
           } else {
             alert("server error")
           }

@@ -24,7 +24,7 @@ const wsize = p => {
 const hsize = p => {
   return height * (p / 100)
 }
-const steps = ['type', 'location', 'phonenumber', 'logo', 'hours']
+const steps = ['type', 'name', 'location', 'phonenumber', 'logo', 'hours']
 const daysArr = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
 export default function Locationsetup({ navigation }) {
@@ -237,13 +237,19 @@ export default function Locationsetup({ navigation }) {
 		let msg = "", skip = false
 
 		switch (index) {
-			case 0:
-				if (!type) {
-					msg = "Please tell what service you are"
-				}
+      case 0:
+        if (!type) {
+          msg = "Please tell what service you are"
+        }
 
-				break
+        break
 			case 1:
+				if (!storeName) {
+          msg = "Please enter the name of your " + (type == 'restaurant' ? 'restaurant' : type + ' salon')
+        }
+
+        break
+			case 2:
 				if (locationInfo != "") {
 					if (locationInfo == "destination") {
 						if (!addressOne || !city || !province || !postalcode) {
@@ -255,19 +261,19 @@ export default function Locationsetup({ navigation }) {
 				}
 
 				break
-			case 2:
+			case 3:
 				if (!phonenumber) {
 					msg = "Please provide the " + (type == 'restaurant' ? 'restaurant' : type + ' salon') + " phone number"
 				}
 
 				break
-			case 3:
+			case 4:
 				if (!logo.uri && Platform.OS == 'ios') {
 					msg = "Please provide a photo of the " + (type == 'restaurant' ? 'restaurant' : type + ' salon')
 				}
 
 				break
-			case 4:
+			case 5:
 				if (!daysInfo.done) {
 					const newDays = []
 
@@ -298,7 +304,7 @@ export default function Locationsetup({ navigation }) {
 
 		if (!skip) {
 			if (msg == "") {
-				const nextStep = index == 4 ? "done" : steps[index + 1]
+				const nextStep = index == 5 ? "done" : steps[index + 1]
 
 				if (nextStep == "location") {
 					openLocation()
@@ -616,6 +622,17 @@ export default function Locationsetup({ navigation }) {
 							</View>
 						)}
 
+            {setupType == "name" && (
+              <View style={{ alignItems: 'center', width: '100%' }}>
+                <View style={styles.inputContainer}>
+                  <Text style={styles.inputHeader}>Enter {type == 'restaurant' ? 'restaurant' : type + ' salon'} name:</Text>
+                  <TextInput style={styles.input} onChangeText={(storeName) => setStorename(storeName)} value={storeName} autoCorrect={false} autoCapitalize="none"/>
+                
+                  {loading && <ActivityIndicator color="black" size="large"/>}
+                </View>
+              </View>
+            )}
+
 						{(setupType == "location" && locationPermission) && (
 							<View style={styles.locationContainer}>
 								{locationInfo == '' ?
@@ -707,10 +724,6 @@ export default function Locationsetup({ navigation }) {
 
 												<Text style={styles.boxMiniheader}>Enter your {type == 'restaurant' ? 'restaurant' : type + ' salon'} information</Text>
 
-												<View style={styles.inputContainer}>
-													<Text style={styles.inputHeader}>Enter {type == 'restaurant' ? 'restaurant' : type + ' salon'} name:</Text>
-													<TextInput style={styles.input} onChangeText={(storeName) => setStorename(storeName)} value={storeName} autoCorrect={false} autoCapitalize="none"/>
-												</View>
 												<View style={styles.inputContainer}>
 													<Text style={styles.inputHeader}>Enter {type == 'restaurant' ? 'restaurant' : type + ' salon'}{'\n'}address #1:</Text>
 													<TextInput style={styles.input} onChangeText={(addressOne) => setAddressone(addressOne)} value={addressOne} autoCorrect={false} autoCapitalize="none"/>

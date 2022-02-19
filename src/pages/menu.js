@@ -399,10 +399,10 @@ export default function Menu(props) {
 
 			for (let k = 0; k <= photo_name_length - 1; k++) {
 				if (k % 2 == 0) {
-	                char += "" + letters[Math.floor(Math.random() * letters.length)].toUpperCase();
-	            } else {
-	                char += "" + (Math.floor(Math.random() * 9) + 0);
-	            }
+            char += "" + letters[Math.floor(Math.random() * letters.length)].toUpperCase();
+        } else {
+            char += "" + (Math.floor(Math.random() * 9) + 0);
+        }
 			}
 
 			FileSystem.moveAsync({
@@ -430,10 +430,10 @@ export default function Menu(props) {
 
 		for (let k = 0; k <= photo_name_length - 1; k++) {
 			if (k % 2 == 0) {
-                char += "" + letters[Math.floor(Math.random() * letters.length)].toUpperCase();
-            } else {
-                char += "" + (Math.floor(Math.random() * 9) + 0);
-            }
+          char += "" + letters[Math.floor(Math.random() * letters.length)].toUpperCase();
+      } else {
+          char += "" + (Math.floor(Math.random() * 9) + 0);
+      }
 		}
 
 		if (!photo.cancelled) {
@@ -442,7 +442,7 @@ export default function Menu(props) {
 				to: `${FileSystem.documentDirectory}/${char}.jpg`
 			})
 			.then(() => {
-				setUploadmenubox({ ...uploadMenubox, uri: `${FileSystem.documentDirectory}/${char}.jpg`, name: `${char}.jpg` })
+				setUploadmenubox({ ...uploadMenubox, uri: `${FileSystem.documentDirectory}/${char}.jpg`, name: `${char}.jpg`, action: 'choose' })
 			})
 		}
 	}
@@ -671,47 +671,45 @@ export default function Menu(props) {
 										</View>
 									</View>
 									:
-									uploadMenubox.action == 'camera' ? 
-										<View style={styles.uploadMenuCameraContainer}>
-											{!uploadMenubox.uri ? 
-												<Camera 
-													style={styles.uploadMenuCamera} 
-													type={Camera.Constants.Type.back} ref={r => { setCamcomp(r) }}
-													ratio={Platform.OS === 'ios' ? "4:3" : "1:1"}
-												/>
-												:
-												<View style={styles.uploadMenuCamera}>
-													<Image style={{ height: '100%', width: '100%' }} source={{ uri: uploadMenubox.uri }}/>
-												</View>
-											}
+									<View style={styles.uploadMenuCameraContainer}>
+                    {!uploadMenubox.uri ? 
+                      <Camera 
+                        style={styles.uploadMenuCamera} 
+                        type={Camera.Constants.Type.back} ref={r => { setCamcomp(r) }}
+                        ratio={Platform.OS === 'ios' ? "4:3" : "1:1"}
+                      />
+                      :
+                      <View style={styles.uploadMenuCamera}>
+                        <Image style={{ height: '100%', width: '100%' }} source={{ uri: uploadMenubox.uri }}/>
+                      </View>
+                    }
 
-											{!uploadMenubox.uri ? 
-												<View style={styles.uploadMenuCameraActions}>
-                          <TouchableOpacity style={styles.uploadMenuCameraAction} onPress={() => setUploadmenubox({ ...uploadMenubox, action: '' })}>
-                            <Text style={styles.uploadMenuCameraActionHeader}>Cancel</Text>
-                          </TouchableOpacity>
-													<TouchableOpacity style={styles.uploadMenuCameraAction} onPress={() => choosePhoto()}>
-														<Text style={styles.uploadMenuCameraActionHeader}>Choose instead</Text>
-													</TouchableOpacity>
-													<TouchableOpacity style={styles.uploadMenuCameraAction} onPress={snapPhoto.bind(this)}>
-														<Text style={styles.uploadMenuCameraActionHeader}>Take photo</Text>
-													</TouchableOpacity>
-												</View>
-												:
-												<View style={styles.uploadMenuCameraActions}>
-													<TouchableOpacity style={styles.uploadMenuCameraAction} onPress={() => setUploadmenubox({ ...uploadMenubox, action: '', uri: '', name: '' })}>
-														<Text style={styles.uploadMenuCameraActionHeader}>Cancel</Text>
-													</TouchableOpacity>
-													<TouchableOpacity style={styles.uploadMenuCameraAction} onPress={() => setUploadmenubox({ ...uploadMenubox, uri: '', name: '' })}>
-														<Text style={styles.uploadMenuCameraActionHeader}>Retake</Text>
-													</TouchableOpacity>
-													<TouchableOpacity style={styles.uploadMenuCameraAction} onPress={() => uploadMenuphoto()}>
-														<Text style={styles.uploadMenuCameraActionHeader}>Done</Text>
-													</TouchableOpacity>
-												</View>
-											}
-										</View>
-									: null
+                    {!uploadMenubox.uri ? 
+                      <View style={styles.uploadMenuCameraActions}>
+                        <TouchableOpacity style={styles.uploadMenuCameraAction} onPress={() => setUploadmenubox({ ...uploadMenubox, action: '' })}>
+                          <Text style={styles.uploadMenuCameraActionHeader}>Cancel</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.uploadMenuCameraAction} onPress={() => choosePhoto()}>
+                          <Text style={styles.uploadMenuCameraActionHeader}>Choose instead</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.uploadMenuCameraAction} onPress={snapPhoto.bind(this)}>
+                          <Text style={styles.uploadMenuCameraActionHeader}>Take photo</Text>
+                        </TouchableOpacity>
+                      </View>
+                      :
+                      <View style={styles.uploadMenuCameraActions}>
+                        <TouchableOpacity style={styles.uploadMenuCameraAction} onPress={() => setUploadmenubox({ ...uploadMenubox, action: '', uri: '', name: '' })}>
+                          <Text style={styles.uploadMenuCameraActionHeader}>Cancel</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.uploadMenuCameraAction} onPress={() => setUploadmenubox({ ...uploadMenubox, uri: '', name: '' })}>
+                          <Text style={styles.uploadMenuCameraActionHeader}>Retake</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.uploadMenuCameraAction} onPress={() => uploadMenuphoto()}>
+                          <Text style={styles.uploadMenuCameraActionHeader}>Done</Text>
+                        </TouchableOpacity>
+                      </View>
+                    }
+                  </View>
 								}
 							</SafeAreaView>
 						</Modal>

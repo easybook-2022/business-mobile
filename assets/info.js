@@ -1,9 +1,9 @@
 import io from 'socket.io-client'
 
-const local_url = true
-const test_stripe = true
-const test_input = true
-const test_bankaccount = true
+const local_url = false
+const test_stripe = false
+const test_input = false
+const test_bankaccount = false
 
 const testStores = [
 	{ id: 0, storeName: "Restaurant place 0", storeType: "restaurant", phonenumber: "(567) 567-5678", addressOne: "1248 Dundas St E", addressTwo: "", city: "Mississauga", province: "ON", postalcode: "L4Y 2C5", longitude: -79.5863632, latitude: 43.6060865 },
@@ -13,9 +13,12 @@ const testStores = [
 	{ id: 4, storeName: "Hair salon 1", storeType: "hair", phonenumber: "(300) 000-0000", addressOne: "6328 Main St", addressTwo: "", city: "Whitchurch-Stouffville", province: "ON", postalcode: "L4A 1G9", longitude: -79.2451038, latitude: 43.9719332 },
 	{ id: 5, storeName: "Nail salon 2", storeType: "nail", phonenumber: "(905) 987-5678", addressOne: "5000 Hwy 7", addressTwo: "", city: "Markham", province: "ON", postalcode: "L3R 4M9", longitude: -79.2882055, latitude: 43.8682345 },
 ]
+const realStores = [
+  { id: 0, storeName: "the salon", storeType: "hair", phonenumber: "(416) 462-1482", addressOne: "642 Gerrard St E", addressTwo: "", city: "Toronto", province: "ON", postalcode: "M4M1Y3", longitude: -79.3505832, latitude: 43.6660751 },
+]
 const emptyStore = { storeName: "", storeType: "", phonenumber: "", addressOne: "", addressTwo: "", city: "", province: "", postalcode: "", longitude: 0, latitude: 0 }
 
-const owners = [
+const testOwners = [
 	{ id: 0, username: 'owner1', cellnumber: "(011) 011-0101", password: "password" },
 	{ id: 1, username: 'owner2', cellnumber: "(022) 022-0202", password: "password" },
 	{ id: 2, username: 'owner3', cellnumber: "(123) 123-1111", password: "password" },
@@ -25,6 +28,9 @@ const owners = [
 	{ id: 6, username: 'owner7', cellnumber: "(416) 770-7700", password: "password" },
 	{ id: 7, username: 'owner8', cellnumber: "(905) 000-0000", password: "password" },
 	{ id: 8, username: 'owner9', cellnumber: "(905) 000-0001", password: "password" }
+]
+const realOwners = [
+  { id: 0, username: 'kevin', cellnumber: "(647) 926-3868", password: "password" },
 ]
 const emptyOwner = { username: "", cellnumber: "", password: "" }
 
@@ -66,7 +72,7 @@ const emptyBankAccount = {
 	accountNumber: '', countryCode: '', currency: '', 
 	routingNumber: '', accountHolderName: ''
 }
-
+const useInput = false
 const { accountNumber, countryCode, currency, routingNumber, accountHolderName } = 
 	test_bankaccount ? 
 		test_stripe ? 
@@ -76,10 +82,10 @@ const { accountNumber, countryCode, currency, routingNumber, accountHolderName }
 	:
 	emptyBankAccount
 
-const login = test_input ? testStores[1] : emptyStore
-const ownerLogin = test_input ? owners[1] : emptyOwner
-const register = test_input ? testStores[0] : emptyStore
-const ownerRegister = test_input ? owners[0] : emptyOwner
+const login = test_input ? testStores[0] : useInput ? realStores[0] : emptyStore
+const ownerLogin = test_input ? testOwners[0] : useInput ? realOwners[0] : emptyOwner
+const register = test_input ? testStores[0] : useInput ? realStores[0] : emptyStore
+const ownerRegister = test_input ? testOwners[0] : useInput ? realOwners[0] : emptyOwner
 const wifi_api_url = "http://192.168.0.172:5001/flask"
 const wifi_socket_url = "http://192.168.0.172:5002"
 const server_api_url = "https://www.easygo.tk/flask"
