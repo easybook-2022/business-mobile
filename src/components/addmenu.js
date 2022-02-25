@@ -17,7 +17,7 @@ const wsize = p => {
 const hsize = p => {
   return height * (p / 100)
 }
-const steps = ['name', 'info', 'photo']
+const steps = ['name', 'photo']
 
 export default function Addmenu(props) {
 	const params = props.route.params
@@ -29,7 +29,6 @@ export default function Addmenu(props) {
 	const [camComp, setCamcomp] = useState(null)
 	
 	const [name, setName] = useState('')
-	const [info, setInfo] = useState('')
 	const [image, setImage] = useState({ uri: '', name: '' })
 
 	const [loaded, setLoaded] = useState(menuid ? false : true)
@@ -42,7 +41,7 @@ export default function Addmenu(props) {
 	const addTheNewMenu = async() => {
 		const ownerid = await AsyncStorage.getItem("ownerid")
 		const locationid = await AsyncStorage.getItem("locationid")
-		const data = { locationid, parentMenuid, name, info, image, permission: cameraPermission || pickingPermission }
+		const data = { locationid, parentMenuid, name, image, permission: cameraPermission || pickingPermission }
 
 		setLoading(true)
 
@@ -67,12 +66,12 @@ export default function Addmenu(props) {
 						errormsg
 					})
 				} else {
-					setErrormsg("an error has occurred in server")
+					alert("server error")
 				}
 			})
 	}
 	const saveTheMenu = () => {
-		const data = { menuid, name, info, image, permission: cameraPermission && pickingPermission }
+		const data = { menuid, name, image, permission: cameraPermission && pickingPermission }
 
 		setLoading(true)
 		
@@ -92,7 +91,7 @@ export default function Addmenu(props) {
 				if (err.response && err.response.status == 400) {
 
 				} else {
-					setErrormsg("an error has occurred in server")
+					alert("server error")
 				}
 			})
 	}
@@ -109,7 +108,7 @@ export default function Addmenu(props) {
 				}
 
 				break
-			case 2:
+			case 1:
 				if (!image.uri && Platform.OS == 'ios') {
 					msg = "Please provide a photo for the menu"
 				}
@@ -119,7 +118,7 @@ export default function Addmenu(props) {
 		} 
 
 		if (msg == "") {
-			const nextStep = index == 2 ? "done" : steps[index + 1]
+			const nextStep = index == 1 ? "done" : steps[index + 1]
 
 			if (nextStep == "photo") {
 				allowCamera()
@@ -144,10 +143,9 @@ export default function Addmenu(props) {
 			})
 			.then((res) => {
 				if (res && isMounted.current == true) {
-					const { name, info, image } = res.info
+					const { name, image } = res.info
 
 					setName(name)
-					setInfo(info)
 					setImage({ uri: logo_url + image, name: image })
 					setLoaded(true)
 				}
@@ -156,7 +154,7 @@ export default function Addmenu(props) {
 				if (err.response && err.response.status == 400) {
 					
 				} else {
-					setErrormsg("an error has occurred in server")
+					alert("server error")
 				}
 			})
 	}
@@ -280,19 +278,6 @@ export default function Addmenu(props) {
 							</View>
 						)}
 
-						{setupType == 'info' && (
-							<View style={style.inputContainer}>
-								<Text style={style.addHeader}>Anything you want to say about {'\n' + name} (Optional)</Text>
-
-								<TextInput 
-									style={style.infoInput} multiline textAlignVertical="top"
-									placeholder={"example: " + name + " will be 20% off this week (Optional)"} placeholderTextColor="rgba(127, 127, 127, 0.5)" 
-									onChangeText={(info) => setInfo(info)} value={info} autoCorrect={false} autoCompleteType="off" 
-									autoCapitalize="none"
-								/>
-							</View>
-						)}
-
 						{setupType == 'photo' && (
 							<View style={style.cameraContainer}>
 								<Text style={style.cameraHeader}>Provide a photo for {name}</Text>
@@ -376,8 +361,7 @@ const style = StyleSheet.create({
 	inputContainer: { alignItems: 'center', width: '100%' },
 	addHeader: { fontSize: wsize(5), fontWeight: 'bold', paddingVertical: 5, textAlign: 'center' },
 	addInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, fontSize: wsize(5), padding: 10, width: '90%' },
-	infoInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, fontSize: wsize(5), height: 100, marginVertical: 5, padding: 10, width: '90%' },
-	
+  
 	cameraContainer: { alignItems: 'center', width: '100%' },
 	cameraHeader: { fontSize: wsize(5), fontWeight: 'bold', paddingVertical: 5 },
 	camera: { height: wsize(70), width: wsize(70) },

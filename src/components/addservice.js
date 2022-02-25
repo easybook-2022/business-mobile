@@ -21,7 +21,7 @@ const wsize = p => {
 const hsize = p => {
   return height * (p / 100)
 }
-const steps = ['name', 'info', 'photo', 'price', 'duration']
+const steps = ['name', 'photo', 'price', 'duration']
 
 export default function Addservice(props) {
 	const params = props.route.params
@@ -32,7 +32,6 @@ export default function Addservice(props) {
 	const [pickingPermission, setPickingpermission] = useState(null);
 	const [camComp, setCamcomp] = useState(null)
 	const [name, setName] = useState('')
-	const [info, setInfo] = useState('')
 	const [image, setImage] = useState({ uri: '', name: '' })
 	const [price, setPrice] = useState('')
 	const [duration, setDuration] = useState('')
@@ -47,7 +46,7 @@ export default function Addservice(props) {
 		const locationid = await AsyncStorage.getItem("locationid")
 
 		if (name && (price && !isNaN(price)) && duration) {
-			const data = { locationid, menuid: parentMenuid, name, info, image, price, duration, permission: cameraPermission || pickingPermission }
+			const data = { locationid, menuid: parentMenuid ? parentMenuid : "", name, image, price, duration, permission: cameraPermission || pickingPermission }
 
 			setLoading(true)
 
@@ -101,7 +100,7 @@ export default function Addservice(props) {
 		const locationid = await AsyncStorage.getItem("locationid")
 
 		if (name && (price && !isNaN(price)) && duration) {
-			const data = { locationid, menuid: parentMenuid, serviceid, name, info, image, price, duration, permission: cameraPermission || pickingPermission }
+			const data = { locationid, menuid: parentMenuid ? parentMenuid : "", serviceid, name, image, price, duration, permission: cameraPermission || pickingPermission }
 
 			updateService(data)
 				.then((res) => {
@@ -184,7 +183,7 @@ export default function Addservice(props) {
 		}
 
 		if (msg == "") {
-			const nextStep = index == 4 ? "done" : steps[index + 1]
+			const nextStep = index == 3 ? "done" : steps[index + 1]
 
 			if (nextStep == "photo") {
 				allowCamera()
@@ -306,7 +305,6 @@ export default function Addservice(props) {
 					const { serviceInfo } = res
 
 					setName(serviceInfo.name)
-					setInfo(serviceInfo.info)
 					setImage({ uri: logo_url + serviceInfo.image, name: serviceInfo.image })
 					setPrice(serviceInfo.price.toString())
 					setDuration(serviceInfo.duration)
@@ -348,21 +346,7 @@ export default function Addservice(props) {
 								/>
 							</View>
 						)}
-
-						{setupType == "info" && (
-							<View style={styles.inputContainer}>
-								<Text style={styles.addHeader}>Anything you want to say about {'\n' + name} (Optional)</Text>
-
-								<TextInput 
-									style={styles.infoInput} multiline textAlignVertical="top"
-									placeholderTextColor="rgba(127, 127, 127, 0.5)" 
-									placeholder={"example: " + name + " will be 20% off this week (Optional)"}
-									onChangeText={(info) => setInfo(info)} value={info} autoCorrect={false} 
-									autoCompleteType="off" autoCapitalize="none"
-								/>
-							</View>
-						)}
-
+            
 						{setupType == "photo" && (
 							<View style={styles.cameraContainer}>
 								<Text style={styles.cameraHeader}>Provide a photo for {name}</Text>
@@ -475,9 +459,9 @@ const styles = StyleSheet.create({
 	cameraAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginBottom: 50, margin: 5, padding: 5, width: wsize(30) },
 	cameraActionHeader: { fontSize: wsize(3), textAlign: 'center' },
 	
-	addActions: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 50, width: '100%' },
-	addAction: { alignItems: 'center', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(7), padding: 5, width: 100 },
-	addActionHeader: { fontSize: wsize(4) },
+	addActions: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
+  addAction: { alignItems: 'center', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(6), padding: 5, width: wsize(30) },
+  addActionHeader: { fontSize: wsize(5) },
 
   loading: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
   errorMsg: { color: 'darkred', fontSize: wsize(4), textAlign: 'center' },

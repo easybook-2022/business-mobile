@@ -17,7 +17,6 @@ export const addNewMenu = (data) => {
 	form.append("locationid", data.locationid)
 	form.append("parentmenuid", data.parentMenuid)
 	form.append("name", data.name)
-	form.append("info", data.info)
 	form.append("permission", data.permission)
 
 	if (data.image.uri) {
@@ -44,7 +43,6 @@ export const saveMenu = data => {
 
 	form.append("menuid", data.menuid)
 	form.append("name", data.name)
-	form.append("info", data.info)
 	form.append("permission", data.permission)
 
 	if (data.image.uri) {

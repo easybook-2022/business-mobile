@@ -47,8 +47,8 @@ export default function Menu(props) {
 	const [uploadMenubox, setUploadmenubox] = useState({ show: false, action: '', uri: '', name: '' })
 	const [menuPhotooption, setMenuphotooption] = useState({ show: false, action: '', photo: '' })
 	const [removeMenuinfo, setRemovemenuinfo] = useState({ show: false, id: "", name: "" })
-	const [removeServiceinfo, setRemoveserviceinfo] = useState({ show: false, id: "", name: "", info: "", image: "", price: 0 })
-	const [removeProductinfo, setRemoveproductinfo] = useState({ show: false, id: "", name: "", info: "", image: "", sizes: [], others: [], options: [], price: 0 })
+	const [removeServiceinfo, setRemoveserviceinfo] = useState({ show: false, id: "", name: "", image: "", price: 0 })
+	const [removeProductinfo, setRemoveproductinfo] = useState({ show: false, id: "", name: "", image: "", sizes: [], others: [], options: [], price: 0 })
 
 	const getTheLocationProfile = async() => {
 		const locationid = await AsyncStorage.getItem("locationid")
@@ -74,7 +74,7 @@ export default function Menu(props) {
 				if (err.response && err.response.status == 400) {
 
 				} else {
-					alert("an error has occurred in server")
+					alert("server error")
 				}
 			})
 	}
@@ -101,7 +101,7 @@ export default function Menu(props) {
 				if (err.response && err.response.status == 400) {
 					
 				} else {
-					alert("an error has occurred in server")
+					alert("server error")
 				}
 			})
 	}
@@ -257,16 +257,16 @@ export default function Menu(props) {
 				})
 				.then((res) => {
 					if (res) {
-						const { name, info, image } = res.info
+						const { name, image } = res.info
 
-						setRemovemenuinfo({ show: true, id, name, info, image })
+						setRemovemenuinfo({ ...removeMenuinfo, show: true, id, name, info, image })
 					}
 				})
 				.catch((err) => {
 					if (err.response && err.response.status == 400) {
 						
 					} else {
-						alert("an error has occurred in server")
+						alert("server error")
 					}
 				})
 		} else {
@@ -278,7 +278,7 @@ export default function Menu(props) {
 				})
 				.then((res) => {
 					if (res) {
-						setRemovemenuinfo({ show: false, id: "", name: "", info: "", image: "" })
+						setRemovemenuinfo({ ...removeMenuinfo, show: false })
 						getTheLocationProfile()
 					}
 				})
@@ -286,7 +286,7 @@ export default function Menu(props) {
 					if (err.response && err.response.status == 400) {
 						
 					} else {
-						alert("an error has occurred in server")
+						alert("server error")
 					}
 				})
 		}
@@ -301,16 +301,16 @@ export default function Menu(props) {
 				})
 				.then((res) => {
 					if (res) {
-						const { image, info, name, options, others, price, sizes } = res.productInfo
+						const { image, name, options, others, price, sizes } = res.productInfo
 
-						setRemoveproductinfo({ show: true, id, name, info, image, sizes, others, options, price })
+						setRemoveproductinfo({ ...removeProductinfo, show: true, id, name, image, sizes, others, options, price })
 					}
 				})
 				.catch((err) => {
 					if (err.response && err.response.status == 400) {
 						
 					} else {
-						alert("an error has occurred in server")
+						alert("server error")
 					}
 				})
 		} else {
@@ -321,13 +321,16 @@ export default function Menu(props) {
 					}
 				})
 				.then((res) => {
-					if (res) getTheLocationProfile()
+					if (res) {
+            setRemoveproductinfo({ ...removeProductinfo, show: false })
+            getTheLocationProfile()
+          }
 				})
 				.catch((err) => {
 					if (err.response && err.response.status == 400) {
 
 					} else {
-						alert("an error has occurred in server")
+						alert("server error")
 					}
 				})
 		}
@@ -342,16 +345,16 @@ export default function Menu(props) {
 				})
 				.then((res) => {
 					if (res) {
-						const { name, info, price, image, duration } = res.serviceInfo
+						const { name, price, image, duration } = res.serviceInfo
 
-						setRemoveserviceinfo({ show: true, id, name, info, price, image, duration })
+						setRemoveserviceinfo({ ...removeServiceinfo, show: true, id, name, price, image, duration })
 					}
 				})
 				.catch((err) => {
 					if (err.response && err.response.status == 400) {
 						
 					} else {
-						alert("an error has occurred in server")
+						alert("server error")
 					}
 				})
 		} else {
@@ -363,15 +366,15 @@ export default function Menu(props) {
 				})
 				.then((res) => {
 					if (res) {
+            setRemoveserviceinfo({ ...removeServiceinfo, show: false })
 						getTheLocationProfile()
-						setRemoveserviceinfo({ show: false, id: "", name: "", info: "", price: 0, image: "", duration: "" })
 					}
 				})
 				.catch((err) => {
 					if (err.response && err.response.status == 400) {
 						
 					} else {
-						alert("an error has occurred in server")
+						alert("server error")
 					}
 				})
 		}
@@ -873,9 +876,9 @@ const styles = StyleSheet.create({
 
 	menuRow: { flexDirection: 'row', justifyContent: 'space-between', padding: 5 },
 	menuPhoto: { height: height * 0.3, width: width * 0.3 },
-	menuPhotoActions: { flexDirection: 'row', justifyContent: 'space-around', marginTop: -30 },
+	menuPhotoActions: { flexDirection: 'row', justifyContent: 'space-around', marginTop: -50 },
 	menuPhotoAction: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 3 },
-	menuPhotoActionHeader: { textAlign: 'center' },
+	menuPhotoActionHeader: { fontSize: wsize(3), textAlign: 'center' },
 	menuStart: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5 },
 	menuStartHeader: { fontSize: wsize(7), textAlign: 'center' },
   menuStartDiv: { fontSize: wsize(7), fontWeight: 'bold', marginVertical: 20 },

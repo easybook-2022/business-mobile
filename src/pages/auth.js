@@ -36,7 +36,7 @@ export default function Auth({ navigation }) {
 
 const styles = StyleSheet.create({
 	auth: { backgroundColor: 'white', height: '100%', width: '100%' },
-	box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
+	box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', paddingHorizontal: 10, width: '100%' },
   icon: { height: width * 0.5, width: width * 0.5 },
 	boxHeader: { fontSize: wsize(7), fontWeight: 'bold', textAlign: 'center' },
 	boxNav: { alignItems: 'center' },

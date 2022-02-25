@@ -5,32 +5,33 @@ export const verifyUser = cellnumber => {
 	return axios.get(`${url}/owners/verify/${cellnumber}`)
 }
 
-export const registerUser = data => {
-	const form = new FormData()
-	const { uri, name, type = "image/jpeg" } = data.profile
-	
-	form.append("username", data.username)
-	form.append("cellnumber", data.cellnumber)
-	form.append("password", data.password)
-	form.append("confirmPassword", data.confirmPassword)
-	form.append("hours", JSON.stringify(data.hours))
-	form.append("permission", data.permission)
-
-	if (data.profile.uri) {
-		form.append("profile", { uri, name, type })
-	}
-
-	return axios.post(
-		`${url}/owners/register`,
-		form
-	)
-}
-
 export const loginUser = data => {
 	return axios.post(
 		`${url}/owners/login`,
 		data
 	)
+}
+
+export const registerUser = data => {
+  return axios.post(
+    `${url}/owners/register`,
+    data
+  )
+}
+
+export const saveUserInfo = data => {
+  const form = new FormData()
+  const { uri, name, type = "image/jpeg" } = data.profile
+  
+  form.append("id", data.id)
+  form.append("username", data.username)
+  form.append("profile", { uri, name, type })
+  form.append("permission", data.permission)
+
+  return axios.post(
+    `${url}/owners/save_user_info`,
+    form
+  )
 }
 
 export const addOwner = data => {
@@ -115,10 +116,10 @@ export const getOtherWorkers = data => {
 }
 
 export const setOwnerHours = data => {
-	return axios.post(
-		`${url}/owners/set_hours`,
-		data
-	)
+  return axios.post(
+    `${url}/owners/set_hours`,
+    data
+  )
 }
 
 export const updateNotificationToken = data => {
@@ -128,47 +129,8 @@ export const updateNotificationToken = data => {
 	)
 }
 
-export const addBankaccount = data => {
-	return axios.post(
-		`${url}/owners/add_bankaccount`,
-		data
-	)
-}
-
-export const updateBankaccount = data => {
-	return axios.post(
-		`${url}/owners/update_bankaccount`,
-		data
-	)
-}
-
 export const getAccounts = locationid => {
 	return axios.get(`${url}/owners/get_accounts/${locationid}`)
-}
-
-export const getBankaccounts = locationid => {
-	return axios.get(`${url}/owners/get_bankaccounts/${locationid}`)
-}
-
-export const setBankaccountDefault = data => {
-	return axios.post(
-		`${url}/owners/set_bankaccountdefault`,
-		data
-	)
-}
-
-export const getBankaccountInfo = data => {
-	return axios.post(
-		`${url}/owners/get_bankaccount_info`,
-		data
-	)
-}
-
-export const deleteTheBankAccount = data => {
-	return axios.post(
-		`${url}/owners/delete_bankaccount`,
-		data
-	)
 }
 
 export const getCode = cellnumber => {

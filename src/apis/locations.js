@@ -16,34 +16,34 @@ export const loginLocation = data => {
 }
 
 export const setupLocation = data => {
-	const form = new FormData()
-	const { uri, name, type = "image/jpeg" } = data.logo
+  const form = new FormData()
+  const { uri, name, type = "image/jpeg" } = data.logo
 
-	form.append("storeName", data.storeName)
-	form.append("phonenumber", data.phonenumber)
-	form.append("addressOne", data.addressOne)
-	form.append("addressTwo", data.addressTwo)
-	form.append("city", data.city)
-	form.append("province", data.province)
-	form.append("postalcode", data.postalcode)
-	form.append("hours", JSON.stringify(data.hours))
-	form.append("type", data.type)
-	form.append("longitude", data.longitude)
-	form.append("latitude", data.latitude)
-	form.append("ownerid", data.ownerid)
-	form.append("time", data.time)
-	form.append("ipAddress", data.ipAddress)
-	form.append("permission", data.permission)
-	form.append("trialtime", data.trialtime)
+  form.append("storeName", data.storeName)
+  form.append("phonenumber", data.phonenumber)
+  form.append("addressOne", data.addressOne)
+  form.append("addressTwo", data.addressTwo)
+  form.append("city", data.city)
+  form.append("province", data.province)
+  form.append("postalcode", data.postalcode)
+  form.append("hours", JSON.stringify(data.hours))
+  form.append("type", data.type)
+  form.append("longitude", data.longitude)
+  form.append("latitude", data.latitude)
+  form.append("ownerid", data.ownerid)
+  form.append("time", data.time)
+  form.append("ipAddress", data.ipAddress)
+  form.append("permission", data.permission)
+  form.append("trialtime", data.trialtime)
 
-	if (data.logo.uri) {
-		form.append("logo", { uri, name, type })
-	}
+  if (data.logo.uri) {
+    form.append("logo", { uri, name, type })
+  }
 
-	return axios.post(
-		`${url}/locations/setup_location`, 
-		form
-	)
+  return axios.post(
+    `${url}/locations/setup_location`, 
+    form
+  )
 }
 
 export const updateLocation = data => {
@@ -84,10 +84,6 @@ export const fetchNumAppointments = id => {
 
 export const fetchNumCartOrderers = id => {
 	return axios.get(`${url}/locations/fetch_num_cartorderers/${id}`)
-}
-
-export const fetchNumReservations = id => {
-	return axios.get(`${url}/locations/fetch_num_reservations/${id}`)
 }
 
 export const fetchNumorders = id => {

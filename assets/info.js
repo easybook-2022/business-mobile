@@ -1,13 +1,11 @@
 import io from 'socket.io-client'
 
-const local_url = false
-const test_stripe = false
-const test_input = false
-const test_bankaccount = false
+const local_url = true
+const test_input = true
 
 const testStores = [
-	{ id: 0, storeName: "Restaurant place 0", storeType: "restaurant", phonenumber: "(567) 567-5678", addressOne: "1248 Dundas St E", addressTwo: "", city: "Mississauga", province: "ON", postalcode: "L4Y 2C5", longitude: -79.5863632, latitude: 43.6060865 },
-	{ id: 1, storeName: "Hair salon", storeType: "hair", phonenumber: "(900) 000-0000", addressOne: "642 Gerrard St E", addressTwo: "", city: "Toronto", province: "ON", postalcode: "M4M1Y3", longitude: -79.3505832, latitude: 43.6660751 },
+  { id: 0, storeName: "Hair salon", storeType: "hair", phonenumber: "(900) 000-0000", addressOne: "642 Gerrard St E", addressTwo: "", city: "Toronto", province: "ON", postalcode: "M4M1Y3", longitude: -79.3505832, latitude: 43.6660751 },
+	{ id: 1, storeName: "Restaurant place 0", storeType: "restaurant", phonenumber: "(567) 567-5678", addressOne: "1248 Dundas St E", addressTwo: "", city: "Mississauga", province: "ON", postalcode: "L4Y 2C5", longitude: -79.5863632, latitude: 43.6060865 },
 	{ id: 2, storeName: "Nail salon", storeType: "nail", phonenumber: "(100) 000-0000", addressOne: "9 King St E", addressTwo: "", city: "Toronto", province: "ON", postalcode: "M5C 3C5", longitude: -79.3770086, latitude: 43.649194 },
 	{ id: 3, storeName: "Restaurant place 1", storeType: "restaurant", phonenumber: "(200) 000-0000", addressOne: "625 Gerrard St E", addressTwo: "", city: "Toronto", province: "ON", postalcode: "M4M 1Y2", longitude: -79.3509312, latitude: 43.6656672 },
 	{ id: 4, storeName: "Hair salon 1", storeType: "hair", phonenumber: "(300) 000-0000", addressOne: "6328 Main St", addressTwo: "", city: "Whitchurch-Stouffville", province: "ON", postalcode: "L4A 1G9", longitude: -79.2451038, latitude: 43.9719332 },
@@ -34,53 +32,7 @@ const realOwners = [
 ]
 const emptyOwner = { username: "", cellnumber: "", password: "" }
 
-const realBankAccount = [
-	{ 
-		id: 0, 
-		accountNumber: '212120254029', countryCode: 'ca', currency: 'cad', 
-		routingNumber: '21212002', accountHolderName: 'Dad', 
-	},
-	{
-		id: 1, 
-		accountNumber: '411520125784', countryCode: 'ca', currency: 'cad', 
-		routingNumber: '41152002', accountHolderName: 'Sister', 
-	},
-	{
-		id: 2, 
-		accountNumber: '212120501387', countryCode: 'ca', currency: 'cad', 
-		routingNumber: '21212002', accountHolderName: 'Powerchequing', 
-	}
-]
-const testBankAccount = [
-	{ 
-		id: 0, 
-		accountNumber: '000123456789', countryCode: 'us', currency: 'usd', 
-		routingNumber: '110000000', accountHolderName: 'Test holder name one', 
-	},
-	{
-		id: 1, 
-		accountNumber: '000123456789', countryCode: 'us', currency: 'usd', 
-		routingNumber: '110000000', accountHolderName: 'Test holder name two', 
-	},
-	{
-		id: 2, 
-		accountNumber: '000123456789', countryCode: 'us', currency: 'usd', 
-		routingNumber: '110000000', accountHolderName: 'Test holder name three', 
-	}
-]
-const emptyBankAccount = {
-	accountNumber: '', countryCode: '', currency: '', 
-	routingNumber: '', accountHolderName: ''
-}
-const useInput = false
-const { accountNumber, countryCode, currency, routingNumber, accountHolderName } = 
-	test_bankaccount ? 
-		test_stripe ? 
-			testBankAccount[Math.floor(Math.random() * 2) + 0]
-			:
-			realBankAccount[Math.floor(Math.random() * 2) + 0]
-	:
-	emptyBankAccount
+const useInput = true
 
 const login = test_input ? testStores[0] : useInput ? realStores[0] : emptyStore
 const ownerLogin = test_input ? testOwners[0] : useInput ? realOwners[0] : emptyOwner
@@ -96,7 +48,7 @@ export const loginInfo = {
 	cellnumber: ownerLogin.cellnumber, password: ownerLogin.password, storeName: login.storeName, 
 	storeType: login.storeType, phonenumber: login.phonenumber, addressOne: login.addressOne, 
 	addressTwo: login.addressTwo, city: login.city, province: login.province, 
-	postalcode: login.postalcode, accountNumber, countryCode, currency, routingNumber, accountHolderName
+	postalcode: login.postalcode
 }
 export const ownerLoginInfo = {
 	username: ownerLogin.username,
@@ -113,12 +65,10 @@ export const registerInfo = {
 	phonenumber: register.phonenumber, password: "password", storeName: register.storeName, 
 	storeType: register.storeType, phonenumber: register.phonenumber, addressOne: register.addressOne,
 	addressTwo: register.addressTwo, city: register.city, province: register.province, 
-	postalcode: register.postalcode, longitude: register.longitude, latitude: register.latitude, 
-	accountNumber, countryCode, currency, routingNumber, accountHolderName
+	postalcode: register.postalcode, longitude: register.longitude, latitude: register.latitude
 }
 export const url = local_url ? wifi_api_url : server_api_url
 export const isLocal = test_input
-export const stripe_key = test_stripe ? "sk_test_lft1B76yZfF2oEtD5rI3y8dz" : "sk_live_AeoXx4kxjfETP2fTR7IkdTYC"
 export const logo_url = url + "/static/"
 export const displayTime = unixtime => {
 	const months = ['January', 'February', 'March', 'April', 'May', 'Jun', 'July', 'August', 'September', 'October', 'November', 'December']

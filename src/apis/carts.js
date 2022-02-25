@@ -8,16 +8,9 @@ export const orderReady = data => {
 	)
 }
 
-export const receivePayment = data => {
+export const orderDone = data => {
 	return axios.post(
-		`${url}/carts/receive_payment`,
-		data
-	)
-}
-
-export const setProductPrice = data => {
-	return axios.post(
-		`${url}/carts/set_product_price`,
+		`${url}/carts/order_done`,
 		data
 	)
 }

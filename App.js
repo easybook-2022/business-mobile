@@ -5,7 +5,6 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Platform, Text, View, TouchableOpacity, StyleSheet, Dimensions, LogBox } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Font from 'expo-font';
-import { socket } from './assets/info'
 
 LogBox.ignoreLogs([
     'Non-serializable values were found in the navigation state',
@@ -23,11 +22,6 @@ import Workinghours from './src/pages/workinghours'
 
 import Main from './src/pages/main'
 import Cartorders from './src/pages/cartorders'
-import Diningorders from './src/pages/diningorders'
-import Dinersorders from './src/pages/dinersorders'
-
-// restaurants
-import Makereservation from './src/pages/makereservation'
 
 // salons' components
 import Addmenu from './src/components/addmenu'
@@ -120,48 +114,6 @@ export default function App() {
             <Stack.Screen name="main" component={Main} options={{ headerShown: false }}/>
             <Stack.Screen name="cartorders" component={Cartorders} options={({ navigation, route }) => ({
               headerTitle: () => <Text style={styles.header}>#{route.params.ordernumber} Order(s)</Text>,
-              headerLeft: () => (
-                Platform.OS == 'ios' && (
-                  <TouchableOpacity style={styles.back} onPress={() => {
-                    if (route.params && route.params.refetch) {
-                        route.params.refetch()
-                    }
-
-                    navigation.goBack()
-                  }}>
-                    <Text style={styles.backHeader}>Go Back</Text>
-                  </TouchableOpacity>
-                )
-              )
-            })}/>
-            <Stack.Screen name="diningorders" component={Diningorders} options={({ navigation, route }) => ({
-              headerTitle: () => <Text style={styles.header}>Order(s)</Text>,
-              headerLeft: () => (
-                Platform.OS == 'ios' && (
-                  <TouchableOpacity style={styles.back} onPress={() => {
-                    if (route.params && route.params.refetch) {
-                        route.params.refetch()
-                    }
-
-                    navigation.goBack()
-                  }}>
-                    <Text style={styles.backHeader}>Go Back</Text>
-                  </TouchableOpacity>
-                )
-              )
-            })}/>
-            <Stack.Screen name="dinersorders" component={Dinersorders} options={({ navigation }) => ({
-              headerTitle: () => <Text style={styles.header}>Diners' Order(s)</Text>,
-              headerLeft: () => (
-                Platform.OS == 'ios' && (
-                  <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>
-                    <Text style={styles.backHeader}>Go Back</Text>
-                  </TouchableOpacity>
-                )
-              )
-            })}/>
-            <Stack.Screen name="makereservation" component={Makereservation} options={({ navigation, route }) => ({
-              headerTitle: () => <Text style={styles.header}>Choose another time</Text>,
               headerLeft: () => (
                 Platform.OS == 'ios' && (
                   <TouchableOpacity style={styles.back} onPress={() => {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { SafeAreaView, ActivityIndicator, Platform, Dimensions, ScrollView, View, Text, TextInput, Image, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet } from 'react-native';
+import { SafeAreaView, ActivityIndicator, Platform, Dimensions, ScrollView, View, Text, TextInput, Image, TouchableOpacity, TouchableWithoutFeedback, Modal, Keyboard, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
 import Constants from 'expo-constants';
@@ -16,6 +16,9 @@ import { registerInfo } from '../../assets/info'
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5'
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import Entypo from 'react-native-vector-icons/Entypo'
+
+// components
+import Loadingprogress from '../components/loadingprogress';
 
 const { height, width } = Dimensions.get('window')
 const wsize = p => {
@@ -59,7 +62,7 @@ export default function Locationsetup({ navigation }) {
 	const setupYourLocation = async() => {
 		const ownerid = await AsyncStorage.getItem("ownerid")
 		const { details } = await NetInfo.fetch()
-		const ipAddress = details.ipAddress, hours = {}
+		const hours = {}
 		let longitude, latitude, invalid = false
 
 		if (storeName && phonenumber, addressOne && city && province && postalcode) {
@@ -138,58 +141,59 @@ export default function Locationsetup({ navigation }) {
 			const time = (Date.now() / 1000).toString().split(".")[0]
 			const data = {
 				storeName, phonenumber, addressOne, addressTwo, city, province, postalcode, logo, hours, type, 
-				longitude, latitude, ownerid, time, ipAddress, permission: cameraPermission, trialtime: Date.now()
+				longitude, latitude, ownerid, permission: cameraPermission
 			}
 
 			setLoading(true)
 
 			if (!invalid) {
-				setupLocation(data)
-					.then((res) => {
-						if (res.status == 200) {
-							return res.data
-						}
-					})
-					.then((res) => {
-						if (res) {
-							const { id } = res
+        setupLocation(data)
+          .then((res) => {
+            if (res.status == 200) {
+              return res.data
+            }
+          })
+          .then((res) => {
+            if (res) {
+              const { id } = res
 
-							AsyncStorage.setItem("locationid", id.toString())
-							AsyncStorage.setItem("locationtype", type)
+              AsyncStorage.setItem("locationid", id.toString())
+              AsyncStorage.setItem("locationtype", type)
 
-							if (type == "restaurant") {
-								AsyncStorage.setItem("phase", "main")
+              setLoading(false)
 
-								navigation.dispatch(
-									CommonActions.reset({
-										index: 0,
-										routes: [{ name: "main", params: { firstTime: true } }]
-									})
-								)
-							} else {
-								AsyncStorage.setItem("phase", "workinghours")
+              if (type == "restaurant") {
+                AsyncStorage.setItem("phase", "main")
 
-								navigation.dispatch(
-									CommonActions.reset({
-										index: 0,
-										routes: [{ name: "workinghours" }]
-									})
-								)
-							}
-								
-						}
-					})
-					.catch((err) => {
-						if (err.response && err.response.status == 400) {
-							const { errormsg, status } = err.response.data
+                navigation.dispatch(
+                  CommonActions.reset({
+                    index: 0,
+                    routes: [{ name: "main", params: { firstTime: true } }]
+                  })
+                )
+              } else {
+                AsyncStorage.setItem("phase", "register")
 
-							setErrormsg(errormsg)
-						} else {
-							setErrormsg("an error has occurred in server")
-						}
+                navigation.dispatch(
+                  CommonActions.reset({
+                    index: 0,
+                    routes: [{ name: "register" }]
+                  })
+                )
+              }
+            }
+          })
+          .catch((err) => {
+            if (err.response && err.response.status == 400) {
+              const { errormsg, status } = err.response.data
 
-						setLoading(false)
-					})
+              setErrormsg(errormsg)
+            } else {
+              alert("server error")
+            }
+
+            setLoading(false)
+          })
 			} else {
 				setLoading(false)
 				setErrormsg("Please choose an option for all the days")
@@ -617,8 +621,6 @@ export default function Locationsetup({ navigation }) {
 										</View>
 									</TouchableOpacity>
 								</View>
-
-								{loading && <ActivityIndicator color="black" size="large"/>}
 							</View>
 						)}
 
@@ -627,8 +629,6 @@ export default function Locationsetup({ navigation }) {
                 <View style={styles.inputContainer}>
                   <Text style={styles.inputHeader}>Enter {type == 'restaurant' ? 'restaurant' : type + ' salon'} name:</Text>
                   <TextInput style={styles.input} onChangeText={(storeName) => setStorename(storeName)} value={storeName} autoCorrect={false} autoCapitalize="none"/>
-                
-                  {loading && <ActivityIndicator color="black" size="large"/>}
                 </View>
               </View>
             )}
@@ -680,7 +680,6 @@ export default function Locationsetup({ navigation }) {
 										{loading && (
 											<View style={{ marginVertical: 10 }}>
 												<Text style={styles.locationFetchingHeader}>getting your location</Text>
-												<ActivityIndicator color="black" size="small"/>
 											</View>
 										)}
 									</View>
@@ -744,8 +743,6 @@ export default function Locationsetup({ navigation }) {
 													<Text style={styles.inputHeader}>Enter postal code:</Text>
 													<TextInput style={styles.input} onChangeText={(postalcode) => setPostalcode(postalcode)} value={postalcode} autoCorrect={false} autoCapitalize="none"/>
 												</View>
-
-												{loading && <ActivityIndicator color="black" size="large"/>}
 											</View>
 										</ScrollView>
 										:
@@ -774,8 +771,6 @@ export default function Locationsetup({ navigation }) {
 											}}>
 												<Text style={styles.locationActionOptionHeader}>Enter address instead</Text>
 											</TouchableOpacity>
-
-											{loading && <ActivityIndicator color="black" size="large"/>}
 										</View>
 								}
 							</View>
@@ -806,8 +801,6 @@ export default function Locationsetup({ navigation }) {
 											}
 										}} value={phonenumber} keyboardType="numeric" autoCorrect={false} autoCapitalize="none"/>
 									</View>
-
-									{loading && <ActivityIndicator color="black" size="large"/>}
 								</View>
 							</TouchableWithoutFeedback>
 						)}
@@ -842,8 +835,6 @@ export default function Locationsetup({ navigation }) {
 										</View>
 									</>
 								)}
-
-								{loading && <ActivityIndicator color="black" size="large"/>}
 							</View>
 						)}
 
@@ -961,8 +952,6 @@ export default function Locationsetup({ navigation }) {
 											</View>
 										}
 									</View>
-
-									{loading && <ActivityIndicator color="black" size="large"/>}
 								</View>
 							</ScrollView>
 						)}
@@ -1008,6 +997,12 @@ export default function Locationsetup({ navigation }) {
 					</View>
 				</View>
 			</View>
+
+      {loading && (
+        <Modal transparent={true}>
+          <Loadingprogress/>
+        </Modal>
+      )}
 		</SafeAreaView>
 	)
 }

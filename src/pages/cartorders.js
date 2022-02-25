@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { socket, logo_url } from '../../assets/info'
 import { seeUserOrders } from '../apis/schedules'
-import { orderReady, receivePayment } from '../apis/carts'
+import { orderReady, orderDone } from '../apis/carts'
 
 const { height, width } = Dimensions.get('window')
 const wsize = p => {
@@ -19,12 +19,9 @@ export default function Cartorders(props) {
 
 	const [ownerId, setOwnerid] = useState(null)
 	const [orders, setOrders] = useState([])
-	const [totalCost, setTotalcost] = useState({ price: 0.00, pst: 0.00, hst: 0.00, cost: 0.00, nofee: 0.00, fee: 0.00 })
 	const [ready, setReady] = useState(false)
 	const [loading, setLoading] = useState(false)
-	const [showBankaccountrequired, setShowbankaccountrequired] = useState(false)
 	const [showNoorders, setShownoorders] = useState(false)
-	const [showPaymentconfirm, setShowpaymentconfirm] = useState(false)
 
 	const isMounted = useRef(null)
 	
@@ -43,7 +40,6 @@ export default function Cartorders(props) {
 				if (res && isMounted.current == true) {
 					setOwnerid(ownerid)
 					setOrders(res.orders)
-					setTotalcost(res.totalcost)
 					setReady(res.ready)
 				}
 			})
@@ -51,7 +47,7 @@ export default function Cartorders(props) {
 				if (err.response && err.response.status == 400) {
 					
 				} else {
-					alert("an error has occurred in server")
+					alert("server error")
 				}
 			})
 	}
@@ -88,59 +84,50 @@ export default function Cartorders(props) {
 				}
 			})
 	}
-	const receiveThePayment = async() => {
-		const time = Date.now()
-		const locationid = await AsyncStorage.getItem("locationid")
-		let data = { userid, ordernumber, locationid, time, type: "productPurchased", receiver: ["user" + userid] }
+  const orderIsDone = async() => {
+    const time = Date.now()
+    const locationid = await AsyncStorage.getItem("locationid")
+    let data = { userid, ordernumber, locationid, type: "orderDone", receiver: ["user" + userid] }
 
-		setLoading(true)
+    setLoading(true)
 
-		receivePayment(data)
-			.then((res) => {
-				if (res.status == 200) {
-					return res.data
-				} else {
-					setLoading(false)
-				}
-			})
-			.then((res) => {
-				if (res) {
-					socket.emit("socket/productPurchased", data, () => {
-            setShowpaymentconfirm(true)
+    orderDone(data)
+      .then((res) => {
+        if (res.status == 200) {
+          return res.data
+        } else {
+          setLoading(false)
+        }
+      })
+      .then((res) => {
+        if (res) {
+          socket.emit("socket/orderDone", data, () => {
+            if (refetch) refetch()
 
-            setTimeout(function () {
-              if (refetch) refetch()
-
-              setShowpaymentconfirm(false)
-              props.navigation.goBack()
-            }, 3000)
+            props.navigation.goBack()
           })
-				}
-			})
-			.catch((err) => {
-				if (err.response && err.response.status == 400) {
-					if (err.response.data.status) {
-						const { errormsg, status } = err.response.data
+        }
+      })
+      .catch((err) => {
+        if (err.response && err.response.status == 400) {
+          if (err.response.data.status) {
+            const { errormsg, status } = err.response.data
 
-						switch (status) {
-							case "bankaccountrequired":
-								setShowbankaccountrequired(true)
+            switch (status) {
+              case "nonexist":
+                setShownoorders(true)
 
-								break
-							case "nonexist":
-								setShownoorders(true)
+                break
+              default:
+            }
 
-								break
-							default:
-						}
-
-						setLoading(false)
-					}
-				} else {
-					alert("an error has occurred in server")
-				}
-			})
-	}
+            setLoading(false)
+          }
+        } else {
+          alert("server error")
+        }
+      })
+  }
 
 	useEffect(() => {
 		isMounted.current = true
@@ -163,9 +150,11 @@ export default function Cartorders(props) {
 										<Image source={{ uri: logo_url + item.image }} style={styles.itemImage}/>
 									</View>
 								)}
-									
+
 								<View style={styles.itemInfos}>
 									<Text style={styles.itemName}>{item.name}</Text>
+                  <Text style={styles.header}><Text style={{ fontWeight: 'bold' }}>Quantity:</Text> {item.quantity}</Text>
+                  {item.cost && <Text style={styles.header}><Text style={{ fontWeight: 'bold' }}>Total cost:</Text> ${item.cost.toFixed(2)}</Text>}
 
 									{item.options.map((option, infoindex) => (
 										<Text key={option.key} style={styles.itemInfo}>
@@ -193,14 +182,6 @@ export default function Cartorders(props) {
 										: null
 									))}
 								</View>
-								<View>
-									<Text style={styles.header}><Text style={{ fontWeight: 'bold' }}>Quantity:</Text> {item.quantity}</Text>
-									<Text style={styles.header}><Text style={{ fontWeight: 'bold' }}>Price:</Text> ${item.price.toFixed(2)}</Text>
-                  {item.fee > 0 && <Text style={styles.header}><Text style={{ fontWeight: 'bold' }}>E-pay fee:</Text> ${item.fee.toFixed(2)}</Text>}
-                  {item.pst > 0 && <Text style={styles.header}><Text style={{ fontWeight: 'bold' }}>PST:</Text> ${item.pst.toFixed(2)}</Text>}
-                  {item.hst > 0 && <Text style={styles.header}><Text style={{ fontWeight: 'bold' }}>HST:</Text> ${item.hst.toFixed(2)}</Text>}
-                  <Text style={styles.header}><Text style={{ fontWeight: 'bold' }}>Total Cost:</Text> ${item.totalcost.toFixed(2)}</Text>
-								</View>
 							</View>
 
 							{item.note ? 
@@ -210,67 +191,27 @@ export default function Cartorders(props) {
   								</View>
                 </View>
 							: null }
-
-							{item.orderers > 0 && (
-								<>
-									<View style={{ alignItems: 'center' }}>
-										<View style={styles.orderersEdit}>
-											<Text style={styles.orderersEditHeader}>Calling for</Text>
-											<View style={styles.orderersNumHolder}>
-												<Text style={styles.orderersNumHeader}>{item.orderers} {item.orderers == 1 ? 'person' : 'people'}</Text>
-											</View>
-										</View>
-									</View>
-								</>
-							)}
 						</View>
 					}
 				/>
 
 				<View style={{ alignItems: 'center' }}>
 					{loading && <ActivityIndicator size="small"/>}
-					{!ready ? 
+					{!ready ?
 						<>
-							<Text style={styles.totalHeader}>Total cost: ${totalCost.cost.toFixed(2)}</Text>
 							<Text style={styles.readyHeader}>Order is ready?</Text>
-							<TouchableOpacity style={styles.receivePayment} disabled={loading} onPress={() => orderIsReady()}>
-								<Text style={styles.receivePaymentHeader}>Alert customer(s)</Text>
+							<TouchableOpacity style={styles.alert} disabled={loading} onPress={() => orderIsReady()}>
+								<Text style={styles.alertHeader}>Alert customer(s)</Text>
 							</TouchableOpacity>
 						</>
-						:
-						<TouchableOpacity style={styles.receivePayment} disabled={loading} onPress={() => receiveThePayment()}>
-							<Text style={styles.receivePaymentHeader}>Receive payment of $ {totalCost.cost.toFixed(2)}</Text>
-						</TouchableOpacity>
-					}
+            :
+            <TouchableOpacity style={styles.alert} disabled={loading} onPress={() => orderIsDone()}>
+              <Text style={styles.alertHeader}>Done</Text>
+            </TouchableOpacity>
+          }
 				</View>
 			</View>
 
-			{showBankaccountrequired && (
-				<Modal transparent={true}>
-					<SafeAreaView style={styles.requiredBoxContainer}>
-						<View style={styles.requiredBox}>
-							<View style={styles.requiredContainer}>
-								<Text style={styles.requiredHeader}>
-									You need to provide a bank account to 
-									receive your payment
-								</Text>
-
-								<View style={styles.requiredActions}>
-									<TouchableOpacity style={styles.requiredAction} onPress={() => setShowbankaccountrequired(false)}>
-										<Text style={styles.requiredActionHeader}>Close</Text>
-									</TouchableOpacity>
-									<TouchableOpacity style={styles.requiredAction} onPress={() => {
-										setShowbankaccountrequired(false)
-										props.navigation.navigate("settings", { required: "bankaccount" })
-									}}>
-										<Text style={styles.requiredActionHeader}>Ok</Text>
-									</TouchableOpacity>
-								</View>
-							</View>
-						</View>
-					</SafeAreaView>
-				</Modal>
-			)}
 			{showNoorders && (
 				<Modal transparent={true}>
 					<SafeAreaView style={styles.requiredBoxContainer}>
@@ -288,21 +229,6 @@ export default function Cartorders(props) {
 										<Text style={styles.requiredActionHeader}>Close</Text>
 									</TouchableOpacity>
 								</View>
-							</View>
-						</View>
-					</SafeAreaView>
-				</Modal>
-			)}
-			{showPaymentconfirm && (
-				<Modal transparent={true}>
-					<SafeAreaView style={styles.confirmBoxContainer}>
-						<View style={styles.confirmBox}>
-							<View style={styles.confirmContainer}>
-								<Text style={styles.confirmHeader}>
-									You have received a total payment of $ {totalCost.cost.toFixed(2)}
-									{'\n\n\n'}
-									Good Job
-								</Text>
 							</View>
 						</View>
 					</SafeAreaView>
@@ -330,10 +256,9 @@ const styles = StyleSheet.create({
 	orderersNumHolder: { backgroundColor: 'black', padding: 5 },
 	orderersNumHeader: { color: 'white', fontWeight: 'bold' },
 
-  totalHeader: { fontSize: wsize(4) },
   readyHeader: { fontSize: wsize(4) },
-	receivePayment: { borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, marginVertical: 10, padding: 10, width: wsize(30) },
-	receivePaymentHeader: { fontSize: wsize(4), textAlign: 'center' },
+	alert: { borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, marginVertical: 10, padding: 10, width: wsize(30) },
+	alertHeader: { fontSize: wsize(4), textAlign: 'center' },
 
 	requiredBoxContainer: { backgroundColor: 'rgba(0, 0, 0, 0.7)' },
 	requiredBox: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
@@ -341,13 +266,5 @@ const styles = StyleSheet.create({
 	requiredHeader: { fontFamily: 'appFont', fontSize: wsize(5), fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
 	requiredActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	requiredAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: wsize(30) },
-	requiredActionHeader: { fontSize: wsize(4), textAlign: 'center' },
-
-	confirmBoxContainer: { backgroundColor: 'rgba(0, 0, 0, 0.7)' },
-	confirmBox: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
-	confirmContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },
-	confirmHeader: { fontFamily: 'appFont', fontSize: wsize(5), fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
-	confirmActions: { flexDirection: 'row', justifyContent: 'space-around' },
-	confirmAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: wsize(30) },
-	confirmActionHeader: { fontSize: wsize(4), textAlign: 'center' },
+	requiredActionHeader: { fontSize: wsize(4), textAlign: 'center' }
 })

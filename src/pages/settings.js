@@ -9,10 +9,7 @@ import * as ImageManipulator from 'expo-image-manipulator'
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import { logo_url } from '../../assets/info'
-import { 
-	addOwner, updateOwner, deleteOwner, getWorkerInfo, getOtherWorkers, addBankaccount, updateBankaccount, getAccounts, getBankaccounts, 
-	setBankaccountDefault, getBankaccountInfo, deleteTheBankAccount
-} from '../apis/owners'
+import { addOwner, updateOwner, deleteOwner, getWorkerInfo, getOtherWorkers, getAccounts } from '../apis/owners'
 import { getLocationProfile, updateLocation, setLocationHours } from '../apis/locations'
 import { loginInfo, ownerRegisterInfo, stripe_key } from '../../assets/info'
 
@@ -77,10 +74,6 @@ export default function Settings(props) {
 		{ key: "6", header: "Saturday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, working: true, takeShift: "" }
 	])
 
-	// bank accounts
-	const [bankAccounts, setBankAccounts] = useState([])
-	const [bankAccountsloading, setBankaccountsloading] = useState(true)
-
 	const [errorMsg, setErrormsg] = useState('')
 	const [loading, setLoading] = useState(false)
 	const [accountForm, setAccountform] = useState({
@@ -91,25 +84,6 @@ export default function Settings(props) {
 		currentPassword: '', newPassword: '', confirmPassword: '', editPassword: false,
 		profile: { uri: '', name: '' }, editProfile: false,
     editHours: false,
-		loading: false,
-		errorMsg: ''
-	})
-	const [bankAccountForm, setBankaccountform] = useState({
-		show: false,
-		id: -1,
-		type: '',
-		accountNumber: '', 
-		countryCode: '',
-		currency: '',
-
-		// routing number: '0' + institution + transit number
-		routingNumber: '',
-		institutionNumber: '',
-		placeholder: '',
-		transitNumber: '',
-
-		accountHolderName: '', 
-
 		loading: false,
 		errorMsg: ''
 	})
@@ -732,304 +706,6 @@ export default function Settings(props) {
     setGetworkersbox({ ...getWorkersbox, show: false })
   }
 
-	const openBankAccountForm = () => {
-		setBankaccountform({
-			...bankAccountForm,
-			show: true,
-			id: '',
-			type: 'add',
-			accountNumber: accountNumber, 
-			countryCode: countryCode,
-			currency: currency,
-
-			// routing number: '0' + institution + transit number
-			routingNumber: routingNumber,
-			institutionNumber: routingNumber.substr(1, 3),
-			placeholder: '',
-			transitNumber: routingNumber.substr(4),
-
-			accountHolderName: accountHolderName
-		})
-	}
-	const addNewBankAccount = async() => {
-		const locationid = await AsyncStorage.getItem("locationid")
-		let { accountHolderName, accountNumber, institutionNumber, transitNumber, routingNumber } = bankAccountForm
-		let data = { locationid }
-
-    countryCode = countryCode ? countryCode : "ca"
-    currency = currency ? currency : "cad"
-    routingNumber = routingNumber ? routingNumber : "0" + institutionNumber + "" + transitNumber
-
-		const bankaccountDetails = {
-			"bank_account[country]": countryCode,
-			"bank_account[currency]": currency,
-			"bank_account[account_holder_name]": accountHolderName,
-			"bank_account[account_holder_type]": "company",
-			"bank_account[routing_number]": routingNumber,
-			"bank_account[account_number]": accountNumber
-		};
-
-		if (accountNumber && countryCode && currency && routingNumber && accountHolderName) {
-			let formBody = [];
-			
-			for (let property in bankaccountDetails) {
-				let encodedKey = encodeURIComponent(property);
-				let encodedValue = encodeURIComponent(bankaccountDetails[property]);
-				formBody.push(encodedKey + "=" + encodedValue);
-			}
-			formBody = formBody.join("&");
-
-      const resp = await fetch("https://api.stripe.com/v1/tokens", {
-        method: "post",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/x-www-form-urlencoded",
-          Authorization: "Bearer " + stripe_key,
-        },
-        body: formBody,
-      });
-
-      const json = await resp.json()
-  			
-			data = { ...data, banktoken: json.id }
-
-			setBankaccountform({ ...bankAccountForm, loading: true })
-
-			addBankaccount(data)
-				.then((res) => {
-					if (res.status == 200) {
-						return res.data
-					}
-
-					return
-				})
-				.then((res) => {
-					if (res) {
-						setBankaccountform({
-							...bankAccountForm,
-							show: false,
-							id: '',
-							accountHolderName: '', accountNumber: '', transitNumber, routingNumber: '',
-							loading: false
-						})
-						getAllBankaccounts()
-					}
-				})
-				.catch((err) => {
-					if (err.response && err.response.status == 400) {
-						
-					} else {
-						alert("server error")
-					}
-				})
-		} else {
-			if (!accountNumber) {
-				setBankaccountform({
-					...bankAccountForm,
-					errorMsg: "Please enter your account number"
-				})
-
-				return
-			}
-
-			if (!countryCode) {
-				setBankaccountform({
-					...bankAccountForm,
-					errorMsg: "Please select a country"
-				})
-
-				return
-			}
-
-			if (!currency) {
-				setBankaccountform({
-					...bankAccountForm,
-					errorMsg: "Please select a currency"
-				})
-
-				return
-			}
-
-			if (!routingNumber) {
-				setBankaccountform({
-					...bankAccountForm,
-					errorMsg: "Please enter your routing number"
-				})
-
-				return
-			}
-
-			if (!accountHolderName) {
-				setBankaccountform({
-					...bankAccountForm,
-					errorMsg: "Please enter the account holder name"
-				})
-
-				return
-			}
-		}
-	}
-
-	const useBankAccount = async(bankid) => {
-		const locationid = await AsyncStorage.getItem("locationid")
-		const data = { locationid, bankid }
-
-		setBankaccountDefault(data)
-			.then((res) => {
-				if (res.status == 200) {
-					return res.data
-				}
-			})
-			.then((res) => {
-				if (res) {
-					const newBankaccounts = [...bankAccounts]
-
-					newBankaccounts.forEach(function (data) {
-						data.default = false
-
-						if (data.bankid == bankid) {
-							data.default = true
-						}
-					})
-
-					setBankAccounts(newBankaccounts)
-				}
-			})
-			.catch((err) => {
-				if (err.response && err.response.status == 400) {
-					
-				} else {
-					alert("server error")
-				}
-			})
-	}
-	const editBankAccount = async(bankid, index) => {
-		const locationid = await AsyncStorage.getItem("locationid")
-		const data = { locationid, bankid }
-
-		getBankaccountInfo(data)
-			.then((res) => {
-				if (res.status == 200) {
-					return res.data
-				}
-			})
-			.then((res) => {
-				if (res) {
-					const { account_holder_name, last4, transit_number, institution_number } = res.bankaccountInfo
-
-					setBankaccountform({
-						show: true,
-						id: bankid,
-						type: 'edit',
-
-						accountNumber: accountNumber,
-						routingNumber: routingNumber,
-						institutionNumber: institution_number,
-						placeholder: "****" + last4,
-						accountHolderName: account_holder_name, 
-						transitNumber: transit_number
-					})
-				}
-			})
-			.catch((err) => {
-				if (err.response && err.response.status == 400) {
-					
-				} else {
-					alert("server error")
-				}
-			})
-	}
-	const updateTheBankAccount = async() => {
-		const locationid = await AsyncStorage.getItem("locationid")
-		const { id, accountHolderName, accountNumber, routingNumber, institutionNumber, transitNumber } = bankAccountForm
-		const data = { oldbanktoken: id, locationid }
-		const bankaccountDetails = {
-			"bank_account[country]": countryCode,
-			"bank_account[currency]": currency,
-			"bank_account[account_holder_name]": accountHolderName,
-			"bank_account[account_holder_type]": "company",
-			"bank_account[routing_number]": routingNumber,
-			"bank_account[account_number]": accountNumber
-		};
-
-		let formBody = [];
-			
-		for (let property in bankaccountDetails) {
-			let encodedKey = encodeURIComponent(property);
-			let encodedValue = encodeURIComponent(bankaccountDetails[property]);
-			formBody.push(encodedKey + "=" + encodedValue);
-		}
-		formBody = formBody.join("&");
-		
-		const resp = await fetch("https://api.stripe.com/v1/tokens", {
-			method: "post",
-			headers: {
-				Accept: "application/json",
-				"Content-Type": "application/x-www-form-urlencoded",
-				Authorization: "Bearer sk_test_lft1B76yZfF2oEtD5rI3y8dz",
-			},
-			body: formBody,
-		});
-		const json = await resp.json()
-
-		data['banktoken'] = json.id
-
-		setBankaccountform({ ...bankAccountForm, loading: true })
-
-		updateBankaccount(data)
-			.then((res) => {
-				if (res.status == 200) {
-					return res.data
-				}
-
-				return
-			})
-			.then((res) => {
-				setBankaccountform({
-					...bankAccountForm,
-					show: false,
-					id: '',
-					accountHolderName: '', accountNumber: '', transitNumber: '', routingNumber: '',
-					loading: false
-				})
-				getAllBankaccounts()
-			})
-			.catch((err) => {
-				if (err.response && err.response.status == 400) {
-					
-				} else {
-					alert("server error")
-				}
-			})
-	}
-	const deleteBankAccount = async(bankid, index) => {
-		const locationid = await AsyncStorage.getItem("locationid")
-		const data = { locationid, bankid }
-
-		deleteTheBankAccount(data)
-			.then((res) => {
-				if (res.status == 200) {
-					return res.data
-				}
-			})
-			.then((res) => {
-				if (res) {
-					const newBankaccounts = [...bankAccounts]
-
-					newBankaccounts.splice(index, 1)
-
-					setBankAccounts(newBankaccounts)
-				}
-			})
-			.catch((err) => {
-				if (err.response && err.response.status == 400) {
-					
-				} else {
-					alert("server error")
-				}
-			})
-	}
-
 	const getTheLocationProfile = async() => {
 		const locationid = await AsyncStorage.getItem("locationid")
 		const data = { locationid }
@@ -1175,29 +851,6 @@ export default function Settings(props) {
 			})
 		}
 	}
-	const getAllBankaccounts = async() => {
-		const locationid = await AsyncStorage.getItem("locationid")
-
-		getBankaccounts(locationid)
-			.then((res) => {
-				if (res.status == 200) {
-					return res.data
-				}
-			})
-			.then((res) => {
-				if (res && isMounted.current == true) {
-					setBankAccounts(res.bankaccounts)
-					setBankaccountsloading(false)
-				}
-			})
-			.catch((err) => {
-				if (err.response && err.response.status == 400) {
-					
-				} else {
-					alert("server error")
-				}
-			})
-	}
 	const snapPhoto = async() => {
 		let letters = [
 			"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", 
@@ -1295,20 +948,15 @@ export default function Settings(props) {
         	setPickingpermission(status === 'granted')
         }
 	}
-
+  
 	useEffect(() => {
 		isMounted.current = true
 
 		getTheLocationProfile()
 		getAllAccounts()
-		getAllBankaccounts()
 
 		allowCamera()
 		allowChoosing()
-
-		if (required == "bankaccount") {
-			openBankAccountForm()
-		}
 
 		return () => isMounted.current = false
 	}, [])
@@ -1605,49 +1253,6 @@ export default function Settings(props) {
 								:
 								<TouchableOpacity style={styles.editButton} onPress={() => setEdittype('users')}>
 									<Text style={styles.editButtonHeader}>Edit Stylist(s) Info</Text>
-								</TouchableOpacity>
-							:
-              <View>
-  							<View style={styles.loading}>
-                  <ActivityIndicator color="black" size="small"/>
-                </View>
-              </View>
-						}
-
-						{!bankAccountsloading ?
-							editType == 'bankaccounts' ? 
-								<View style={styles.bankaccountHolders}>
-									<Text style={styles.header}>Edit Bank Account(s)</Text>
-
-									<TouchableOpacity style={styles.bankaccountHolderAdd} onPress={() => openBankAccountForm()}>
-										<Text style={styles.bankaccountHolderAddHeader}>Add a bank account</Text>
-									</TouchableOpacity>
-
-									{bankAccounts.map((info, index) => (
-										<View key={info.key} style={styles.bankaccount}>
-											<View style={styles.bankaccountRow}>
-												<Text style={styles.bankaccountHeader}>#{index + 1}:</Text>
-												<View style={styles.bankaccountNumberHolder}>
-													<Text style={styles.bankaccountNumberHeader}>{info.number}</Text>
-												</View>
-											</View>
-											<View style={styles.bankaccountActions}>
-												<TouchableOpacity style={[styles.bankaccountAction, { backgroundColor: info.default ? 'black' : null }]} disabled={info.default} onPress={() => useBankAccount(info.bankid)}>
-													<Text style={[styles.bankaccountActionHeader, { color: info.default ? 'white' : 'black' }]}>Set default</Text>
-												</TouchableOpacity>
-												<TouchableOpacity style={styles.bankaccountAction} onPress={() => editBankAccount(info.bankid, index)}>
-													<Text style={styles.bankaccountActionHeader}>Change</Text>
-												</TouchableOpacity>
-												<TouchableOpacity style={styles.bankaccountAction} onPress={() => deleteBankAccount(info.bankid, index)}>
-													<Text style={styles.bankaccountActionHeader}>Delete</Text>
-												</TouchableOpacity>
-											</View>
-										</View>
-									))}
-								</View>
-								:
-								<TouchableOpacity style={styles.editButton} onPress={() => setEdittype('bankaccounts')}>
-									<Text style={styles.editButtonHeader}>Edit Bank account(s) Info</Text>
 								</TouchableOpacity>
 							:
               <View>
@@ -2377,88 +1982,6 @@ export default function Settings(props) {
             )}
 					</Modal>
 				)}
-				{bankAccountForm.show && (
-					<Modal transparent={true}>
-						<TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
-							<SafeAreaView style={styles.bankaccountform}>
-								<View style={styles.bankaccountformContainer}>
-									<View style={{ alignItems: 'center', marginVertical: 5 }}>
-										<TouchableOpacity onPress={() => {
-											setBankaccountform({
-												show: false,
-												id: '',
-												accountNumber: '', 
-												countryCode: 'ca',
-												currency: 'cad',
-
-												// routing number: '0' + institution + transit number
-												routingNumber: '',
-												institutionNumber: '',
-												transitNumber: '',
-
-												accountHolderName: ''
-											})
-										}}>
-											<AntDesign name="closecircleo" size={wsize(7)}/>
-										</TouchableOpacity>
-
-										<Text style={styles.bankaccountformHeader}>{bankAccountForm.type == 'add' ? 'Add' : 'Editing'} bank account</Text>
-									</View>
-
-									<View style={styles.bankaccountformInputField}>
-										<Text style={styles.bankaccountformInputHeader}>Enter Account Holder</Text>
-										<TextInput style={styles.bankaccountformInputInput} onChangeText={(holder) => setBankaccountform({
-											...bankAccountForm,
-											accountHolderName: holder.toString()
-										})} value={bankAccountForm.accountHolderName} autoCorrect={false}/>
-									</View>
-									<View style={styles.bankaccountformInputField}>
-										<Text style={styles.bankaccountformInputHeader}>Enter Account Number</Text>
-										<TextInput style={styles.bankaccountformInputInput} onChangeText={(number) => setBankaccountform({
-											...bankAccountForm,
-											accountNumber: number.toString()
-										})} value={bankAccountForm.accountNumber} placeholder={bankAccountForm.placeholder} autoCorrect={false} keyboardType="numeric"/>
-									</View>
-									<View style={{ flexDirection: 'row' }}>
-										<View style={{ width: '50%' }}>
-											<View style={styles.bankaccountformInputField}>
-												<Text style={styles.bankaccountformInputHeader}>Enter Institution Number</Text>
-												<TextInput style={styles.bankaccountformInputInput} onChangeText={(number) => setBankaccountform({
-													...bankAccountForm,
-													institutionNumber: number.toString()
-												})} value={bankAccountForm.institutionNumber} autoCorrect={false} keyboardType="numeric"/>
-											</View>
-										</View>
-										<View style={{ width: '50%' }}>
-											<View style={styles.bankaccountformInputField}>
-												<Text style={styles.bankaccountformInputHeader}>Enter Transit Number</Text>
-												<TextInput style={styles.bankaccountformInputInput} onChangeText={(number) => setBankaccountform({
-													...bankAccountForm,
-													transitNumber: number.toString()
-												})} value={bankAccountForm.transitNumber} autoCorrect={false} keyboardType="numeric"/>
-											</View>
-										</View>
-									</View>
-
-									{bankAccountForm.errormsg ? <Text style={styles.errorMsg}>{bankAccountForm.errormsg}</Text> : null}
-									{bankAccountForm.loading ? <ActivityIndicator marginBottom={10} size="small"/> : null}
-
-									<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-										<TouchableOpacity style={[styles.bankaccountformSubmit, { opacity: bankAccountForm.loading ? 0.3 : 1 }]} disabled={bankAccountForm.loading} disabled={bankAccountForm.loading} onPress={() => {
-											if (bankAccountForm.type == 'add') {
-												addNewBankAccount()
-											} else {
-												updateTheBankAccount()
-											}
-										}}>
-											<Text style={styles.bankaccountformSubmitHeader}>{bankAccountForm.type == 'add' ? 'Add' : 'Save'} Bank Account</Text>
-										</TouchableOpacity>
-									</View>
-								</View>
-							</SafeAreaView>
-						</TouchableWithoutFeedback>
-					</Modal>
-				)}
         {deleteOwnerbox.show && (
           <Modal transparent={true}>
             <SafeAreaView style={styles.deleteOwnerBox}>
@@ -2542,19 +2065,6 @@ const styles = StyleSheet.create({
   accountInfoEditHeader: { fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
 
   accountformEdit: { flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
-
-	bankaccountHolders: { alignItems: 'center', marginHorizontal: 10, marginTop: 20 },
-	bankaccountHolderHeader: { fontFamily: 'appFont', fontSize: wsize(30), textAlign: 'center' },
-	bankaccountHolderAdd: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 3, padding: 5 },
-	bankaccountHolderAddHeader: { fontSize: wsize(5) },
-	bankaccount: { marginVertical: 30 },
-	bankaccountRow: { flexDirection: 'row', justifyContent: 'space-between' },
-	bankaccountHeader: { fontSize: wsize(5), fontWeight: 'bold', padding: 5 },
-	bankaccountNumberHolder: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 5, padding: 5, width: '70%' },
-	bankaccountNumberHeader: { fontSize: wsize(5), paddingVertical: 4, textAlign: 'center', width: '100%' },
-	bankaccountActions: { flexDirection: 'row', justifyContent: 'space-around' },
-	bankaccountAction: { borderRadius: 2, borderStyle: 'solid', borderWidth: 2, marginTop: 5, padding: 5, width: wsize(25) },
-  bankaccountActionHeader: { fontSize: wsize(4), textAlign: 'center' },
 	
 	editButton: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 30, padding: 5, width: wsize(80) },
 	editButtonHeader: { fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
@@ -2578,16 +2088,6 @@ const styles = StyleSheet.create({
   worker: { alignItems: 'center', height: wsize(25), margin: 5, width: wsize(25) },
   workerProfile: { borderRadius: wsize(20) / 2, height: wsize(20), overflow: 'hidden', width: wsize(20) },
   workerUsername: { fontSize: wsize(5), textAlign: 'center' },
-
-	// form
-	bankaccountform: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
-	bankaccountformContainer: { backgroundColor: 'white', height: '90%', paddingVertical: 10, width: '90%' },
-	bankaccountformHeader: { fontSize: wsize(6), fontWeight: 'bold', marginVertical: 20, textAlign: 'center' },
-	bankaccountformInputField: { marginBottom: 20, marginHorizontal: '10%', width: '80%' },
-	bankaccountformInputHeader: { fontSize: wsize(5), fontWeight: 'bold' },
-	bankaccountformInputInput: { borderRadius: 2, borderStyle: 'solid', borderWidth: 3, fontSize: wsize(6), padding: 5, width: '100%' },
-	bankaccountformSubmit: { alignItems: 'center', borderRadius: 2, borderStyle: 'solid', borderWidth: 1, margin: 5, padding: 5 },
-	bankaccountformSubmitHeader: { fontFamily: 'appFont', fontSize: wsize(6) },
 
   deleteOwnerBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
   deleteOwnerContainer: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '80%', justifyContent: 'space-between', paddingVertical: 20, width: '80%' },

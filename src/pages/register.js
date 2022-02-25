@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { SafeAreaView, ActivityIndicator, Platform, Dimensions, ScrollView, View, Text, TextInput, Image, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet } from 'react-native';
+import { SafeAreaView, Platform, Dimensions, ScrollView, View, Text, TextInput, Image, TouchableOpacity, TouchableWithoutFeedback, Modal, Keyboard, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import * as FileSystem from 'expo-file-system'
@@ -7,11 +7,14 @@ import { Camera } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator'
 import * as ImagePicker from 'expo-image-picker';
 import { CommonActions } from '@react-navigation/native';
-import { registerUser } from '../apis/owners'
+import { saveUserInfo } from '../apis/owners'
 import { ownerRegisterInfo, registerInfo } from '../../assets/info'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import Entypo from 'react-native-vector-icons/Entypo'
+
+// components
+import Loadingprogress from '../components/loadingprogress';
 
 const { height, width } = Dimensions.get('window')
 const wsize = p => {
@@ -20,55 +23,56 @@ const wsize = p => {
 const hsize = p => {
   return height * (p / 100)
 }
-const steps = ['nickname', 'password', 'profile']
+const steps = ['nickname', 'profile']
 
 export default function Register(props) {
-	const cellnumber = props.route.params.cellnumber
-
 	const [setupType, setSetuptype] = useState('nickname')
 	const [cameraPermission, setCamerapermission] = useState(null);
 	const [pickingPermission, setPickingpermission] = useState(null);
 	const [camComp, setCamcomp] = useState(null)
 	const [username, setUsername] = useState(ownerRegisterInfo.username)
-	const [passwordInfo, setPasswordinfo] = useState({ password: ownerRegisterInfo.password, confirmPassword: ownerRegisterInfo.password, step: 0 })
 	const [profile, setProfile] = useState({ uri: '', name: '' })
 
 	const [loading, setLoading] = useState(false)
 	const [errorMsg, setErrormsg] = useState('')
 
-	const register = () => {
-		const { password, confirmPassword } = passwordInfo
-		const data = { cellnumber, username, password, confirmPassword, profile, permission: cameraPermission || pickingPermission }
-
+	const register = async() => {
     setLoading(true)
 
-		registerUser(data)
-			.then((res) => {
-				if (res.status == 200) {
-					return res.data
-				}
-			})
-			.then((res) => {
-				if (res) {
-					const { id } = res
+    const id = await AsyncStorage.getItem("ownerid")
+    const data = { id, username, profile, permission: cameraPermission || pickingPermission }
 
-					AsyncStorage.setItem("ownerid", id.toString())
-					AsyncStorage.setItem("phase", "setup")
+    saveUserInfo(data)
+      .then((res) => {
+          if (res.status == 200) {
+            return res.data
+          }
+        })
+        .then((res) => {
+          if (res) {
+            const { msg } = res
 
-					props.navigation.navigate("locationsetup")
-				}
-			})
-			.catch((err) => {
-				if (err.response && err.response.status == 400) {
-					const { errormsg, status } = err.response.data
+            AsyncStorage.setItem("phase", "workinghours")
 
-					setErrormsg(errormsg)
-				} else {
-          alert("server error")
-				}
+            props.navigation.dispatch(
+              CommonActions.reset({
+                index: 0,
+                routes: [{ name: "workinghours" }]
+              })
+            )
+          }
+        })
+        .catch((err) => {
+          if (err.response && err.response.status == 400) {
+            const { errormsg, status } = err.response.data
 
-        setLoading(false)
-			})
+            setErrormsg(errormsg)
+          } else {
+            alert("server error")
+          }
+
+          setLoading(false)
+        })
 	}
 	const saveInfo = () => {
 		const index = steps.indexOf(setupType)
@@ -84,34 +88,16 @@ export default function Register(props) {
 
 				break
 			case 1:
-				if (passwordInfo.step == 0) {
-					if (!passwordInfo.password) {
-						msg = "Please provide a password"
-					}
-				} else {
-					if (!passwordInfo.confirmPassword) {
-						msg = "Please confirm your password"
-					}
-				}
-
-				break
-			case 2:
 				if (!profile.uri && Platform.OS == 'ios') {
 					msg = "Please provide a profile you like"
 				}
+
+        break
+      default:
 		}
 
 		if (msg == "") {
-			if (index == 1) {
-				if (passwordInfo.step == 0) {
-					setPasswordinfo({ ...passwordInfo, step: 1 })
-					nextStep = "password"
-				} else {
-					nextStep = index == 2 ? "done" : steps[index + 1]
-				}
-			} else {
-				nextStep = index == 2 ? "done" : steps[index + 1]
-			}
+			nextStep = index == 2 ? "done" : steps[index + 1]
 
 			if (nextStep == "profile") {
 				allowCamera()
@@ -119,6 +105,7 @@ export default function Register(props) {
 			}
 
 			setSetuptype(nextStep)
+      setErrormsg("")
 		} else {
 			setErrormsg(msg)
 		}
@@ -227,103 +214,79 @@ export default function Register(props) {
 	}
 
 	return (
-		<SafeAreaView style={style.register}>
+		<SafeAreaView style={styles.register}>
 			<TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
-				<View style={[style.box, { opacity: loading ? 0.5 : 1 }]}>
-					<View style={style.header}>
-						<Text style={style.boxHeader}>Setup</Text>
+				<View style={[styles.box, { opacity: loading.show ? 0.5 : 1 }]}>
+					<View style={styles.header}>
+						<Text style={styles.boxHeader}>Setup your stylist info</Text>
 					</View>
 
-					<View style={style.inputsBox}>
+					<View style={styles.inputsBox}>
 						{setupType == "nickname" && (
-							<View style={style.inputContainer}>
-								<Text style={style.inputHeader}>Enter your name:</Text>
-								<TextInput style={style.input} onChangeText={(username) => setUsername(username)} value={username} autoCorrect={false} autoCapitalize="none"/>
+							<View style={styles.inputContainer}>
+								<Text style={styles.inputHeader}>Enter your name:</Text>
+								<TextInput style={styles.input} onChangeText={(username) => setUsername(username)} value={username} autoCorrect={false} autoCapitalize="none"/>
 							</View>
 						)}
 
-						{setupType == "password" && (
-							passwordInfo.step == 0 ? 
-								<View style={style.inputContainer}>
-									<Text style={style.inputHeader}>Enter a password:</Text>
-									<TextInput style={style.input} secureTextEntry={true} onChangeText={(password) => setPasswordinfo({ ...passwordInfo, password })} value={passwordInfo.password} autoCorrect={false}/>
-								</View>
-								:
-								<View style={style.inputContainer}>
-									<Text style={style.inputHeader}>Confirm your password:</Text>
-									<TextInput style={style.input} secureTextEntry={true} onChangeText={(confirmPassword) => {
-										setPasswordinfo({ ...passwordInfo, confirmPassword })
-
-										if (confirmPassword.length == passwordInfo.password.length) {
-											Keyboard.dismiss()
-										}
-									}} value={passwordInfo.confirmPassword} autoCorrect={false}/>
-								</View>
-						)}
-
-						{(setupType == "profile" && (cameraPermission !== null || pickingPermission !== null)) && (
-							<View style={style.cameraContainer}>
-								<Text style={style.inputHeader}>Provide a photo of yourself</Text>
+            {(setupType == "profile" && (cameraPermission !== null || pickingPermission !== null)) && (
+							<View style={styles.cameraContainer}>
+								<Text style={styles.inputHeader}>Provide a photo of yourself</Text>
+                <Text style={styles.inputInfo}>clients will be able to find and book you easily</Text>
 
 								{profile.uri ? (
 									<>
-										<Image style={style.camera} source={{ uri: profile.uri }}/>
+										<Image style={styles.camera} source={{ uri: profile.uri }}/>
 
-										<TouchableOpacity style={style.cameraAction} onPress={() => setProfile({ uri: '', name: '' })}>
-											<Text style={style.cameraActionHeader}>Cancel</Text>
+										<TouchableOpacity style={styles.cameraAction} onPress={() => setProfile({ uri: '', name: '' })}>
+											<Text style={styles.cameraActionHeader}>Cancel</Text>
 										</TouchableOpacity>
 									</>
 								) : (
 									<>
 										<Camera 
-											style={style.camera} 
+											style={styles.camera} 
 											type={Camera.Constants.Type.front} ref={r => {setCamcomp(r)}}
 											ratio="1:1"
 										/>
 
-										<View style={style.cameraActions}>
-											<TouchableOpacity style={style.cameraAction} onPress={snapPhoto.bind(this)}>
-												<Text style={style.cameraActionHeader}>Take{'\n'}this photo</Text>
+										<View style={styles.cameraActions}>
+											<TouchableOpacity style={styles.cameraAction} onPress={snapPhoto.bind(this)}>
+												<Text style={styles.cameraActionHeader}>Take{'\n'}this photo</Text>
 											</TouchableOpacity>
-											<TouchableOpacity style={style.cameraAction} onPress={() => choosePhoto()}>
-												<Text style={style.cameraActionHeader}>Choose{'\n'}from phone</Text>
+											<TouchableOpacity style={styles.cameraAction} onPress={() => choosePhoto()}>
+												<Text style={styles.cameraActionHeader}>Choose{'\n'}from phone</Text>
 											</TouchableOpacity>
 										</View>
 									</>
-								)}	
+								)}
 							</View>
 						)}
-						
-						<Text style={style.errorMsg}>{errorMsg}</Text>
 
-						{loading ? <ActivityIndicator color="black" size="small"/> : null}
+            <Text style={styles.errorMsg}>{errorMsg}</Text>
 
-						<View style={style.actions}>
+						<View style={styles.actions}>
 							{setupType != 'nickname' && (
-								<TouchableOpacity style={[style.action, { opacity: loading ? 0.3 : 1 }]} onPress={() => {
+								<TouchableOpacity style={[styles.action, { opacity: loading.show ? 0.3 : 1 }]} onPress={() => {
 									let index = steps.indexOf(setupType)
-
-									if (index == 1) {
-										setPasswordinfo({ password: ownerRegisterInfo.password, confirmPassword: ownerRegisterInfo.password, step: 0 })
-									}
 									
 									index--
 
 									setSetuptype(steps[index])
 								}}>
-									<Text style={style.actionHeader}>Back</Text>
+									<Text style={styles.actionHeader}>Back</Text>
 								</TouchableOpacity>
 							)}
 
-							<TouchableOpacity style={[style.action, { opacity: loading ? 0.3 : 1 }]} disabled={loading} onPress={() => setupType == "profile" ? register() : saveInfo()}>
-								<Text style={style.actionHeader}>{setupType == "profile" ? "Done" : "Next"}</Text>
+							<TouchableOpacity style={[styles.action, { opacity: loading.show ? 0.3 : 1 }]} disabled={loading.show} onPress={() => setupType == "profile" ? register() : saveInfo()}>
+								<Text style={styles.actionHeader}>{setupType == "profile" ? "Done" : "Next"}</Text>
 							</TouchableOpacity>
 						</View>
 					</View>
 
-					<View style={style.bottomNavs}>
-						<View style={style.bottomNavsRow}>
-							<TouchableOpacity style={style.bottomNav} onPress={() => {
+					<View style={styles.bottomNavs}>
+						<View style={styles.bottomNavsRow}>
+							<TouchableOpacity style={styles.bottomNav} onPress={() => {
 								AsyncStorage.clear()
 
 								props.navigation.dispatch(
@@ -333,17 +296,23 @@ export default function Register(props) {
 									})
 								);
 							}}>
-								<Text style={style.bottomNavHeader}>Log-Out</Text>
+								<Text style={styles.bottomNavHeader}>Log-Out</Text>
 							</TouchableOpacity>
 						</View>
 					</View>
 				</View>
 			</TouchableWithoutFeedback>
+
+      {loading.show && (
+        <Modal transparent={true}>
+          <Loadingprogress/>
+        </Modal>
+      )}
 		</SafeAreaView>
 	);
 }
 
-const style = StyleSheet.create({
+const styles = StyleSheet.create({
 	register: { backgroundColor: 'white', height: '100%', width: '100%' },
 	box: { alignItems: 'center', backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 	header: { flexDirection: 'column', height: '10%', justifyContent: 'space-around' },
@@ -352,6 +321,7 @@ const style = StyleSheet.create({
 	inputsBox: { alignItems: 'center', height: '80%', width: '100%' },
 	inputContainer: { width: '80%' },
 	inputHeader: { fontFamily: 'appFont', fontSize: wsize(5) },
+  inputInfo: { fontSize: wsize(5), margin: 10, textAlign: 'center' },
 	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), padding: 5, width: '100%' },
 
 	cameraContainer: { alignItems: 'center', width: '100%' },
@@ -369,5 +339,6 @@ const style = StyleSheet.create({
 	bottomNav: { flexDirection: 'row', justifyContent: 'space-around', margin: 5 },
 	bottomNavHeader: { fontSize: wsize(4), fontWeight: 'bold' },
 
+  column: { flexDirection: 'column', justifyContent: 'space-around' },
   errorMsg: { color: 'darkred', fontSize: wsize(5), textAlign: 'center' },
 })
