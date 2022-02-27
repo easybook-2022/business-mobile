@@ -18,17 +18,16 @@ export default function Auth({ navigation }) {
 
 				<Text style={styles.boxHeader}>Welcome to EasyGO (Business)</Text>
 
-				<View style={styles.boxNav}>
-					<Text style={styles.boxActionsHeader}>Do you have an account ?</Text>
-					<View style={styles.boxActions}>
-						<TouchableOpacity style={styles.boxAction} onPress={() => navigation.navigate("verifyowner")}>
-							<Text style={styles.boxActionHeader}>No</Text>
-						</TouchableOpacity>
-						<TouchableOpacity style={styles.boxAction} onPress={() => navigation.navigate("login")}>
-							<Text style={styles.boxActionHeader}>Yes</Text>
-						</TouchableOpacity>
-					</View>
-				</View>
+        <View style={styles.boxOptions}>
+          <View style={styles.boxOption}>
+            <View style={styles.column}><Text style={styles.boxOptionHeader}>Are you new ?</Text></View>
+            <TouchableOpacity style={styles.boxOptionTouch} onPress={() => navigation.navigate("verifyowner")}><Text>Click to{'\n'}Register</Text></TouchableOpacity>
+          </View>
+          <View style={styles.boxOption}>
+            <View style={styles.column}><Text style={styles.boxOptionHeader}>Already registered?</Text></View>
+            <TouchableOpacity style={styles.boxOptionTouch} onPress={() => navigation.navigate("login")}><Text>Click to{'\n'}Login</Text></TouchableOpacity>
+          </View>
+        </View>
       </View>
 		</SafeAreaView>
 	)
@@ -39,9 +38,12 @@ const styles = StyleSheet.create({
 	box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', paddingHorizontal: 10, width: '100%' },
   icon: { height: width * 0.5, width: width * 0.5 },
 	boxHeader: { fontSize: wsize(7), fontWeight: 'bold', textAlign: 'center' },
-	boxNav: { alignItems: 'center' },
-	boxActionsHeader: { fontSize: wsize(5), fontWeight: 'bold'  },
-	boxActions: { flexDirection: 'row', justifyContent: 'space-around' },
-	boxAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 10, width: wsize(30) },
-	boxActionHeader: { fontSize: wsize(5) }
+	
+  boxOptions: { alignItems: 'center' },
+  boxOption: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 20 },
+	boxOptionHeader: { fontSize: wsize(5), fontWeight: 'bold'  },
+	boxOptionTouch: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 10 },
+	boxOptionTouchHeader: { fontSize: wsize(5) },
+
+  column: { flexDirection: 'column', justifyContent: 'space-around' },
 })

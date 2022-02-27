@@ -1,10 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect } from 'react'
 import { SafeAreaView, ActivityIndicator, Platform, Dimensions, ScrollView, View, FlatList, Text, Image, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { socket, logo_url } from '../../assets/info'
 import { seeUserOrders } from '../apis/schedules'
-import { orderReady, orderDone } from '../apis/carts'
+import { orderDone } from '../apis/carts'
+
+import Loadingprogress from '../components/loadingprogress'
 
 const { height, width } = Dimensions.get('window')
 const wsize = p => {
@@ -23,8 +25,6 @@ export default function Cartorders(props) {
 	const [loading, setLoading] = useState(false)
 	const [showNoorders, setShownoorders] = useState(false)
 
-	const isMounted = useRef(null)
-	
 	const getTheOrders = async() => {
 		const ownerid = await AsyncStorage.getItem("ownerid")
 		const locationid = await AsyncStorage.getItem("locationid")
@@ -37,7 +37,7 @@ export default function Cartorders(props) {
 				}
 			})
 			.then((res) => {
-				if (res && isMounted.current == true) {
+				if (res) {
 					setOwnerid(ownerid)
 					setOrders(res.orders)
 					setReady(res.ready)
@@ -48,39 +48,6 @@ export default function Cartorders(props) {
 					
 				} else {
 					alert("server error")
-				}
-			})
-	}
-	const orderIsReady = async() => {
-		const locationid = await AsyncStorage.getItem("locationid")
-		let data = { userid, locationid, ordernumber, type: "orderReady", receiver: ["user" + userid] }
-
-		orderReady(data)
-			.then((res) => {
-				if (res.status == 200) {
-					return res.data
-				}
-			})
-			.then((res) => {
-				if (res) {
-					socket.emit("socket/orderReady", data, () => setReady(true))
-				}
-			})
-			.catch((err) => {
-				if (err.response && err.response.status == 400) {
-					if (err.response.data.status) {
-						const { errormsg, status } = err.response.data
-
-						switch (status) {
-							case "nonexist":
-								setShownoorders(true)
-
-								break
-							default:
-						}
-					}
-				} else {
-					alert("an error has occurred in server")
 				}
 			})
 	}
@@ -130,11 +97,7 @@ export default function Cartorders(props) {
   }
 
 	useEffect(() => {
-		isMounted.current = true
-
 		getTheOrders()
-
-		return () => isMounted.current = false
 	}, [])
 
 	return (
@@ -196,19 +159,9 @@ export default function Cartorders(props) {
 				/>
 
 				<View style={{ alignItems: 'center' }}>
-					{loading && <ActivityIndicator size="small"/>}
-					{!ready ?
-						<>
-							<Text style={styles.readyHeader}>Order is ready?</Text>
-							<TouchableOpacity style={styles.alert} disabled={loading} onPress={() => orderIsReady()}>
-								<Text style={styles.alertHeader}>Alert customer(s)</Text>
-							</TouchableOpacity>
-						</>
-            :
-            <TouchableOpacity style={styles.alert} disabled={loading} onPress={() => orderIsDone()}>
-              <Text style={styles.alertHeader}>Done</Text>
-            </TouchableOpacity>
-          }
+					<TouchableOpacity style={styles.alert} disabled={loading} onPress={() => orderIsDone()}>
+            <Text style={styles.alertHeader}>Done</Text>
+          </TouchableOpacity>
 				</View>
 			</View>
 
@@ -234,6 +187,8 @@ export default function Cartorders(props) {
 					</SafeAreaView>
 				</Modal>
 			)}
+
+      {loading && <Loadingprogress/>}
 		</SafeAreaView>
 	)
 }

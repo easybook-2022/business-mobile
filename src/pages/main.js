@@ -12,6 +12,7 @@ import { fetchNumAppointments, fetchNumCartOrderers, getLocationProfile, changeL
 import { getMenus, removeMenu, addNewMenu } from '../apis/menus'
 import { cancelSchedule, doneService, getAppointments, getCartOrderers } from '../apis/schedules'
 import { removeProduct } from '../apis/products'
+import { orderDone } from '../apis/carts'
 
 import FontAwesome from 'react-native-vector-icons/FontAwesome'
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5'
@@ -335,6 +336,38 @@ export default function Main(props) {
 				})
 		}
 	}
+  const orderIsDone = async(adder, ordernumber) => {
+    const newCartorderers = [...cartOrderers]
+    const locationid = await AsyncStorage.getItem("locationid")
+    let data = { userid: adder, ordernumber, locationid, type: "orderDone", receiver: ["user" + adder] }
+
+    orderDone(data)
+      .then((res) => {
+        if (res.status == 200) {
+          return res.data
+        }
+      })
+      .then((res) => {
+        if (res) {
+          socket.emit("socket/orderDone", data, () => {
+            setCartorderers(newCartorderers.filter(item => {
+              if (item.orderNumber && item.orderNumber != ordernumber) {
+                return item
+              }
+            }))
+          })
+        }
+      })
+      .catch((err) => {
+        if (err.response && err.response.status == 400) {
+          if (err.response.data.status) {
+            const { errormsg, status } = err.response.data
+          }
+        } else {
+          alert("server error")
+        }
+      })
+  }
 
   const doneTheService = (index, id) => {
     doneService(id)
@@ -593,9 +626,6 @@ export default function Main(props) {
                       </View>
                       :
     									<View key={item.key} style={styles.cartorderer}>
-    										<View style={styles.cartordererImageHolder}>
-    											<Image style={styles.cartordererImage} source={{ uri: logo_url + item.profile }}/>
-    										</View>
     										<View style={styles.cartordererInfo}>
     											<Text style={styles.cartordererUsername}>Customer: {item.username}</Text>
     											<Text style={styles.cartordererOrderNumber}>Order #{item.orderNumber}</Text>
@@ -609,8 +639,10 @@ export default function Main(props) {
                             }}>
                               <Text style={styles.cartordererActionHeader}>See Order(s) ({item.numOrders})</Text>
                             </TouchableOpacity>
+                            <TouchableOpacity style={styles.cartordererAction} onPress={() => orderIsDone(item.adder, item.orderNumber)}>
+                              <Text style={styles.cartordererActionHeader}>Order is done</Text>
+                            </TouchableOpacity>
                           </View>
-      											
     										</View>
     									</View>
   								}
@@ -810,14 +842,12 @@ const styles = StyleSheet.create({
 	scheduleActionHeader: { fontSize: wsize(4), textAlign: 'center' },
 	scheduleNumOrders: { fontSize: wsize(4), fontWeight: 'bold', padding: 8 },
 
-	cartorderer: { backgroundColor: 'white', borderRadius: 5, flexDirection: 'row', justifyContent: 'space-between', margin: 10, padding: 5 },
-	cartordererImageHolder: { borderRadius: wsize(20) / 2, height: wsize(20), overflow: 'hidden', width: wsize(20) },
-	cartordererImage: { height: wsize(20), width: wsize(20) },
-	cartordererInfo: { alignItems: 'center', width: wsize(70) },
+	cartorderer: { backgroundColor: 'white', borderRadius: 5, flexDirection: 'row', justifyContent: 'space-around', margin: 10, padding: 5, width: wsize(100) - 20 },
+	cartordererInfo: { alignItems: 'center' },
 	cartordererUsername: { fontSize: wsize(5), fontWeight: 'bold', marginBottom: 10 },
-	cartordererOrderNumber: { fontSize: wsize(5), paddingVertical: 5 },
+	cartordererOrderNumber: { fontSize: wsize(7), fontWeight: 'bold', paddingVertical: 5 },
   cartordererActions: { flexDirection: 'row', justifyContent: 'space-around' },
-	cartordererAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: wsize(30) },
+	cartordererAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: wsize(30) },
 	cartordererActionHeader: { fontSize: wsize(4), textAlign: 'center' },
 
 	bodyResult: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around' },

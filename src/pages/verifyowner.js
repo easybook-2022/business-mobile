@@ -88,7 +88,7 @@ export default function Verifyowner({ navigation }) {
 							{!verifyCode ?
 								<View style={{ alignItems: 'center' }}>
 									<View style={styles.inputContainer}>
-										<Text style={styles.inputHeader}>Enter a cell number:</Text>
+										<Text style={styles.inputHeader}>Enter your cell number:</Text>
 										<TextInput style={styles.input} onKeyPress={(e) => {
 											let newValue = e.nativeEvent.key
 
@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
 	
 	inputsBox: { flexDirection: 'column', height: height / 2, justifyContent: 'space-around', width: '100%' },
 	inputContainer: { marginBottom: 30, width: '80%' },
-	inputHeader: { fontFamily: 'appFont', fontSize: wsize(7) },
+	inputHeader: { fontFamily: 'appFont', fontSize: wsize(6) },
 	input: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(7), padding: 5, width: '100%' },
 	errorMsg: { color: 'darkred', fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
 	
