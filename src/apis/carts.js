@@ -7,3 +7,10 @@ export const orderDone = data => {
 		data
 	)
 }
+
+export const setWaitTime = data => {
+  return axios.post(
+    `${url}/carts/set_wait_time`,
+    data
+  )
+}

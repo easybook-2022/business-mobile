@@ -12,7 +12,6 @@ import { fetchNumAppointments, fetchNumCartOrderers, getLocationProfile, changeL
 import { getMenus, removeMenu, addNewMenu } from '../apis/menus'
 import { cancelSchedule, doneService, getAppointments, getCartOrderers } from '../apis/schedules'
 import { removeProduct } from '../apis/products'
-import { orderDone } from '../apis/carts'
 
 import FontAwesome from 'react-native-vector-icons/FontAwesome'
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5'
@@ -336,38 +335,6 @@ export default function Main(props) {
 				})
 		}
 	}
-  const orderIsDone = async(adder, ordernumber) => {
-    const newCartorderers = [...cartOrderers]
-    const locationid = await AsyncStorage.getItem("locationid")
-    let data = { userid: adder, ordernumber, locationid, type: "orderDone", receiver: ["user" + adder] }
-
-    orderDone(data)
-      .then((res) => {
-        if (res.status == 200) {
-          return res.data
-        }
-      })
-      .then((res) => {
-        if (res) {
-          socket.emit("socket/orderDone", data, () => {
-            setCartorderers(newCartorderers.filter(item => {
-              if (item.orderNumber && item.orderNumber != ordernumber) {
-                return item
-              }
-            }))
-          })
-        }
-      })
-      .catch((err) => {
-        if (err.response && err.response.status == 400) {
-          if (err.response.data.status) {
-            const { errormsg, status } = err.response.data
-          }
-        } else {
-          alert("server error")
-        }
-      })
-  }
 
   const doneTheService = (index, id) => {
     doneService(id)
@@ -638,9 +605,6 @@ export default function Main(props) {
                               }})
                             }}>
                               <Text style={styles.cartordererActionHeader}>See Order(s) ({item.numOrders})</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity style={styles.cartordererAction} onPress={() => orderIsDone(item.adder, item.orderNumber)}>
-                              <Text style={styles.cartordererActionHeader}>Order is done</Text>
                             </TouchableOpacity>
                           </View>
     										</View>

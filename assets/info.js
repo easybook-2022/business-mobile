@@ -1,7 +1,7 @@
 import io from 'socket.io-client'
 
-const local_url = false
-const test_input = false
+const local_url = true
+const test_input = true
 
 const testStores = [
   { id: 0, storeName: "Hair salon", storeType: "hair", phonenumber: "(900) 000-0000", addressOne: "642 Gerrard St E", addressTwo: "", city: "Toronto", province: "ON", postalcode: "M4M1Y3", longitude: -79.3505832, latitude: 43.6660751 },
@@ -32,12 +32,12 @@ const realOwners = [
 ]
 const emptyOwner = { username: "", cellnumber: "", password: "" }
 
-const useInput = false
+const useInput = true
 
 const login = test_input ? testStores[0] : useInput ? realStores[0] : emptyStore
 const ownerLogin = test_input ? testOwners[0] : useInput ? realOwners[0] : emptyOwner
-const register = test_input ? testStores[0] : useInput ? realStores[0] : emptyStore
-const ownerRegister = test_input ? testOwners[0] : useInput ? realOwners[0] : emptyOwner
+const register = test_input ? testStores[1] : useInput ? realStores[0] : emptyStore
+const ownerRegister = test_input ? testOwners[1] : useInput ? realOwners[0] : emptyOwner
 const wifi_api_url = "http://192.168.0.172:5001/flask"
 const wifi_socket_url = "http://192.168.0.172:5002"
 const server_api_url = "https://www.easygo.tk/flask"

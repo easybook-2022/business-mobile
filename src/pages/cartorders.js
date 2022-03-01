@@ -1,10 +1,15 @@
 import React, { useState, useEffect } from 'react'
-import { SafeAreaView, ActivityIndicator, Platform, Dimensions, ScrollView, View, FlatList, Text, Image, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import { 
+  SafeAreaView, ActivityIndicator, Platform, Dimensions, 
+  ScrollView, View, FlatList, Text, TextInput, Image, TouchableOpacity, StyleSheet, Modal 
+} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { socket, logo_url } from '../../assets/info'
 import { seeUserOrders } from '../apis/schedules'
-import { orderDone } from '../apis/carts'
+import { orderDone, setWaitTime } from '../apis/carts'
+
+import AntDesign from 'react-native-vector-icons/AntDesign'
 
 import Loadingprogress from '../components/loadingprogress'
 
@@ -21,9 +26,11 @@ export default function Cartorders(props) {
 
 	const [ownerId, setOwnerid] = useState(null)
 	const [orders, setOrders] = useState([])
+  const [waitTime, setWaittime] = useState('')
 	const [ready, setReady] = useState(false)
 	const [loading, setLoading] = useState(false)
 	const [showNoorders, setShownoorders] = useState(false)
+  const [showSetwaittime, setShowsetwaittime] = useState({ show: false, waitTime: '' })
 
 	const getTheOrders = async() => {
 		const ownerid = await AsyncStorage.getItem("ownerid")
@@ -41,6 +48,7 @@ export default function Cartorders(props) {
 					setOwnerid(ownerid)
 					setOrders(res.orders)
 					setReady(res.ready)
+          setWaittime(res.waitTime)
 				}
 			})
 			.catch((err) => {
@@ -92,6 +100,25 @@ export default function Cartorders(props) {
           }
         } else {
           alert("server error")
+        }
+      })
+  }
+  const setTheWaitTime = () => {
+    const { waitTime } = showSetwaittime
+    let data = { type: "setWaitTime", ordernumber, waitTime }
+
+    setWaitTime(data)
+      .then((res) => {
+        if (res.status == 200) {
+          return res.data
+        }
+      })
+      .then((res) => {
+        if (res) {
+          data = { ...data, receiver: res.receiver }
+          socket.emit("socket/setWaitTime", data, () => {
+            setShowsetwaittime({ ...showSetwaittime, show: false, waitTime: '' })
+          })
         }
       })
   }
@@ -159,9 +186,16 @@ export default function Cartorders(props) {
 				/>
 
 				<View style={{ alignItems: 'center' }}>
-					<TouchableOpacity style={styles.alert} disabled={loading} onPress={() => orderIsDone()}>
-            <Text style={styles.alertHeader}>Done</Text>
-          </TouchableOpacity>
+          <View style={styles.row}>
+    				<View style={styles.actions}>
+              <TouchableOpacity style={styles.action} disabled={loading} onPress={() => setShowsetwaittime({ ...showSetwaittime, show: true, waitTime: '' })}>
+                <Text style={styles.actionHeader}>Set wait time</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.action} disabled={loading} onPress={() => orderIsDone()}>
+                <Text style={styles.actionHeader}>Done</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
 				</View>
 			</View>
 
@@ -188,6 +222,52 @@ export default function Cartorders(props) {
 				</Modal>
 			)}
 
+      {showSetwaittime.show && (
+        <Modal transparent={true}>
+          <SafeAreaView style={styles.waitTimeBox}>
+            <View style={styles.waitTimeContainer}>
+              <AntDesign name="closecircleo" size={wsize(7)} onPress={() => setShowsetwaittime({ ...showSetwaittime, show: false })}/>
+
+              <Text style={styles.waitTimeHeader}>How long will be the wait ?</Text>
+
+              <View style={styles.row}>
+                <TextInput 
+                  style={styles.waitTimeInput} 
+                  onChangeText={(waitTime) => setShowsetwaittime({ ...showSetwaittime, waitTime })}
+                  keyboardType="numeric"
+                  value={showSetwaittime.waitTime}
+                />
+                <View style={styles.column}><Text style={{ fontSize: 15, fontWeight: 'bold', marginLeft: 10 }}>mins</Text></View>
+              </View>
+
+              <View style={styles.waitTimeOptions}>
+                <View style={styles.row}>
+                  {[...Array(3)].map((_, index) => (
+                    <TouchableOpacity key={index.toString()} style={styles.waitTimeOption} onPress={() => setShowsetwaittime({ ...showSetwaittime, waitTime: ((index + 1) * 5).toString() })}>
+                      <Text style={styles.waitTimeOptionHeader}>{(index + 1) * 5} mins</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                <View style={styles.row}>
+                  {[...Array(3)].map((_, index) => (
+                    <TouchableOpacity key={index.toString()} style={styles.waitTimeOption} onPress={() => setShowsetwaittime({ ...showSetwaittime, waitTime: ((index + 4) * 5).toString() })}>
+                      <Text style={styles.waitTimeOptionHeader}>{(index + 4) * 5} mins</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              <View style={styles.waitTimeActions}>
+                <TouchableOpacity style={styles.waitTimeAction} onPress={() => setTheWaitTime()}>
+                  <Text style={styles.waitTimeActionHeader}>Done</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </SafeAreaView>
+        </Modal>
+      )}
+
       {loading && <Loadingprogress/>}
 		</SafeAreaView>
 	)
@@ -212,8 +292,9 @@ const styles = StyleSheet.create({
 	orderersNumHeader: { color: 'white', fontWeight: 'bold' },
 
   readyHeader: { fontSize: wsize(4) },
-	alert: { borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, marginVertical: 10, padding: 10, width: wsize(30) },
-	alertHeader: { fontSize: wsize(4), textAlign: 'center' },
+  actions: { flexDirection: 'row', justifyContent: 'space-around' },
+	action: { borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, margin: 10, padding: 10, width: wsize(30) },
+	actionHeader: { fontSize: wsize(4), textAlign: 'center' },
 
 	requiredBoxContainer: { backgroundColor: 'rgba(0, 0, 0, 0.7)' },
 	requiredBox: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
@@ -221,5 +302,19 @@ const styles = StyleSheet.create({
 	requiredHeader: { fontFamily: 'appFont', fontSize: wsize(5), fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
 	requiredActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	requiredAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: wsize(30) },
-	requiredActionHeader: { fontSize: wsize(4), textAlign: 'center' }
+	requiredActionHeader: { fontSize: wsize(4), textAlign: 'center' },
+
+  waitTimeBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
+  waitTimeContainer: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '80%', justifyContent: 'space-between', paddingVertical: 10, width: '80%' },
+  waitTimeHeader: { fontSize: 20, fontWeight: 'bold', paddingVertical: 10, textAlign: 'center' },
+  waitTimeInput: { borderRadius: 2, borderStyle: 'solid', borderWidth: 2, fontSize: 20, padding: 2, textAlign: 'center', width: '30%' },
+  waitTimeOptions: {  },
+  waitTimeOption: { borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 10},
+  waitTimeOptionHeader: { fontSize: 15, textAlign: 'center' },
+  waitTimeActions: { flexDirection: 'row' },
+  waitTimeAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: wsize(30) },
+  waitTimeActionHeader: { fontSize: wsize(5), textAlign: 'center' },
+
+  column: { flexDirection: 'column', justifyContent: 'space-around' },
+  row: { flexDirection: 'row', justifyContent: 'space-around' },
 })
