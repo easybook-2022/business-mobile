@@ -36,8 +36,8 @@ const useInput = true
 
 const login = test_input ? testStores[0] : useInput ? realStores[0] : emptyStore
 const ownerLogin = test_input ? testOwners[0] : useInput ? realOwners[0] : emptyOwner
-const register = test_input ? testStores[1] : useInput ? realStores[0] : emptyStore
-const ownerRegister = test_input ? testOwners[1] : useInput ? realOwners[0] : emptyOwner
+const register = test_input ? testStores[0] : useInput ? realStores[0] : emptyStore
+const ownerRegister = test_input ? testOwners[0] : useInput ? realOwners[0] : emptyOwner
 const wifi_api_url = "http://192.168.0.172:5001/flask"
 const wifi_socket_url = "http://192.168.0.172:5002"
 const server_api_url = "https://www.easygo.tk/flask"

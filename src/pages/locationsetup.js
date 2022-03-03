@@ -60,6 +60,8 @@ export default function Locationsetup({ navigation }) {
 	const [errorMsg, setErrormsg] = useState('')
 
 	const setupYourLocation = async() => {
+    setLoading(true)
+
 		const ownerid = await AsyncStorage.getItem("ownerid")
 		const { details } = await NetInfo.fetch()
 		const hours = {}
@@ -189,7 +191,7 @@ export default function Locationsetup({ navigation }) {
 
               setErrormsg(errormsg)
             } else {
-              alert("server error")
+              alert("setup location")
             }
 
             setLoading(false)
@@ -199,6 +201,8 @@ export default function Locationsetup({ navigation }) {
 				setErrormsg("Please choose an option for all the days")
 			}
 		} else {
+      setLoading(false)
+
 			if (!storeName) {
 				setErrormsg("Please enter your location name")
 
@@ -330,6 +334,8 @@ export default function Locationsetup({ navigation }) {
 	}
 
 	const snapPhoto = async() => {
+    setLoading(true)
+
 		let letters = [
 			"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", 
 			"n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"
@@ -367,10 +373,13 @@ export default function Locationsetup({ navigation }) {
 					name: `${char}.jpg`
 				})
 				setErrormsg('')
+        setLoading(false)
 			})
 		}
 	}
 	const choosePhoto = async() => {
+    setLoading(true)
+
 		let letters = [
 			"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", 
 			"n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"
@@ -403,6 +412,7 @@ export default function Locationsetup({ navigation }) {
 					name: `${char}.jpg`
 				})
 				setErrormsg('')
+        setLoading(false)
 			})
 		}
 	}
@@ -484,7 +494,9 @@ export default function Locationsetup({ navigation }) {
 
 				if (value < 10) {
 					value = "0" + value
-				}
+				} else {
+          value = value.toString()
+        }
 
 				break
 			case "minute":
@@ -499,7 +511,9 @@ export default function Locationsetup({ navigation }) {
 
 				if (value < 10) {
 					value = "0" + value
-				}
+				} else {
+          value = value.toString()
+        }
 
 				break
 			case "period":
@@ -826,10 +840,10 @@ export default function Locationsetup({ navigation }) {
 										/>
 
 										<View style={styles.cameraActions}>
-											<TouchableOpacity style={styles.cameraAction} onPress={snapPhoto.bind(this)}>
+											<TouchableOpacity style={[styles.cameraAction, { opacity: loading ? 0.3 : 1 }]} disabled={loading} onPress={snapPhoto.bind(this)}>
 												<Text style={styles.cameraActionHeader}>Take{'\n'}this photo</Text>
 											</TouchableOpacity>
-											<TouchableOpacity style={styles.cameraAction} onPress={() => choosePhoto()}>
+											<TouchableOpacity style={[styles.cameraAction, { opacity: loading ? 0.3 : 1 }]} disabled={loading} onPress={() => choosePhoto()}>
 												<Text style={styles.cameraActionHeader}>Choose{'\n'}from phone</Text>
 											</TouchableOpacity>
 										</View>
@@ -876,6 +890,7 @@ export default function Locationsetup({ navigation }) {
 															<Text style={styles.dayHeader}>Set the opening time for {info.header}</Text>
 															
 															<Text style={[styles.dayHeader, { marginTop: 30 }]}>Use the arrow to set the time</Text>
+                              <Text style={styles.dayHeader}>(hours and minutes can be entered)</Text>
 
 															<View style={styles.timeSelectionContainer}>
 																<View style={styles.timeSelection}>
@@ -883,7 +898,13 @@ export default function Locationsetup({ navigation }) {
 																		<TouchableOpacity onPress={() => updateTime(index, "hour", "up", true)}>
 																			<AntDesign name="up" size={wsize(7)}/>
 																		</TouchableOpacity>
-																		<Text style={styles.selectionHeader}>{info.opentime.hour}</Text>
+                                    <TextInput style={styles.selectionHeader} onChangeText={(hour) => {
+                                      const newDays = [...days]
+
+                                      newDays[index].opentime["hour"] = hour.toString()
+
+                                      setDays(newDays)
+                                    }} keyboardType="numeric" maxLength="2" value={info.opentime.hour}/>
 																		<TouchableOpacity onPress={() => updateTime(index, "hour", "down", true)}>
 																			<AntDesign name="down" size={wsize(7)}/>
 																		</TouchableOpacity>
@@ -895,7 +916,13 @@ export default function Locationsetup({ navigation }) {
 																		<TouchableOpacity onPress={() => updateTime(index, "minute", "up", true)}>
 																			<AntDesign name="up" size={wsize(7)}/>
 																		</TouchableOpacity>
-																		<Text style={styles.selectionHeader}>{info.opentime.minute}</Text>
+                                    <TextInput style={styles.selectionHeader} onChangeText={(minute) => {
+                                      const newDays = [...days]
+
+                                      newDays[index].opentime["minute"] = minute.toString()
+
+                                      setDays(newDays)
+                                    }} keyboardType="numeric" maxLength="2" value={info.opentime.minute}/>
 																		<TouchableOpacity onPress={() => updateTime(index, "minute", "down", true)}>
 																			<AntDesign name="down" size={wsize(7)}/>
 																		</TouchableOpacity>
@@ -904,7 +931,7 @@ export default function Locationsetup({ navigation }) {
 																		<TouchableOpacity onPress={() => updateTime(index, "period", "up", true)}>
 																			<AntDesign name="up" size={wsize(7)}/>
 																		</TouchableOpacity>
-																		<Text style={styles.selectionHeader}>{info.opentime.period}</Text>
+                                    <Text style={styles.selectionHeader}>{info.opentime.period}</Text>
 																		<TouchableOpacity onPress={() => updateTime(index, "period", "down", true)}>
 																			<AntDesign name="down" size={wsize(7)}/>
 																		</TouchableOpacity>
@@ -918,7 +945,13 @@ export default function Locationsetup({ navigation }) {
 																		<TouchableOpacity onPress={() => updateTime(index, "hour", "up", false)}>
 																			<AntDesign name="up" size={wsize(7)}/>
 																		</TouchableOpacity>
-																		<Text style={styles.selectionHeader}>{info.closetime.hour}</Text>
+                                    <TextInput style={styles.selectionHeader} onChangeText={(hour) => {
+                                      const newDays = [...days]
+
+                                      newDays[index].closetime["hour"] = hour.toString()
+
+                                      setDays(newDays)
+                                    }} keyboardType="numeric" maxLength="2" value={info.closetime.hour}/>
 																		<TouchableOpacity onPress={() => updateTime(index, "hour", "down", false)}>
 																			<AntDesign name="down" size={wsize(7)}/>
 																		</TouchableOpacity>
@@ -930,7 +963,14 @@ export default function Locationsetup({ navigation }) {
 																		<TouchableOpacity onPress={() => updateTime(index, "minute", "up", false)}>
 																			<AntDesign name="up" size={wsize(7)}/>
 																		</TouchableOpacity>
-																		<Text style={styles.selectionHeader}>{info.closetime.minute}</Text>
+                                    <TextInput style={styles.selectionHeader} onChangeText={(minute) => {
+                                      const newDays = [...days]
+
+                                      newDays[index].closetime["minute"] = minute.toString()
+
+                                      setDays(newDays)
+                                    }} keyboardType="numeric" maxLength="2" value={info.closetime.minute}/>
+
 																		<TouchableOpacity onPress={() => updateTime(index, "minute", "down", false)}>
 																			<AntDesign name="down" size={wsize(7)}/>
 																		</TouchableOpacity>
@@ -939,7 +979,7 @@ export default function Locationsetup({ navigation }) {
 																		<TouchableOpacity onPress={() => updateTime(index, "period", "up", false)}>
 																			<AntDesign name="up" size={wsize(7)}/>
 																		</TouchableOpacity>
-																		<Text style={styles.selectionHeader}>{info.closetime.period}</Text>
+                                    <Text style={styles.selectionHeader}>{info.closetime.period}</Text>
 																		<TouchableOpacity onPress={() => updateTime(index, "period", "down", false)}>
 																			<AntDesign name="down" size={wsize(7)}/>
 																		</TouchableOpacity>

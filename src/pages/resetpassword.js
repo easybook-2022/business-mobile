@@ -55,7 +55,7 @@ export default function Resetpassword(props) {
 
 					setErrormsg(errormsg)
 				} else {
-					setErrormsg("an error has occurred in server")
+          alert("reset password")
 				}
 			})
 	}

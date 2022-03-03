@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState } from 'react'
 import { SafeAreaView, ActivityIndicator, Dimensions, ScrollView, View, Text, TextInput, Image, Keyboard, TouchableOpacity, TouchableWithoutFeedback, StyleSheet } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
@@ -41,8 +41,6 @@ export default function Addproduct(props) {
 	const [loading, setLoading] = useState(false)
 
 	const [errorMsg, setErrormsg] = useState('')
-
-	const isMounted = useRef(null)
 
 	const addTheNewProduct = async() => {
 		const locationid = await AsyncStorage.getItem("locationid")
@@ -146,7 +144,7 @@ export default function Addproduct(props) {
 						setErrormsg(errormsg)
 						setLoading(false)
 					} else {
-						setErrormsg("an error has occurred in server")
+            alert("add product")
 					}
 				})
 		} else {
@@ -269,7 +267,7 @@ export default function Addproduct(props) {
 						setErrormsg(errormsg)
 						setLoading(false)
 					} else {
-						setErrormsg("an error has occurred in server")
+						alert("update product")
 					}
 				})
 		} else {
@@ -430,7 +428,7 @@ export default function Addproduct(props) {
 				}
 			})
 			.then((res) => {
-				if (res && isMounted.current == true) {
+				if (res) {
 					const { image, name, options, others, sizes, price } = res.productInfo
 					const newOptions = [], newOthers = [], newSizes = []
 
@@ -473,17 +471,13 @@ export default function Addproduct(props) {
 				if (err.response && err.response.status == 400) {
 					
 				} else {
-					setErrormsg("an error has occurred in server")
+          alert("get product info")
 				}
 			})
 	}
 
 	useEffect(() => {
-		isMounted.current = true
-
 		if (productid) getTheProductInfo()
-
-		return () => isMounted.current = false
 	}, [])
 
 	return (

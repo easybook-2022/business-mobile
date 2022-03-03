@@ -55,7 +55,7 @@ export default function Cartorders(props) {
 				if (err.response && err.response.status == 400) {
 					
 				} else {
-					alert("server error")
+					alert("get orders")
 				}
 			})
 	}
@@ -99,7 +99,7 @@ export default function Cartorders(props) {
             setLoading(false)
           }
         } else {
-          alert("server error")
+          alert("order done")
         }
       })
   }
@@ -119,6 +119,13 @@ export default function Cartorders(props) {
           socket.emit("socket/setWaitTime", data, () => {
             setShowsetwaittime({ ...showSetwaittime, show: false, waitTime: '' })
           })
+        }
+      })
+      .catch((err) => {
+        if (err.response && err.response.status == 400) {
+
+        } else {
+          alert("set wait time")
         }
       })
   }

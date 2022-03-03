@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState } from 'react'
 import { SafeAreaView, ActivityIndicator, Dimensions, ScrollView, View, Text, TextInput, Image, Keyboard, TouchableOpacity, TouchableWithoutFeedback, StyleSheet } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
@@ -40,8 +40,6 @@ export default function Addservice(props) {
 
 	const [errorMsg, setErrormsg] = useState('')
 
-	const isMounted = useRef(null)
-
 	const addTheNewService = async() => {
 		const locationid = await AsyncStorage.getItem("locationid")
 
@@ -69,7 +67,7 @@ export default function Addservice(props) {
 						setErrormsg(errormsg)
 						setLoading(false)
 					} else {
-						setErrormsg("an error has occurred in server")
+            alert("add service")
 					}
 				})
 		} else {
@@ -121,7 +119,7 @@ export default function Addservice(props) {
 						setErrormsg(errormsg)
 						setLoading(false)
 					} else {
-						setErrormsg("an error has occurred in server")
+            alert("update service")
 					}
 				})
 		} else {
@@ -301,7 +299,7 @@ export default function Addservice(props) {
 				}
 			})
 			.then((res) => {
-				if (res && isMounted.current == true) {
+				if (res) {
 					const { serviceInfo } = res
 
 					setName(serviceInfo.name)
@@ -315,19 +313,13 @@ export default function Addservice(props) {
 				if (err.response && err.response.status == 400) {
 					
 				} else {
-					setErrormsg("an error has occurred in server")
+          alert("get service info")
 				}
 			})
 	}
 
 	useEffect(() => {
-		isMounted.current = true
-
-		if (serviceid) {
-			getTheServiceInfo()
-		}
-
-		return () => isMounted.current = false
+		if (serviceid) getTheServiceInfo()
 	}, [])
 
 	return (

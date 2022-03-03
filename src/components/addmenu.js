@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState } from 'react'
 import { SafeAreaView, Platform, ActivityIndicator, Dimensions, ScrollView, View, Text, TextInput, Image, Keyboard, TouchableOpacity, TouchableWithoutFeedback, StyleSheet } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
@@ -36,8 +36,6 @@ export default function Addmenu(props) {
 
 	const [errorMsg, setErrormsg] = useState('')
 
-	const isMounted = useRef(null)
-
 	const addTheNewMenu = async() => {
 		const ownerid = await AsyncStorage.getItem("ownerid")
 		const locationid = await AsyncStorage.getItem("locationid")
@@ -66,7 +64,7 @@ export default function Addmenu(props) {
 						errormsg
 					})
 				} else {
-					alert("server error")
+					alert("add menu")
 				}
 			})
 	}
@@ -91,7 +89,7 @@ export default function Addmenu(props) {
 				if (err.response && err.response.status == 400) {
 
 				} else {
-					alert("server error")
+					alert("save menu")
 				}
 			})
 	}
@@ -142,7 +140,7 @@ export default function Addmenu(props) {
 				}
 			})
 			.then((res) => {
-				if (res && isMounted.current == true) {
+				if (res) {
 					const { name, image } = res.info
 
 					setName(name)
@@ -154,7 +152,7 @@ export default function Addmenu(props) {
 				if (err.response && err.response.status == 400) {
 					
 				} else {
-					alert("server error")
+					alert("get menu info")
 				}
 			})
 	}
@@ -254,11 +252,7 @@ export default function Addmenu(props) {
 	}
 
 	useEffect(() => {
-		isMounted.current = true
-
 		getTheMenuInfo()
-
-		return () => isMounted.current = false
 	}, [])
 
 	return (

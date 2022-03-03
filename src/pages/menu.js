@@ -74,7 +74,7 @@ export default function Menu(props) {
 				if (err.response && err.response.status == 400) {
 
 				} else {
-					alert("server error")
+					alert("get location profile")
 				}
 			})
 	}
@@ -101,7 +101,7 @@ export default function Menu(props) {
 				if (err.response && err.response.status == 400) {
 					
 				} else {
-					alert("server error")
+					alert("get menus")
 				}
 			})
 	}
@@ -266,7 +266,7 @@ export default function Menu(props) {
 					if (err.response && err.response.status == 400) {
 						
 					} else {
-						alert("server error")
+						alert("remove menu top")
 					}
 				})
 		} else {
@@ -286,7 +286,7 @@ export default function Menu(props) {
 					if (err.response && err.response.status == 400) {
 						
 					} else {
-						alert("server error")
+						alert("remove menu bottom")
 					}
 				})
 		}
@@ -310,7 +310,7 @@ export default function Menu(props) {
 					if (err.response && err.response.status == 400) {
 						
 					} else {
-						alert("server error")
+						alert("remove product top")
 					}
 				})
 		} else {
@@ -330,7 +330,7 @@ export default function Menu(props) {
 					if (err.response && err.response.status == 400) {
 
 					} else {
-						alert("server error")
+						alert("remove product bottom")
 					}
 				})
 		}
@@ -354,7 +354,7 @@ export default function Menu(props) {
 					if (err.response && err.response.status == 400) {
 						
 					} else {
-						alert("server error")
+						alert("remove service top")
 					}
 				})
 		} else {
@@ -374,7 +374,7 @@ export default function Menu(props) {
 					if (err.response && err.response.status == 400) {
 						
 					} else {
-						alert("server error")
+						alert("remove service bottom")
 					}
 				})
 		}
@@ -471,7 +471,7 @@ export default function Menu(props) {
 				if (err.response && err.response.status == 400) {
 					const { status, errormsg } = err.response.data
 				} else {
-          alert("server error")
+          alert("update menu photo")
         }
 			})
 	}
@@ -492,6 +492,13 @@ export default function Menu(props) {
 					setMenuphotooption({ show: false, action: '', photo: '' })
 				}
 			})
+      .catch((err) => {
+        if (err.response && err.response.status == 400) {
+
+        } else {
+          alert("delete menu")
+        }
+      })
 	}
 	const allowCamera = async() => {
 		const { status } = await Camera.getCameraPermissionsAsync()
@@ -507,13 +514,13 @@ export default function Menu(props) {
 	const allowChoosing = async() => {
 		const { status } = await ImagePicker.getMediaLibraryPermissionsAsync()
         
-        if (status == 'granted') {
-        	setPickingpermission(status === 'granted')
-        } else {
-        	const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status == 'granted') {
+    	setPickingpermission(status === 'granted')
+    } else {
+    	const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
-        	setPickingpermission(status === 'granted')
-        }
+    	setPickingpermission(status === 'granted')
+    }
 	}
 	
 	useEffect(() => {

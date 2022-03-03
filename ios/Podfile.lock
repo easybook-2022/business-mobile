@@ -251,7 +251,7 @@ PODS:
   - React-jsinspector (0.64.3)
   - react-native-maps (0.29.4):
     - React-Core
-  - react-native-netinfo (8.0.0):
+  - react-native-netinfo (8.1.0):
     - React-Core
   - react-native-safe-area-context (3.3.2):
     - React-Core
@@ -321,7 +321,7 @@ PODS:
     - React-perflogger (= 0.64.3)
   - RNCAsyncStorage (1.16.1):
     - React-Core
-  - RNGestureHandler (2.2.0):
+  - RNGestureHandler (2.3.0):
     - React-Core
   - RNScreens (3.10.2):
     - React-Core
@@ -543,7 +543,7 @@ SPEC CHECKSUMS:
   React-jsiexecutor: df6abc9fafbecb8e5b7a5fbc5e6d4bd017d594d5
   React-jsinspector: 34e23860273a23695342f58eed3ffd3ba10c31e0
   react-native-maps: a421fe6aeb74279597c4ea9598f25796108e2d89
-  react-native-netinfo: ba4ea50d836c60580c59079233c400753fe5bcb6
+  react-native-netinfo: 379ba2af7d2abcec0c062267abe1c9a977c72bf9
   react-native-safe-area-context: 584dc04881deb49474363f3be89e4ca0e854c057
   React-perflogger: cc76a4254d19640f1d8ad1c66fdee800414b805c
   React-RCTActionSheet: 7448f049318d8d7e8a9a1ebb742ada721757eea8
@@ -558,7 +558,7 @@ SPEC CHECKSUMS:
   React-runtimeexecutor: 493d9abb8b23c3f84e19ae221eeba92cadcb70dc
   ReactCommon: 8fea6422328e2fc093e25c9fac67adbcf0f04fb4
   RNCAsyncStorage: b49b4e38a1548d03b74b30e558a1d18465b94be7
-  RNGestureHandler: bf572f552ea324acd5b5464b8d30755b2d8c1de6
+  RNGestureHandler: 77d59828d40838c9fabb76a12d2d0a80c006906f
   RNScreens: d6da2b9e29cf523832c2542f47bf1287318b1868
   UMTaskManagerInterface: 3184c93ecc290bd422c6e344badc89b601e9c29b
   Yoga: e6ecf3fa25af9d4c87e94ad7d5d292eedef49749

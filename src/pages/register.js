@@ -52,6 +52,7 @@ export default function Register(props) {
           if (res) {
             const { msg } = res
 
+            setLoading(false)
             AsyncStorage.setItem("phase", "workinghours")
 
             props.navigation.dispatch(
@@ -68,7 +69,7 @@ export default function Register(props) {
 
             setErrormsg(errormsg)
           } else {
-            alert("server error")
+            alert("register")
           }
 
           setLoading(false)
@@ -113,6 +114,8 @@ export default function Register(props) {
 		setLoading(false)
 	}
 	const snapPhoto = async() => {
+    setLoading(true)
+
 		let letters = [
 			"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", 
 			"n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"
@@ -152,10 +155,13 @@ export default function Register(props) {
 					uri: `${FileSystem.documentDirectory}/${char}.jpg`,
 					name: `${char}.jpg`
 				})
+        setLoading(false)
 			})
 		}
 	}
 	const choosePhoto = async() => {
+    setLoading(true)
+
 		let letters = [
 			"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", 
 			"n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"
@@ -187,6 +193,7 @@ export default function Register(props) {
 					uri: `${FileSystem.documentDirectory}/${char}.jpg`,
 					name: `${char}.jpg`
 				})
+        setLoading(false)
 			})
 		}
 	}
@@ -204,19 +211,19 @@ export default function Register(props) {
 	const allowChoosing = async() => {
 		const { status } = await ImagePicker.getMediaLibraryPermissionsAsync()
         
-        if (status == 'granted') {
-        	setPickingpermission(status === 'granted')
-        } else {
-        	const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status == 'granted') {
+    	setPickingpermission(status === 'granted')
+    } else {
+    	const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
-        	setPickingpermission(status === 'granted')
-        }
+    	setPickingpermission(status === 'granted')
+    }
 	}
 
 	return (
 		<SafeAreaView style={styles.register}>
 			<TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
-				<View style={[styles.box, { opacity: loading.show ? 0.5 : 1 }]}>
+				<View style={[styles.box, { opacity: loading ? 0.5 : 1 }]}>
 					<View style={styles.header}>
 						<Text style={styles.boxHeader}>Setup your stylist info</Text>
 					</View>
@@ -267,7 +274,7 @@ export default function Register(props) {
 
 						<View style={styles.actions}>
 							{setupType != 'nickname' && (
-								<TouchableOpacity style={[styles.action, { opacity: loading.show ? 0.3 : 1 }]} onPress={() => {
+								<TouchableOpacity style={[styles.action, { opacity: loading ? 0.3 : 1 }]} onPress={() => {
 									let index = steps.indexOf(setupType)
 									
 									index--
@@ -278,7 +285,7 @@ export default function Register(props) {
 								</TouchableOpacity>
 							)}
 
-							<TouchableOpacity style={[styles.action, { opacity: loading.show ? 0.3 : 1 }]} disabled={loading.show} onPress={() => setupType == "profile" ? register() : saveInfo()}>
+							<TouchableOpacity style={[styles.action, { opacity: loading ? 0.3 : 1 }]} disabled={loading} onPress={() => setupType == "profile" ? register() : saveInfo()}>
 								<Text style={styles.actionHeader}>{setupType == "profile" ? "Done" : "Next"}</Text>
 							</TouchableOpacity>
 						</View>
@@ -303,7 +310,7 @@ export default function Register(props) {
 				</View>
 			</TouchableWithoutFeedback>
 
-      {loading.show && (
+      {loading && (
         <Modal transparent={true}>
           <Loadingprogress/>
         </Modal>

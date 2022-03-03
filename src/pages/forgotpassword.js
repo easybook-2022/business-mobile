@@ -40,7 +40,7 @@ export default function Forgotpassword({ navigation }) {
 
 					setErrormsg(errormsg)
 				} else {
-					setErrormsg("an error has occurred in server")
+          alert("get code")
 				}
 			})
 	}

@@ -48,7 +48,7 @@ export default function Verifyowner({ navigation }) {
 
 					setErrormsg(errormsg)
 				} else {
-          alert("server error")
+          alert("verify")
 				}
 			})
 
@@ -71,6 +71,13 @@ export default function Verifyowner({ navigation }) {
           AsyncStorage.setItem("ownerid", id.toString())
 
           navigation.navigate("locationsetup")
+        }
+      })
+      .catch((err) => {
+        if (err.response && err.response.status == 400) {
+
+        } else {
+          alert("register")
         }
       })
   }

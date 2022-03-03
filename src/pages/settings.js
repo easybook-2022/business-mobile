@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect } from 'react'
 import { SafeAreaView, ActivityIndicator, Dimensions, ScrollView, View, Image, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet, Modal } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
@@ -11,7 +11,7 @@ import * as Location from 'expo-location';
 import { logo_url } from '../../assets/info'
 import { addOwner, updateOwner, deleteOwner, getWorkerInfo, getOtherWorkers, getAccounts } from '../apis/owners'
 import { getLocationProfile, updateLocation, setLocationHours } from '../apis/locations'
-import { loginInfo, ownerRegisterInfo, stripe_key } from '../../assets/info'
+import { loginInfo, ownerRegisterInfo } from '../../assets/info'
 
 // bank account
 let { accountNumber, countryCode, currency, routingNumber, accountHolderName } = loginInfo
@@ -97,8 +97,6 @@ export default function Settings(props) {
     workers: []
   })
 
-	const isMounted = useRef(null)
-
 	const updateYourLocation = async() => {
 		const { details } = await NetInfo.fetch()
 		const ipAddress = details.ipAddress
@@ -134,7 +132,7 @@ export default function Settings(props) {
 						setErrormsg(errormsg)
 						setLoading(false)
 					} else {
-						alert("server error")
+						alert("update location")
 					}
 				})
 		} else {
@@ -204,7 +202,9 @@ export default function Settings(props) {
 
 				if (value < 10) {
 					value = "0" + value
-				}
+				} else {
+          value = value.toString()
+        }
 
 				break
 			case "minute":
@@ -219,7 +219,9 @@ export default function Settings(props) {
 
 				if (value < 10) {
 					value = "0" + value
-				}
+				} else {
+          value = value.toString()
+        }
 
 				break
 			case "period":
@@ -245,10 +247,10 @@ export default function Settings(props) {
 		setDays(newDays)
 	}
 	const updateLocationHours = async() => {
+    setLoading(true)
+
 		const locationid = await AsyncStorage.getItem("locationid")
 		const hours = {}
-
-		setLoading(true)
 
 		days.forEach(function (day) {
 			let { opentime, closetime, close } = day
@@ -321,12 +323,14 @@ export default function Settings(props) {
 				if (err.response && err.response.status == 400) {
 					setLoading(false)
 				} else {
-					alert("server error")
+					alert("get location hours")
 				}
 			})
 	}
 
 	const addNewOwner = async() => {
+    setAccountform({ ...accountForm, loading: true, errorMsg: "" })
+
 		const hours = {}
 
 		workerHours.forEach(function (workerHour) {
@@ -385,8 +389,6 @@ export default function Settings(props) {
 		const { cellnumber, username, newPassword, confirmPassword, profile } = accountForm
 		const data = { ownerid: ownerId, cellnumber, username, password: newPassword, confirmPassword, hours, profile }
 
-		setAccountform({ ...accountForm, loading: true, errorMsg: "" })
-
 		addOwner(data)
 			.then((res) => {
 				if (res.status == 200) {
@@ -411,7 +413,7 @@ export default function Settings(props) {
 
 					setAccountform({ ...accountForm, errormsg })
 				} else {
-					alert("server error")
+					alert("add owner")
 				}
 			})
 	}
@@ -437,7 +439,9 @@ export default function Settings(props) {
 
 				if (value < 10) {
 					value = "0" + value
-				}
+				} else {
+          value = value.toString()
+        }
 
 				break
 			case "minute":
@@ -452,7 +456,9 @@ export default function Settings(props) {
 
 				if (value < 10) {
 					value = "0" + value
-				}
+				} else {
+          value = value.toString()
+        }
 
 				break
 			case "period":
@@ -478,6 +484,8 @@ export default function Settings(props) {
 		setWorkerhours(newWorkerhours)
 	}
 	const updateTheOwner = async() => {
+    setAccountform({ ...accountForm, loading: true, errorMsg: "" })
+
     const { cellnumber, username, profile, currentPassword, newPassword, confirmPassword } = accountForm
     let data = { ownerid: accountForm.id, type: accountForm.editType }
 
@@ -576,7 +584,7 @@ export default function Settings(props) {
             cellnumber: "", editCellnumber: false,
 						currentPassword: "", newPassword: "", confirmPassword: "", editPassword: false, 
             profile: { name: "", uri: "" }, editProfile: false, 
-						errorMsg: ""
+						loading: false, errorMsg: ""
 					})
 				}
 			})
@@ -586,7 +594,7 @@ export default function Settings(props) {
 
           setAccountform({ ...accountForm, errorMsg: errormsg })
 				} else {
-					alert("server error")
+					alert("update owner")
 				}
 			})
 	}
@@ -613,7 +621,7 @@ export default function Settings(props) {
           if (err.response && err.response.status == 400) {
             const { errormsg, status } = err.response.data
           } else {
-            alert("server error")
+            alert("delete owner top")
           }
         })
     } else {
@@ -643,7 +651,7 @@ export default function Settings(props) {
           if (err.response && err.response.status == 400) {
             const { errormsg, status } = err.response.data
           } else {
-            alert("server error")
+            alert("delete owner bottom")
           }
         })
     }
@@ -660,36 +668,32 @@ export default function Settings(props) {
     setWorkerhours(newWorkerhours)
   }
   const getTheOtherWorkers = async(day) => {
-    if (!getWorkersbox.show) {
-      const locationid = await AsyncStorage.getItem("locationid")
-      const data = { ownerid: accountForm.id, locationid, day }
+    const locationid = await AsyncStorage.getItem("locationid")
+    const data = { ownerid: accountForm.id, locationid, day }
 
-      getOtherWorkers(data)
-        .then((res) => {
-          if (res.status == 200) {
-            return res.data
-          }
-        })
-        .then((res) => {
-          if (res) {
-            setGetworkersbox({
-              ...getWorkersbox,
-              show: true,
-              workers: res.workers,
-              day
-            })
-          }
-        })
-        .catch((err) => {
-          if (err.response && err.response.status == 400) {
-            const { errormsg, status } = err.response.data
-          } else {
-            alert("server error")
-          }
-        })
-    } else {
-
-    }
+    getOtherWorkers(data)
+      .then((res) => {
+        if (res.status == 200) {
+          return res.data
+        }
+      })
+      .then((res) => {
+        if (res) {
+          setGetworkersbox({
+            ...getWorkersbox,
+            show: true,
+            workers: res.workers,
+            day
+          })
+        }
+      })
+      .catch((err) => {
+        if (err.response && err.response.status == 400) {
+          const { errormsg, status } = err.response.data
+        } else {
+          alert("get other workers")
+        }
+      })
   }
   const selectTheOtherWorker = id => {
     const { day } = getWorkersbox
@@ -717,7 +721,7 @@ export default function Settings(props) {
 				}
 			})
 			.then((res) => {
-				if (res && isMounted.current == true) {
+				if (res) {
 					const { name, phonenumber, addressOne, addressTwo, city, province, postalcode, logo, hours, type } = res.info
 
 					setStorename(name)
@@ -738,7 +742,7 @@ export default function Settings(props) {
 				if (err.response && err.response.status == 400) {
 					
 				} else {
-					alert("server error")
+					alert("get location profile")
 				}
 			})
 	}
@@ -753,7 +757,7 @@ export default function Settings(props) {
 				}
 			})
 			.then((res) => {
-				if (res && isMounted.current == true) {
+				if (res) {
 					setOwnerid(ownerid)
 					setAccountholders(res.accounts)
 					setAccountholdersloading(false)
@@ -763,11 +767,13 @@ export default function Settings(props) {
 				if (err.response && err.response.status == 400) {
 					
 				} else {
-					alert("server error")
+					alert("get all accounts")
 				}
 			})
 	}
 	const snapProfile = async() => {
+    setLoading(true)
+
 		let letters = [
 			"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", 
 			"n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"
@@ -792,10 +798,10 @@ export default function Settings(props) {
 
 			for (let k = 0; k <= photo_name_length - 1; k++) {
 				if (k % 2 == 0) {
-	                char += "" + letters[Math.floor(Math.random() * letters.length)].toUpperCase();
-	            } else {
-	                char += "" + (Math.floor(Math.random() * 9) + 0);
-	            }
+            char += "" + letters[Math.floor(Math.random() * letters.length)].toUpperCase();
+        } else {
+            char += "" + (Math.floor(Math.random() * 9) + 0);
+        }
 			}
 
 			FileSystem.moveAsync({
@@ -810,10 +816,13 @@ export default function Settings(props) {
 						name: `${char}.jpg`
 					}
 				})
+        setLoading(false)
 			})
 		}
 	}
 	const chooseProfile = async() => {
+    setAccountform({ ...accountForm, loading: true })
+
 		let letters = [
 			"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", 
 			"n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"
@@ -829,10 +838,10 @@ export default function Settings(props) {
 
 		for (let k = 0; k <= photo_name_length - 1; k++) {
 			if (k % 2 == 0) {
-                char += "" + letters[Math.floor(Math.random() * letters.length)].toUpperCase();
-            } else {
-                char += "" + (Math.floor(Math.random() * 9) + 0);
-            }
+          char += "" + letters[Math.floor(Math.random() * letters.length)].toUpperCase();
+      } else {
+          char += "" + (Math.floor(Math.random() * 9) + 0);
+      }
 		}
 
 		if (!photo.cancelled) {
@@ -846,12 +855,15 @@ export default function Settings(props) {
 					profile: {
 						uri: `${FileSystem.documentDirectory}/${char}.jpg`,
 						name: `${char}.jpg`
-					}
+					},
+          loading: false
 				})
 			})
 		}
 	}
 	const snapPhoto = async() => {
+    setLoading(true)
+
 		let letters = [
 			"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", 
 			"n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"
@@ -873,10 +885,10 @@ export default function Settings(props) {
 
 			for (let k = 0; k <= photo_name_length - 1; k++) {
 				if (k % 2 == 0) {
-	                char += "" + letters[Math.floor(Math.random() * letters.length)].toUpperCase();
-	            } else {
-	                char += "" + (Math.floor(Math.random() * 9) + 0);
-	            }
+            char += "" + letters[Math.floor(Math.random() * letters.length)].toUpperCase();
+        } else {
+            char += "" + (Math.floor(Math.random() * 9) + 0);
+        }
 			}
 
 			FileSystem.moveAsync({
@@ -888,10 +900,13 @@ export default function Settings(props) {
 					uri: `${FileSystem.documentDirectory}/${char}.jpg`,
 					name: `${char}.jpg`
 				})
+        setLoading(false)
 			})
 		}
 	}
 	const choosePhoto = async() => {
+    setLoading(true)
+
 		let letters = [
 			"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", 
 			"n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"
@@ -907,10 +922,10 @@ export default function Settings(props) {
 
 		for (let k = 0; k <= photo_name_length - 1; k++) {
 			if (k % 2 == 0) {
-                char += "" + letters[Math.floor(Math.random() * letters.length)].toUpperCase();
-            } else {
-                char += "" + (Math.floor(Math.random() * 9) + 0);
-            }
+          char += "" + letters[Math.floor(Math.random() * letters.length)].toUpperCase();
+      } else {
+          char += "" + (Math.floor(Math.random() * 9) + 0);
+      }
 		}
 
 		if (!photo.cancelled) {
@@ -923,6 +938,7 @@ export default function Settings(props) {
 					uri: `${FileSystem.documentDirectory}/${char}.jpg`,
 					name: `${char}.jpg`
 				})
+        setLoading(false)
 			})
 		}
 	}
@@ -950,15 +966,11 @@ export default function Settings(props) {
 	}
   
 	useEffect(() => {
-		isMounted.current = true
-
 		getTheLocationProfile()
 		getAllAccounts()
 
 		allowCamera()
 		allowChoosing()
-
-		return () => isMounted.current = false
 	}, [])
 
 	return (
@@ -1084,7 +1096,13 @@ export default function Settings(props) {
 																	<TouchableOpacity onPress={() => updateTime(index, "hour", "up", true)}>
 																		<AntDesign name="up" size={wsize(7)}/>
 																	</TouchableOpacity>
-																	<Text style={styles.selectionHeader}>{info.opentime.hour}</Text>
+                                  <TextInput style={styles.selectionHeader} onChangeText={(hour) => {
+                                    const newDays = [...days]
+
+                                    newDays[index].opentime["hour"] = hour.toString()
+
+                                    setDays(newDays)
+                                  }} keyboardType="numeric" maxLength={2} value={info.opentime.hour}/>
 																	<TouchableOpacity onPress={() => updateTime(index, "hour", "down", true)}>
 																		<AntDesign name="down" size={wsize(7)}/>
 																	</TouchableOpacity>
@@ -1096,7 +1114,13 @@ export default function Settings(props) {
 																	<TouchableOpacity onPress={() => updateTime(index, "minute", "up", true)}>
 																		<AntDesign name="up" size={wsize(7)}/>
 																	</TouchableOpacity>
-																	<Text style={styles.selectionHeader}>{info.opentime.minute}</Text>
+                                  <TextInput style={styles.selectionHeader} onChangeText={(minute) => {
+                                    const newDays = [...days]
+
+                                    newDays[index].opentime["minute"] = minute.toString()
+
+                                    setDays(newDays)
+                                  }} keyboardType="numeric" maxLength={2} value={info.opentime.minute}/>
 																	<TouchableOpacity onPress={() => updateTime(index, "minute", "down", true)}>
 																		<AntDesign name="down" size={wsize(7)}/>
 																	</TouchableOpacity>
@@ -1119,7 +1143,13 @@ export default function Settings(props) {
 																	<TouchableOpacity onPress={() => updateTime(index, "hour", "up", false)}>
 																		<AntDesign name="up" size={wsize(7)}/>
 																	</TouchableOpacity>
-																	<Text style={styles.selectionHeader}>{info.closetime.hour}</Text>
+                                  <TextInput style={styles.selectionHeader} onChangeText={(hour) => {
+                                    const newDays = [...days]
+
+                                    newDays[index].closetime["hour"] = hour.toString()
+
+                                    setDays(newDays)
+                                  }} keyboardType="numeric" maxLength={2} value={info.closetime.hour}/>
 																	<TouchableOpacity onPress={() => updateTime(index, "hour", "down", false)}>
 																		<AntDesign name="down" size={wsize(7)}/>
 																	</TouchableOpacity>
@@ -1131,7 +1161,13 @@ export default function Settings(props) {
 																	<TouchableOpacity onPress={() => updateTime(index, "minute", "up", false)}>
 																		<AntDesign name="up" size={wsize(7)}/>
 																	</TouchableOpacity>
-																	<Text style={styles.selectionHeader}>{info.closetime.minute}</Text>
+                                  <TextInput style={styles.selectionHeader} onChangeText={(minute) => {
+                                    const newDays = [...days]
+
+                                    newDays[index].closetime["minute"] = minute.toString()
+
+                                    setDays(newDays)
+                                  }} keyboardType="numeric" maxLength={2} value={info.closetime.minute}/>
 																	<TouchableOpacity onPress={() => updateTime(index, "minute", "down", false)}>
 																		<AntDesign name="down" size={wsize(7)}/>
 																	</TouchableOpacity>
@@ -1209,10 +1245,14 @@ export default function Settings(props) {
 
 									{accountHolders.map((info, index) => (
 										<View key={info.key} style={styles.account}>
-											<Text style={styles.accountHeader}>#{index + 1}:</Text>
+                      <View style={styles.column}>
+                        <Text style={styles.accountHeader}>#{index + 1}:</Text>
+                      </View>
 
 											<View style={styles.accountEdit}>
-                        <Text style={styles.accountEditHeader}>{info.username}</Text>
+                        <View style={styles.column}>
+                          <Text style={styles.accountEditHeader}>{info.username}</Text>
+                        </View>
 
                         {type == "salon" && (
                           <>
@@ -1331,13 +1371,20 @@ export default function Settings(props) {
                                 <View>
                                   <Text style={styles.workerHourHeader}>You are working on {info.header}</Text>
                                   <Text style={styles.workerHourHeader}>Edit your time</Text>
+                                  <Text style={styles.workerHourHeader}>(hours and minutes can be entered)</Text>
                                   <View style={styles.timeSelectionContainer}>
                                     <View style={styles.timeSelection}>
                                       <View style={styles.selection}>
                                         <TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "up", true)}>
                                           <AntDesign name="up" size={wsize(7)}/>
                                         </TouchableOpacity>
-                                        <Text style={styles.selectionHeader}>{info.opentime.hour}</Text>
+                                        <TextInput style={styles.selectionHeader} onChangeText={(hour) => {
+                                          const newWorkerhours = [...workerHours]
+
+                                          newWorkerhours[index].opentime["hour"] = hour.toString()
+
+                                          setWorkerhours(newWorkerhours)
+                                        }} keyboardType="numeric" maxLength={2} value={info.opentime.hour}/>
                                         <TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "down", true)}>
                                           <AntDesign name="down" size={wsize(7)}/>
                                         </TouchableOpacity>
@@ -1349,7 +1396,13 @@ export default function Settings(props) {
                                         <TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "up", true)}>
                                           <AntDesign name="up" size={wsize(7)}/>
                                         </TouchableOpacity>
-                                        <Text style={styles.selectionHeader}>{info.opentime.minute}</Text>
+                                        <TextInput style={styles.selectionHeader} onChangeText={(minute) => {
+                                          const newWorkerhours = [...workerHours]
+
+                                          newWorkerhours[index].opentime["minute"] = minute.toString()
+
+                                          setWorkerhours(newWorkerhours)
+                                        }} keyboardType="numeric" maxLength={2} value={info.opentime.minute}/>
                                         <TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "down", true)}>
                                           <AntDesign name="down" size={wsize(7)}/>
                                         </TouchableOpacity>
@@ -1372,7 +1425,13 @@ export default function Settings(props) {
                                         <TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "up", false)}>
                                           <AntDesign name="up" size={wsize(7)}/>
                                         </TouchableOpacity>
-                                        <Text style={styles.selectionHeader}>{info.closetime.hour}</Text>
+                                        <TextInput style={styles.selectionHeader} onChangeText={(hour) => {
+                                          const newWorkerhours = [...workerHours]
+
+                                          newWorkerhours[index].closetime["hour"] = hour.toString()
+
+                                          setWorkerhours(newWorkerhours)
+                                        }} keyboardType="numeric" maxLength={2} value={info.closetime.hour}/>
                                         <TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "down", false)}>
                                           <AntDesign name="down" size={wsize(7)}/>
                                         </TouchableOpacity>
@@ -1384,7 +1443,13 @@ export default function Settings(props) {
                                         <TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "up", false)}>
                                           <AntDesign name="up" size={wsize(7)}/>
                                         </TouchableOpacity>
-                                        <Text style={styles.selectionHeader}>{info.closetime.minute}</Text>
+                                        <TextInput style={styles.selectionHeader} onChangeText={(minute) => {
+                                          const newWorkerhours = [...workerHours]
+
+                                          newWorkerhours[index].closetime["minute"] = minute.toString()
+
+                                          setWorkerhours(newWorkerhours)
+                                        }} keyboardType="numeric" maxLength={2} value={info.closetime.minute}/>
                                         <TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "down", false)}>
                                           <AntDesign name="down" size={wsize(7)}/>
                                         </TouchableOpacity>
@@ -1559,13 +1624,20 @@ export default function Settings(props) {
                                   <View style={{ opacity: info.working ? 1 : 0.1 }}>
                                     <Text style={styles.workerHourHeader}>You are working on {info.header}</Text>
                                     <Text style={styles.workerHourHeader}>Edit your time</Text>
+                                    <Text style={styles.workerHourHeader}>(hours and minutes can be entered)</Text>
                                     <View style={styles.timeSelectionContainer}>
                                       <View style={styles.timeSelection}>
                                         <View style={styles.selection}>
                                           <TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "up", true)}>
                                             <AntDesign name="up" size={wsize(7)}/>
                                           </TouchableOpacity>
-                                          <Text style={styles.selectionHeader}>{info.opentime.hour}</Text>
+                                          <TextInput style={styles.selectionHeader} onChangeText={(hour) => {
+                                            const newWorkerhours = [...workerHours]
+
+                                            newWorkerhours[index].opentime["hour"] = hour.toString()
+
+                                            setWorkerhours(newWorkerhours)
+                                          }} keyboardType="numeric" maxLength={2} value={info.opentime.hour}/>
                                           <TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "down", true)}>
                                             <AntDesign name="down" size={wsize(7)}/>
                                           </TouchableOpacity>
@@ -1577,7 +1649,13 @@ export default function Settings(props) {
                                           <TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "up", true)}>
                                             <AntDesign name="up" size={wsize(7)}/>
                                           </TouchableOpacity>
-                                          <Text style={styles.selectionHeader}>{info.opentime.minute}</Text>
+                                          <TextInput style={styles.selectionHeader} onChangeText={(minute) => {
+                                            const newWorkerhours = [...workerHours]
+
+                                            newWorkerhours[index].opentime["minute"] = minute.toString()
+
+                                            setWorkerhours(newWorkerhours)
+                                          }} keyboardType="numeric" maxLength={2} value={info.opentime.minute}/>
                                           <TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "down", true)}>
                                             <AntDesign name="down" size={wsize(7)}/>
                                           </TouchableOpacity>
@@ -1600,7 +1678,13 @@ export default function Settings(props) {
                                           <TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "up", false)}>
                                             <AntDesign name="up" size={wsize(7)}/>
                                           </TouchableOpacity>
-                                          <Text style={styles.selectionHeader}>{info.closetime.hour}</Text>
+                                          <TextInput style={styles.selectionHeader} onChangeText={(hour) => {
+                                            const newWorkerhours = [...workerHours]
+
+                                            newWorkerhours[index].closetime["hour"] = hour.toString()
+
+                                            setWorkerhours(newWorkerhours)
+                                          }} keyboardType="numeric" maxLength={2} value={info.closetime.hour}/>
                                           <TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "down", false)}>
                                             <AntDesign name="down" size={wsize(7)}/>
                                           </TouchableOpacity>
@@ -1612,7 +1696,13 @@ export default function Settings(props) {
                                           <TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "up", false)}>
                                             <AntDesign name="up" size={wsize(7)}/>
                                           </TouchableOpacity>
-                                          <Text style={styles.selectionHeader}>{info.closetime.minute}</Text>
+                                          <TextInput style={styles.selectionHeader} onChangeText={(minute) => {
+                                            const newWorkerhours = [...workerHours]
+
+                                            newWorkerhours[index].closetime["minute"] = minute.toString()
+
+                                            setWorkerhours(newWorkerhours)
+                                          }} keyboardType="numeric" maxLength={2} value={info.closetime.minute}/>
                                           <TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "down", false)}>
                                             <AntDesign name="down" size={wsize(7)}/>
                                           </TouchableOpacity>
@@ -1805,13 +1895,20 @@ export default function Settings(props) {
                                   <View style={{ opacity: info.working ? 1 : 0.1 }}>
                                     <Text style={styles.workerHourHeader}>You are working on {info.header}</Text>
                                     <Text style={styles.workerHourHeader}>Edit your time</Text>
+                                    <Text style={styles.workerHourHeader}>(hours and minutes can be entered)</Text>
                                     <View style={styles.timeSelectionContainer}>
                                       <View style={styles.timeSelection}>
                                         <View style={styles.selection}>
                                           <TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "up", true)}>
                                             <AntDesign name="up" size={wsize(7)}/>
                                           </TouchableOpacity>
-                                          <Text style={styles.selectionHeader}>{info.opentime.hour}</Text>
+                                          <TextInput style={styles.selectionHeader} onChangeText={(hour) => {
+                                            const newWorkerhours = [...workerHours]
+
+                                            newWorkerhours[index].opentime["hour"] = hour.toString()
+
+                                            setWorkerhours(newWorkerhours)
+                                          }} keyboardType="numeric" maxLength={2} value={info.opentime.hour}/>
                                           <TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "down", true)}>
                                             <AntDesign name="down" size={wsize(7)}/>
                                           </TouchableOpacity>
@@ -1823,7 +1920,13 @@ export default function Settings(props) {
                                           <TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "up", true)}>
                                             <AntDesign name="up" size={wsize(7)}/>
                                           </TouchableOpacity>
-                                          <Text style={styles.selectionHeader}>{info.opentime.minute}</Text>
+                                          <TextInput style={styles.selectionHeader} onChangeText={(minute) => {
+                                            const newWorkerhours = [...workerHours]
+
+                                            newWorkerhours[index].opentime["minute"] = minute.toString()
+
+                                            setWorkerhours(newWorkerhours)
+                                          }} keyboardType="numeric" maxLength={2} value={info.opentime.minute}/>
                                           <TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "down", true)}>
                                             <AntDesign name="down" size={wsize(7)}/>
                                           </TouchableOpacity>
@@ -1846,7 +1949,13 @@ export default function Settings(props) {
                                           <TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "up", false)}>
                                             <AntDesign name="up" size={wsize(7)}/>
                                           </TouchableOpacity>
-                                          <Text style={styles.selectionHeader}>{info.closetime.hour}</Text>
+                                          <TextInput style={styles.selectionHeader} onChangeText={(hour) => {
+                                            const newWorkerhours = [...workerHours]
+
+                                            newWorkerhours[index].closetime["hour"] = hour.toString()
+
+                                            setWorkerhours(newWorkerhours)
+                                          }} keyboardType="numeric" maxLength={2} value={info.closetime.hour}/>
                                           <TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "down", false)}>
                                             <AntDesign name="down" size={wsize(7)}/>
                                           </TouchableOpacity>
@@ -1858,7 +1967,13 @@ export default function Settings(props) {
                                           <TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "up", false)}>
                                             <AntDesign name="up" size={wsize(7)}/>
                                           </TouchableOpacity>
-                                          <Text style={styles.selectionHeader}>{info.closetime.minute}</Text>
+                                          <TextInput style={styles.selectionHeader} onChangeText={(minute) => {
+                                            const newWorkerhours = [...workerHours]
+
+                                            newWorkerhours[index].closetime["minute"] = minute.toString()
+
+                                            setWorkerhours(newWorkerhours)
+                                          }} keyboardType="numeric" maxLength={2} value={info.closetime.minute}/>
                                           <TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "down", false)}>
                                             <AntDesign name="down" size={wsize(7)}/>
                                           </TouchableOpacity>
@@ -2056,8 +2171,8 @@ const styles = StyleSheet.create({
 	accountHoldersAddHeader: { fontSize: wsize(5) },
 	account: { flexDirection: 'row', justifyContent: 'space-between', marginVertical: 10 },
 	accountHeader: { fontSize: wsize(5), fontWeight: 'bold', padding: 5 },
-	accountEdit: { backgroundColor: 'rgba(127, 127, 127, 0.3)', borderRadius: 4, flexDirection: 'row', justifyContent: 'space-between', width: '80%' },
-	accountEditHeader: { fontSize: wsize(5), paddingVertical: 8, textAlign: 'center', width: '50%' },
+	accountEdit: { backgroundColor: 'rgba(127, 127, 127, 0.3)', borderRadius: 4, flexDirection: 'row', justifyContent: 'space-around', width: '80%' },
+	accountEditHeader: { fontSize: wsize(5), paddingVertical: 8, textAlign: 'center' },
 	accountEditTouch: { borderRadius: 2, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: wsize(30) },
   accountEditTouchHeader: { fontSize: wsize(4), textAlign: 'center' },
 

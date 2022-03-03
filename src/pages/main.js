@@ -85,7 +85,7 @@ export default function Main(props) {
 						if (err.response && err.response.status == 400) {
 
 						} else {
-							alert("server error")
+							alert("get notification permission top")
 						}
 					})
 			}
@@ -115,7 +115,7 @@ export default function Main(props) {
 							if (err.response && err.response.status == 400) {
 								
 							} else {
-								alert("server error")
+								alert("get notification permission bottom")
 							}
 						})
 				}
@@ -139,7 +139,7 @@ export default function Main(props) {
         if (err.response && err.response.status == 400) {
           
         } else {
-          alert("server error")
+          alert("fetch num appointments")
         }
       })
 	}
@@ -159,7 +159,7 @@ export default function Main(props) {
 				if (err.response && err.response.status == 400) {
 
 				} else {
-					alert("server error")
+					alert("fetch num cart orderers")
 				}
 			})
 	}
@@ -200,7 +200,7 @@ export default function Main(props) {
 				if (err.response && err.response.status == 400) {
 					
 				} else {
-					alert("server error")
+					alert("get location profile")
 				}
 			})
 	}
@@ -230,7 +230,7 @@ export default function Main(props) {
 						}
 					}
 				} else {
-					alert("server error")
+					alert("change location state")
 				}
 			})
 	}
@@ -258,7 +258,7 @@ export default function Main(props) {
 				if (err.response && err.response.status == 400) {
 
 				} else {
-					alert("server error")
+					alert("get all appointments")
 				}
 			})
 	}
@@ -283,7 +283,7 @@ export default function Main(props) {
 				if (err.response && err.response.status == 400) {
 
 				} else {
-					alert("server error")
+					alert("get all cart orderers")
 				}
 			})
 	}
@@ -330,7 +330,7 @@ export default function Main(props) {
 					if (err.response && err.response.status == 400) {
 						const { errormsg, status } = err.response.data
 					} else {
-						alert("server error")
+						alert("cancel schedule")
 					}
 				})
 		}
@@ -361,7 +361,7 @@ export default function Main(props) {
           const { errormsg, status } = err.response.data
 
         } else {
-          alert("server error")
+          alert("done service")
         }
       })
   }
@@ -414,7 +414,7 @@ export default function Main(props) {
 				if (err.response && err.response.status == 400) {
 
 				} else {
-					alert("server error")
+					alert("set location public")
 				}
 			})
 	}
