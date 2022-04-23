@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { 
   SafeAreaView, ActivityIndicator, Platform, Dimensions, 
-  ScrollView, View, FlatList, Text, TextInput, Image, TouchableOpacity, StyleSheet, Modal 
+  ScrollView, View, FlatList, Text, TextInput, Image, 
+  TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet, Modal 
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
@@ -142,11 +143,11 @@ export default function Cartorders(props) {
 					renderItem={({ item, index }) => 
 						<View style={styles.item} key={item.key}>
 							<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-								{item.image && (
+								{item.image ? 
 									<View style={styles.itemImageHolder}>
-										<Image source={{ uri: logo_url + item.image }} style={styles.itemImage}/>
+										<Image source={{ uri: logo_url + item.image.name }} style={styles.itemImage}/>
 									</View>
-								)}
+								: null }
 
 								<View style={styles.itemInfos}>
 									<Text style={styles.itemName}>{item.name}</Text>
@@ -228,53 +229,53 @@ export default function Cartorders(props) {
 					</SafeAreaView>
 				</Modal>
 			)}
-
       {showSetwaittime.show && (
         <Modal transparent={true}>
           <SafeAreaView style={styles.waitTimeBox}>
-            <View style={styles.waitTimeContainer}>
-              <AntDesign name="closecircleo" size={wsize(7)} onPress={() => setShowsetwaittime({ ...showSetwaittime, show: false })}/>
+            <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+              <View style={styles.waitTimeContainer}>
+                <AntDesign name="closecircleo" size={wsize(7)} onPress={() => setShowsetwaittime({ ...showSetwaittime, show: false })}/>
 
-              <Text style={styles.waitTimeHeader}>How long will be the wait ?</Text>
-
-              <View style={styles.row}>
-                <TextInput 
-                  style={styles.waitTimeInput} 
-                  onChangeText={(waitTime) => setShowsetwaittime({ ...showSetwaittime, waitTime })}
-                  keyboardType="numeric"
-                  value={showSetwaittime.waitTime}
-                />
-                <View style={styles.column}><Text style={{ fontSize: 15, fontWeight: 'bold', marginLeft: 10 }}>mins</Text></View>
-              </View>
-
-              <View style={styles.waitTimeOptions}>
-                <View style={styles.row}>
-                  {[...Array(3)].map((_, index) => (
-                    <TouchableOpacity key={index.toString()} style={styles.waitTimeOption} onPress={() => setShowsetwaittime({ ...showSetwaittime, waitTime: ((index + 1) * 5).toString() })}>
-                      <Text style={styles.waitTimeOptionHeader}>{(index + 1) * 5} mins</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
+                <Text style={styles.waitTimeHeader}>How long will be the wait ?</Text>
 
                 <View style={styles.row}>
-                  {[...Array(3)].map((_, index) => (
-                    <TouchableOpacity key={index.toString()} style={styles.waitTimeOption} onPress={() => setShowsetwaittime({ ...showSetwaittime, waitTime: ((index + 4) * 5).toString() })}>
-                      <Text style={styles.waitTimeOptionHeader}>{(index + 4) * 5} mins</Text>
-                    </TouchableOpacity>
-                  ))}
+                  <TextInput 
+                    style={styles.waitTimeInput} 
+                    onChangeText={(waitTime) => setShowsetwaittime({ ...showSetwaittime, waitTime })}
+                    keyboardType="numeric"
+                    value={showSetwaittime.waitTime}
+                  />
+                  <View style={styles.column}><Text style={{ fontSize: 15, fontWeight: 'bold', marginLeft: 10 }}>mins</Text></View>
+                </View>
+
+                <View style={styles.waitTimeOptions}>
+                  <View style={styles.row}>
+                    {[...Array(3)].map((_, index) => (
+                      <TouchableOpacity key={index.toString()} style={styles.waitTimeOption} onPress={() => setShowsetwaittime({ ...showSetwaittime, waitTime: ((index + 1) * 5).toString() })}>
+                        <Text style={styles.waitTimeOptionHeader}>{(index + 1) * 5} mins</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+
+                  <View style={styles.row}>
+                    {[...Array(3)].map((_, index) => (
+                      <TouchableOpacity key={index.toString()} style={styles.waitTimeOption} onPress={() => setShowsetwaittime({ ...showSetwaittime, waitTime: ((index + 4) * 5).toString() })}>
+                        <Text style={styles.waitTimeOptionHeader}>{(index + 4) * 5} mins</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+
+                <View style={styles.waitTimeActions}>
+                  <TouchableOpacity style={styles.waitTimeAction} onPress={() => setTheWaitTime()}>
+                    <Text style={styles.waitTimeActionHeader}>Done</Text>
+                  </TouchableOpacity>
                 </View>
               </View>
-
-              <View style={styles.waitTimeActions}>
-                <TouchableOpacity style={styles.waitTimeAction} onPress={() => setTheWaitTime()}>
-                  <Text style={styles.waitTimeActionHeader}>Done</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
+            </TouchableWithoutFeedback>
           </SafeAreaView>
         </Modal>
       )}
-
       {loading && <Loadingprogress/>}
 		</SafeAreaView>
 	)

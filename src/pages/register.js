@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { SafeAreaView, Platform, Dimensions, ScrollView, View, Text, TextInput, Image, TouchableOpacity, TouchableWithoutFeedback, Modal, Keyboard, StyleSheet } from 'react-native';
+import { 
+  SafeAreaView, Platform, ActivityIndicator, Dimensions, ScrollView, View, Text, TextInput, 
+  Image, TouchableOpacity, TouchableWithoutFeedback, Modal, Keyboard, StyleSheet, PermissionsAndroid
+} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import * as FileSystem from 'expo-file-system'
@@ -12,6 +15,7 @@ import { ownerRegisterInfo, registerInfo } from '../../assets/info'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import Entypo from 'react-native-vector-icons/Entypo'
+import Ionicons from 'react-native-vector-icons/Ionicons'
 
 // components
 import Loadingprogress from '../components/loadingprogress';
@@ -30,8 +34,10 @@ export default function Register(props) {
 	const [cameraPermission, setCamerapermission] = useState(null);
 	const [pickingPermission, setPickingpermission] = useState(null);
 	const [camComp, setCamcomp] = useState(null)
+  const [camType, setCamtype] = useState('front')
+  const [choosing, setChoosing] = useState(false)
 	const [username, setUsername] = useState(ownerRegisterInfo.username)
-	const [profile, setProfile] = useState({ uri: '', name: '' })
+	const [profile, setProfile] = useState({ uri: '', name: '', size: { width: 0, height: 0 }})
 
 	const [loading, setLoading] = useState(false)
 	const [errorMsg, setErrormsg] = useState('')
@@ -121,66 +127,69 @@ export default function Register(props) {
 			"n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"
 		]
 		let photo_name_length = Math.floor(Math.random() * (15 - 10)) + 10
-		let char = "", captured, self = this
+		let char = ""
 
 		if (camComp) {
 			let options = { quality: 0, skipProcessing: true };
-			let photo = await camComp.takePictureAsync(options)
-			let photo_option = [
-				{ resize: { width: width, height: width }},
-				{ flip: ImageManipulator.FlipType.Horizontal }
-			]
-			let photo_save_option = { format: ImageManipulator.SaveFormat.JPEG, base64: true }
+      let photo = await camComp.takePictureAsync(options)
+      let photo_option = [{ resize: { width: width, height: width }}]
+      let photo_save_option = { format: ImageManipulator.SaveFormat.JPEG, base64: true }
 
-			photo = await ImageManipulator.manipulateAsync(
-				photo.localUri || photo.uri,
-				photo_option,
-				photo_save_option
-			)
+      if (camType == "front") {
+        photo_option.push({ flip: ImageManipulator.FlipType.Horizontal })
+      }
 
-			for (let k = 0; k <= photo_name_length - 1; k++) {
-				if (k % 2 == 0) {
-	                char += "" + letters[Math.floor(Math.random() * letters.length)].toUpperCase();
-	            } else {
-	                char += "" + (Math.floor(Math.random() * 9) + 0);
-	            }
-			}
+      photo = await ImageManipulator.manipulateAsync(
+        photo.localUri || photo.uri,
+        photo_option,
+        photo_save_option
+      )
 
-			FileSystem.moveAsync({
-				from: photo.uri,
-				to: `${FileSystem.documentDirectory}/${char}.jpg`
-			})
-			.then(() => {
-				setProfile({
-					uri: `${FileSystem.documentDirectory}/${char}.jpg`,
-					name: `${char}.jpg`
-				})
+      for (let k = 0; k <= photo_name_length - 1; k++) {
+        char += "" + (
+          k % 2 == 0 ? 
+            letters[Math.floor(Math.random() * letters.length)].toUpperCase()
+            :
+            Math.floor(Math.random() * 9) + 0
+        )
+      }
+
+      FileSystem.moveAsync({
+        from: photo.uri,
+        to: `${FileSystem.documentDirectory}/${char}.jpg`
+      })
+      .then(() => {
+        setProfile({
+          uri: `${FileSystem.documentDirectory}/${char}.jpg`,
+          name: `${char}.jpg`, size: { width, height: width }
+        })
         setLoading(false)
-			})
+      })	
 		}
 	}
 	const choosePhoto = async() => {
     setLoading(true)
+    setChoosing(true)
 
 		let letters = [
 			"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", 
 			"n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"
 		]
 		let photo_name_length = Math.floor(Math.random() * (15 - 10)) + 10
-		let char = "", captured, self = this
-		let photo = await ImagePicker.launchImageLibraryAsync({
+		let char = "", photo = await ImagePicker.launchImageLibraryAsync({
 			mediaTypes: ImagePicker.MediaTypeOptions.Images,
-			aspect: [4, 3],
+			aspect: [1, 1],
 			quality: 0.1,
 			base64: true
 		});
 
 		for (let k = 0; k <= photo_name_length - 1; k++) {
-			if (k % 2 == 0) {
-                char += "" + letters[Math.floor(Math.random() * letters.length)].toUpperCase();
-            } else {
-                char += "" + (Math.floor(Math.random() * 9) + 0);
-            }
+      char += "" + (
+        k % 2 == 0 ? 
+          letters[Math.floor(Math.random() * letters.length)].toUpperCase()
+          :
+          Math.floor(Math.random() * 9) + 0
+      )
 		}
 
 		if (!photo.cancelled) {
@@ -191,32 +200,60 @@ export default function Register(props) {
 			.then(() => {
 				setProfile({
 					uri: `${FileSystem.documentDirectory}/${char}.jpg`,
-					name: `${char}.jpg`
+					name: `${char}.jpg`, size: { width, height: width }
 				})
         setLoading(false)
 			})
 		}
+
+    setChoosing(false)
 	}
 	const allowCamera = async() => {
-		const { status } = await Camera.getCameraPermissionsAsync()
+  	if (Platform.OS === "ios") {
+      const { status } = await Camera.getCameraPermissionsAsync()
 
-		if (status == 'granted') {
-			setCamerapermission(status === 'granted')
-		} else {
-			const { status } = await Camera.requestCameraPermissionsAsync()
+      if (status == 'granted') {
+        setCamerapermission(status === 'granted')
+      } else {
+        const { status } = await Camera.requestCameraPermissionsAsync()
 
-			setCamerapermission(status === 'granted')
-		}
+        setCamerapermission(status === 'granted')
+      }
+    } else {
+      const status = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.CAMERA)
+
+      if (!status) {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.CAMERA,
+          {
+            title: "Camera Permission",
+            message: "EasyGO Business uses camera to allow you to take a photo of yourself",
+            buttonNegative: "Cancel",
+            buttonPositive: "OK"
+          }
+        );
+
+        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+          setCamerapermission(true)
+        }
+      } else {
+        setCamerapermission(true)
+      }
+    }
 	}
 	const allowChoosing = async() => {
-		const { status } = await ImagePicker.getMediaLibraryPermissionsAsync()
-        
-    if (status == 'granted') {
-    	setPickingpermission(status === 'granted')
-    } else {
-    	const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (Platform.OS === "ios") {
+      const { status } = await ImagePicker.getMediaLibraryPermissionsAsync()
+          
+      if (status == 'granted') {
+        setPickingpermission(status === 'granted')
+      } else {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
-    	setPickingpermission(status === 'granted')
+        setPickingpermission(status === 'granted')
+      }
+    } else {
+      setPickingpermission(true)
     }
 	}
 
@@ -236,7 +273,7 @@ export default function Register(props) {
 							</View>
 						)}
 
-            {(setupType == "profile" && (cameraPermission !== null || pickingPermission !== null)) && (
+            {(setupType == "profile" && (cameraPermission || pickingPermission)) && (
 							<View style={styles.cameraContainer}>
 								<Text style={styles.inputHeader}>Provide a photo of yourself</Text>
                 <Text style={styles.inputInfo}>clients will be able to find and book you easily</Text>
@@ -251,17 +288,27 @@ export default function Register(props) {
 									</>
 								) : (
 									<>
-										<Camera 
-											style={styles.camera} 
-											type={Camera.Constants.Type.front} ref={r => {setCamcomp(r)}}
-											ratio="1:1"
-										/>
+  									{!choosing && (
+                      <Camera 
+                        style={styles.camera} 
+                        type={camType}
+                        ref={r => {setCamcomp(r)}}
+                        ratio="1:1"
+                      />
+                    )}
+
+                    <View style={{ alignItems: 'center', marginVertical: 10 }}>
+                      <Ionicons name="camera-reverse-outline" size={wsize(7)} onPress={() => setCamtype(camType == 'back' ? 'front' : 'back')}/>
+                    </View>
 
 										<View style={styles.cameraActions}>
-											<TouchableOpacity style={styles.cameraAction} onPress={snapPhoto.bind(this)}>
+											<TouchableOpacity style={[styles.cameraAction, { opacity: loading ? 0.5 : 1 }]} disabled={loading} onPress={snapPhoto.bind(this)}>
 												<Text style={styles.cameraActionHeader}>Take{'\n'}this photo</Text>
 											</TouchableOpacity>
-											<TouchableOpacity style={styles.cameraAction} onPress={() => choosePhoto()}>
+											<TouchableOpacity style={[styles.cameraAction, { opacity: loading ? 0.5 : 1 }]} disabled={loading} onPress={() => {
+                        allowChoosing()
+                        choosePhoto()
+                      }}>
 												<Text style={styles.cameraActionHeader}>Choose{'\n'}from phone</Text>
 											</TouchableOpacity>
 										</View>
@@ -310,17 +357,13 @@ export default function Register(props) {
 				</View>
 			</TouchableWithoutFeedback>
 
-      {loading && (
-        <Modal transparent={true}>
-          <Loadingprogress/>
-        </Modal>
-      )}
+      {loading && <Modal transparent={true}><Loadingprogress/></Modal>}
 		</SafeAreaView>
 	);
 }
 
 const styles = StyleSheet.create({
-	register: { backgroundColor: 'white', height: '100%', width: '100%' },
+	register: { backgroundColor: 'white', height: '100%', paddingTop: Platform.OS == "ios" ? 0 : Constants.statusBarHeight, width: '100%' },
 	box: { alignItems: 'center', backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 	header: { flexDirection: 'column', height: '10%', justifyContent: 'space-around' },
 	boxHeader: { color: 'black', fontFamily: 'appFont', fontSize: wsize(7), fontWeight: 'bold' },

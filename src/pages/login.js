@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import axios from 'axios'
 import { 
-	SafeAreaView, Dimensions, View, ImageBackground, Text, TextInput, Image, 
+	SafeAreaView, Platform, Dimensions, View, ImageBackground, Text, TextInput, Image, 
 	TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import { loginUser } from '../apis/owners'
-import { loginInfo } from '../../assets/info'
+import { loginInfo, displayPhonenumber } from '../../assets/info'
 
 const { height, width } = Dimensions.get('window')
 const wsize = p => {
@@ -71,25 +71,7 @@ export default function Login({ navigation }) {
 					<View style={style.inputsBox}>
 						<View style={style.inputContainer}>
 							<Text style={style.inputHeader}>Phone number:</Text>
-							<TextInput style={style.input} onKeyPress={(e) => {
-								let newValue = e.nativeEvent.key
-
-								if (newValue >= "0" && newValue <= "9") {
-									if (phonenumber.length == 3) {
-										setPhonenumber("(" + phonenumber + ") " + newValue)
-									} else if (phonenumber.length == 9) {
-										setPhonenumber(phonenumber + "-" + newValue)
-									} else if (phonenumber.length == 13) {
-										setPhonenumber(phonenumber + newValue)
-
-										Keyboard.dismiss()
-									} else {
-										setPhonenumber(phonenumber + newValue)
-									}
-								} else if (newValue == "Backspace") {
-									setPhonenumber(phonenumber.substr(0, phonenumber.length - 1))
-								}
-							}} value={phonenumber} keyboardType="numeric" autoCorrect={false}/>
+							<TextInput style={style.input} onChangeText={(num) => setPhonenumber(displayPhonenumber(phonenumber, num, () => Keyboard.dismiss()))} value={phonenumber} keyboardType="numeric" autoCorrect={false}/>
 						</View>
 
 						<View style={style.inputContainer}>

@@ -47,8 +47,8 @@ export default function App() {
 
   if (loaded) {
     const retrieveId = async() => {
-      let ownerid = await AsyncStorage.getItem("ownerid")
-      let phase = await AsyncStorage.getItem("phase")
+      const ownerid = await AsyncStorage.getItem("ownerid")
+      const phase = await AsyncStorage.getItem("phase")
 
       if (ownerid) {
         if (phase) {
@@ -198,7 +198,7 @@ export default function App() {
       )
     }  
   }
-
+  
   return null
 }
 

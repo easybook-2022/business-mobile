@@ -1,5 +1,9 @@
 import React, { useEffect, useState } from 'react'
-import { SafeAreaView, Platform, ActivityIndicator, Dimensions, ScrollView, View, Text, TextInput, Image, Keyboard, TouchableOpacity, TouchableWithoutFeedback, StyleSheet } from 'react-native'
+import { 
+  SafeAreaView, Platform, ActivityIndicator, Dimensions, ScrollView, Modal, View, 
+  Text, TextInput, Image, Keyboard, TouchableOpacity, TouchableWithoutFeedback, StyleSheet, 
+  PermissionsAndroid
+} from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
@@ -9,6 +13,11 @@ import * as ImageManipulator from 'expo-image-manipulator'
 import * as ImagePicker from 'expo-image-picker';
 import { logo_url } from '../../assets/info'
 import { addNewMenu, getMenuInfo, saveMenu } from '../apis/menus'
+
+import Ionicons from 'react-native-vector-icons/Ionicons'
+
+// components
+import Loadingprogress from '../components/loadingprogress';
 
 const { height, width } = Dimensions.get('window')
 const wsize = p => {
@@ -26,10 +35,12 @@ export default function Addmenu(props) {
 	const [setupType, setSetuptype] = useState('name')
 	const [cameraPermission, setCamerapermission] = useState(null);
 	const [pickingPermission, setPickingpermission] = useState(null);
+  const [camType, setCamtype] = useState('back')
 	const [camComp, setCamcomp] = useState(null)
+  const [choosing, setChoosing] = useState(false) // for android
 	
 	const [name, setName] = useState('')
-	const [image, setImage] = useState({ uri: '', name: '' })
+	const [image, setImage] = useState({ uri: '', name: '', size: { height: 0, width: 0 }, loading: false })
 
 	const [loaded, setLoaded] = useState(menuid ? false : true)
 	const [loading, setLoading] = useState(false)
@@ -39,7 +50,7 @@ export default function Addmenu(props) {
 	const addTheNewMenu = async() => {
 		const ownerid = await AsyncStorage.getItem("ownerid")
 		const locationid = await AsyncStorage.getItem("locationid")
-		const data = { locationid, parentMenuid, name, image, permission: cameraPermission || pickingPermission }
+		const data = { locationid, parentMenuid, name, image }
 
 		setLoading(true)
 
@@ -58,14 +69,11 @@ export default function Addmenu(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					const { errormsg, status } = err.response.data
-
-					setMenuform({
-						...menuForm,
-						errormsg
-					})
 				} else {
 					alert("add menu")
 				}
+
+        setLoading(false)
 			})
 	}
 	const saveTheMenu = () => {
@@ -106,12 +114,6 @@ export default function Addmenu(props) {
 				}
 
 				break
-			case 1:
-				if (!image.uri && Platform.OS == 'ios') {
-					msg = "Please provide a photo for the menu"
-				}
-
-				break
 			default:
 		} 
 
@@ -144,7 +146,7 @@ export default function Addmenu(props) {
 					const { name, image } = res.info
 
 					setName(name)
-					setImage({ uri: logo_url + image, name: image })
+					setImage({ ...image, uri: logo_url + image.name })
 					setLoaded(true)
 				}
 			})
@@ -158,18 +160,24 @@ export default function Addmenu(props) {
 	}
 
 	const snapPhoto = async() => {
+    setImage({ ...image, loading: true })
+
 		let letters = [
 			"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", 
 			"n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"
 		]
 		let photo_name_length = Math.floor(Math.random() * (15 - 10)) + 10
-		let char = "", captured, self = this
+		let char = ""
 
 		if (camComp) {
 			let options = { quality: 0, skipProcessing: true };
 			let photo = await camComp.takePictureAsync(options)
 			let photo_option = [{ resize: { width: width, height: width }}]
 			let photo_save_option = { format: ImageManipulator.SaveFormat.JPEG, base64: true }
+
+      if (camType == "front") {
+        photo_option.push({ flip: ImageManipulator.FlipType.Horizontal })
+      }
 
 			photo = await ImageManipulator.manipulateAsync(
 				photo.localUri || photo.uri,
@@ -178,11 +186,12 @@ export default function Addmenu(props) {
 			)
 
 			for (let k = 0; k <= photo_name_length - 1; k++) {
-				if (k % 2 == 0) {
-	                char += "" + letters[Math.floor(Math.random() * letters.length)].toUpperCase();
-	            } else {
-	                char += "" + (Math.floor(Math.random() * 9) + 0);
-	            }
+				char += "" + (
+          k % 2 == 0 ? 
+            letters[Math.floor(Math.random() * letters.length)].toUpperCase()
+            :
+            Math.floor(Math.random() * 9) + 0
+        )
 			}
 
 			FileSystem.moveAsync({
@@ -190,31 +199,37 @@ export default function Addmenu(props) {
 				to: `${FileSystem.documentDirectory}/${char}.jpg`
 			})
 			.then(() => {
-				setImage({ uri: `${FileSystem.documentDirectory}/${char}.jpg`, name: `${char}.jpg` })
+				setImage({ 
+          ...image, 
+          uri: `${FileSystem.documentDirectory}/${char}.jpg`, name: `${char}.jpg`, loading: false, 
+          size: { width, height: width }
+        })
 				setErrormsg('')
 			})
 		}
 	}
 	const choosePhoto = async() => {
+    setChoosing(true)
+
 		let letters = [
 			"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", 
 			"n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"
 		]
 		let photo_name_length = Math.floor(Math.random() * (15 - 10)) + 10
-		let char = "", captured, self = this
-		let photo = await ImagePicker.launchImageLibraryAsync({
+		let char = "", photo = await ImagePicker.launchImageLibraryAsync({
 			mediaTypes: ImagePicker.MediaTypeOptions.Images,
-			aspect: [4, 3],
+			aspect: [1, 1],
 			quality: 0.1,
 			base64: true
 		});
 
 		for (let k = 0; k <= photo_name_length - 1; k++) {
-			if (k % 2 == 0) {
-                char += "" + letters[Math.floor(Math.random() * letters.length)].toUpperCase();
-            } else {
-                char += "" + (Math.floor(Math.random() * 9) + 0);
-            }
+			char += "" + (
+        k % 2 == 0 ? 
+          letters[Math.floor(Math.random() * letters.length)].toUpperCase() 
+          : 
+          Math.floor(Math.random() * 9) + 0
+        )
 		}
 
 		if (!photo.cancelled) {
@@ -223,32 +238,64 @@ export default function Addmenu(props) {
 				to: `${FileSystem.documentDirectory}/${char}.jpg`
 			})
 			.then(() => {
-				setImage({ uri: `${FileSystem.documentDirectory}/${char}.jpg`, name: `${char}.jpg` })
+				setImage({ 
+          ...image, 
+          uri: `${FileSystem.documentDirectory}/${char}.jpg`, name: `${char}.jpg`, loading: false, 
+          size: { width: photo.width, height: photo.height }
+        })
 				setErrormsg('')
 			})
 		}
+
+    setChoosing(false)
 	}
 	const allowCamera = async() => {
-		const { status } = await Camera.getCameraPermissionsAsync()
+		if (Platform.OS == "ios") {
+      const { status } = await Camera.getCameraPermissionsAsync()
 
-		if (status == 'granted') {
-			setCamerapermission(status === 'granted')
-		} else {
-			const { status } = await Camera.requestCameraPermissionsAsync()
+      if (status == 'granted') {
+        setCamerapermission(status === 'granted')
+      } else {
+        const { status } = await Camera.requestCameraPermissionsAsync()
 
-			setCamerapermission(status === 'granted')
-		}
+        setCamerapermission(status === 'granted')
+      }
+    } else {
+      const status = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.CAMERA)
+
+      if (!status) {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.CAMERA,
+          {
+            title: "Camera Permission",
+            message: "EasyGO Business allows you to take a photo for menu",
+            buttonNegative: "Cancel",
+            buttonPositive: "OK"
+          }
+        );
+
+        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+          setCamerapermission(true)
+        }
+      } else {
+        setCamerapermission(true)
+      }
+    }
 	}
 	const allowChoosing = async() => {
-		const { status } = await ImagePicker.getMediaLibraryPermissionsAsync()
-        
-        if (status == 'granted') {
-        	setPickingpermission(status === 'granted')
-        } else {
-        	const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+		if (Platform.OS === "ios") {
+      const { status } = await ImagePicker.getMediaLibraryPermissionsAsync()
+          
+      if (status == 'granted') {
+        setPickingpermission(status === 'granted')
+      } else {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
-        	setPickingpermission(status === 'granted')
-        }
+        setPickingpermission(status === 'granted')
+      }
+    } else {
+      setPickingpermission(true)
+    }
 	}
 
 	useEffect(() => {
@@ -256,16 +303,16 @@ export default function Addmenu(props) {
 	}, [])
 
 	return (
-		<SafeAreaView style={[style.addmenu, { opacity: loading ? 0.5 : 1 }]}>
+		<SafeAreaView style={[styles.addmenu, { opacity: loading ? 0.5 : 1 }]}>
 			<TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
 				{loaded ? 
-					<View style={style.box}>
+					<View style={styles.box}>
 						{setupType == 'name' && (
-							<View style={style.inputContainer}>
-								<Text style={style.addHeader}>What is this menu call</Text>
+							<View style={styles.inputContainer}>
+								<Text style={styles.addHeader}>What is this menu call</Text>
 
 								<TextInput 
-									style={style.addInput} placeholder="example: Beverages" placeholderTextColor="rgba(127, 127, 127, 0.5)" 
+									style={styles.addInput} placeholder="example: Beverages" placeholderTextColor="rgba(127, 127, 127, 0.5)" 
 									onChangeText={(name) => setName(name)} value={name} autoCorrect={false} autoCompleteType="off" 
 									autoCapitalize="none"
 								/>
@@ -273,33 +320,43 @@ export default function Addmenu(props) {
 						)}
 
 						{setupType == 'photo' && (
-							<View style={style.cameraContainer}>
-								<Text style={style.cameraHeader}>Provide a photo for {name}</Text>
-
+							<View style={styles.cameraContainer}>
+								<Text style={styles.cameraHeader}>Provide a photo for {name} (Optional)</Text>
+                
 								{image.uri ? (
 									<>
-										<Image style={style.camera} source={{ uri: image.uri }}/>
+										<Image style={styles.camera} source={{ uri: image.uri }}/>
 
-										<TouchableOpacity style={style.cameraAction} onPress={() => setImage({ uri: '', name: '' })}>
-											<Text style={style.cameraActionHeader}>Cancel</Text>
+										<TouchableOpacity style={styles.cameraAction} onPress={() => setImage({ ...image, uri: '' })}>
+											<Text style={styles.cameraActionHeader}>Cancel</Text>
 										</TouchableOpacity>
 									</>
 								) : (
 									<>
-										<Camera 
-											style={style.camera} 
-											type={Camera.Constants.Type.back} ref={r => { setCamcomp(r) }}
-											ratio="1:1"
-										/>
+                    {!choosing && (
+                      <>
+                        <Camera 
+                          style={styles.camera} 
+                          type={camType} 
+                          ref={r => { setCamcomp(r) }}
+                          ratio={"1:1"}
+                        />
 
-										{image.loading && <ActivityIndicator color="black" size="small"/>}
+                        <View style={{ alignItems: 'center', marginVertical: 10 }}>
+                          <Ionicons name="camera-reverse-outline" size={wsize(7)} onPress={() => setCamtype(camType == 'back' ? 'front' : 'back')}/>
+                        </View>
+                      </>
+                    )}
 
-										<View style={style.cameraActions}>
-											<TouchableOpacity style={style.cameraAction} onPress={snapPhoto.bind(this)}>
-												<Text style={style.cameraActionHeader}>Take{'\n'}this photo</Text>
+										<View style={styles.cameraActions}>
+											<TouchableOpacity style={[styles.cameraAction, { opacity: image.loading ? 0.5 : 1 }]} disabled={image.loading} onPress={snapPhoto.bind(this)}>
+												<Text style={styles.cameraActionHeader}>Take{'\n'}this photo</Text>
 											</TouchableOpacity>
-											<TouchableOpacity style={style.cameraAction} onPress={() => choosePhoto()}>
-												<Text style={style.cameraActionHeader}>Choose{'\n'}from phone</Text>
+											<TouchableOpacity style={[styles.cameraAction, { opacity: image.loading ? 0.5 : 1 }]} disabled={image.loading} onPress={() => {
+                        allowChoosing()
+                        choosePhoto()
+                      }}>
+												<Text style={styles.cameraActionHeader}>Choose{'\n'}from phone</Text>
 											</TouchableOpacity>
 										</View>
 									</>
@@ -307,15 +364,13 @@ export default function Addmenu(props) {
 							</View>
 						)}
 						
-						<Text style={style.errorMsg}>{errorMsg}</Text>
+						<Text style={styles.errorMsg}>{errorMsg}</Text>
 
-						{loading ? <ActivityIndicator color="black" size="small"/> : null}
-
-						<View style={style.addActions}>
-							<TouchableOpacity style={style.addAction} disabled={loading} onPress={() => props.navigation.goBack()}>
-								<Text style={style.addActionHeader}>Cancel</Text>
+						<View style={styles.addActions}>
+							<TouchableOpacity style={styles.addAction} disabled={loading} onPress={() => props.navigation.goBack()}>
+								<Text style={styles.addActionHeader}>Cancel</Text>
 							</TouchableOpacity>
-							<TouchableOpacity style={style.addAction} disabled={loading} onPress={() => {
+							<TouchableOpacity style={styles.addAction} disabled={loading} onPress={() => {
 								if (!menuid) {
 									if (setupType == "photo") {
 										addTheNewMenu()
@@ -330,7 +385,7 @@ export default function Addmenu(props) {
 									}
 								}
 							}}>
-								<Text style={style.addActionHeader}>{
+								<Text style={styles.addActionHeader}>{
 									!menuid ? 
 										setupType == "photo" ? "Done" : "Next"
 										:
@@ -345,12 +400,14 @@ export default function Addmenu(props) {
 					</View>
 				}
 			</TouchableWithoutFeedback>
+
+      {(image.loading || loading) && <Modal transparent={true}><Loadingprogress/></Modal>}
 		</SafeAreaView>
 	)
 }
 
-const style = StyleSheet.create({
-	addmenu: { height: '100%', width: '100%' },
+const styles = StyleSheet.create({
+	addmenu: { height: '100%', paddingTop: Platform.OS == "ios" ? 0 : Constants.statusBarHeight, width: '100%' },
 	box: { alignItems: 'center', height: '100%', width: '100%' },
 	inputContainer: { alignItems: 'center', width: '100%' },
 	addHeader: { fontSize: wsize(5), fontWeight: 'bold', paddingVertical: 5, textAlign: 'center' },

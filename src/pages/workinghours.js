@@ -1,11 +1,16 @@
 import React, { useState } from 'react'
-import { SafeAreaView, ActivityIndicator, Dimensions, ScrollView, View, Text, TextInput, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { SafeAreaView, Platform, ActivityIndicator, Dimensions, ScrollView, Modal, View, Text, TextInput, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import { setOwnerHours } from '../apis/owners'
+import { getLocationProfile } from '../apis/locations'
+import { timeControl } from '../../assets/info'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
+
+// components
+import Loadingprogress from '../components/loadingprogress';
 
 const { height, width } = Dimensions.get('window')
 const wsize = p => {
@@ -20,19 +25,77 @@ export default function Workinghours({ navigation }) {
   const [type, setType] = useState('')
 
   const [daysInfo, setDaysinfo] = useState({ working: ['', '', '', '', '', '', ''], done: false })
-  const [workerHours, setWorkerhours] = useState([
-    { key: "0", header: "Sunday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, working: null },
-    { key: "1", header: "Monday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, working: null },
-    { key: "2", header: "Tuesday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, working: null },
-    { key: "3", header: "Wednesday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, working: null },
-    { key: "4", header: "Thursday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, working: null },
-    { key: "5", header: "Friday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, working: null },
-    { key: "6", header: "Saturday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, working: null }
-  ])
+  const [workerHours, setWorkerhours] = useState([])
+  const [hoursRange, setHoursrange] = useState([])
   const [errorMsg, setErrormsg] = useState('')
+  const [loaded, setLoaded] = useState(false)
   const [loading, setLoading] = useState(false)
   
-  const getInfo = async() => setType(await AsyncStorage.getItem("locationtype"))
+  const getInfo = async() => {
+    const locationid = await AsyncStorage.getItem("locationid")
+    const locationtype = await AsyncStorage.getItem("locationtype")
+    const data = { locationid }
+
+    getLocationProfile(data)
+      .then((res) => {
+        if (res.status == 200) {
+          return res.data
+        }
+      })
+      .then((res) => {
+        if (res) {
+          const hours = [...res.info.hours]
+          let openHour, openMinute, closeHour, closeMinute
+          let openInfo, closeInfo, currDate, calcDate, openTime, closeTime
+
+          for (let k = 0; k < 7; k++) {
+            openInfo = hours[k].opentime
+            closeInfo = hours[k].closetime
+
+            openMinute = parseInt(openInfo.minute)
+            openHour = parseInt(openInfo.hour)
+            openHour = openInfo.period == "PM" ? openHour + 12 : openHour
+
+            closeMinute = parseInt(closeInfo.minute)
+            closeHour = parseInt(closeInfo.hour)
+            closeHour = closeInfo.period == "PM" ? closeHour + 12 : closeHour
+
+            currDate = new Date()
+
+            calcDate = new Date(currDate.setDate(currDate.getDate() - currDate.getDay() + k)).toUTCString();
+            calcDate = calcDate.split(" ")
+            calcDate.pop()
+            calcDate.pop()
+
+            calcDate = calcDate.join(" ") + " "
+
+            openTime = (openHour < 10 ? "0" + openHour : openHour)
+            openTime += ":"
+            openTime += (openMinute < 10 ? "0" + openMinute : openMinute)
+
+            closeTime = (closeHour < 10 ? "0" + closeHour : closeHour)
+            closeTime += ":"
+            closeTime += (closeMinute < 10 ? "0" + closeMinute : closeMinute)
+
+            hours[k]["calcDate"] = calcDate
+            hours[k]["openunix"] = Date.parse(calcDate + openTime)
+            hours[k]["closeunix"] = Date.parse(calcDate + closeTime)
+          }
+
+          setType(locationtype)
+          setWorkerhours(hours)
+          setHoursrange(hours)
+          setLoaded(true)
+        }
+      })
+      .catch((err) => {
+        if (err.response && err.response.status == 400) {
+          const { errormsg, status } = err.response.data
+        } else {
+          alert("get info")
+        }
+      })
+  }
   const setTime = () => {
     const newWorkerhours = []
     let emptyDays = true
@@ -41,8 +104,8 @@ export default function Workinghours({ navigation }) {
       newWorkerhours.push({ 
         key: newWorkerhours.length.toString(), 
         header: day, 
-        opentime: { hour: "12", minute: "00", period: "AM" }, 
-        closetime: { hour: "11", minute: "59", period: "PM" }, 
+        opentime: {...hoursRange[index].opentime}, 
+        closetime: {...hoursRange[index].closetime}, 
         working: daysInfo.working[index] ? true : false
       })
 
@@ -135,6 +198,7 @@ export default function Workinghours({ navigation }) {
         })
         .then((res) => {
           if (res) {
+            setLoading(false)
             AsyncStorage.setItem("phase", "main")
 
             navigation.dispatch(
@@ -158,63 +222,41 @@ export default function Workinghours({ navigation }) {
     }
   }
   const updateWorkingHour = (index, timetype, dir, open) => {
-    const newWorkerhours = [...workerHours]
-    let value, period
+    const newWorkerhours = [...workerHours], hoursRangeInfo = [...hoursRange]
+    let value, { openunix, closeunix, calcDate } = hoursRangeInfo[index]
+    let { opentime, closetime } = newWorkerhours[index], valid = false
 
-    value = open ? 
-      newWorkerhours[index].opentime[timetype]
-      :
-      newWorkerhours[index].closetime[timetype]
-
-    switch (timetype) {
-      case "hour":
-        value = parseInt(value)
-        value = dir == "up" ? value + 1 : value - 1
-
-        if (value > 12) {
-          value = 1
-        } else if (value < 1) {
-          value = 12
-        }
-
-        if (value < 10) {
-          value = "0" + value
-        } else {
-          value = value.toString()
-        }
-
-        break
-      case "minute":
-        value = parseInt(value)
-        value = dir == "up" ? value + 1 : value - 1
-
-        if (value > 59) {
-          value = 0
-        } else if (value < 0) {
-          value = 59
-        }
-
-        if (value < 10) {
-          value = "0" + value
-        } else {
-          value = value.toString()
-        }
-
-        break
-      case "period":
-        value = value == "AM" ? "PM" : "AM"
-
-        break
-      default:
-    }
+    value = open ? opentime : closetime
+    
+    let { hour, minute, period } = timeControl(timetype, value, dir, open)
 
     if (open) {
-      newWorkerhours[index].opentime[timetype] = value
+      valid = (
+        Date.parse(calcDate + " " + hour + ":" + minute + " " + period) >= openunix
+        &&
+        Date.parse(calcDate + " " + hour + ":" + minute + " " + period) <= Date.parse(calcDate + " " + closetime.hour + ":" + closetime.minute + " " + closetime.period)
+      )
     } else {
-      newWorkerhours[index].closetime[timetype] = value
+      valid = (
+        Date.parse(calcDate + " " + hour + ":" + minute + " " + period) <= closeunix
+        &&
+        Date.parse(calcDate + " " + hour + ":" + minute + " " + period) >= Date.parse(calcDate + " " + opentime.hour + ":" + opentime.minute + " " + opentime.period)
+      )
     }
+      
+    if (valid) {
+      value.hour = hour < 10 ? "0" + hour : hour.toString()
+      value.minute = minute < 10 ? "0" + minute : minute.toString()
+      value.period = period
 
-    setWorkerhours(newWorkerhours)
+      if (open) {
+        newWorkerhours[index].opentime = value
+      } else {
+        newWorkerhours[index].closetime = value
+      }
+
+      setWorkerhours(newWorkerhours)
+    }
   }
 
   return (
@@ -228,150 +270,159 @@ export default function Workinghours({ navigation }) {
           </TouchableOpacity>
         </View>
         :
-        <ScrollView style={{ height: '90%', width: '100%' }}>
-          <View style={{ alignItems: 'center' }}>
-            <Text style={styles.boxHeader}>Your time</Text>
-            <Text style={styles.boxMiniheader}>Set your working days and hours</Text>
+        loaded ? 
+          <ScrollView style={{ height: '90%', width: '100%' }}>
+            <View style={{ alignItems: 'center' }}>
+              <Text style={styles.boxHeader}>Your time</Text>
+              <Text style={styles.boxMiniheader}>Set your working days and hours</Text>
 
-            {!daysInfo.done ? 
-              <View style={{ alignItems: 'center', width: '100%' }}>
-                <Text style={styles.workerDayHeader}>Tap the days you work on</Text>
+              {!daysInfo.done ? 
+                <View style={{ alignItems: 'center', width: '100%' }}>
+                  <Text style={styles.workerDayHeader}>Tap the days you work on</Text>
 
-                {daysArr.map((day, index) => (
-                  <TouchableOpacity key={index} style={daysInfo.working.indexOf(day) > -1 ? styles.workerDayTouchSelected : styles.workerDayTouch} onPress={() => {
-                    const newWorking = [...daysInfo.working]
+                  {daysArr.map((day, index) => (
+                    <TouchableOpacity key={index} disabled={hoursRange[index].close} style={
+                      !hoursRange[index].close ? 
+                        daysInfo.working.indexOf(day) > -1 ? 
+                          styles.workerDayTouchSelected : styles.workerDayTouch
+                        :
+                        styles.workerDayTouchOff
+                    } onPress={() => {
+                      const newWorking = [...daysInfo.working]
 
-                    if (newWorking[index] == '') {
-                      newWorking[index] = day
-                    } else {
-                      newWorking[index] = ''
-                    }
+                      if (newWorking[index] == '') {
+                        newWorking[index] = day
+                      } else {
+                        newWorking[index] = ''
+                      }
 
-                    setDaysinfo({ ...daysInfo, working: newWorking })
-                  }}>
-                    <Text style={styles.workerDayTouchHeader}>{day}</Text>
+                      setDaysinfo({ ...daysInfo, working: newWorking })
+                    }}>
+                      <Text style={styles.workerDayTouchHeader}>{day}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+                :
+                <View style={styles.workerHours}>
+                  <TouchableOpacity style={styles.workerHoursBack} onPress={() => setDaysinfo({ working: ['', '', '', '', '', '', ''], done: false })}>
+                    <Text style={styles.workerHoursBackHeader}>Go Back</Text>
                   </TouchableOpacity>
-                ))}
-              </View>
-              :
-              <View style={styles.workerHours}>
-                <TouchableOpacity style={styles.workerHoursBack} onPress={() => setDaysinfo({ working: ['', '', '', '', '', '', ''], done: false })}>
-                  <Text style={styles.workerHoursBackHeader}>Go Back</Text>
-                </TouchableOpacity>
 
-                {workerHours.map((info, index) => (
-                  info.working ?
-                    <View key={index} style={styles.workerHour}>
-                      <Text style={styles.workerHourHeader}>Set your working time for {info.header}</Text>
-                      <Text style={[styles.workerHourHeader, { marginTop: 10 }]}>Use the arrow to set the time</Text>
-                      <View style={styles.timeSelectionContainer}>
-                        <View style={styles.timeSelection}>
-                          <View style={styles.selection}>
-                            <TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "up", true)}>
-                              <AntDesign name="up" size={wsize(6)}/>
-                            </TouchableOpacity>
-                            <TextInput style={styles.selectionHeader} onChangeText={(hour) => {
-                              const newWorkerhours = [...workerHours]
+                  {workerHours.map((info, index) => (
+                    info.working ?
+                      <View key={index} style={styles.workerHour}>
+                        <Text style={styles.workerHourHeader}><Text style={{ fontWeight: '300' }}>Your working time for</Text> {info.header}</Text>
 
-                              newWorkerhours[index].opentime["hour"] = hour.toString()
+                        <View style={styles.timeSelectionContainer}>
+                          <View style={styles.timeSelection}>
+                            <View style={styles.selection}>
+                              <TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "up", true)}>
+                                <AntDesign name="up" size={wsize(6)}/>
+                              </TouchableOpacity>
+                              <TextInput style={styles.selectionHeader} onChangeText={(hour) => {
+                                const newWorkerhours = [...workerHours]
 
-                              setWorkerhours(newWorkerhours)
-                            }} keyboardType="numeric" maxLength="2" value={info.opentime.hour}/>
-                            <TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "down", true)}>
-                              <AntDesign name="down" size={wsize(6)}/>
-                            </TouchableOpacity>
+                                newWorkerhours[index].opentime["hour"] = hour.toString()
+
+                                setWorkerhours(newWorkerhours)
+                              }} keyboardType="numeric" maxLength={2} value={info.opentime.hour}/>
+                              <TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "down", true)}>
+                                <AntDesign name="down" size={wsize(6)}/>
+                              </TouchableOpacity>
+                            </View>
+                            <View style={styles.selectionDivHolder}>
+                              <Text style={styles.selectionDiv}>:</Text>
+                            </View>
+                            <View style={styles.selection}>
+                              <TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "up", true)}>
+                                <AntDesign name="up" size={wsize(6)}/>
+                              </TouchableOpacity>
+                              <TextInput style={styles.selectionHeader} onChangeText={(minute) => {
+                                const newWorkerhours = [...workerHours]
+
+                                newWorkerhours[index].opentime["minute"] = minute.toString()
+
+                                setWorkerhours(newWorkerhours)
+                              }} keyboardType="numeric" maxLength={2} value={info.opentime.minute}/>
+                              <TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "down", true)}>
+                                <AntDesign name="down" size={wsize(6)}/>
+                              </TouchableOpacity>
+                            </View>
+                            <View style={styles.selection}>
+                              <TouchableOpacity onPress={() => updateWorkingHour(index, "period", "up", true)}>
+                                <AntDesign name="up" size={wsize(6)}/>
+                              </TouchableOpacity>
+                              <Text style={styles.selectionHeader}>{info.opentime.period}</Text>
+                              <TouchableOpacity onPress={() => updateWorkingHour(index, "period", "down", true)}>
+                                <AntDesign name="down" size={wsize(6)}/>
+                              </TouchableOpacity>
+                            </View>
                           </View>
-                          <View style={styles.column}>
-                            <Text style={styles.selectionDiv}>:</Text>
+                          <View style={styles.timeSelectionHeaderHolder}>
+                            <Text style={styles.timeSelectionHeader}>To</Text>
                           </View>
-                          <View style={styles.selection}>
-                            <TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "up", true)}>
-                              <AntDesign name="up" size={wsize(6)}/>
-                            </TouchableOpacity>
-                            <TextInput style={styles.selectionHeader} onChangeText={(minute) => {
-                              const newWorkerhours = [...workerHours]
+                          <View style={styles.timeSelection}>
+                            <View style={styles.selection}>
+                              <TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "up", false)}>
+                                <AntDesign name="up" size={wsize(6)}/>
+                              </TouchableOpacity>
+                              <TextInput style={styles.selectionHeader} onChangeText={(hour) => {
+                                const newWorkerhours = [...workerHours]
 
-                              newWorkerhours[index].opentime["minute"] = minute.toString()
+                                newWorkerhours[index].closetime["hour"] = hour.toString()
 
-                              setWorkerhours(newWorkerhours)
-                            }} keyboardType="numeric" maxLength="2" value={info.opentime.minute}/>
-                            <TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "down", true)}>
-                              <AntDesign name="down" size={wsize(6)}/>
-                            </TouchableOpacity>
-                          </View>
-                          <View style={styles.selection}>
-                            <TouchableOpacity onPress={() => updateWorkingHour(index, "period", "up", true)}>
-                              <AntDesign name="up" size={wsize(6)}/>
-                            </TouchableOpacity>
-                            <Text style={styles.selectionHeader}>{info.opentime.period}</Text>
-                            <TouchableOpacity onPress={() => updateWorkingHour(index, "period", "down", true)}>
-                              <AntDesign name="down" size={wsize(6)}/>
-                            </TouchableOpacity>
-                          </View>
-                        </View>
-                        <View style={styles.column}>
-                          <Text style={styles.timeSelectionHeader}>To</Text>
-                        </View>
-                        <View style={styles.timeSelection}>
-                          <View style={styles.selection}>
-                            <TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "up", false)}>
-                              <AntDesign name="up" size={wsize(6)}/>
-                            </TouchableOpacity>
-                            <TextInput style={styles.selectionHeader} onChangeText={(hour) => {
-                              const newWorkerhours = [...workerHours]
+                                setWorkerhours(newWorkerhours)
+                              }} keyboardType="numeric" maxLength={2} value={info.closetime.hour}/>
+                              <TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "down", false)}>
+                                <AntDesign name="down" size={wsize(6)}/>
+                              </TouchableOpacity>
+                            </View>
+                            <View style={styles.selectionDivHolder}>
+                              <Text style={styles.selectionDiv}>:</Text>
+                            </View>
+                            <View style={styles.selection}>
+                              <TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "up", false)}>
+                                <AntDesign name="up" size={wsize(6)}/>
+                              </TouchableOpacity>
+                              <TextInput style={styles.selectionHeader} onChangeText={(minute) => {
+                                const newWorkerhours = [...workerHours]
 
-                              newWorkerhours[index].closetime["hour"] = hour.toString()
+                                newWorkerhours[index].closetime["minute"] = minute.toString()
 
-                              setWorkerhours(newWorkerhours)
-                            }} keyboardType="numeric" maxLength="2" value={info.closetime.hour}/>
-                            <TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "down", false)}>
-                              <AntDesign name="down" size={wsize(6)}/>
-                            </TouchableOpacity>
-                          </View>
-                          <View style={styles.column}>
-                            <Text style={styles.selectionDiv}>:</Text>
-                          </View>
-                          <View style={styles.selection}>
-                            <TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "up", false)}>
-                              <AntDesign name="up" size={wsize(6)}/>
-                            </TouchableOpacity>
-                            <TextInput style={styles.selectionHeader} onChangeText={(minute) => {
-                              const newWorkerhours = [...workerHours]
-
-                              newWorkerhours[index].closetime["minute"] = minute.toString()
-
-                              setWorkerhours(newWorkerhours)
-                            }} keyboardType="numeric" maxLength="2" value={info.closetime.minute}/>
-                            <TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "down", false)}>
-                              <AntDesign name="down" size={wsize(6)}/>
-                            </TouchableOpacity>
-                          </View>
-                          <View style={styles.selection}>
-                            <TouchableOpacity onPress={() => updateWorkingHour(index, "period", "up", false)}>
-                              <AntDesign name="up" size={wsize(6)}/>
-                            </TouchableOpacity>
-                            <Text style={styles.selectionHeader}>{info.closetime.period}</Text>
-                            <TouchableOpacity onPress={() => updateWorkingHour(index, "period", "down", false)}>
-                              <AntDesign name="down" size={wsize(6)}/>
-                            </TouchableOpacity>
+                                setWorkerhours(newWorkerhours)
+                              }} keyboardType="numeric" maxLength={2} value={info.closetime.minute}/>
+                              <TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "down", false)}>
+                                <AntDesign name="down" size={wsize(6)}/>
+                              </TouchableOpacity>
+                            </View>
+                            <View style={styles.selection}>
+                              <TouchableOpacity onPress={() => updateWorkingHour(index, "period", "up", false)}>
+                                <AntDesign name="up" size={wsize(6)}/>
+                              </TouchableOpacity>
+                              <Text style={styles.selectionHeader}>{info.closetime.period}</Text>
+                              <TouchableOpacity onPress={() => updateWorkingHour(index, "period", "down", false)}>
+                                <AntDesign name="down" size={wsize(6)}/>
+                              </TouchableOpacity>
+                            </View>
                           </View>
                         </View>
                       </View>
-                    </View>
-                  : null
-                ))}
-              </View>
-            }
+                    : null
+                  ))}
+                </View>
+              }
 
-            <Text style={styles.errorMsg}>{errorMsg}</Text>
-
-            {loading && <ActivityIndicator color="black" size="large"/>}
-            
-            <TouchableOpacity style={styles.submit} disabled={loading} onPress={() => !daysInfo.done ? setTime() : done()}>
-              <Text style={styles.submitHeader}>{!daysInfo.done ? "Next" : "Done"}</Text>
-            </TouchableOpacity>
+              <Text style={styles.errorMsg}>{errorMsg}</Text>
+              
+              <TouchableOpacity style={styles.submit} disabled={loading} onPress={() => !daysInfo.done ? setTime() : done()}>
+                <Text style={styles.submitHeader}>{!daysInfo.done ? "Next" : "Done"}</Text>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
+          :
+          <View style={styles.loading}>
+            <ActivityIndicator color="black" size="large"/>
           </View>
-        </ScrollView>
       }
 
       <View style={styles.bottomNavs}>
@@ -390,12 +441,14 @@ export default function Workinghours({ navigation }) {
           </TouchableOpacity>
         </View>
       </View>
+
+      {loading && <Modal transparent={true}><Loadingprogress/></Modal>}
     </SafeAreaView>
   )
 }
 
 const styles = StyleSheet.create({
-  workinghours: { backgroundColor: '#EAEAEA', height: '100%', width: '100%' },
+  workinghours: { backgroundColor: '#EAEAEA', height: '100%', paddingTop: Platform.OS == "ios" ? 0 : Constants.statusBarHeight, width: '100%' },
   box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
   boxHeader: { fontFamily: 'appFont', fontSize: wsize(7), paddingVertical: 30 },
   boxMiniheader: { fontFamily: 'appFont', fontSize: wsize(6), marginBottom: 30, marginHorizontal: 20, textAlign: 'center' },
@@ -403,12 +456,13 @@ const styles = StyleSheet.create({
   introBox: { alignItems: 'center', flexDirection: 'column', height: '90%', justifyContent: 'space-around', paddingHorizontal: 10, width: '100%' },
   introHeader: { fontSize: wsize(6), paddingHorizontal: 10, textAlign: 'center' },
 
-  workerHours: { alignItems: 'center', width: '100%' },
+  workerHours: { alignItems: 'center', marginBottom: 50, width: '100%' },
 
   // select working days
   workerDayHeader: { fontSize: wsize(6) },
   workerDayTouch: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: '90%' },
   workerDayTouchSelected: { backgroundColor: 'rgba(0, 0, 0, 0.6)', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: '90%' },
+  workerDayTouchOff: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, margin: 5, opacity: 0.2, padding: 5, width: '90%' },
   workerDayTouchHeader: { fontSize: wsize(6), textAlign: 'center' },
 
   workerHoursBack: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, marginBottom: 20, padding: 10 },
@@ -416,18 +470,19 @@ const styles = StyleSheet.create({
 
   // adjust working time for each day
   workerHour: { alignItems: 'center', backgroundColor: 'white', borderRadius: 10, marginTop: 30, padding: 5, width: '95%' },
-  workerHourHeader: { fontSize: wsize(6), fontWeight: 'bold', marginBottom: 10, marginHorizontal: 10, textAlign: 'center' },
+  workerHourHeader: { fontSize: wsize(5), fontWeight: 'bold', marginBottom: 10, marginHorizontal: 10, textAlign: 'center' },
   workerHourAnswer: { alignItems: 'center' },
   workerHourAnswerActions: { flexDirection: 'row', justifyContent: 'space-between' },
   workerHourAnswerAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 10, width: wsize(10) },
   workerHourAnswerActionHeader: { fontSize: wsize(6) },
-  timeSelectionContainer: { flexDirection: 'row' },
-  timeSelection: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, flexDirection: 'row', marginHorizontal: 5 },
-  timeSelectionHeader: { fontSize: wsize(7), fontWeight: 'bold' },
+  timeSelectionContainer: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
+  timeSelection: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, flexDirection: 'row', justifyContent: 'space-between', width: '45%' },
+  timeSelectionHeaderHolder: { flexDirection: 'column', justifyContent: 'space-around', width: '10%' },
+  timeSelectionHeader: { fontSize: wsize(6), fontWeight: 'bold', textAlign: 'center' },
   selection: { alignItems: 'center', margin: 5 },
-  selectionHeader: { fontSize: wsize(7), textAlign: 'center' },
+  selectionHeader: { fontSize: wsize(6), textAlign: 'center' },
   selectionDivHolder: { flexDirection: 'column', justifyContent: 'space-around' },
-  selectionDiv: { fontSize: wsize(7) },
+  selectionDiv: { fontSize: wsize(6) },
 
   submit: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 30, padding: 5 },
   submitHeader: { fontFamily: 'appFont', fontSize: wsize(7), textAlign: 'center' },

@@ -21,12 +21,12 @@ export const registerUser = data => {
 
 export const saveUserInfo = data => {
   const form = new FormData()
-  const { uri, name, type = "image/jpeg" } = data.profile
+  const { uri, name, type = "image/jpeg", size } = data.profile
   
   form.append("id", data.id)
   form.append("username", data.username)
   form.append("profile", { uri, name, type })
-  form.append("permission", data.permission)
+  form.append("size", JSON.stringify(size))
 
   return axios.post(
     `${url}/owners/save_user_info`,
@@ -36,7 +36,7 @@ export const saveUserInfo = data => {
 
 export const addOwner = data => {
 	const form = new FormData()
-	const { uri, name, type = "image/jpeg" } = data.profile
+	const { uri, name, type = "image/jpeg", size } = data.profile
 
 	form.append("ownerid", data.ownerid)
 	form.append("cellnumber", data.cellnumber)
@@ -44,10 +44,10 @@ export const addOwner = data => {
 	form.append("password", data.password)
 	form.append("confirmPassword", data.confirmPassword)
 	form.append("hours", JSON.stringify(data.hours))
-	form.append("permission", data.permission)
 
-	if (data.profile.uri) {
+	if (data.profile.uri.includes("file")) {
 		form.append("profile", { uri, name, type })
+    form.append("size", JSON.stringify(size))
 	}
 
 	return axios.post(
@@ -72,13 +72,12 @@ export const updateOwner = data => {
 
       break;
     case "profile":
-      const { uri, name, type = "image/jpeg" } = data.profile
+      const { uri, name, type = "image/jpeg", size } = data.profile
 
-      if (data.profile.uri) {
+      if (data.profile.uri.includes("file")) {
         form.append("profile", { uri, name, type })
+        form.append("size", JSON.stringify(size))
       }
-
-      form.append("permission", data.permission)
 
       break;
     case "password":

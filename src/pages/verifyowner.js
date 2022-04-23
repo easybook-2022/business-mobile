@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { SafeAreaView, ActivityIndicator, Dimensions, View, ImageBackground, Text, TextInput, Image, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet } from 'react-native';
+import { SafeAreaView, Platform, ActivityIndicator, Dimensions, View, ImageBackground, Text, TextInput, Image, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import { verifyUser, registerUser } from '../apis/owners'
-import { ownerRegisterInfo, registerInfo, isLocal } from '../../assets/info'
+import { ownerRegisterInfo, registerInfo, isLocal, displayPhonenumber } from '../../assets/info'
 
 const { height, width } = Dimensions.get('window')
 const wsize = p => {
@@ -18,7 +18,6 @@ export default function Verifyowner({ navigation }) {
 	const [cellnumber, setCellnumber] = useState(ownerRegisterInfo.cellnumber)
 	const [verifyCode, setVerifycode] = useState('')
   const [verified, setVerified] = useState(false)
-	const [userCode, setUsercode] = useState(isLocal ? '111111' : '')
 
   const [passwordInfo, setPasswordinfo] = useState({ password: ownerRegisterInfo.password, confirmPassword: ownerRegisterInfo.password, step: 0 })
 
@@ -39,6 +38,7 @@ export default function Verifyowner({ navigation }) {
 					const { verifycode } = res
 
 					setVerifycode(verifycode)
+          setErrormsg('')
 					setLoading(false)
 				}
 			})
@@ -90,33 +90,19 @@ export default function Verifyowner({ navigation }) {
 						<View style={styles.background}>
 							<Image source={require("../../assets/background.jpg")} style={{ height: width, width: width }}/>
 						</View>
-
+            
 						<View style={styles.inputsBox}>
 							{!verifyCode ?
 								<View style={{ alignItems: 'center' }}>
 									<View style={styles.inputContainer}>
 										<Text style={styles.inputHeader}>Enter your cell number:</Text>
-										<TextInput style={styles.input} onKeyPress={(e) => {
-											let newValue = e.nativeEvent.key
-
-											if (newValue >= "0" && newValue <= "9") {
-												if (cellnumber.length == 3) {
-													setCellnumber("(" + cellnumber + ") " + newValue)
-												} else if (cellnumber.length == 9) {
-													setCellnumber(cellnumber + "-" + newValue)
-												} else if (cellnumber.length == 13) {
-													setCellnumber(cellnumber + newValue)
-													
-													Keyboard.dismiss()
-												} else {
-													setCellnumber(cellnumber + newValue)
-												}
-											} else if (newValue == "Backspace") {
-												setCellnumber(cellnumber.substr(0, cellnumber.length - 1))
-											}
-										}} value={cellnumber} keyboardType="numeric" autoCorrect={false}/>
+										<TextInput 
+                      style={styles.input} 
+                      onChangeText={(num) => setCellnumber(displayPhonenumber(cellnumber, num, () => Keyboard.dismiss()))} 
+                      value={cellnumber} keyboardType="numeric" autoCorrect={false}
+                    />
 									</View>
-									<TouchableOpacity style={[styles.submit, { opacity: loading ? 0.3 : 1 }]} onPress={() => verify()} disabled={loading}>
+									<TouchableOpacity style={[styles.submit, { opacity: loading ? 0.3 : 1 }]} disabled={loading} onPress={() => verify()} disabled={loading}>
 										<Text style={styles.submitHeader}>Register</Text>
 									</TouchableOpacity>
 								</View>
@@ -127,26 +113,27 @@ export default function Verifyowner({ navigation }) {
     									<View style={styles.inputContainer}>
     										<Text style={styles.inputHeader}>Enter verify code from your message:</Text>
     										<TextInput style={styles.input} onChangeText={(usercode) => {
-    											setUsercode(usercode)
-
     											if (usercode.length == 6) {
     												Keyboard.dismiss()
-    											}
-    										}} value={userCode} keyboardType="numeric" autoCorrect={false}/>
-    									</View>
-    									<View style={{ flexDirection: 'row', justifyContent: 'space-around', width: '100%' }}>
-                        <View style={{ flexDirection: 'row' }}>
-      										<TouchableOpacity style={[styles.submit, { opacity: loading ? 0.3 : 1 }]} disabled={loading} onPress={() => setVerifycode('')}>
-      											<Text style={styles.submitHeader}>Back</Text>
-      										</TouchableOpacity>
-      										<TouchableOpacity style={[styles.submit, { opacity: loading ? 0.3 : 1 }]} disabled={loading} onPress={() => {
-                            if (verifyCode == userCode || userCode == '111111') {
+
+                            if (usercode == verifyCode || (isLocal && usercode == '111111')) {
                               setVerified(true)
+                              setErrormsg("")
                             } else {
                               setErrormsg("The verify code is wrong")
                             }
+    											} else {
+                            setErrormsg("")
+                          }
+    										}} keyboardType="numeric" autoCorrect={false}/>
+    									</View>
+    									<View style={{ flexDirection: 'row', justifyContent: 'space-around', width: '100%' }}>
+                        <View style={{ flexDirection: 'row' }}>
+      										<TouchableOpacity style={[styles.submit, { opacity: loading ? 0.3 : 1 }]} disabled={loading} onPress={() => {
+                            setVerifycode('')
+                            setErrormsg('')
                           }}>
-      											<Text style={styles.submitHeader}>Verify</Text>
+      											<Text style={styles.submitHeader}>Back</Text>
       										</TouchableOpacity>
                         </View>
     									</View>
@@ -155,11 +142,11 @@ export default function Verifyowner({ navigation }) {
                     <>
                       <View style={styles.inputContainer}>
                         <Text style={styles.inputHeader}>Enter a password:</Text>
-                        <TextInput style={styles.input} secureTextEntry={true} onChangeText={(password) => setPasswordinfo({ ...passwordInfo, password })} value={passwordInfo.password} autoCorrect={false}/>
+                        <TextInput style={styles.input} secureTextEntry onChangeText={(password) => setPasswordinfo({ ...passwordInfo, password })} value={passwordInfo.password} autoCorrect={false}/>
                       </View>
                       <View style={styles.inputContainer}>
                         <Text style={styles.inputHeader}>Confirm your password:</Text>
-                        <TextInput style={styles.input} secureTextEntry={true} onChangeText={(confirmPassword) => {
+                        <TextInput style={styles.input} secureTextEntry onChangeText={(confirmPassword) => {
                           setPasswordinfo({ ...passwordInfo, confirmPassword })
 
                           if (confirmPassword.length == passwordInfo.password.length) {
@@ -184,7 +171,7 @@ export default function Verifyowner({ navigation }) {
 
 						{loading ? <ActivityIndicator color="black" size="small"/> : null}
 
-						<TouchableOpacity style={styles.option} onPress={() => navigation.replace('forgotpassword')}>
+						<TouchableOpacity style={[styles.option, { opacity: loading ? 0.5 : 1 }]} disabled={loading} onPress={() => navigation.replace('forgotpassword')}>
 							<Text style={styles.optionHeader}>I don't remember my password ? Click here</Text>
 						</TouchableOpacity>
 					</View>

@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { SafeAreaView, Dimensions, View, ImageBackground, Text, TextInput, Image, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet } from 'react-native';
+import { SafeAreaView, Platform, Dimensions, View, ImageBackground, Text, TextInput, Image, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import { getCode } from '../apis/owners'
-import { loginInfo } from '../../assets/info'
+import { loginInfo, displayPhonenumber } from '../../assets/info'
 
 const { height, width } = Dimensions.get('window')
 const wsize = p => {
@@ -66,8 +66,11 @@ export default function Forgotpassword({ navigation }) {
 						{!info.sent ? 
 							<View style={{ alignItems: 'center' }}>
 								<View style={styles.inputContainer}>
-									<Text style={styles.inputHeader}>Phone number:</Text>
-									<TextInput style={styles.input} onChangeText={(cellnumber) => setInfo({ ...info, cellnumber })} value={info.cellnumber} keyboardType="numeric" autoCorrect={false}/>
+									<Text style={styles.inputHeader}>Cell number:</Text>
+									<TextInput style={styles.input} onChangeText={(num) => setInfo({ 
+                    ...info, 
+                    cellnumber: displayPhonenumber(info.cellnumber, num, () => Keyboard.dismiss())
+                  })} value={info.cellnumber} keyboardType="numeric" autoCorrect={false}/>
 								</View>
 
 								<TouchableOpacity style={styles.submit} onPress={() => getTheCode()}>
@@ -113,6 +116,7 @@ const styles = StyleSheet.create({
 	
 	inputsBox: { flexDirection: 'column', height: height / 2, justifyContent: 'space-around', width: '80%' },
 	inputContainer: { marginBottom: 30, width: '100%' },
+  resetCodeHeader: { fontSize: wsize(4) },
 	inputHeader: { fontFamily: 'appFont', fontSize: wsize(7) },
 	input: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(7), padding: 5, width: '100%' },
 	errorMsg: { color: 'darkred', fontSize: wsize(10), fontWeight: 'bold', textAlign: 'center' },

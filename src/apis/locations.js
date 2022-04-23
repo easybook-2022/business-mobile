@@ -17,7 +17,7 @@ export const loginLocation = data => {
 
 export const setupLocation = data => {
   const form = new FormData()
-  const { uri, name, type = "image/jpeg" } = data.logo
+  const { uri, name, type = "image/jpeg", size } = data.logo
 
   form.append("storeName", data.storeName)
   form.append("phonenumber", data.phonenumber)
@@ -32,12 +32,10 @@ export const setupLocation = data => {
   form.append("latitude", data.latitude)
   form.append("ownerid", data.ownerid)
   form.append("time", data.time)
-  form.append("ipAddress", data.ipAddress)
-  form.append("permission", data.permission)
-  form.append("trialtime", data.trialtime)
 
-  if (data.logo.uri) {
+  if (data.logo.uri.includes("file")) {
     form.append("logo", { uri, name, type })
+    form.append("size", JSON.stringify(size))
   }
 
   return axios.post(
@@ -48,7 +46,7 @@ export const setupLocation = data => {
 
 export const updateLocation = data => {
 	const form = new FormData()
-	const { uri, name, type = "image/jpeg" } = data.logo
+	const { uri, name, type = "image/jpeg", size } = data.logo
 
 	form.append("storeName", data.storeName)
 	form.append("phonenumber", data.phonenumber)
@@ -61,11 +59,10 @@ export const updateLocation = data => {
 	form.append("latitude", data.latitude)
 	form.append("ownerid", data.ownerid)
 	form.append("time", data.time)
-	form.append("ipAddress", data.ipAddress)
-	form.append("permission", data.permission)
 
-	if (data.logo.uri) {
+	if (data.logo.uri.includes("file")) {
 		form.append("logo", { uri, name, type })
+    form.append("size", JSON.stringify(size))
 	}
 
 	return axios.post(
@@ -95,14 +92,6 @@ export const setLocationHours = data => {
 		`${url}/locations/set_hours`,
 		data
 	)
-}
-
-export const changeLocationState = id => {
-	return axios.get(`${url}/locations/change_location_state/${id}`)
-}
-
-export const setLocationPublic = id => {
-	return axios.get(`${url}/locations/set_location_public/${id}`)
 }
 
 export const getLocationHours = data => {

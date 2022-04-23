@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from 'react'
-import { SafeAreaView, ActivityIndicator, Dimensions, ScrollView, View, Text, TextInput, Image, Keyboard, TouchableOpacity, TouchableWithoutFeedback, StyleSheet } from 'react-native'
+import { 
+  SafeAreaView, Platform, ActivityIndicator, Dimensions, ScrollView, Modal, View, Text, 
+  TextInput, Image, Keyboard, TouchableOpacity, TouchableWithoutFeedback, StyleSheet, PermissionsAndroid
+} from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
@@ -13,6 +16,10 @@ import { getServiceInfo, addNewService, updateService } from '../apis/services'
 import FontAwesome from 'react-native-vector-icons/FontAwesome'
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import Entypo from 'react-native-vector-icons/Entypo'
+import Ionicons from 'react-native-vector-icons/Ionicons'
+
+// components
+import Loadingprogress from '../components/loadingprogress';
 
 const { height, width } = Dimensions.get('window')
 const wsize = p => {
@@ -21,20 +28,21 @@ const wsize = p => {
 const hsize = p => {
   return height * (p / 100)
 }
-const steps = ['name', 'photo', 'price', 'duration']
+const steps = ['name', 'photo', 'price']
 
 export default function Addservice(props) {
 	const params = props.route.params
 	const { parentMenuid, serviceid, refetch } = params
-
+  
 	const [setupType, setSetuptype] = useState('name')
 	const [cameraPermission, setCamerapermission] = useState(null);
 	const [pickingPermission, setPickingpermission] = useState(null);
 	const [camComp, setCamcomp] = useState(null)
+  const [camType, setCamtype] = useState('back')
+  const [choosing, setChoosing] = useState(false)
 	const [name, setName] = useState('')
-	const [image, setImage] = useState({ uri: '', name: '' })
+	const [image, setImage] = useState({ uri: '', name: '', size: { height: 0, width: 0 }, loading: false })
 	const [price, setPrice] = useState('')
-	const [duration, setDuration] = useState('')
 	const [loaded, setLoaded] = useState(serviceid ? false : true)
 	const [loading, setLoading] = useState(false)
 
@@ -43,8 +51,8 @@ export default function Addservice(props) {
 	const addTheNewService = async() => {
 		const locationid = await AsyncStorage.getItem("locationid")
 
-		if (name && (price && !isNaN(price)) && duration) {
-			const data = { locationid, menuid: parentMenuid ? parentMenuid : "", name, image, price, duration, permission: cameraPermission || pickingPermission }
+		if (name && (price && !isNaN(price))) {
+			const data = { locationid, menuid: parentMenuid ? parentMenuid : "", name, image, price }
 
 			setLoading(true)
 
@@ -86,19 +94,15 @@ export default function Addservice(props) {
 
 				return
 			}
-
-			if (!duration) {
-				setErrormsg("Please enter the duration of this service")
-
-				return
-			}
 		}
 	}
 	const updateTheService = async() => {
 		const locationid = await AsyncStorage.getItem("locationid")
 
-		if (name && (price && !isNaN(price)) && duration) {
-			const data = { locationid, menuid: parentMenuid ? parentMenuid : "", serviceid, name, image, price, duration, permission: cameraPermission || pickingPermission }
+		if (name && (price && !isNaN(price))) {
+			const data = { locationid, menuid: parentMenuid ? parentMenuid : "", serviceid, name, image, price }
+
+      setLoading(true)
 
 			updateService(data)
 				.then((res) => {
@@ -138,12 +142,6 @@ export default function Addservice(props) {
 
 				return
 			}
-
-			if (!duration) {
-				setErrormsg("Please enter the duration of this service")
-
-				return
-			}
 		}
 	}
 	const saveInfo = () => {
@@ -160,20 +158,8 @@ export default function Addservice(props) {
 
 				break
 			case 2:
-				if (!image.uri && Platform.OS == 'ios') {
-					msg = "Please provide a photo for the service"
-				}
-
-				break
-			case 3:
 				if (!price) {
 					msg = "Please provide a price for the service"
-				}
-
-				break
-			case 4:
-				if (!duration) {
-					msg = "Please provide the duration of the service"
 				}
 
 				break
@@ -181,14 +167,14 @@ export default function Addservice(props) {
 		}
 
 		if (msg == "") {
-			const nextStep = index == 3 ? "done" : steps[index + 1]
+			const nextStep = index == 2 ? "done" : steps[index + 1]
 
 			if (nextStep == "photo") {
 				allowCamera()
 				allowChoosing()
 			}
 
-			setSetuptype(nextStep)
+      setSetuptype(nextStep)
 			setErrormsg('')
 		} else {
 			setErrormsg(msg)
@@ -198,6 +184,8 @@ export default function Addservice(props) {
 	}
 
 	const snapPhoto = async() => {
+    setImage({ ...image, loading: true })
+
 		let letters = [
 			"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", 
 			"n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"
@@ -206,10 +194,14 @@ export default function Addservice(props) {
 		let char = "", captured, self = this
 
 		if (camComp) {
-			let options = { quality: 0 };
+			let options = { quality: 0, skipProcessing: true };
 			let photo = await camComp.takePictureAsync(options)
 			let photo_option = [{ resize: { width: width, height: width }}]
 			let photo_save_option = { format: ImageManipulator.SaveFormat.JPEG, base64: true }
+
+      if (camType == "front") {
+        photo_option.push({ flip: ImageManipulator.FlipType.Horizontal })
+      }
 
 			photo = await ImageManipulator.manipulateAsync(
 				photo.localUri || photo.uri,
@@ -218,11 +210,12 @@ export default function Addservice(props) {
 			)
 
 			for (let k = 0; k <= photo_name_length - 1; k++) {
-				if (k % 2 == 0) {
-	                char += "" + letters[Math.floor(Math.random() * letters.length)].toUpperCase();
-	            } else {
-	                char += "" + (Math.floor(Math.random() * 9) + 0);
-	            }
+				char += "" + (
+          k % 2 == 0 ? 
+            letters[Math.floor(Math.random() * letters.length)].toUpperCase()
+            :
+            Math.floor(Math.random() * 9) + 0
+        )
 			}
 
 			FileSystem.moveAsync({
@@ -230,12 +223,19 @@ export default function Addservice(props) {
 				to: `${FileSystem.documentDirectory}/${char}.jpg`
 			})
 			.then(() => {
-				setImage({ uri: `${FileSystem.documentDirectory}/${char}.jpg`, name: `${char}.jpg` })
+				setImage({ 
+          ...image, 
+          uri: `${FileSystem.documentDirectory}/${char}.jpg`, name: `${char}.jpg`, loading: false, 
+          size: { width, height: width }
+        })
 				setErrormsg('')
 			})
 		}
 	}
 	const choosePhoto = async() => {
+    setImage({ ...image, loading: true })
+    setChoosing(true)
+
 		let letters = [
 			"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", 
 			"n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"
@@ -244,17 +244,18 @@ export default function Addservice(props) {
 		let char = "", captured, self = this
 		let photo = await ImagePicker.launchImageLibraryAsync({
 			mediaTypes: ImagePicker.MediaTypeOptions.Images,
-			aspect: [4, 3],
+			aspect: [1, 1],
 			quality: 0.1,
 			base64: true
 		});
 
 		for (let k = 0; k <= photo_name_length - 1; k++) {
-			if (k % 2 == 0) {
-                char += "" + letters[Math.floor(Math.random() * letters.length)].toUpperCase();
-            } else {
-                char += "" + (Math.floor(Math.random() * 9) + 0);
-            }
+			char += "" + (
+        k % 2 == 0 ? 
+          letters[Math.floor(Math.random() * letters.length)].toUpperCase() 
+          : 
+          Math.floor(Math.random() * 9) + 0
+        )
 		}
 
 		if (!photo.cancelled) {
@@ -263,32 +264,62 @@ export default function Addservice(props) {
 				to: `${FileSystem.documentDirectory}/${char}.jpg`
 			})
 			.then(() => {
-				setImage({ uri: `${FileSystem.documentDirectory}/${char}.jpg`, name: `${char}.jpg` })
+				setImage({ 
+          ...image, 
+          uri: `${FileSystem.documentDirectory}/${char}.jpg`, name: `${char}.jpg`, loading: false, 
+          size: { width, height: width }
+        })
 				setErrormsg('')
 			})
 		}
+
+    setChoosing(false)
 	}
 	const allowCamera = async() => {
-		const { status } = await Camera.getCameraPermissionsAsync()
+		if (Platform.OS == "ios") {
+      const { status } = await Camera.getCameraPermissionsAsync()
 
-		if (status == 'granted') {
-			setCamerapermission(status === 'granted')
-		} else {
-			const { status } = await Camera.requestCameraPermissionsAsync()
+      if (status == 'granted') {
+        setCamerapermission(status === 'granted')
+      } else {
+        const { status } = await Camera.requestCameraPermissionsAsync()
 
-			setCamerapermission(status === 'granted')
-		}
+        setCamerapermission(status === 'granted')
+      }
+    } else {
+      const status = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.CAMERA)
+
+      if (!status) {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.CAMERA,
+          {
+            title: "Camera Permission",
+            message: "EasyGO Business allows you to take a photo for service",
+            buttonNegative: "Cancel",
+            buttonPositive: "OK"
+          }
+        );
+
+        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+          setCamerapermission(true)
+        }
+      } else {
+        setCamerapermission(true)
+      }
+    }
 	}
 	const allowChoosing = async() => {
-		const { status } = await ImagePicker.getMediaLibraryPermissionsAsync()
-        
-        if (status == 'granted') {
-        	setPickingpermission(status === 'granted')
-        } else {
-        	const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+		if (Platform.OS === "ios") {
+      const { status } = await ImagePicker.getMediaLibraryPermissionsAsync()
+          
+      if (status == 'granted') {
+        setPickingpermission(status === 'granted')
+      } else {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
-        	setPickingpermission(status === 'granted')
-        }
+        setPickingpermission(status === 'granted')
+      }
+    }
 	}
 	
 	const getTheServiceInfo = async() => {
@@ -303,9 +334,8 @@ export default function Addservice(props) {
 					const { serviceInfo } = res
 
 					setName(serviceInfo.name)
-					setImage({ uri: logo_url + serviceInfo.image, name: serviceInfo.image })
+					setImage({ ...image, uri: logo_url + serviceInfo.image.name })
 					setPrice(serviceInfo.price.toString())
-					setDuration(serviceInfo.duration)
 					setLoaded(true)
 				}
 			})
@@ -338,64 +368,66 @@ export default function Addservice(props) {
 								/>
 							</View>
 						)}
-            
+
 						{setupType == "photo" && (
-							<View style={styles.cameraContainer}>
-								<Text style={styles.cameraHeader}>Provide a photo for {name}</Text>
+              <View style={styles.cameraContainer}>
+                <Text style={styles.cameraHeader}>Provide a photo for {name} (Optional)</Text>
 
-								{image.uri ? (
-									<>
-										<Image style={styles.camera} source={{ uri: image.uri }}/>
+                {image.uri ? (
+                  <>
+                    <Image style={styles.camera} source={{ uri: image.uri }}/>
 
-										<TouchableOpacity style={styles.cameraAction} onPress={() => setImage({ uri: '', name: '' })}>
-											<Text style={styles.cameraActionHeader}>Cancel</Text>
-										</TouchableOpacity>
-									</>
-								) : (
-									<>
-										<Camera 
-											style={styles.camera} 
-											type={Camera.Constants.Type.back} ref={r => {setCamcomp(r)}}
-											ratio="1:1"
-										/>
+                    <TouchableOpacity style={styles.cameraAction} onPress={() => setImage({ ...image, uri: '', name: '' })}>
+                      <Text style={styles.cameraActionHeader}>Cancel</Text>
+                    </TouchableOpacity>
+                  </>
+                ) : (
+                  <>
+                    {!choosing && (
+                      <>
+                        <Camera 
+                          style={styles.camera} 
+                          type={camType} 
+                          ref={r => {setCamcomp(r)}}
+                          ratio="1:1"
+                        />
 
-										<View style={styles.cameraActions}>
-											<TouchableOpacity style={styles.cameraAction} onPress={snapPhoto.bind(this)}>
-												<Text style={styles.cameraActionHeader}>Take{'\n'}this photo</Text>
-											</TouchableOpacity>
-											<TouchableOpacity style={styles.cameraAction} onPress={() => choosePhoto()}>
-												<Text style={styles.cameraActionHeader}>Choose{'\n'}from phone</Text>
-											</TouchableOpacity>
-										</View>
-									</>
-								)}	
-							</View>
-						)}
+                        <View style={{ alignItems: 'center', marginVertical: 10 }}>
+                          <Ionicons name="camera-reverse-outline" size={wsize(7)} onPress={() => setCamtype(camType == 'back' ? 'front' : 'back')}/>
+                        </View>
+                      </>
+                    )}
 
-						{setupType == "price" && (
-							<View style={styles.inputContainer}>
-								<Text style={styles.addHeader}>{serviceid ? "Update" : "Enter"} {name} price</Text>
-								<TextInput style={styles.addInput} placeholderTextColor="rgba(0, 0, 0, 0.5)" placeholder="example: 4.99" onChangeText={(price) => {
-									let newPrice = price.toString()
+                    <View style={styles.cameraActions}>
+                      <TouchableOpacity style={[styles.cameraAction, { opacity: image.loading ? 0.5 : 1 }]} disabled={image.loading} onPress={snapPhoto.bind(this)}>
+                        <Text style={styles.cameraActionHeader}>Take{'\n'}this photo</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity style={[styles.cameraAction, { opacity: image.loading ? 0.5 : 1 }]} disabled={image.loading} onPress={() => {
+                        allowChoosing()
+                        choosePhoto()
+                      }}>
+                        <Text style={styles.cameraActionHeader}>Choose{'\n'}from phone</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </>
+                )}  
+              </View>
+            )}
 
-									if (newPrice.includes(".") && newPrice.split(".")[1].length == 2) {
-										Keyboard.dismiss()
-									}
+            {setupType == "price" && (
+              <View style={styles.inputContainer}>
+                <Text style={styles.addHeader}>{serviceid ? "Update" : "Enter"} {name} price</Text>
+                <TextInput style={styles.addInput} placeholderTextColor="rgba(0, 0, 0, 0.5)" placeholder="example: 4.99" onChangeText={(price) => {
+                  let newPrice = price.toString()
 
-									setPrice(price.toString())
-								}} value={price} keyboardType="numeric" autoCorrect={false} autoCapitalize="none"/>
-							</View>
-						)}
+                  if (newPrice.includes(".") && newPrice.split(".")[1].length == 2) {
+                    Keyboard.dismiss()
+                  }
 
-						{setupType == "duration" && (
-							<View style={styles.inputContainer}>
-								<Text style={styles.addHeader}>How long is the {'\n' + name} service</Text>
-								<TextInput 
-									style={styles.addInput} placeholderTextColor="rgba(0, 0, 0, 0.5)" placeholder="example: 4 hours" 
-									onChangeText={(duration) => setDuration(duration)} value={duration} autoCapitalize="none"
-								/>
-							</View>
-						)}
+                  setPrice(price.toString())
+                }} value={price} keyboardType="numeric" autoCorrect={false} autoCapitalize="none"/>
+              </View>
+            )}
 
 						<Text style={styles.errorMsg}>{errorMsg}</Text>
 
@@ -405,13 +437,13 @@ export default function Addservice(props) {
 							</TouchableOpacity>
 							<TouchableOpacity style={styles.addAction} disabled={loading} onPress={() => {
 								if (!serviceid) {
-									if (setupType == "duration") {
+									if (setupType == steps[steps.length - 1]) {
 										addTheNewService()
 									} else {
 										saveInfo()
 									}
 								} else {
-									if (setupType == "duration") {
+									if (setupType == steps[steps.length - 1]) {
 										updateTheService()
 									} else {
 										saveInfo()
@@ -420,9 +452,9 @@ export default function Addservice(props) {
 							}}>
 								<Text style={styles.addActionHeader}>{
 									!serviceid ? 
-										setupType == 'duration' ? "Done" : "Next"
+										setupType == steps[steps.length - 1] ? "Done" : "Next"
 										: 
-										setupType == 'duration' ? "Save" : "Next"
+										setupType == steps[steps.length - 1] ? "Save" : "Next"
 								}</Text>
 							</TouchableOpacity>
 						</View>
@@ -433,12 +465,14 @@ export default function Addservice(props) {
 					</View>
 				}
 			</TouchableWithoutFeedback>
+
+      {(image.loading || loading) && <Modal transparent={true}><Loadingprogress/></Modal>}
 		</SafeAreaView>
 	)
 }
 
 const styles = StyleSheet.create({
-	addservice: { height: '100%', width: '100%' },
+	addservice: { height: '100%', paddingTop: Platform.OS == "ios" ? 0 : Constants.statusBarHeight, width: '100%' },
 	box: { alignItems: 'center', height: '100%', width: '100%' },
 	inputContainer: { alignItems: 'center', width: '100%' },
 	addHeader: { fontSize: wsize(5), fontWeight: 'bold', paddingVertical: 5, textAlign: 'center' },

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { SafeAreaView, Dimensions, View, ImageBackground, Text, TextInput, Image, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet } from 'react-native';
+import { SafeAreaView, Platform, Dimensions, View, ImageBackground, Text, TextInput, Image, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
@@ -87,11 +87,9 @@ export default function Resetpassword(props) {
 							<TouchableOpacity style={style.option} onPress={() => navigation.replace('verifyowner')}>
 								<Text style={style.optionHeader}>Don't have an account ? Sign up</Text>
 							</TouchableOpacity>
-							<View style={style.options}>
-								<TouchableOpacity style={style.option} onPress={() => navigation.replace('login')}>
-									<Text style={style.optionHeader}>Already a member ? Log in</Text>
-								</TouchableOpacity>
-							</View>
+							<TouchableOpacity style={style.option} onPress={() => navigation.replace('login')}>
+                <Text style={style.optionHeader}>Already a member ? Log in</Text>
+              </TouchableOpacity>
 						</View>
 					</View>
 				</View>
@@ -101,9 +99,8 @@ export default function Resetpassword(props) {
 }
 
 const style = StyleSheet.create({
-	resetpassword: { backgroundColor: '#3C74FF', height: '100%', width: '100%' },
+	resetpassword: { backgroundColor: '#3C74FF', height: '100%', paddingTop: Platform.OS == "ios" ? 0 : Constants.statusBarHeight, width: '100%' },
 	box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-between', paddingVertical: 30, width: '100%' },
-	background: { height: '100%', position: 'absolute', width: '100%' },
 	
 	inputsBox: { alignItems: 'center', backgroundColor: 'rgba(2, 136, 255, 0.1)', paddingHorizontal: 20, width: '80%' },
 	inputContainer: { marginVertical: 5 },

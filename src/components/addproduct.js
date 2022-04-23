@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from 'react'
-import { SafeAreaView, ActivityIndicator, Dimensions, ScrollView, View, Text, TextInput, Image, Keyboard, TouchableOpacity, TouchableWithoutFeedback, StyleSheet } from 'react-native'
+import { 
+  SafeAreaView, Platform, ActivityIndicator, Dimensions, ScrollView, Modal, View, Text, 
+  TextInput, Image, Keyboard, TouchableOpacity, TouchableWithoutFeedback, StyleSheet, PermissionsAndroid
+} from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
@@ -13,6 +16,10 @@ import { getProductInfo, addNewProduct, updateProduct } from '../apis/products'
 import FontAwesome from 'react-native-vector-icons/FontAwesome'
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import Entypo from 'react-native-vector-icons/Entypo'
+import Ionicons from 'react-native-vector-icons/Ionicons'
+
+// components
+import Loadingprogress from '../components/loadingprogress';
 
 const { height, width } = Dimensions.get('window')
 const wsize = p => {
@@ -30,9 +37,10 @@ export default function Addproduct(props) {
 	const [setupType, setSetuptype] = useState('name')
 	const [cameraPermission, setCamerapermission] = useState(null);
 	const [pickingPermission, setPickingpermission] = useState(null);
-	const [camComp, setCamcomp] = useState(null)
+	const [camComp, setCamcomp] = useState('front')
+  const [choosing, setChoosing] = useState(false)
 	const [name, setName] = useState('')
-	const [image, setImage] = useState({ uri: '', name: '' })
+	const [image, setImage] = useState({ uri: '', name: '', size: { height: 0, width: 0 }, loading: false })
 	const [options, setOptions] = useState([])
 	const [others, setOthers] = useState([])
 	const [sizes, setSizes] = useState([])
@@ -121,7 +129,7 @@ export default function Addproduct(props) {
 				delete size['key']
 			})
 
-			const data = { locationid, menuid: parentMenuid ? parentMenuid : "", name, image, options, others, sizes, price: sizes.length > 0 ? "" : price, permission: cameraPermission || pickingPermission }
+			const data = { locationid, menuid: parentMenuid ? parentMenuid : "", name, image, options, others, sizes, price: sizes.length > 0 ? "" : price }
 
 			setLoading(true)
 
@@ -244,7 +252,7 @@ export default function Addproduct(props) {
 				delete size['key']
 			})
 
-			const data = { locationid, menuid: parentMenuid ? parentMenuid : "", productid, name, image, options, others, sizes, price: sizes.length > 0 ? "" : price, permission: cameraPermission || pickingPermission }
+			const data = { locationid, menuid: parentMenuid ? parentMenuid : "", productid, name, image, options, others, sizes, price: sizes.length > 0 ? "" : price }
 
 			setLoading(true)
 
@@ -301,12 +309,6 @@ export default function Addproduct(props) {
 				}
 
 				break
-			case 2:
-				if (!image.uri && Platform.OS == 'ios') {
-					msg = "Please provide a photo for the product"
-				}
-
-				break
 			default:
 
 		}
@@ -328,6 +330,8 @@ export default function Addproduct(props) {
 		setLoading(false)
 	}
 	const snapPhoto = async() => {
+    setImage({ ...image, loading: true })
+
 		let letters = [
 			"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", 
 			"n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"
@@ -336,10 +340,14 @@ export default function Addproduct(props) {
 		let char = "", captured, self = this
 
 		if (camComp) {
-			let options = { quality: 0 };
+			let options = { quality: 0, skipProcessing: true };
 			let photo = await camComp.takePictureAsync(options)
 			let photo_option = [{ resize: { width: width, height: width }}]
 			let photo_save_option = { format: ImageManipulator.SaveFormat.JPEG, base64: true }
+
+      if (camType == "front") {
+        photo_option.push({ flip: ImageManipulator.FlipType.Horizontal })
+      }
 
 			photo = await ImageManipulator.manipulateAsync(
 				photo.localUri || photo.uri,
@@ -348,11 +356,12 @@ export default function Addproduct(props) {
 			)
 
 			for (let k = 0; k <= photo_name_length - 1; k++) {
-				if (k % 2 == 0) {
-	                char += "" + letters[Math.floor(Math.random() * letters.length)].toUpperCase();
-	            } else {
-	                char += "" + (Math.floor(Math.random() * 9) + 0);
-	            }
+				char += "" + (
+          k % 2 == 0 ? 
+            letters[Math.floor(Math.random() * letters.length)].toUpperCase()
+            :
+            Math.floor(Math.random() * 9) + 0
+        )
 			}
 
 			FileSystem.moveAsync({
@@ -360,12 +369,19 @@ export default function Addproduct(props) {
 				to: `${FileSystem.documentDirectory}/${char}.jpg`
 			})
 			.then(() => {
-				setImage({ uri: `${FileSystem.documentDirectory}/${char}.jpg`, name: `${char}.jpg` })
+				setImage({ 
+          ...image, 
+          uri: `${FileSystem.documentDirectory}/${char}.jpg`, name: `${char}.jpg`, loading: false, 
+          size: { width, height: width }
+        })
 				setErrormsg('')
 			})
 		}
 	}
 	const choosePhoto = async() => {
+    setImage({ ...image, loading: true })
+    setChoosing(true)
+
 		let letters = [
 			"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", 
 			"n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"
@@ -380,11 +396,12 @@ export default function Addproduct(props) {
 		});
 
 		for (let k = 0; k <= photo_name_length - 1; k++) {
-			if (k % 2 == 0) {
-                char += "" + letters[Math.floor(Math.random() * letters.length)].toUpperCase();
-            } else {
-                char += "" + (Math.floor(Math.random() * 9) + 0);
-            }
+			char += "" + (
+        k % 2 == 0 ? 
+          letters[Math.floor(Math.random() * letters.length)].toUpperCase() 
+          : 
+          Math.floor(Math.random() * 9) + 0
+        )
 		}
 
 		if (!photo.cancelled) {
@@ -393,32 +410,63 @@ export default function Addproduct(props) {
 				to: `${FileSystem.documentDirectory}/${char}.jpg`
 			})
 			.then(() => {
-				setImage({ uri: `${FileSystem.documentDirectory}/${char}.jpg`, name: `${char}.jpg` })
+				setImage({ 
+          ...image, uri: `${FileSystem.documentDirectory}/${char}.jpg`, name: `${char}.jpg`, loading: false, 
+          size: { width, height: width }
+        })
 				setErrormsg('')
 			})
 		}
+
+    setChoosing(false)
 	}
 	const allowCamera = async() => {
-		const { status } = await Camera.getCameraPermissionsAsync()
+		if (Platform.OS === "ios") {
+      const { status } = await Camera.getCameraPermissionsAsync()
 
-		if (status == 'granted') {
-			setCamerapermission(status === 'granted')
-		} else {
-			const { status } = await Camera.requestCameraPermissionsAsync()
+      if (status == 'granted') {
+        setCamerapermission(status === 'granted')
+      } else {
+        const { status } = await Camera.requestCameraPermissionsAsync()
 
-			setCamerapermission(status === 'granted')
-		}
+        setCamerapermission(status === 'granted')
+      }
+    } else {
+      const status = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.CAMERA)
+
+      if (!status) {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.CAMERA,
+          {
+            title: "Camera Permission",
+            message: "EasyGO Business allows you to take a photo for product",
+            buttonNegative: "Cancel",
+            buttonPositive: "OK"
+          }
+        );
+
+        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+          setCamerapermission(true)
+        }
+      } else {
+        setCamerapermission(true)
+      }
+    }
 	}
 	const allowChoosing = async() => {
-		const { status } = await ImagePicker.getMediaLibraryPermissionsAsync()
-        
-        if (status == 'granted') {
-        	setPickingpermission(status === 'granted')
-        } else {
-        	const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+		if (Platform.OS === "ios") {
+      const { status } = await ImagePicker.getMediaLibraryPermissionsAsync()
+          
+      if (status == 'granted') {
+        setPickingpermission(status === 'granted')
+      } else {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
-        	setPickingpermission(status === 'granted')
-        }
+        setPickingpermission(status === 'granted')
+      }
+    } else {
+      setPickingpermission(true)
+    }
 	}
 	const getTheProductInfo = async() => {
 		getProductInfo(productid)
@@ -433,7 +481,7 @@ export default function Addproduct(props) {
 					const newOptions = [], newOthers = [], newSizes = []
 
 					setName(name)
-					setImage({ uri: logo_url + image, name: image })
+					setImage({ ...image, uri: logo_url + image.name })
 					setPrice(price)
 
 					options.forEach(function (option, index) {
@@ -499,29 +547,41 @@ export default function Addproduct(props) {
 
 						{setupType == "photo" && (
 							<View style={styles.cameraContainer}>
-								<Text style={styles.cameraHeader}>Provide a photo for {name}</Text>
+								<Text style={styles.cameraHeader}>Provide a photo for {name} (Optional)</Text>
 
 								{image.uri ? (
 									<>
 										<Image style={styles.camera} source={{ uri: image.uri }}/>
 
-										<TouchableOpacity style={styles.cameraAction} onPress={() => setImage({ uri: '', name: '' })}>
+										<TouchableOpacity style={styles.cameraAction} onPress={() => setImage({ ...image, uri: '', name: '' })}>
 											<Text style={styles.cameraActionHeader}>Cancel</Text>
 										</TouchableOpacity>
 									</>
 								) : (
 									<>
-										<Camera 
-											style={styles.camera} 
-											type={Camera.Constants.Type.back} ref={r => {setCamcomp(r)}}
-											ratio="1:1"
-										/>
+  									{!choosing && (
+                      <>
+                        <Camera 
+                          style={styles.camera} 
+                          type={camType} 
+                          ref={r => {setCamcomp(r)}}
+                          ratio="1:1"
+                        />
+
+                        <View style={{ alignItems: 'center', marginVertical: 10 }}>
+                          <Ionicons name="camera-reverse-outline" size={wsize(7)} onPress={() => setCamtype(camType == 'back' ? 'front' : 'back')}/>
+                        </View>
+                      </>
+                    )}
 
 										<View style={styles.cameraActions}>
-											<TouchableOpacity style={styles.cameraAction} onPress={snapPhoto.bind(this)}>
+											<TouchableOpacity style={[styles.cameraAction, { opacity: image.loading ? 0.5 : 1 }]} disabled={image.loading} onPress={snapPhoto.bind(this)}>
 												<Text style={styles.cameraActionHeader}>Take{'\n'}this photo</Text>
 											</TouchableOpacity>
-											<TouchableOpacity style={styles.cameraAction} onPress={() => choosePhoto()}>
+											<TouchableOpacity style={[styles.cameraAction, { opacity: image.loading ? 0.5 : 1 }]} disabled={image.loading} onPress={() => {
+                        allowChoosing()
+                        choosePhoto()
+                      }}>
 												<Text style={styles.cameraActionHeader}>Choose{'\n'}from phone</Text>
 											</TouchableOpacity>
 										</View>
@@ -756,8 +816,6 @@ export default function Addproduct(props) {
 
 						<Text style={styles.errorMsg}>{errorMsg}</Text>
 
-						{loading ? <ActivityIndicator color="black" size="small"/> : null}
-
 						<View style={{ flexDirection: 'row' }}>
 							<View style={styles.addActions}>
 								<TouchableOpacity style={styles.addAction} disabled={loading} onPress={() => props.navigation.goBack()}>
@@ -794,17 +852,18 @@ export default function Addproduct(props) {
 					</View>
 				}
 			</TouchableWithoutFeedback>
+
+      {(image.loading || loading) && <Modal transparent={true}><Loadingprogress/></Modal>}
 		</SafeAreaView>
 	)
 }
 
 const styles = StyleSheet.create({
-	addproduct: { height: '100%', width: '100%' },
+	addproduct: { height: '100%', paddingTop: Platform.OS == "ios" ? 0 : Constants.statusBarHeight, width: '100%' },
 	box: { alignItems: 'center', paddingTop: 10, width: '100%' },
 	inputContainer: { alignItems: 'center', width: '100%' },
 	addHeader: { fontSize: wsize(5), fontWeight: 'bold', paddingVertical: 5, textAlign: 'center' },
 	addInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, fontSize: wsize(5), padding: 10, width: '90%' },
-	infoInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, fontSize: wsize(5), height: 100, marginVertical: 5, padding: 10, width: '90%' },
 	
 	cameraContainer: { alignItems: 'center', width: '100%' },
 	cameraHeader: { fontSize: wsize(5), fontWeight: 'bold', paddingVertical: 5 },

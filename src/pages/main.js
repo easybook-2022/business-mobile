@@ -1,14 +1,18 @@
 import React, { useEffect, useState } from 'react'
-import { SafeAreaView, Platform, ScrollView, ActivityIndicator, Dimensions, View, FlatList, Image, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet, Modal } from 'react-native'
+import { 
+  SafeAreaView, Platform, ScrollView, ActivityIndicator, Dimensions, 
+  View, FlatList, Image, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, 
+  Keyboard, StyleSheet, Modal 
+} from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
 import { CommonActions } from '@react-navigation/native';
 import * as FileSystem from 'expo-file-system'
 import * as ImageManipulator from 'expo-image-manipulator'
-import { test, socket, logo_url, displayTime } from '../../assets/info'
+import { socket, logo_url, displayTime } from '../../assets/info'
 import { updateNotificationToken } from '../apis/owners'
-import { fetchNumAppointments, fetchNumCartOrderers, getLocationProfile, changeLocationState, setLocationPublic } from '../apis/locations'
+import { fetchNumAppointments, fetchNumCartOrderers, getLocationProfile } from '../apis/locations'
 import { getMenus, removeMenu, addNewMenu } from '../apis/menus'
 import { cancelSchedule, doneService, getAppointments, getCartOrderers } from '../apis/schedules'
 import { removeProduct } from '../apis/products'
@@ -41,7 +45,6 @@ export default function Main(props) {
 	const [storeIcon, setStoreicon] = useState('')
 	const [storeName, setStorename] = useState('')
 	const [locationType, setLocationtype] = useState('')
-	const [locationListed, setLocationlisted] = useState('')
 
 	const [appointments, setAppointments] = useState([])
 	const [numAppointments, setNumappointments] = useState(0)
@@ -177,14 +180,13 @@ export default function Main(props) {
 			})
 			.then((res) => {
 				if (res) {
-					const { name, fullAddress, logo, type, listed } = res.info
+					const { name, fullAddress, logo, type } = res.info
 
 					socket.emit("socket/business/login", ownerid, () => {
 						setOwnerid(ownerid)
 						setStorename(name)
 						setStoreicon(logo)
 						setLocationtype(type)
-						setLocationlisted(listed)
 
 						if (type == 'restaurant') {
 							fetchTheNumCartOrderers()
@@ -198,39 +200,9 @@ export default function Main(props) {
 			})
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
-					
+          const { errormsg, status } = err.response.data
 				} else {
 					alert("get location profile")
-				}
-			})
-	}
-	const changeTheLocationState = async() => {
-		const locationid = await AsyncStorage.getItem("locationid")
-
-		changeLocationState(locationid)
-			.then((res) => {
-				if (res.status == 200) {
-					return res.data
-				}
-			})
-			.then((res) => {
-				if (res) setLocationlisted(res.listed)
-			})
-			.catch((err) => {
-				if (err.response && err.response.status == 400) {
-					if (err.response.data.status) {
-						const { errormsg, status } = err.response.data
-
-						switch (status) {
-							case "menusetuprequired":
-								setShowmenurequired(true)
-
-								break;
-							default:
-						}
-					}
-				} else {
-					alert("change location state")
 				}
 			})
 	}
@@ -398,26 +370,6 @@ export default function Main(props) {
 			default:
 		}
 	}
-	const setTheLocationPublic = () => {
-		setLocationPublic(ownerId)
-			.then((res) => {
-				if (res.status == 200) {
-					return res.data
-				}
-			})
-			.then((res) => {
-				if (res) {
-					setLocationlisted(true)
-				}
-			})
-			.catch((err) => {
-				if (err.response && err.response.status == 400) {
-
-				} else {
-					alert("set location public")
-				}
-			})
-	}
   const logout = async() => {
     const ownerid = await AsyncStorage.getItem("ownerid")
 
@@ -446,7 +398,7 @@ export default function Main(props) {
 
         setAppointments(newAppointments)
 
-        fetchTheNumAppointments()
+        getAllAppointments()
       } else if (data.type == "cancelRequest") {
         const newAppointments = [...appointments]
 
@@ -471,7 +423,7 @@ export default function Main(props) {
 				fetchTheNumAppointments()
 			}
 		})
-		socket.on("updateOrders", () => fetchTheNumCartOrderers())
+		socket.on("updateOrders", () => getAllCartOrderers())
 		socket.io.on("open", () => {
 			if (ownerId != null) {
 				socket.emit("socket/business/login", ownerId, () => setShowdisabledscreen(false))
@@ -485,7 +437,7 @@ export default function Main(props) {
 
 		if (Constants.isDevice) getNotificationPermission()
 	}
-
+  
 	useEffect(() => {
 		initialize()
 
@@ -519,42 +471,28 @@ export default function Main(props) {
   			<View style={styles.box}>
   				<View style={styles.body}>
   					<View style={styles.navs}>
-              {locationType == 'salon' ? 
-                <>
-                  <Text style={styles.header}>Appointment(s)</Text>
-                  <TouchableOpacity style={styles.headerTouch} onPress={() => getAllAppointments()}>
-                    <Text style={styles.headerTouchHeader}>Refresh {(numAppointments > 0 ? '(' + numAppointments + ')' : '')}</Text>
-                  </TouchableOpacity>
-                </>
-                :
-                <>
-                  <Text style={styles.header}>Orderer(s)</Text>
-                  <TouchableOpacity style={styles.headerTouch} onPress={() => getAllCartOrderers()}>
-                    <Text style={styles.headerTouchHeader}>Refresh {numCartorderers > 0 ? '(' + numCartorderers + ')' : ''}</Text>
-                  </TouchableOpacity>
-                </>
-              }
+              <Text style={styles.header}>{locationType == 'salon' ? 'Appointment(s)' : 'Orderer(s)'}</Text>
   					</View>
 
-  					{viewType == "appointments" && (
-  						appointments.length > 0 ? 
-  							<FlatList
-  								data={appointments}
-  								renderItem={({ item, index }) => 
-  									<View key={item.key} style={styles.schedule}>
-  										{item.image && (
-  											<View style={styles.scheduleImageHolder}>
-  												<Image style={styles.scheduleImage} source={{ uri: logo_url + item.image }}/>
-  											</View>
-  										)}
-  											
-  										<Text style={styles.scheduleHeader}>
+            {viewType == "appointments" && (
+              appointments.length > 0 ? 
+                <FlatList
+                  data={appointments}
+                  renderItem={({ item, index }) => 
+                    <View key={item.key} style={styles.schedule}>
+                      {item.image ?
+                        <View style={styles.scheduleImageHolder}>
+                          <Image style={styles.scheduleImage} source={{ uri: logo_url + item.image.name }}/>
+                        </View>
+                      : null }
+                        
+                      <Text style={styles.scheduleHeader}>
                         Client: {item.client.username}
                         {'\nAppointment for: ' + item.name}
                         {'\n' + displayTime(item.time)}
-  										</Text>
+                      </Text>
 
-  										<View style={styles.scheduleActions}>
+                      <View style={styles.scheduleActions}>
                         <View style={styles.column}>
                           <TouchableOpacity style={styles.scheduleAction} onPress={() => cancelTheSchedule(index, "appointment")}>
                             <Text style={styles.scheduleActionHeader}>Cancel</Text>
@@ -566,22 +504,21 @@ export default function Main(props) {
                           </TouchableOpacity>
                         </View>
                       </View>
-  									</View>
-  								}
-  							/>
-  							:
-  							<View style={styles.bodyResult}>
+                    </View>
+                  }
+                />
+                :
+                <View style={styles.bodyResult}>
                   <Text style={styles.bodyResultHeader}>
-    								{numAppointments == 0 ? "No appointment(s) yet" : numAppointments + " appointment(s)"}
+                    {numAppointments == 0 ? "No appointment(s) yet" : numAppointments + " appointment(s)"}
                   </Text>
-  							</View>
-  					)}
-
-  					{viewType == "cartorderers" && (
-  						cartOrderers.length > 0 ? 
-  							<FlatList
-  								data={cartOrderers}
-  								renderItem={({ item, index }) => 
+                </View>
+            )}
+            {viewType == "cartorderers" && (
+              cartOrderers.length > 0 ? 
+                <FlatList
+                  data={cartOrderers}
+                  renderItem={({ item, index }) => 
                     item.product ? 
                       <View key={item.key} style={styles.orderRequest}>
                         <View style={styles.orderRequestRow}>
@@ -592,10 +529,10 @@ export default function Main(props) {
                         </View>
                       </View>
                       :
-    									<View key={item.key} style={styles.cartorderer}>
-    										<View style={styles.cartordererInfo}>
-    											<Text style={styles.cartordererUsername}>Customer: {item.username}</Text>
-    											<Text style={styles.cartordererOrderNumber}>Order #{item.orderNumber}</Text>
+                      <View key={item.key} style={styles.cartorderer}>
+                        <View style={styles.cartordererInfo}>
+                          <Text style={styles.cartordererUsername}>Customer: {item.username}</Text>
+                          <Text style={styles.cartordererOrderNumber}>Order #{item.orderNumber}</Text>
 
                           <View style={styles.cartorderActions}>
                             <TouchableOpacity style={styles.cartordererAction} onPress={() => {
@@ -607,38 +544,38 @@ export default function Main(props) {
                               <Text style={styles.cartordererActionHeader}>See Order(s) ({item.numOrders})</Text>
                             </TouchableOpacity>
                           </View>
-    										</View>
-    									</View>
-  								}
-  							/>
-  							:
-  							<View style={styles.bodyResult}>
-  								{numCartorderers == 0 ? 
-  									<Text style={styles.bodyResultHeader}>No order(s) yet</Text>
-  									:
-  									<Text style={styles.bodyResultHeader}>{numCartorderers} order(s)</Text>
-  								}
-  							</View>
-  					)}
+                        </View>
+                      </View>
+                  }
+                />
+                :
+                <View style={styles.bodyResult}>
+                  {numCartorderers == 0 ? 
+                    <Text style={styles.bodyResultHeader}>No order(s) yet</Text>
+                    :
+                    <Text style={styles.bodyResultHeader}>{numCartorderers} order(s)</Text>
+                  }
+                </View>
+            )}
   				</View>
 
   				<View style={styles.bottomNavs}>
   					<View style={styles.bottomNavsRow}>
-  						<TouchableOpacity style={styles.bottomNav} onPress={() => props.navigation.navigate("settings", { refetch: () => getTheLocationProfile()})}>
-  							<AntDesign name="setting" size={wsize(7)}/>
-  						</TouchableOpacity>
+              <View style={styles.column}>
+    						<TouchableOpacity style={styles.bottomNav} onPress={() => props.navigation.navigate("settings", { refetch: () => getTheLocationProfile()})}>
+    							<AntDesign name="setting" size={wsize(7)}/>
+    						</TouchableOpacity>
+              </View>
 
   						<TouchableOpacity style={styles.bottomNavButton} onPress={() => props.navigation.navigate("menu", { refetch: () => getTheLocationProfile()})}>
   							<Text style={styles.bottomNavButtonHeader}>Edit Menu</Text>
   						</TouchableOpacity>
 
-  						<TouchableOpacity style={styles.bottomNavButton} onPress={() => changeTheLocationState()}>
-  							<Text style={styles.bottomNavButtonHeader}>{locationListed ? "Unlist" : "List"} Public</Text>
-  						</TouchableOpacity>
-
-  						<TouchableOpacity style={styles.bottomNav} onPress={() => logout()}>
-  							<Text style={styles.bottomNavHeader}>Log-Out</Text>
-  						</TouchableOpacity>
+              <View style={styles.column}>
+    						<TouchableOpacity style={styles.bottomNav} onPress={() => logout()}>
+    							<Text style={styles.bottomNavHeader}>Log-Out</Text>
+    						</TouchableOpacity>
+              </View>
   					</View>
   				</View>
   			</View>
@@ -776,16 +713,14 @@ export default function Main(props) {
 }
 
 const styles = StyleSheet.create({
-	main: { backgroundColor: 'white', height: '100%', width: '100%' },
+	main: { backgroundColor: 'white', height: '100%', paddingTop: Platform.OS == "ios" ? 0 : Constants.statusBarHeight, width: '100%' },
 	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 
-	navs: { alignItems: 'center', height: '25%', width: '100%' },
+	navs: { alignItems: 'center', height: '10%', width: '100%' },
   header: { fontSize: wsize(10), fontWeight: 'bold' },
-  headerTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5 },
-  headerTouchHeader: { fontSize: wsize(9), fontWeight: 'bold', textAlign: 'center' },
 
 	// body
-	body: { height: '80%' },
+	body: { height: '90%' },
 
 	// client appointment & orders
 	orderRequest: { borderRadius: 5, backgroundColor: 'white', marginHorizontal: 5, marginVertical: 2.5, padding: 10 },
@@ -804,7 +739,6 @@ const styles = StyleSheet.create({
   column: { flexDirection: 'column', justifyContent: 'space-around' },
 	scheduleAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, paddingVertical: 10, width: wsize(30) },
 	scheduleActionHeader: { fontSize: wsize(4), textAlign: 'center' },
-	scheduleNumOrders: { fontSize: wsize(4), fontWeight: 'bold', padding: 8 },
 
 	cartorderer: { backgroundColor: 'white', borderRadius: 5, flexDirection: 'row', justifyContent: 'space-around', margin: 10, padding: 5, width: wsize(100) - 20 },
 	cartordererInfo: { alignItems: 'center' },
@@ -819,9 +753,9 @@ const styles = StyleSheet.create({
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'column', height: '10%', justifyContent: 'space-around', width: '100%' },
 	bottomNavsRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
-	bottomNav: { flexDirection: 'row', marginVertical: 5 },
+	bottomNav: { flexDirection: 'row' },
 	bottomNavHeader: { color: 'black', fontSize: wsize(4), fontWeight: 'bold', paddingVertical: 5 },
-	bottomNavButton: { backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, paddingVertical: 8, width: wsize(30) },
+	bottomNavButton: { backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5 },
 	bottomNavButtonHeader: { color: 'white', fontSize: wsize(4), fontWeight: 'bold', textAlign: 'center' },
 
 	cancelRequestBox: { backgroundColor: 'white', height: '100%', width: '100%' },

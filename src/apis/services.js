@@ -14,18 +14,16 @@ export const getServiceInfo = id => {
 
 export const addNewService = data => {
 	const form = new FormData()
-	const { uri, name, type = "image/jpeg" } = data.image
+	const { uri, name, type = "image/jpeg", size } = data.image
 
 	form.append("locationid", data.locationid)
 	form.append("menuid", data.menuid)
 	form.append("name", data.name)
-	form.append("info", data.info)
 	form.append("price", data.price)
-	form.append("duration", data.duration)
-	form.append("permission", data.permission)
 
-	if (data.image.uri) {
+	if (data.image.uri.includes("file")) {
 		form.append("image", { uri, name, type })
+    form.append("size", JSON.stringify(size))
 	}
 
 	return axios.post(
@@ -36,19 +34,17 @@ export const addNewService = data => {
 
 export const updateService = data => {
 	const form = new FormData()
-	const { uri, name, type = "image/jpeg" } = data.image
+	const { uri, name, type = "image/jpeg", size } = data.image
 
 	form.append("locationid", data.locationid)
 	form.append("menuid", data.menuid)
 	form.append("serviceid", data.serviceid)
 	form.append("name", data.name)
-	form.append("info", data.info)
 	form.append("price", data.price)
-	form.append("duration", data.duration)
-	form.append("permission", data.permission)
 
-	if (data.image.uri) {
+	if (data.image.uri.includes("file")) {
 		form.append("image", { uri, name, type })
+    form.append("size", JSON.stringify(size))
 	}
 
 	return axios.post(

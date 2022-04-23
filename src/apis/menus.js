@@ -11,22 +11,22 @@ export const getRequests = () => {
 
 export const addNewMenu = (data) => {
 	const form = new FormData()
-	const { uri, name, type = "image/jpeg" } = data.image
+  const { uri, name, type = "image/jpeg", size } = data.image
 
-	form.append("ownerid", data.ownerid)
-	form.append("locationid", data.locationid)
-	form.append("parentmenuid", data.parentMenuid)
-	form.append("name", data.name)
-	form.append("permission", data.permission)
+  form.append("ownerid", data.ownerid)
+  form.append("locationid", data.locationid)
+  form.append("parentmenuid", data.parentMenuid)
+  form.append("name", data.name)
 
-	if (data.image.uri) {
-		form.append("image", { uri, name, type })
-	}
+  if (data.image.uri.includes("file")) {
+    form.append("image", { uri, name, type })
+    form.append("size", JSON.stringify(size))
+  }
 
-	return axios.post(
-		`${url}/menus/add_menu`,
-		form
-	)
+  return axios.post(
+    `${url}/menus/add_menu`,
+    form
+  )
 }
 
 export const removeMenu = id => {
@@ -39,14 +39,14 @@ export const getMenuInfo = id => {
 
 export const saveMenu = data => {
 	const form = new FormData()
-	const { uri, name, type = "image/jpeg" } = data.image
+	const { uri, name, type = "image/jpeg", size } = data.image
 
 	form.append("menuid", data.menuid)
 	form.append("name", data.name)
-	form.append("permission", data.permission)
 
-	if (data.image.uri) {
+	if (data.image.uri.includes("file")) {
 		form.append("image", { uri, name, type })
+    form.append("size", JSON.stringify(size))
 	}
 
 	return axios.post(
@@ -61,7 +61,7 @@ export const uploadMenu = data => {
 
 	form.append("locationid", data.locationid)
 	form.append("image", { uri, name, type })
-	form.append("permission", data.permission)
+  form.append("size", JSON.stringify(data.size))
 
 	return axios.post(
 		`${url}/menus/upload_menu`,

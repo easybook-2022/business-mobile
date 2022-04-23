@@ -1,5 +1,5 @@
 import React from 'react';
-import { SafeAreaView, View, Text, Image, TouchableOpacity, Dimensions, StyleSheet } from 'react-native';
+import { SafeAreaView, Platform, View, Text, Image, TouchableOpacity, Dimensions, StyleSheet } from 'react-native';
 import Constants from 'expo-constants';
 
 const { height, width } = Dimensions.get('window')
@@ -17,15 +17,19 @@ export default function Auth({ navigation }) {
 				<Image style={styles.icon} source={require("../../assets/icon.png")}/>
 
 				<Text style={styles.boxHeader}>Welcome to EasyGO (Business)</Text>
-
+        
         <View style={styles.boxOptions}>
           <View style={styles.boxOption}>
             <View style={styles.column}><Text style={styles.boxOptionHeader}>Are you new ?</Text></View>
-            <TouchableOpacity style={styles.boxOptionTouch} onPress={() => navigation.navigate("verifyowner")}><Text>Click to{'\n'}Register</Text></TouchableOpacity>
+            <TouchableOpacity style={styles.boxOptionTouch} onPress={() => navigation.navigate("verifyowner")}>
+              <Text>Click to{'\n'}Register</Text>
+            </TouchableOpacity>
           </View>
           <View style={styles.boxOption}>
             <View style={styles.column}><Text style={styles.boxOptionHeader}>Already registered?</Text></View>
-            <TouchableOpacity style={styles.boxOptionTouch} onPress={() => navigation.navigate("login")}><Text>Click to{'\n'}Login</Text></TouchableOpacity>
+            <TouchableOpacity style={styles.boxOptionTouch} onPress={() => navigation.navigate("login")}>
+              <Text>Click to{'\n'}Login</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </View>
@@ -34,7 +38,7 @@ export default function Auth({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-	auth: { backgroundColor: 'white', height: '100%', width: '100%' },
+	auth: { backgroundColor: 'white', height: '100%', paddingTop: Platform.OS == "ios" ? 0 : Constants.statusBarHeight, width: '100%' },
 	box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', paddingHorizontal: 10, width: '100%' },
   icon: { height: width * 0.5, width: width * 0.5 },
 	boxHeader: { fontSize: wsize(7), fontWeight: 'bold', textAlign: 'center' },
