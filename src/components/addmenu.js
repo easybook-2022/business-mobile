@@ -48,11 +48,11 @@ export default function Addmenu(props) {
 	const [errorMsg, setErrormsg] = useState('')
 
 	const addTheNewMenu = async() => {
+    setLoading(true)
+
 		const ownerid = await AsyncStorage.getItem("ownerid")
 		const locationid = await AsyncStorage.getItem("locationid")
 		const data = { locationid, parentMenuid, name, image }
-
-		setLoading(true)
 
 		addNewMenu(data)
 			.then((res) => {
@@ -62,6 +62,8 @@ export default function Addmenu(props) {
 			})
 			.then((res) => {
 				if (res) {
+          setLoading(false)
+
 					refetch()
 					props.navigation.goBack()
 				}
@@ -69,17 +71,15 @@ export default function Addmenu(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					const { errormsg, status } = err.response.data
-				} else {
-					alert("add menu")
 				}
 
         setLoading(false)
 			})
 	}
 	const saveTheMenu = () => {
-		const data = { menuid, name, image, permission: cameraPermission && pickingPermission }
+    setLoading(true)
 
-		setLoading(true)
+		const data = { menuid, name, image, permission: cameraPermission && pickingPermission }
 		
 		saveMenu(data)
 			.then((res) => {
@@ -89,15 +89,15 @@ export default function Addmenu(props) {
 			})
 			.then((res) => {
 				if (res) {
+          setLoading(false)
+
 					refetch()
 					props.navigation.goBack()
 				}
 			})
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
-
-				} else {
-					alert("save menu")
+          const { errormsg, status } = err.response.data
 				}
 			})
 	}
@@ -152,9 +152,7 @@ export default function Addmenu(props) {
 			})
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
-					
-				} else {
-					alert("get menu info")
+          const { errormsg, status } = err.response.data
 				}
 			})
 	}

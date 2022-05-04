@@ -15,7 +15,7 @@ import * as Location from 'expo-location';
 import MapView, { Marker } from 'react-native-maps';
 import { logo_url, timeControl } from '../../assets/info'
 import { addOwner, updateOwner, deleteOwner, getWorkerInfo, getOtherWorkers, getAccounts } from '../apis/owners'
-import { getLocationProfile, updateLocation, setLocationHours } from '../apis/locations'
+import { getLocationProfile, updateLocation, setLocationHours, setReceiveType } from '../apis/locations'
 import { loginInfo, ownerRegisterInfo, displayPhonenumber } from '../../assets/info'
 
 // bank account
@@ -57,6 +57,7 @@ export default function Settings(props) {
 	const [province, setProvince] = useState(loginInfo.province)
 	const [postalcode, setPostalcode] = useState(loginInfo.postalcode)
 	const [logo, setLogo] = useState({ uri: '', name: '', size: { width: 0, height: 0 }, loading: false })
+  const [locationReceivetype, setLocationreceivetype] = useState('')
 	const [type, setType] = useState('')
 	const [infoLoading, setInfoloading] = useState(true)
 
@@ -85,6 +86,8 @@ export default function Settings(props) {
     { key: "6", header: "Saturday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, working: true, takeShift: "" }
   ])
 
+  const [receiveTypeloading, setReceivetypeloading] = useState(true)
+
 	const [errorMsg, setErrormsg] = useState('')
 	const [loading, setLoading] = useState(false)
 	const [accountForm, setAccountform] = useState({
@@ -93,7 +96,7 @@ export default function Settings(props) {
 		username: '', editUsername: false,
 		cellnumber: '', editCellnumber: false,
 		currentPassword: '', newPassword: '', confirmPassword: '', editPassword: false,
-		profile: { uri: '', name: '' }, editProfile: false, camType: 'front',
+		profile: { uri: '', name: '', size: { width: 0, height: 0 }}, editProfile: false, camType: 'front',
     workerHours: [], editHours: false,
 		loading: false,
 		errorMsg: ''
@@ -139,8 +142,6 @@ export default function Settings(props) {
 
 						setErrormsg(errormsg)
 						setLoading(false)
-					} else {
-						alert("update location")
 					}
 				})
 		} else {
@@ -329,9 +330,9 @@ export default function Settings(props) {
 			})
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
+          const { errormsg, status } = err.response.data
+
 					setLoading(false)
-				} else {
-					alert("get location hours")
 				}
 			})
 	}
@@ -426,8 +427,6 @@ export default function Settings(props) {
 					const { errormsg, status } = err.response.data
 
 					setAccountform({ ...accountForm, errormsg })
-				} else {
-					alert("add owner")
 				}
 			})
 	}
@@ -589,8 +588,6 @@ export default function Settings(props) {
 					const { errormsg, status } = err.response.data
 
           setAccountform({ ...accountForm, errorMsg: errormsg })
-				} else {
-					alert("update owner")
 				}
 			})
 	}
@@ -616,8 +613,6 @@ export default function Settings(props) {
         .catch((err) => {
           if (err.response && err.response.status == 400) {
             const { errormsg, status } = err.response.data
-          } else {
-            alert("delete owner top")
           }
         })
     } else {
@@ -646,8 +641,6 @@ export default function Settings(props) {
         .catch((err) => {
           if (err.response && err.response.status == 400) {
             const { errormsg, status } = err.response.data
-          } else {
-            alert("delete owner bottom")
           }
         })
     }
@@ -686,8 +679,6 @@ export default function Settings(props) {
       .catch((err) => {
         if (err.response && err.response.status == 400) {
           const { errormsg, status } = err.response.data
-        } else {
-          alert("get other workers")
         }
       })
   }
@@ -718,7 +709,7 @@ export default function Settings(props) {
 			})
 			.then((res) => {
 				if (res) {
-					const { name, phonenumber, addressOne, addressTwo, city, province, postalcode, logo, hours, type } = res.info
+					const { name, phonenumber, addressOne, addressTwo, city, province, postalcode, logo, hours, type, receiveType } = res.info
           let openHour, openMinute, closeHour, closeMinute
           let openInfo, closeInfo, currDate, calcDate, openTime, closeTime
 
@@ -765,6 +756,8 @@ export default function Settings(props) {
 					setPostalcode(postalcode)
 					setLogo({ ...logo, uri: logo_url + logo.name })
 					setType(type)
+          setLocationreceivetype(receiveType)
+          setReceivetypeloading(false)
 					setInfoloading(false)
 					setDays(hours)
           setHoursrange(hours)
@@ -773,9 +766,7 @@ export default function Settings(props) {
 			})
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
-					
-				} else {
-					alert("get location profile")
+					const { errormsg, status } = err.response.data
 				}
 			})
 	}
@@ -798,9 +789,7 @@ export default function Settings(props) {
 			})
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
-					
-				} else {
-					alert("get all accounts")
+					const { errormsg, status } = err.response.data
 				}
 			})
 	}
@@ -830,8 +819,8 @@ export default function Settings(props) {
 				photo_save_option
 			)
 
-			for (let k = 0; k <= photo_name_length - 1; k++) {
-				char += "" (
+			for (let k = 0; k < photo_name_length; k++) {
+				char += "" + (
           k % 2 == 0 ? 
             letters[Math.floor(Math.random() * letters.length)].toUpperCase()
             :
@@ -848,7 +837,7 @@ export default function Settings(props) {
 					...accountForm,
 					profile: {
 						uri: `${FileSystem.documentDirectory}/${char}.jpg`,
-						name: `${char}.jpg`
+						name: `${char}.jpg`, size: { width, height: width }
 					},
           loading: false
 				})
@@ -871,12 +860,13 @@ export default function Settings(props) {
 			base64: true
 		});
 
-		for (let k = 0; k <= photo_name_length - 1; k++) {
-			if (k % 2 == 0) {
-          char += "" + letters[Math.floor(Math.random() * letters.length)].toUpperCase();
-      } else {
-          char += "" + (Math.floor(Math.random() * 9) + 0);
-      }
+		for (let k = 0; k < photo_name_length; k++) {
+			char += "" + (
+        k % 2 == 0 ? 
+          letters[Math.floor(Math.random() * letters.length)].toUpperCase()
+          :
+          Math.floor(Math.random() * 9) + 0
+      )
 		}
 
 		if (!photo.cancelled) {
@@ -889,7 +879,7 @@ export default function Settings(props) {
 					...accountForm,
 					profile: {
 						uri: `${FileSystem.documentDirectory}/${char}.jpg`,
-						name: `${char}.jpg`
+						name: `${char}.jpg`, size: { width, height: width }
 					},
           loading: false
 				})
@@ -926,7 +916,7 @@ export default function Settings(props) {
 				photo_save_option
 			)
 
-			for (let k = 0; k <= photo_name_length - 1; k++) {
+			for (let k = 0; k < photo_name_length; k++) {
         char += "" + (
           k % 2 == 0 ? 
             letters[Math.floor(Math.random() * letters.length)].toUpperCase()
@@ -965,7 +955,7 @@ export default function Settings(props) {
 			base64: true
 		});
 
-		for (let k = 0; k <= photo_name_length - 1; k++) {
+		for (let k = 0; k < photo_name_length; k++) {
       char += "" + (
         k % 2 == 0 ? 
           letters[Math.floor(Math.random() * letters.length)].toUpperCase()
@@ -1078,6 +1068,27 @@ export default function Settings(props) {
       setPickingpermission(true)
     }
 	}
+  const setTheReceiveType = async(type) => {
+    const locationid = await AsyncStorage.getItem("locationid")
+    const data = { locationid, type }
+
+    setReceiveType(data)
+      .then((res) => {
+        if (res.status == 200) {
+          return res.data
+        }
+      })
+      .then((res) => {
+        if (res) {
+          setLocationreceivetype(type)
+        }
+      })
+      .catch((err) => {
+        if (err.response && err.response.status == 400) {
+          const { errormsg, status } = err.response.data
+        }
+      })
+  }
 
 	useEffect(() => {
 		getTheLocationProfile()
@@ -1252,7 +1263,7 @@ export default function Settings(props) {
 						{!daysLoading ?
 							editType == 'hours' ? 
 								<>
-									<Text style={styles.header}>Edit {type == "salon" ? "Salon" : "Restaurant"} Hour(s)</Text>
+									<Text style={styles.header}>Edit {(type == "hair" || type == "nail") ? "Salon" : "Restaurant"} Hour(s)</Text>
 
 									{days.map((info, index) => (
 										<View key={index} style={styles.workerHour}>
@@ -1388,7 +1399,7 @@ export default function Settings(props) {
 								</>
 								:
 								<TouchableOpacity style={styles.editButton} onPress={() => setEdittype('hours')}>
-									<Text style={styles.editButtonHeader}>Edit {type == "salon" ? "Salon" : "Restaurant"} Hour(s)</Text>
+									<Text style={styles.editButtonHeader}>Edit {(type == "hair" || type == "nail") ? "Salon" : "Restaurant"} Hour(s)</Text>
 								</TouchableOpacity>
 							:
               <View style={styles.loading}>
@@ -1396,40 +1407,40 @@ export default function Settings(props) {
               </View>
 						}
 
-						{type == "salon" && (
+						{(type == "hair" || type == "nail") && (
               !accountHoldersloading ?
   							editType == 'users' ? 
-  								<View style={styles.accountHolders}>
-  									<Text style={styles.header}>Edit Stylist(s)</Text>
+                  <View style={styles.accountHolders}>
+                    <Text style={styles.header}>Edit Stylist(s)</Text>
 
-  									<TouchableOpacity style={styles.accountHoldersAdd} onPress={() => {
-  										setAccountform({
-  											...accountForm,
-  											show: true,
-  											type: 'add',
+                    <TouchableOpacity style={styles.accountHoldersAdd} onPress={() => {
+                      setAccountform({
+                        ...accountForm,
+                        show: true,
+                        type: 'add',
                         username: ownerRegisterInfo.username,
                         cellnumber: ownerRegisterInfo.cellnumber,
                         currentPassword: ownerRegisterInfo.password, 
                         newPassword: ownerRegisterInfo.password, 
                         confirmPassword: ownerRegisterInfo.password,
                         workerHours: [...hoursRange]
-  										})
-  									}}>
-  										<Text style={styles.accountHoldersAddHeader}>Add a new stylist</Text>
-  									</TouchableOpacity>
+                      })
+                    }}>
+                      <Text style={styles.accountHoldersAddHeader}>Add a new stylist</Text>
+                    </TouchableOpacity>
 
-  									{accountHolders.map((info, index) => (
-  										<View key={info.key} style={styles.account}>
+                    {accountHolders.map((info, index) => (
+                      <View key={info.key} style={styles.account}>
                         <View style={styles.column}>
                           <Text style={styles.accountHeader}>#{index + 1}:</Text>
                         </View>
 
-  											<View style={styles.accountEdit}>
+                        <View style={styles.accountEdit}>
                           <View style={styles.column}>
                             <Text style={styles.accountEditHeader}>{info.username}</Text>
                           </View>
 
-                          {type == "salon" && (
+                          {(type == "hair" || type == "nail") && (
                             <>
                               <View style={styles.column}>
                                 <TouchableOpacity style={styles.accountEditTouch} onPress={() => {
@@ -1463,10 +1474,10 @@ export default function Settings(props) {
                               </View>
                             </>
                           )}
-  											</View>
-  										</View>
-  									))}
-  								</View>
+                        </View>
+                      </View>
+                    ))}
+                  </View>
   								:
                   <TouchableOpacity style={styles.editButton} onPress={() => setEdittype('users')}>
                     <Text style={styles.editButtonHeader}>Edit Stylist(s) Info</Text>
@@ -1476,6 +1487,31 @@ export default function Settings(props) {
                   <ActivityIndicator color="black" size="small"/>
                 </View>
 						)}
+
+            {(type == "hair" || type == "nail") && (
+              !receiveTypeloading ? 
+                editType == "receivetype" ? 
+                  <View style={styles.receiveTypesBox}>
+                    <Text style={styles.receiveTypesHeader}>How do you want to receive appointments</Text>
+
+                    <View style={styles.receiveTypes}>
+                      <TouchableOpacity style={[styles.receiveType, { backgroundColor: locationReceivetype == 'stylist' ? 'black' : 'white' }]} onPress={() => setTheReceiveType('stylist')}>
+                        <Text style={[styles.receiveTypeHeader, { color: locationReceivetype == 'stylist' ? 'white' : 'black' }]}>By each stylist</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity style={[styles.receiveType, { backgroundColor: locationReceivetype == 'computer' ? 'black' : 'white' }]} onPress={() => setTheReceiveType('computer')}>
+                        <Text style={[styles.receiveTypeHeader, { color: locationReceivetype == 'computer' ? 'white' : 'black' }]}>By main computer</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                  :
+                  <TouchableOpacity style={styles.editButton} onPress={() => setEdittype('receivetype')}>
+                    <Text style={styles.editButtonHeader}>Edit Receive Type</Text>
+                  </TouchableOpacity>
+                :
+                <View style={styles.loading}>
+                  <ActivityIndicator color="black" size="small"/>
+                </View>
+            )}
 					</View>
 				</ScrollView>
 
@@ -1529,7 +1565,7 @@ export default function Settings(props) {
                           </TouchableOpacity>
                         </View>
 
-                        {type == "salon" && (
+                        {(type == "hair" || type == "nail") && (
                           <View style={{ alignItems: 'center' }}>
                             <TouchableOpacity style={styles.accountInfoEdit} onPress={() => setAccountform({ ...accountForm, editHours: true, editType: 'hours' })}>
                               <Text style={styles.accountInfoEditHeader}>Change your days and hours</Text>
@@ -1743,7 +1779,7 @@ export default function Settings(props) {
                                 {!choosing && (
                                   <Camera 
                                     style={styles.camera} 
-                                    ratio={Platform.OS === "android" && "1:1"}
+                                    ratio={"1:1"}
                                     type={accountForm.camType} 
                                     ref={r => {setCamcomp(r)}}
                                   />
@@ -2388,7 +2424,13 @@ const styles = StyleSheet.create({
 	accountEditTouch: { borderRadius: 2, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: wsize(30) },
   accountEditTouchHeader: { fontSize: wsize(4), textAlign: 'center' },
 	
-	editButton: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 30, padding: 5, width: wsize(80) },
+	receiveTypesBox: { alignItems: 'center', marginHorizontal: 10, marginTop: 20 },
+  receiveTypesHeader: { fontWeight: 'bold' },
+  receiveTypes: { flexDirection: 'row', justifyContent: 'space-between' },
+  receiveType: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: 150 },
+  receiveTypeHeader: { textAlign: 'center' },
+
+  editButton: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 30, padding: 5, width: wsize(80) },
 	editButtonHeader: { fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
 
 	// account form

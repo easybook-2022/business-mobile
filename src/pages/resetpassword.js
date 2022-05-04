@@ -54,8 +54,6 @@ export default function Resetpassword(props) {
 					const { errormsg, status } = err.response.data
 
 					setErrormsg(errormsg)
-				} else {
-          alert("reset password")
 				}
 			})
 	}

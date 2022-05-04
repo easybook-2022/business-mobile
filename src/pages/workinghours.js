@@ -91,8 +91,6 @@ export default function Workinghours({ navigation }) {
       .catch((err) => {
         if (err.response && err.response.status == 400) {
           const { errormsg, status } = err.response.data
-        } else {
-          alert("get info")
         }
       })
   }
@@ -198,8 +196,8 @@ export default function Workinghours({ navigation }) {
         })
         .then((res) => {
           if (res) {
-            setLoading(false)
             AsyncStorage.setItem("phase", "main")
+            setLoading(false)
 
             navigation.dispatch(
               CommonActions.reset({
@@ -211,9 +209,9 @@ export default function Workinghours({ navigation }) {
         })
         .catch((err) => {
           if (err.response && err.response.status == 400) {
+            const { errormsg, status } = err.response.data
+            
             setLoading(false)
-          } else {
-            alert("done")
           }
         })
     } else {

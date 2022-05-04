@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "easygo-business",
+    "name": "EasyGO (Business)",
     "slug": "easygo-business",
     "version": "0.0.0",
     "orientation": "portrait",
@@ -19,13 +19,11 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.geottuse.serviceapp.business",
-      "buildNumber": "6",
+      "buildNumber": "0",
       "infoPlist": {
         "NSCameraUsageDescription": "EasyGO (Business) uses camera to allow you to capture a photo of your location/menu/product/service",
         "NSMicrophoneUsageDescription": "EasyGO (Business) does not need microphone",
-        "NSLocationWhenInUseUsageDescription": "EasyGO (Business) optionally marks your location using your geo coordinates so that clients/customers can find you",
-        "NSLocationUsageDescription": "EasyGO (Business) optionally marks your location using your geo coordinates so that clients/customers can find you",
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "EasyGO (Business) optionally marks your location using your geo coordinates so that clients/customers can find you"
+        "NSLocationUsageDescription": "EasyGO (Business) optionally marks your location using your geo coordinates so that clients/customers can find you"
       },
       "entitlements": {
         "com.apple.developer.networking.wifi-info": "true"
@@ -33,8 +31,9 @@
     },
     "android": {
       "package": "com.geottuse.serviceapp.business",
-      "versionCode": 16,
-      "permissions": ["CAMERA","ACCESS_MEDIA_LOCATION"]
+      "versionCode": 18,
+      "permissions": ["CAMERA","ACCESS_MEDIA_LOCATION", "ACCESS_FINE_LOCATION"],
+      "googleServicesFile": "./google-services.json"
     },
     "notification": {
       "icon": "./assets/notification.png"

@@ -94,6 +94,13 @@ export const setLocationHours = data => {
 	)
 }
 
+export const setReceiveType = data => {
+  return axios.post(
+    `${url}/locations/set_receive_type`,
+    data
+  )
+}
+
 export const getLocationHours = data => {
 	return axios.post(
 		`${url}/locations/get_hours`,

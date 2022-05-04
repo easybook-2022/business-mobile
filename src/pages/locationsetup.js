@@ -133,15 +133,13 @@ export default function Locationsetup({ navigation }) {
 				longitude = locationCoords.longitude
 				latitude = locationCoords.latitude
 			} else {
-				if (locationPermission) {
-					let info = await Location.geocodeAsync(`${addressOne} ${addressTwo}, ${city} ${province}, ${postalcode}`)
-
-					longitude = info[0].longitude
-					latitude = info[0].latitude
-				} else {
+				if (!locationPermission) {
 					longitude = registerInfo.longitude
 					latitude = registerInfo.latitude
-				}
+				} else {
+          longitude = locationCoords.longitude
+          latitude = locationCoords.latitude
+        }
 			}
 
 			const time = (Date.now() / 1000).toString().split(".")[0]
@@ -164,7 +162,9 @@ export default function Locationsetup({ navigation }) {
               AsyncStorage.setItem("locationid", id.toString())
               AsyncStorage.setItem("locationtype", type)
 
-              if (type == "restaurant") {
+              setLoading(false)
+
+              if (type == "restaurant" || type == "store") {
                 AsyncStorage.setItem("phase", "main")
 
                 navigation.dispatch(
@@ -190,15 +190,12 @@ export default function Locationsetup({ navigation }) {
               const { errormsg, status } = err.response.data
 
               setErrormsg(errormsg)
-            } else {
-              alert("setup location")
+              setLoading(false)
             }
           })
 			} else {
 				setErrormsg("Please choose an option for all the days")
 			}
-
-      setLoading(false)
 		} else {
       setLoading(false)
 
@@ -239,7 +236,7 @@ export default function Locationsetup({ navigation }) {
 			}
 		}
 	}
-	const saveInfo = () => {
+	const saveInfo = async() => {
 		const index = steps.indexOf(setupType)
 		let msg = "", skip = false
 
@@ -252,7 +249,7 @@ export default function Locationsetup({ navigation }) {
         break
 			case 1:
 				if (!storeName) {
-          msg = "Please enter the name of your " + (type == 'restaurant' ? 'restaurant' : type + ' salon')
+          msg = "Please enter the name of your " + type
         }
 
         break
@@ -261,7 +258,14 @@ export default function Locationsetup({ navigation }) {
 					if (locationInfo == "destination") {
 						if (!addressOne || !city || !province || !postalcode) {
 							msg = "There are some missing address info"
-						}
+						} else {
+              let info = await Location.geocodeAsync(`${addressOne} ${addressTwo}, ${city} ${province}, ${postalcode}`)
+
+              longitude = info[0].longitude
+              latitude = info[0].latitude
+
+              setLocationcoords({ ...locationCoords, longitude, latitude })
+            }
 					}
 				} else {
 					msg = "Please choose an option"
@@ -270,13 +274,13 @@ export default function Locationsetup({ navigation }) {
 				break
 			case 3:
 				if (!phonenumber) {
-					msg = "Please provide the " + (type == 'restaurant' ? 'restaurant' : type + ' salon') + " phone number"
+					msg = "Please provide the " + type + " phone number"
 				}
 
 				break
 			case 4:
 				if (!logo.uri && Platform.OS == 'ios') {
-					msg = "Please provide a photo of the " + (type == 'restaurant' ? 'restaurant' : type + ' salon')
+					msg = "Please provide a photo of the " + type
 				}
 
 				break
@@ -619,13 +623,26 @@ export default function Locationsetup({ navigation }) {
                           </View>
                         </View>
                       </TouchableOpacity>
+                      <TouchableOpacity style={[styles.typeSelection, { backgroundColor: type == 'store' ? 'rgba(0, 0, 0, 0.5)' : null }]} onPress={() => setType('store')}>
+                        <View style={styles.typeSelectionRow}>
+                          <View style={styles.column}>
+                            <Text style={styles.typeSelectionHeader}>Store</Text>
+                          </View>
+                          <View style={styles.column}>
+                            <Image source={require("../../assets/shopping-cart.png")} style={styles.typeSelectionIcon}/>
+                          </View>
+                          <View style={styles.column}>
+                            <Text style={styles.typeSelectionAction}>Tap{'\n'}to choose</Text>
+                          </View>
+                        </View>
+                      </TouchableOpacity>
                     </View>
                   </View>
                 )}
 
                 {setupType == "name" && (
                   <View style={styles.inputContainer}>
-                    <Text style={styles.inputHeader}>Enter {type == 'restaurant' ? 'restaurant' : type + ' salon'} name:</Text>
+                    <Text style={styles.inputHeader}>Enter {type} name:</Text>
                     <TextInput style={styles.input} onChangeText={(storeName) => setStorename(storeName)} value={storeName} autoCorrect={false} autoCapitalize="none"/>
                   </View>
                 )}
@@ -634,7 +651,7 @@ export default function Locationsetup({ navigation }) {
                   <View style={styles.locationContainer}>
                     {locationInfo == '' ?
                       <View style={{ alignItems: 'center', height: '100%' }}>
-                        <Text style={styles.locationHeader}>If you are at the {type == 'restaurant' ? 'restaurant' : type + ' salon'} right now,</Text>
+                        <Text style={styles.locationHeader}>If you are at the {type} right now,</Text>
 
                         <TouchableOpacity style={[styles.locationActionOption, { width: width * 0.5 }]} disabled={loading} onPress={() => markLocation()}>
                           <Text style={styles.locationActionOptionHeader}>Mark your location</Text>
@@ -660,7 +677,7 @@ export default function Locationsetup({ navigation }) {
                         <ScrollView style={{ height: '100%', width: '100%' }}>
                           <View style={styles.locationInfos}>
                             <View style={{ alignItems: 'center', marginTop: 50 }}>
-                              <Text style={styles.locationHeader}>If you are at the {type == 'restaurant' ? 'restaurant' : type + ' salon'} right now,</Text>
+                              <Text style={styles.locationHeader}>If you are at the {type} right now,</Text>
                               <TouchableOpacity style={[styles.locationActionOption, { width: width * 0.5 }]} disabled={loading} onPress={() => markLocation()}>
                                 <Text style={styles.locationActionOptionHeader}>Mark your location</Text>
                               </TouchableOpacity>
@@ -668,14 +685,14 @@ export default function Locationsetup({ navigation }) {
 
                             <Text style={{ fontSize: 20, fontWeight: 'bold', marginVertical: 30 }}>Or</Text>
 
-                            <Text style={styles.locationHeader}>Enter your {type == 'restaurant' ? 'restaurant' : type + ' salon'} information</Text>
+                            <Text style={styles.locationHeader}>Enter your {type} information</Text>
 
                             <View style={styles.inputContainer}>
-                              <Text style={styles.inputHeader}>Enter {type == 'restaurant' ? 'restaurant' : type + ' salon'}{'\n'}address #1:</Text>
+                              <Text style={styles.inputHeader}>Enter {type}{'\n'}address #1:</Text>
                               <TextInput style={styles.input} onChangeText={(addressOne) => setAddressone(addressOne)} value={addressOne} autoCorrect={false} autoCapitalize="none"/>
                             </View>
                             <View style={styles.inputContainer}>
-                              <Text style={styles.inputHeader}>Enter {type == 'restaurant' ? 'restaurant' : type + ' salon'}{'\n'}address #2: (Optional)</Text>
+                              <Text style={styles.inputHeader}>Enter {type}{'\n'}address #2: (Optional)</Text>
                               <TextInput style={styles.input} onChangeText={(addressTwo) => setAddresstwo(addressTwo)} value={addressTwo} autoCorrect={false} autoCapitalize="none"/>
                             </View>
                             <View style={styles.inputContainer}>
@@ -694,7 +711,7 @@ export default function Locationsetup({ navigation }) {
                         </ScrollView>
                         :
                         <View style={{ alignItems: 'center', height: '100%', width: '100%' }}>
-                          <Text style={styles.locationHeader}>Your {type == 'restaurant' ? 'restaurant' : type + ' salon'} is located at</Text>
+                          <Text style={styles.locationHeader}>Your {type} is located at</Text>
                           {(locationCoords.longitude && locationCoords.latitude) ? 
                             <>
                               <MapView
@@ -731,14 +748,14 @@ export default function Locationsetup({ navigation }) {
 
                 {setupType == "phonenumber" && (
                   <View style={styles.inputContainer}>
-                    <Text style={styles.inputHeader}>Enter {type == 'restaurant' ? 'restaurant' : type + ' salon'}'s phone number:</Text>
+                    <Text style={styles.inputHeader}>Enter {type}'s phone number:</Text>
                     <TextInput style={styles.input} onChangeText={(num) => setPhonenumber(displayPhonenumber(phonenumber, num, () => Keyboard.dismiss()))} value={phonenumber} keyboardType="numeric" autoCorrect={false} autoCapitalize="none"/>
                   </View>
                 )}
 
                 {(setupType == "logo" && (cameraPermission || pickingPermission)) && (
                   <View style={styles.cameraContainer}>
-                    <Text style={styles.inputHeader}>Provide a photo for {type == 'restaurant' ? 'restaurant' : type + ' salon'}</Text>
+                    <Text style={styles.inputHeader}>Provide a photo for {type}</Text>
 
                     {logo.uri ? (
                       <>
@@ -826,11 +843,11 @@ export default function Locationsetup({ navigation }) {
             <View style={styles.header}><Text style={styles.boxHeader}>Setup</Text></View>
 
             <View style={styles.days}>
-              <Text style={[styles.inputHeader, { marginBottom: 20, textAlign: 'center' }]}>Set the {type == 'restaurant' ? 'restaurant' : type + ' salon'}'s opening hours</Text>
+              <Text style={[styles.inputHeader, { marginBottom: 20, textAlign: 'center' }]}>Set the {type}'s opening hours</Text>
 
               {!daysInfo.done ?
                 <View style={{ alignItems: 'center', marginBottom: 50, width: '100%' }}>
-                  <Text style={styles.openingDayHeader}>Tap on the days {type == 'restaurant' ? 'restaurant' : type + ' salon'} open ?</Text>
+                  <Text style={styles.openingDayHeader}>Tap on the days {type} open ?</Text>
 
                   {daysArr.map((day, index) => (
                     <TouchableOpacity key={index} style={daysInfo.working.indexOf(day) > -1 ? styles.openingDayTouchSelected : styles.openingDayTouch} onPress={() => {
@@ -1024,7 +1041,7 @@ const styles = StyleSheet.create({
 
   typeContainer: { alignItems: 'center', height: '100%', width: '100%' },
   selections: { flexDirection: 'column', justifyContent: 'space-between', width: '90%' },
-  typeSelection: { backgroundColor: 'rgba(127, 127, 127, 0.05)', borderStyle: 'solid', borderWidth: 2, flexDirection: 'column', height: hsize(15), justifyContent: 'space-around', marginBottom: 10, padding: 5, width: '100%' },
+  typeSelection: { backgroundColor: 'rgba(127, 127, 127, 0.05)', borderStyle: 'solid', borderWidth: 2, flexDirection: 'column', height: hsize(10), justifyContent: 'space-around', marginBottom: 10, padding: 5, width: '100%' },
   typeSelectionRow: { flexDirection: 'row', justifyContent: 'space-between' },
   typeSelectionHeader: { fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
   typeSelectionIcon: { height: wsize(15), width: wsize(15) },

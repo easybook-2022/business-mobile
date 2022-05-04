@@ -47,8 +47,6 @@ export default function Verifyowner({ navigation }) {
 					const { errormsg } = err.response.data
 
 					setErrormsg(errormsg)
-				} else {
-          alert("verify")
 				}
 			})
 
@@ -69,15 +67,14 @@ export default function Verifyowner({ navigation }) {
           const { id } = res
 
           AsyncStorage.setItem("ownerid", id.toString())
+          AsyncStorage.setItem("phase", "locationsetup")
 
           navigation.navigate("locationsetup")
         }
       })
       .catch((err) => {
         if (err.response && err.response.status == 400) {
-
-        } else {
-          alert("register")
+          const { errormsg, status } = err.response.data
         }
       })
   }

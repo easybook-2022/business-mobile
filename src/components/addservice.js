@@ -74,8 +74,6 @@ export default function Addservice(props) {
 
 						setErrormsg(errormsg)
 						setLoading(false)
-					} else {
-            alert("add service")
 					}
 				})
 		} else {
@@ -122,8 +120,6 @@ export default function Addservice(props) {
 
 						setErrormsg(errormsg)
 						setLoading(false)
-					} else {
-            alert("update service")
 					}
 				})
 		} else {
@@ -341,9 +337,7 @@ export default function Addservice(props) {
 			})
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
-					
-				} else {
-          alert("get service info")
+				  const { errormsg, status } = err.response.data
 				}
 			})
 	}

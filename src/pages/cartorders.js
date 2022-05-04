@@ -23,7 +23,7 @@ const hsize = p => {
 }
 
 export default function Cartorders(props) {
-	const { userid, ordernumber, refetch } = props.route.params
+	const { userid, type, ordernumber, refetch } = props.route.params
 
 	const [ownerId, setOwnerid] = useState(null)
 	const [orders, setOrders] = useState([])
@@ -54,9 +54,7 @@ export default function Cartorders(props) {
 			})
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
-					
-				} else {
-					alert("get orders")
+					const { errormsg, status } = err.response.data
 				}
 			})
 	}
@@ -77,6 +75,8 @@ export default function Cartorders(props) {
       })
       .then((res) => {
         if (res) {
+          setLoading(false)
+
           socket.emit("socket/orderDone", data, () => {
             if (refetch) refetch()
 
@@ -99,8 +99,6 @@ export default function Cartorders(props) {
 
             setLoading(false)
           }
-        } else {
-          alert("order done")
         }
       })
   }
@@ -124,9 +122,7 @@ export default function Cartorders(props) {
       })
       .catch((err) => {
         if (err.response && err.response.status == 400) {
-
-        } else {
-          alert("set wait time")
+          const { errormsg, status } = err.response.data
         }
       })
   }
@@ -196,9 +192,12 @@ export default function Cartorders(props) {
 				<View style={{ alignItems: 'center' }}>
           <View style={styles.row}>
     				<View style={styles.actions}>
-              <TouchableOpacity style={styles.action} disabled={loading} onPress={() => setShowsetwaittime({ ...showSetwaittime, show: true, waitTime: '' })}>
-                <Text style={styles.actionHeader}>Set wait time</Text>
-              </TouchableOpacity>
+              {type == "restaurant" && (
+                <TouchableOpacity style={styles.action} disabled={loading} onPress={() => setShowsetwaittime({ ...showSetwaittime, show: true, waitTime: '' })}>
+                  <Text style={styles.actionHeader}>Set wait time</Text>
+                </TouchableOpacity>
+              )}
+                
               <TouchableOpacity style={styles.action} disabled={loading} onPress={() => orderIsDone()}>
                 <Text style={styles.actionHeader}>Done</Text>
               </TouchableOpacity>

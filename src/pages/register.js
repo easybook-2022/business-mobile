@@ -74,8 +74,6 @@ export default function Register(props) {
             const { errormsg, status } = err.response.data
 
             setErrormsg(errormsg)
-          } else {
-            alert("register")
           }
 
           setLoading(false)

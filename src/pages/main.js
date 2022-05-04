@@ -65,65 +65,38 @@ export default function Main(props) {
 		const ownerid = await AsyncStorage.getItem("ownerid")
 		const { status } = await Notifications.getPermissionsAsync()
 
-		if (status == "granted") {
-			setNotificationpermission(true)
+    if (status == "granted") {
+      setNotificationpermission(true)
+    } else {
+      const info = await Notifications.requestPermissionsAsync()
 
-			const { data } = await Notifications.getExpoPushTokenAsync({
-				experienceId: "@robogram/easygo-business"
-			})
+      if (info.status == "granted") {
+        setNotificationpermission(true)
+      }
+    }
 
-			if (ownerid != null) {
-				updateNotificationToken({ ownerid, token: data })
-					.then((res) => {
-						if (res.status == 200) {
-							return res.data
-						}
-					})
-					.then((res) => {
-						if (res) {
+    const { data } = await Notifications.getExpoPushTokenAsync({
+      experienceId: "@robogram/EasyGO (Business)"
+    })
 
-						}
-					})
-					.catch((err) => {
-						if (err.response && err.response.status == 400) {
+    if (ownerid) {
+      updateNotificationToken({ ownerid, token: data })
+        .then((res) => {
+          if (res.status == 200) {
+            return res.data
+          }
+        })
+        .then((res) => {
+          if (res) {
 
-						} else {
-							alert("get notification permission top")
-						}
-					})
-			}
-		} else {
-			const info = await Notifications.requestPermissionsAsync()
-
-			if (info.status == "granted") {
-				setNotificationpermission(true)
-
-				const { data } = await Notifications.getExpoPushTokenAsync({
-					experienceId: "@robogram/easygo-business"
-				})
-
-				if (userid != null) {
-					updateNotificationToken({ userid, token: data })
-						.then((res) => {
-							if (res.status == 200) {
-								return res.data
-							}
-						})
-						.then((res) => {
-							if (res) {
-
-							}
-						})
-						.catch((err) => {
-							if (err.response && err.response.status == 400) {
-								
-							} else {
-								alert("get notification permission bottom")
-							}
-						})
-				}
-			}
-		}
+          }
+        })
+        .catch((err) => {
+          if (err.response && err.response.status == 400) {
+            const { errormsg, status } = err.response.data
+          }
+        })
+    }
 	}
 	
 	const fetchTheNumAppointments = async() => {
@@ -140,9 +113,7 @@ export default function Main(props) {
       })
       .catch((err) => {
         if (err.response && err.response.status == 400) {
-          
-        } else {
-          alert("fetch num appointments")
+          const { errormsg, status } = err.response.data
         }
       })
 	}
@@ -160,9 +131,7 @@ export default function Main(props) {
 			})
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
-
-				} else {
-					alert("fetch num cart orderers")
+          const { errormsg, status } = err.response.data
 				}
 			})
 	}
@@ -188,7 +157,7 @@ export default function Main(props) {
 						setStoreicon(logo)
 						setLocationtype(type)
 
-						if (type == 'restaurant') {
+						if (type == 'store' || type == 'restaurant') {
 							fetchTheNumCartOrderers()
               getAllCartOrderers()
 						} else {
@@ -201,8 +170,6 @@ export default function Main(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
           const { errormsg, status } = err.response.data
-				} else {
-					alert("get location profile")
 				}
 			})
 	}
@@ -228,9 +195,7 @@ export default function Main(props) {
 			})
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
-
-				} else {
-					alert("get all appointments")
+          const { errormsg, status } = err.response.data
 				}
 			})
 	}
@@ -253,9 +218,7 @@ export default function Main(props) {
 			})
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
-
-				} else {
-					alert("get all cart orderers")
+          const { errormsg, status } = err.response.data
 				}
 			})
 	}
@@ -301,8 +264,6 @@ export default function Main(props) {
 				.catch((err) => {
 					if (err.response && err.response.status == 400) {
 						const { errormsg, status } = err.response.data
-					} else {
-						alert("cancel schedule")
 					}
 				})
 		}
@@ -331,9 +292,6 @@ export default function Main(props) {
       .catch((err) => {
         if (err.response && err.response.status == 400) {
           const { errormsg, status } = err.response.data
-
-        } else {
-          alert("done service")
         }
       })
   }
@@ -471,7 +429,9 @@ export default function Main(props) {
   			<View style={styles.box}>
   				<View style={styles.body}>
   					<View style={styles.navs}>
-              <Text style={styles.header}>{locationType == 'salon' ? 'Appointment(s)' : 'Orderer(s)'}</Text>
+              <Text style={styles.header}>
+                {(locationType == 'hair' || locationType == 'nail') ? 'Appointment(s)' : 'Orderer(s)'}
+              </Text>
   					</View>
 
             {viewType == "appointments" && (
@@ -536,7 +496,7 @@ export default function Main(props) {
 
                           <View style={styles.cartorderActions}>
                             <TouchableOpacity style={styles.cartordererAction} onPress={() => {
-                              props.navigation.navigate("cartorders", { userid: item.adder, ordernumber: item.orderNumber, refetch: () => {
+                              props.navigation.navigate("cartorders", { userid: item.adder, type: item.type, ordernumber: item.orderNumber, refetch: () => {
                                 getAllCartOrderers()
                                 removeFromList(item.id, "cartOrderers")
                               }})

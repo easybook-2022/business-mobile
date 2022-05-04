@@ -54,8 +54,6 @@ export default function Login({ navigation }) {
 					const { errormsg } = err.response.data
 
 					setErrormsg(errormsg)
-				} else {
-          alert("login")
 				}
 			})
 	}

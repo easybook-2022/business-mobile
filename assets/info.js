@@ -1,7 +1,7 @@
 import io from 'socket.io-client'
 
-const local_url = false
-const test_input = false
+const local_url = true
+const test_input = true
 
 const testStores = [
   { id: 0, storeName: "Hair salon", storeType: "hair", phonenumber: "(900) 000-0000", addressOne: "642 Gerrard St E", addressTwo: "", city: "Toronto", province: "ON", postalcode: "M4M1Y3", longitude: -79.3505832, latitude: 43.6660751 },
@@ -10,6 +10,7 @@ const testStores = [
 	{ id: 3, storeName: "Restaurant place 1", storeType: "restaurant", phonenumber: "(200) 000-0000", addressOne: "625 Gerrard St E", addressTwo: "", city: "Toronto", province: "ON", postalcode: "M4M 1Y2", longitude: -79.3509312, latitude: 43.6656672 },
 	{ id: 4, storeName: "Hair salon 1", storeType: "hair", phonenumber: "(300) 000-0000", addressOne: "6328 Main St", addressTwo: "", city: "Whitchurch-Stouffville", province: "ON", postalcode: "L4A 1G9", longitude: -79.2451038, latitude: 43.9719332 },
 	{ id: 5, storeName: "Nail salon 2", storeType: "nail", phonenumber: "(905) 987-5678", addressOne: "5000 Hwy 7", addressTwo: "", city: "Markham", province: "ON", postalcode: "L3R 4M9", longitude: -79.2882055, latitude: 43.8682345 },
+  { id: 6, storeName: "The Skin care", storeType: "store", phonenumber: "(900) 101-0101", addressOne: "750 Queen St E", addressTwo: "", city: "Toronto", province: "ON", postalcode: "M4M1H4", longitude: -79.3505832, latitude: 43.6660751 },
 ]
 const realStores = [
   { id: 0, storeName: "the salon", storeType: "hair", phonenumber: "(416) 462-1482", addressOne: "642 Gerrard St E", addressTwo: "", city: "Toronto", province: "ON", postalcode: "M4M1Y3", longitude: -79.3505832, latitude: 43.6660751 },
@@ -18,20 +19,20 @@ const realStores = [
 const emptyStore = { storeName: "", storeType: "", phonenumber: "", addressOne: "", addressTwo: "", city: "", province: "", postalcode: "", longitude: 0, latitude: 0 }
 
 const testOwners = [
-	{ id: 0, username: 'owner1', cellnumber: "(011) 011-0101", password: "password" },
-	{ id: 1, username: 'owner2', cellnumber: "(022) 022-0202", password: "password" },
-	{ id: 2, username: 'owner3', cellnumber: "(123) 123-1111", password: "password" },
-	{ id: 3, username: 'owner4', cellnumber: "(567) 567-5670", password: "password" },
-	{ id: 4, username: 'owner5', cellnumber: "(900) 000-0001", password: "password" },
-	{ id: 5, username: 'owner6', cellnumber: "(100) 000-0001", password: "password" },
-	{ id: 6, username: 'owner7', cellnumber: "(416) 770-7700", password: "password" },
-	{ id: 7, username: 'owner8', cellnumber: "(905) 000-0000", password: "password" },
-	{ id: 8, username: 'owner9', cellnumber: "(905) 000-0001", password: "password" }
+	{ id: 0, username: 'owner1', cellnumber: "(000) 000-0000", password: "password" },
+	{ id: 1, username: 'owner2', cellnumber: "(111) 111-1111", password: "password" },
+	{ id: 2, username: 'owner3', cellnumber: "(222) 222-2222", password: "password" },
+	{ id: 3, username: 'owner4', cellnumber: "(333) 333-3333", password: "password" },
+	{ id: 4, username: 'owner5', cellnumber: "(444) 444-4444", password: "password" },
+	{ id: 5, username: 'owner6', cellnumber: "(555) 555-5555", password: "password" },
+	{ id: 6, username: 'owner7', cellnumber: "(666) 666-6666", password: "password" },
+	{ id: 7, username: 'owner8', cellnumber: "(777) 777-7777", password: "password" },
+	{ id: 8, username: 'owner9', cellnumber: "(888) 888-8888", password: "password" }
 ]
 const realOwner = { id: 0, username: 'kevin', cellnumber: "(647) 926-3868", password: "password" }
 const emptyOwner = { username: "", cellnumber: "", password: "" }
 
-const useInput = false
+const useInput = true
 
 const login = test_input ? testStores[0] : useInput ? realStores[0] : emptyStore
 const ownerLogin = test_input ? testOwners[0] : useInput ? realOwner : emptyOwner

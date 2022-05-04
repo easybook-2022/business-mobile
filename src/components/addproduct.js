@@ -141,6 +141,8 @@ export default function Addproduct(props) {
 				})
 				.then((res) => {
 					if (res) {
+            setLoading(false)
+
 						refetch()
 						props.navigation.goBack()
 					}
@@ -150,10 +152,9 @@ export default function Addproduct(props) {
 						const { errormsg, status } = err.response.data
 
 						setErrormsg(errormsg)
-						setLoading(false)
-					} else {
-            alert("add product")
 					}
+
+          setLoading(false)
 				})
 		} else {
 			if (!name) {
@@ -264,6 +265,8 @@ export default function Addproduct(props) {
 				})
 				.then((res) => {
 					if (res) {
+            setLoading(false)
+
 						refetch()
 						props.navigation.goBack()
 					}
@@ -273,10 +276,9 @@ export default function Addproduct(props) {
 						const { errormsg, status } = err.response.data
 
 						setErrormsg(errormsg)
-						setLoading(false)
-					} else {
-						alert("update product")
 					}
+
+          setLoading(false)
 				})
 		} else {
 			if (!name) {
@@ -517,9 +519,7 @@ export default function Addproduct(props) {
 			})
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
-					
-				} else {
-          alert("get product info")
+				  const { errormsg, status } = err.response.data
 				}
 			})
 	}

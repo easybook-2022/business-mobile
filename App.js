@@ -7,7 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Font from 'expo-font';
 
 LogBox.ignoreLogs([
-    'Non-serializable values were found in the navigation state',
+  'Non-serializable values were found in the navigation state',
 ]);
 
 // pages
