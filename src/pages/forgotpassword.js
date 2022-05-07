@@ -4,7 +4,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import { getCode } from '../apis/owners'
-import { loginInfo, displayPhonenumber } from '../../assets/info'
+import { loginInfo } from '../../assets/info'
+import { displayPhonenumber } from 'geottuse-tools'
 
 const { height, width } = Dimensions.get('window')
 const wsize = p => {

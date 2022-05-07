@@ -12,6 +12,7 @@ import { Camera } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator'
 import * as ImagePicker from 'expo-image-picker';
 import { logo_url } from '../../assets/info'
+import { resizePhoto } from 'geottuse-tools'
 import { getLocationProfile } from '../apis/locations'
 import { getMenus, addNewMenu, removeMenu, getMenuInfo, saveMenu, uploadMenu, deleteMenu } from '../apis/menus'
 import { getProducts, getProductInfo, removeProduct } from '../apis/products'
@@ -118,7 +119,7 @@ export default function Menu(props) {
 						<View style={{ flexDirection: 'row' }}>
               {image.name ? 
                 <View style={styles.menuImageHolder}>
-                  <Image style={styles.menuImage} source={{ uri: logo_url + image.name }}/>
+                  <Image style={resizePhoto(image, wsize(10))} source={{ uri: logo_url + image.name }}/>
                 </View>
               : null }
   							
@@ -149,7 +150,14 @@ export default function Menu(props) {
                     )
                   }
                 }}>
-                  <View style={styles.column}><Text style={styles.itemAddHeader}>Add {(locationType == "hair" || locationType == "nail") ? "service" : "meal"}</Text></View>
+                  <View style={styles.column}>
+                    <Text style={styles.itemAddHeader}>
+                      Add{' '}
+                      {(locationType == "hair" || locationType == "nail") && "service"}
+                      {locationType == "restaurant" && "meal"}
+                      {locationType == "store" && "product"}
+                    </Text>
+                  </View>
 									<AntDesign name="pluscircleo" size={wsize(7)}/>
 								</TouchableOpacity>
 							</View>
@@ -206,7 +214,14 @@ export default function Menu(props) {
                           )
                         }
                       }}>
-                        <View style={styles.column}><Text style={styles.itemAddHeader}>Add {(locationType == "hair" || locationType == "nail") ? "service" : "meal"}</Text></View>
+                        <View style={styles.column}>
+                          <Text style={styles.itemAddHeader}>
+                            Add{' '}
+                            {(locationType == "hair" || locationType == "nail") && "service"}
+                            {locationType == "restaurant" && "meal"}
+                            {locationType == "store" && "product"}
+                          </Text>
+                        </View>
 												<AntDesign name="pluscircleo" size={wsize(7)}/>
 											</TouchableOpacity>
 										</View>
@@ -253,15 +268,6 @@ export default function Menu(props) {
 			</View>
 		)
 	}
-  const resizePhoto = (info, width) => {
-    let s_width = info.width, s_height = info.height
-    let photo_width = width
-
-    return {
-      width: photo_width,
-      height: (photo_width * s_height) / s_width
-    }
-  }
 
 	const removeTheMenu = id => {
     setRemovemenuinfo({ ...removeMenuinfo, loading: true })
@@ -625,7 +631,12 @@ export default function Menu(props) {
 							{menuInfo.length == 0 ? 
 								<>
 									<TouchableOpacity style={styles.menuStart} onPress={() => setCreateoptionbox({ show: true, id: "", allow: "both" })}>
-										<Text style={styles.menuStartHeader}>Click to add menu/{(locationType == "hair" || locationType == "nail") ? "service" : "food"}</Text>
+										<Text style={styles.menuStartHeader}>
+                      Click to add menu/
+                      {(locationType == "hair" || locationType == "nail") && "service"}
+                      {locationType == "restaurant" && "meal"}
+                      {locationType == "store" && "product"}
+                    </Text>
 									</TouchableOpacity>
 									<Text style={styles.menuStartDiv}>Or</Text>
 									<TouchableOpacity style={styles.menuStart} onPress={() => {
@@ -639,7 +650,7 @@ export default function Menu(props) {
                 !menuInfo[0].row ? 
   								menuInfo[0].listType == "list" ? 
   									<TouchableOpacity style={styles.itemAdd} onPress={() => {
-                      if (menuInfo.items.length == 0) {
+                      if (menuInfo.length == 0) {
                         setCreateoptionbox({ show: true, id: "", allow: "both" })
                       } else {
                         props.navigation.navigate(
@@ -676,7 +687,13 @@ export default function Menu(props) {
                     }}>
                       <View style={styles.column}>
                         <Text style={styles.itemAddHeader}>
-                          Add {menuInfo.type != "list" ? ((locationType == "hair" || locationType == "nail") ? "service" : "meal") : "menu"}
+                          Add {menuInfo.type != "list" ? (
+                            <>
+                              {(locationType == "hair" || locationType == "nail") && "service"}
+                              {locationType == "restaurant" && "meal"}
+                              {locationType == "store" && "product"}
+                            </>
+                          ) : "menu"}
                         </Text>
                       </View>
   										<AntDesign name="pluscircleo" size={40}/>
@@ -882,9 +899,11 @@ export default function Menu(props) {
 									<Text style={styles.menuInfoBoxHeader}>Delete menu confirmation</Text>
 
 									<View style={{ alignItems: 'center' }}>
-										<View style={styles.menuInfoImageHolder}>
-											<Image source={{ uri: logo_url + removeMenuinfo.image.name }} style={styles.menuInfoImage}/>
-										</View>
+  									{removeMenuinfo.image.name && (
+                      <View style={styles.menuInfoImageHolder}>
+                        <Image source={{ uri: logo_url + removeMenuinfo.image.name }} style={resizePhoto(removeMenuinfo.image, wsize(50))}/>
+                      </View>
+                    )}
 										<Text style={styles.menuInfoName}>{removeMenuinfo.name}</Text>
 									</View>
 
@@ -908,9 +927,11 @@ export default function Menu(props) {
 								<View style={styles.productInfoBox}>
 									<Text style={styles.productInfoBoxHeader}>Delete product confirmation</Text>
 
-									<View style={styles.productInfoImageHolder}>
-										<Image source={{ uri: logo_url + removeProductinfo.image.name }} style={styles.productInfoImage}/>
-									</View>
+  								{removeProductinfo.image.name && (
+                    <View style={styles.productInfoImageHolder}>
+                      <Image source={{ uri: logo_url + removeProductinfo.image.name }} style={resizePhoto(removeProductinfo.image, wsize(50))}/>
+                    </View>
+                  )}
 									<Text style={styles.productInfoName}>{removeProductinfo.name}</Text>
 
 									<View>
@@ -961,9 +982,11 @@ export default function Menu(props) {
 								<View style={styles.serviceInfoBox}>
 									<Text style={styles.serviceInfoBoxHeader}>Delete service confirmation</Text>
 
-									<View style={styles.serviceInfoImageHolder}>
-										<Image source={{ uri: logo_url + removeServiceinfo.image.name }} style={styles.serviceInfoImage}/>
-									</View>
+  								{removeServiceinfo.image.name ? 
+                    <View style={styles.serviceInfoImageHolder}>
+                      <Image source={{ uri: logo_url + removeServiceinfo.image.name }} style={resizePhoto(removeServiceinfo.image, wsize(50))}/>
+                    </View>
+                  : null}
 									<Text style={styles.serviceInfoName}>{removeServiceinfo.name}</Text>
 									<Text style={styles.serviceInfoPrice}><Text style={{ fontWeight: 'bold' }}>Price: </Text>$ {(removeServiceinfo.price).toFixed(2)}</Text>
 									<Text style={styles.serviceInfoHeader}>Are you sure you want to delete this service</Text>
@@ -1067,7 +1090,7 @@ const styles = StyleSheet.create({
 	menuInfoContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	menuInfoBox: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '80%', justifyContent: 'space-between', padding: 10, width: '80%' },
 	menuInfoBoxHeader: { fontSize: wsize(6), textAlign: 'center' },
-	menuInfoImageHolder: { borderRadius: wsize(50) / 2, height: wsize(50), overflow: 'hidden', width: wsize(50) },
+	menuInfoImageHolder: { borderRadius: wsize(50) / 2, flexDirection: 'column', height: wsize(50), justifyContent: 'space-around', overflow: 'hidden', width: wsize(50) },
 	menuInfoImage: { height: wsize(50), width: wsize(50) },
 	menuInfoName: { fontSize: wsize(5), fontWeight: 'bold' },
 	menuInfoInfo: { fontSize: wsize(5), textAlign: 'center' },
@@ -1080,7 +1103,7 @@ const styles = StyleSheet.create({
 	productInfoContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	productInfoBox: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '80%', justifyContent: 'space-between', padding: 10, width: '80%' },
 	productInfoBoxHeader: { fontSize: wsize(6), textAlign: 'center' },
-	productInfoImageHolder: { borderRadius: wsize(50) / 2, height: wsize(50), overflow: 'hidden', width: wsize(50) },
+	productInfoImageHolder: { borderRadius: wsize(50) / 2, flexDirection: 'column', height: wsize(50), justifyContent: 'space-around', overflow: 'hidden', width: wsize(50) },
 	productInfoImage: { height: wsize(50), width: wsize(50) },
 	productInfoName: { fontSize: wsize(5), fontWeight: 'bold' },
 	productInfoQuantity: {  },
@@ -1094,7 +1117,7 @@ const styles = StyleSheet.create({
 	serviceInfoContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	serviceInfoBox: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '80%', justifyContent: 'space-between', padding: 10, width: '80%' },
 	serviceInfoBoxHeader: { fontSize: wsize(6), textAlign: 'center' },
-	serviceInfoImageHolder: { borderRadius: wsize(50) / 2, height: wsize(50), overflow: 'hidden', width: wsize(50) },
+	serviceInfoImageHolder: { borderRadius: wsize(50) / 2, flexDirection: 'column', height: wsize(50), justifyContent: 'space-around', overflow: 'hidden', width: wsize(50) },
 	serviceInfoImage: { height: wsize(50), width: wsize(50) },
 	serviceInfoName: { fontSize: wsize(5), fontWeight: 'bold' },
 	serviceInfoQuantity: { fontSize: wsize(5) },

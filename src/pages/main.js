@@ -10,7 +10,8 @@ import * as Notifications from 'expo-notifications';
 import { CommonActions } from '@react-navigation/native';
 import * as FileSystem from 'expo-file-system'
 import * as ImageManipulator from 'expo-image-manipulator'
-import { socket, logo_url, displayTime } from '../../assets/info'
+import { socket, logo_url } from '../../assets/info'
+import { displayTime, resizePhoto } from 'geottuse-tools'
 import { updateNotificationToken } from '../apis/owners'
 import { fetchNumAppointments, fetchNumCartOrderers, getLocationProfile } from '../apis/locations'
 import { getMenus, removeMenu, addNewMenu } from '../apis/menus'
@@ -442,7 +443,7 @@ export default function Main(props) {
                     <View key={item.key} style={styles.schedule}>
                       {item.image ?
                         <View style={styles.scheduleImageHolder}>
-                          <Image style={styles.scheduleImage} source={{ uri: logo_url + item.image.name }}/>
+                          <Image style={resizePhoto(item.image, wsize(20))} source={{ uri: logo_url + item.image.name }}/>
                         </View>
                       : null }
                         
@@ -613,14 +614,14 @@ export default function Main(props) {
 										Welcome!!{'\n\n'}
 										This is the main page{'\n\n'}
 										You will see all 
-										{locationType == 'restaurant' ? ' orders ' : ' appointments '}
+										{(locationType == 'restaurant' || locationType == 'store') ? ' orders ' : ' appointments '}
 										here
 									</Text>
 								: null }
 
 								{showFirsttime.step == 1 ? 
 									<Text style={styles.firstTimeHeader}>
-										Before you can accept {locationType == 'restaurant' ? ' orders ' : ' appointments '} from {locationType == 'restaurant' ? 'customers' : 'clients'}
+										Before you can accept {(locationType == 'restaurant' || locationType == 'store') ? 'orders' : 'appointments'} from {(locationType == 'restaurant' || locationType == 'store') ? 'customers' : 'clients'}
 										{'\n\n'}
 										you need to setup your menu
 									</Text>

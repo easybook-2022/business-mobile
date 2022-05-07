@@ -16,7 +16,8 @@ import MapView, { Marker } from 'react-native-maps';
 import { logo_url, timeControl } from '../../assets/info'
 import { addOwner, updateOwner, deleteOwner, getWorkerInfo, getOtherWorkers, getAccounts } from '../apis/owners'
 import { getLocationProfile, updateLocation, setLocationHours, setReceiveType } from '../apis/locations'
-import { loginInfo, ownerRegisterInfo, displayPhonenumber } from '../../assets/info'
+import { loginInfo, ownerRegisterInfo } from '../../assets/info'
+import { displayPhonenumber } from 'geottuse-tools'
 
 // bank account
 let { accountNumber, countryCode, currency, routingNumber, accountHolderName } = loginInfo
@@ -113,37 +114,49 @@ export default function Settings(props) {
 
 	const updateYourLocation = async() => {
 		if (storeName && phonenumber && addressOne && city && province && postalcode) {
-			const [{ latitude, longitude }] = await Location.geocodeAsync(`${addressOne} ${addressTwo}, ${city} ${province}, ${postalcode}`)
-			const time = (Date.now() / 1000).toString().split(".")[0]
-			const data = {
-				storeName, phonenumber, addressOne, addressTwo, city, province, postalcode, logo,
-				longitude, latitude, ownerid: ownerId, time
-			}
+      let longitude = null, latitude = null
 
-			setLoading(true)
+      try {
+        const [info] = await Location.geocodeAsync(`${addressOne}${addressTwo ? ' ' + addressTwo : ''}, ${city} ${province}, ${postalcode}`)
 
-			updateLocation(data)
-				.then((res) => {
-					if (res.status == 200) {
-						return res.data
-					}
-				})
-				.then((res) => {
-					if (res) {
-						const { id } = res
+        longitude = info.longitude
+        latitude = info.latitude
+      } catch(err) {
 
-						setEdittype('')
-						setLoading(false)
-					}
-				})
-				.catch((err) => {
-					if (err.response && err.response.status == 400) {
-						const { errormsg, status } = err.response.data
+      }
 
-						setErrormsg(errormsg)
-						setLoading(false)
-					}
-				})
+      if (longitude && latitude) {
+        const time = (Date.now() / 1000).toString().split(".")[0]
+        const data = {
+          storeName, phonenumber, addressOne, addressTwo, city, province, postalcode, logo,
+          longitude, latitude, ownerid: ownerId, time
+        }
+
+        setLoading(true)
+
+        updateLocation(data)
+          .then((res) => {
+            if (res.status == 200) {
+              return res.data
+            }
+          })
+          .then((res) => {
+            if (res) {
+              const { id } = res
+
+              setEdittype('')
+              setLoading(false)
+            }
+          })
+          .catch((err) => {
+            if (err.response && err.response.status == 400) {
+              const { errormsg, status } = err.response.data
+
+              setErrormsg(errormsg)
+              setLoading(false)
+            }
+          })
+      }
 		} else {
 			if (!storeName) {
 				setErrormsg("Please enter your store name")
@@ -416,7 +429,7 @@ export default function Settings(props) {
 						...accountForm, show: false, 
             type: '', editType: '', addStep: 0, id: -1, 
             username: '', cellnumber: '', 
-						password: '', confirmPassword: '', profile: { uri: '', name: '' }, 
+						password: '', confirmPassword: '', profile: { uri: '', name: '', size: { width: 0, height: 0 } }, 
 						loading: false, errorMsg: ""
 					})
 					getAllAccounts()
@@ -809,7 +822,7 @@ export default function Settings(props) {
 			let photo_option = [{ resize: { width: width, height: width }}]
 			let photo_save_option = { format: ImageManipulator.SaveFormat.JPEG, base64: true }
 
-      if (camType == "front") {
+      if (accountForm.camType == "front") {
         photo_option.push({ flip: ImageManipulator.FlipType.Horizontal })
       }
 
@@ -879,7 +892,8 @@ export default function Settings(props) {
 					...accountForm,
 					profile: {
 						uri: `${FileSystem.documentDirectory}/${char}.jpg`,
-						name: `${char}.jpg`, size: { width, height: width }
+						name: `${char}.jpg`, 
+            size: { width, height: width }
 					},
           loading: false
 				})
@@ -903,7 +917,7 @@ export default function Settings(props) {
 		if (camComp) {
 			let options = { quality: 0 };
 			let photo = await camComp.takePictureAsync(options)
-			let photo_option = [{ resize: { width: width, height: width }}]
+			let photo_option = [{ resize: { width, height: width }}]
 			let photo_save_option = { format: ImageManipulator.SaveFormat.JPEG, base64: true }
 
       if (camType == "front") {
@@ -1127,24 +1141,24 @@ export default function Settings(props) {
 
                         <Text style={styles.header}>Or</Text>
 
-                        <Text style={styles.header}>Edit Store Address</Text>
+                        <Text style={styles.header}>Edit Address</Text>
 
                         <View style={styles.inputsBox}>
                           <View style={styles.inputContainer}>
-                            <Text style={styles.inputHeader}>{type}'s name:</Text>
+                            <Text style={styles.inputHeader}>{(type == 'hair' || type == 'nail') ? type + ' salon' : type}'s name:</Text>
                             <TextInput style={styles.input} onChangeText={(storeName) => setStorename(storeName)} value={storeName} autoCorrect={false}/>
                           </View>
                           <View style={styles.inputContainer}>
-                            <Text style={styles.inputHeader}>{type}'s Phone number:</Text>
+                            <Text style={styles.inputHeader}>{(type == 'hair' || type == 'nail') ? type + ' salon' : type}'s Phone number:</Text>
                             <TextInput style={styles.input} onChangeText={(num) => setPhonenumber(displayPhonenumber(phonenumber, num, () => Keyboard.dismiss()))} value={phonenumber} keyboardType="numeric" autoCorrect={false}/>
                           </View>
                           <View style={styles.inputContainer}>
-                            <Text style={styles.inputHeader}>{type}'s address #1:</Text>
-                            <TextInput style={styles.input} onChangeText={(addressOne) => setAddressone(addressOne)} value={addressOne} keyboardType="numeric" autoCorrect={false}/>
+                            <Text style={styles.inputHeader}>{(type == 'hair' || type == 'nail') ? type + ' salon' : type}'s address #1:</Text>
+                            <TextInput style={styles.input} onChangeText={(addressOne) => setAddressone(addressOne)} value={addressOne} autoCorrect={false}/>
                           </View>
                           <View style={styles.inputContainer}>
-                            <Text style={styles.inputHeader}>{type}'s address #2:</Text>
-                            <TextInput style={styles.input} onChangeText={(addressTwo) => setAddresstwo(addressTwo)} value={addressTwo} keyboardType="numeric" autoCorrect={false}/>
+                            <Text style={styles.inputHeader}>{(type == 'hair' || type == 'nail') ? type + ' salon' : type}'s address #2:</Text>
+                            <TextInput style={styles.input} onChangeText={(addressTwo) => setAddresstwo(addressTwo)} value={addressTwo} autoCorrect={false}/>
                           </View>
                           <View style={styles.inputContainer}>
                             <Text style={styles.inputHeader}>City:</Text>
@@ -1164,7 +1178,9 @@ export default function Settings(props) {
                       </>
                       :
                       <View style={{ alignItems: 'center', width: '100%' }}>
-                        <Text style={styles.locationHeader}>Your {type == 'restaurant' ? 'restaurant' : type + ' salon'} is located at</Text>
+                        <Text style={styles.locationHeader}>
+                          Your {(type == 'hair' || type == 'nail') ? type + ' salon' : type} is located at
+                        </Text>
                         {(locationCoords.longitude && locationCoords.latitude) ? 
                           <>
                             <MapView
@@ -1263,7 +1279,13 @@ export default function Settings(props) {
 						{!daysLoading ?
 							editType == 'hours' ? 
 								<>
-									<Text style={styles.header}>Edit {(type == "hair" || type == "nail") ? "Salon" : "Restaurant"} Hour(s)</Text>
+									<Text style={styles.header}>
+                    Edit 
+                    {(type === "hair" || type === "nail") && " Salon "} 
+                    {type === "restaurant" && " Restaurant "}
+                    {type === "store" && " Store "}
+                    Hour(s)
+                  </Text>
 
 									{days.map((info, index) => (
 										<View key={index} style={styles.workerHour}>
@@ -1399,7 +1421,13 @@ export default function Settings(props) {
 								</>
 								:
 								<TouchableOpacity style={styles.editButton} onPress={() => setEdittype('hours')}>
-									<Text style={styles.editButtonHeader}>Edit {(type == "hair" || type == "nail") ? "Salon" : "Restaurant"} Hour(s)</Text>
+									<Text style={styles.editButtonHeader}>
+                    Edit 
+                    {(type === "hair" || type === "nail") && " Salon "} 
+                    {type === "restaurant" && " Restaurant "}
+                    {type === "store" && " Store "}
+                    Hour(s)
+                  </Text>
 								</TouchableOpacity>
 							:
               <View style={styles.loading}>
@@ -2017,7 +2045,7 @@ export default function Settings(props) {
                             <TextInput style={styles.accountformInputInput} onChangeText={(num) => setAccountform({
                               ...accountForm, 
                               cellnumber: displayPhonenumber(accountForm.cellnumber, num, () => Keyboard.dismiss())
-                            })} value={accountForm.cellnumber} autoCorrect={false}/>
+                            })} keyboardType="numeric" value={accountForm.cellnumber} autoCorrect={false}/>
                           </View>
                         )}
 
@@ -2324,7 +2352,7 @@ export default function Settings(props) {
                         {info.row.map(worker => (
                           <TouchableOpacity key={worker.key} style={styles.worker} onPress={() => selectTheOtherWorker(worker.id)}>
                             <View style={styles.workerProfile}>
-                              <Image style={{ height: '100%', width: '100%' }} source={{ uri: logo_url + worker.profile.name }}/>
+                              <Image style={resizePhoto(worker.profile, wsize(20))} source={{ uri: logo_url + worker.profile.name }}/>
                             </View>
                             <Text style={styles.workerUsername}>{worker.username}</Text>
                           </TouchableOpacity>
@@ -2342,7 +2370,7 @@ export default function Settings(props) {
             <SafeAreaView style={styles.deleteOwnerBox}>
               <View style={styles.deleteOwnerContainer}>
                 <View style={styles.deleteOwnerProfile}>
-                  <Image style={{ height: '100%', width: '100%' }} source={{ uri: logo_url + deleteOwnerbox.profile.name }}/>
+                  <Image style={resizePhoto(deleteOwnerbox.profile, wsize(40))} source={{ uri: logo_url + deleteOwnerbox.profile.name }}/>
                 </View>
                 <Text style={styles.deleteOwnerHeader}>
                   {deleteOwnerbox.username}

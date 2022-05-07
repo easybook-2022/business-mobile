@@ -170,7 +170,7 @@ export default function Addmenu(props) {
 		if (camComp) {
 			let options = { quality: 0, skipProcessing: true };
 			let photo = await camComp.takePictureAsync(options)
-			let photo_option = [{ resize: { width: width, height: width }}]
+			let photo_option = [{ resize: { width, height: width }}]
 			let photo_save_option = { format: ImageManipulator.SaveFormat.JPEG, base64: true }
 
       if (camType == "front") {

@@ -345,7 +345,7 @@ export default function Addservice(props) {
 	useEffect(() => {
 		if (serviceid) getTheServiceInfo()
 	}, [])
-
+  
 	return (
 		<SafeAreaView style={[styles.addservice, { opacity: loading ? 0.5 : 1 }]}>
 			<TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>

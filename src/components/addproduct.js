@@ -37,7 +37,8 @@ export default function Addproduct(props) {
 	const [setupType, setSetuptype] = useState('name')
 	const [cameraPermission, setCamerapermission] = useState(null);
 	const [pickingPermission, setPickingpermission] = useState(null);
-	const [camComp, setCamcomp] = useState('front')
+	const [camComp, setCamcomp] = useState(null)
+  const [camType, setCamtype] = useState('back')
   const [choosing, setChoosing] = useState(false)
 	const [name, setName] = useState('')
 	const [image, setImage] = useState({ uri: '', name: '', size: { height: 0, width: 0 }, loading: false })

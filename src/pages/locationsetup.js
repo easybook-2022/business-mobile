@@ -13,7 +13,8 @@ import * as Location from 'expo-location';
 import MapView, { Marker } from 'react-native-maps';
 import { CommonActions } from '@react-navigation/native';
 import { setupLocation } from '../apis/locations'
-import { registerInfo, displayPhonenumber, timeControl } from '../../assets/info'
+import { registerInfo, timeControl } from '../../assets/info'
+import { displayPhonenumber } from 'geottuse-tools'
 
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5'
 import AntDesign from 'react-native-vector-icons/AntDesign'
@@ -346,7 +347,7 @@ export default function Locationsetup({ navigation }) {
 		if (camComp) {
 			let options = { quality: 0, skipProcessing: true };
 			let photo = await camComp.takePictureAsync(options)
-			let photo_option = [{ resize: { width: width, height: width }}]
+			let photo_option = [{ resize: { width, height: width }}]
 			let photo_save_option = { format: ImageManipulator.SaveFormat.JPEG, base64: true }
 
       if (camType == "front") {
@@ -458,10 +459,21 @@ export default function Locationsetup({ navigation }) {
 
   const markLocation = async() => {
     const { status } = await Location.getForegroundPermissionsAsync()
+    let realStatus = false
 
     if (status == 'granted') {
       setLocationinfo('destination')
+      realStatus = true
+    } else {
+      const info = await Location.requestForegroundPermissionsAsync()
 
+      if (info.status == 'granted') {
+        setLocationinfo('destination')
+        realStatus = true
+      }
+    }
+
+    if (realStatus == true) {
       const location = await Location.getCurrentPositionAsync({});
       const { longitude, latitude } = location.coords
       let address = await Location.reverseGeocodeAsync({
@@ -481,34 +493,7 @@ export default function Locationsetup({ navigation }) {
         setPostalcode(item.postalCode)
       }
 
-      setErrormsg()
-    } else {
-      const { status } = await Location.requestForegroundPermissionsAsync()
-
-      if (status == 'granted') {
-        setLocationinfo('destination')
-
-        const location = await Location.getCurrentPositionAsync({});
-        const { longitude, latitude } = location.coords
-        let address = await Location.reverseGeocodeAsync({
-          latitude,
-          longitude
-        });
-
-        for (let item of address) {
-          setLocationcoords({ 
-            longitude, 
-            latitude,
-            address: `${item.name}, ${item.subregion} ${item.region}, ${item.postalCode}`
-          })
-          setAddressone(item.name)
-          setCity(item.subregion)
-          setProvince(item.region)
-          setPostalcode(item.postalCode)
-        }
-
-        setErrormsg()
-      }
+      setErrormsg('')
     }
   }
 
@@ -642,7 +627,7 @@ export default function Locationsetup({ navigation }) {
 
                 {setupType == "name" && (
                   <View style={styles.inputContainer}>
-                    <Text style={styles.inputHeader}>Enter {type} name:</Text>
+                    <Text style={styles.inputHeader}>Enter {(type == 'hair' || type == 'nail') ? type + ' salon' : type} name:</Text>
                     <TextInput style={styles.input} onChangeText={(storeName) => setStorename(storeName)} value={storeName} autoCorrect={false} autoCapitalize="none"/>
                   </View>
                 )}
@@ -651,7 +636,7 @@ export default function Locationsetup({ navigation }) {
                   <View style={styles.locationContainer}>
                     {locationInfo == '' ?
                       <View style={{ alignItems: 'center', height: '100%' }}>
-                        <Text style={styles.locationHeader}>If you are at the {type} right now,</Text>
+                        <Text style={styles.locationHeader}>If you are at the {(type == 'hair' || type == 'nail') ? type + ' salon' : type} right now,</Text>
 
                         <TouchableOpacity style={[styles.locationActionOption, { width: width * 0.5 }]} disabled={loading} onPress={() => markLocation()}>
                           <Text style={styles.locationActionOptionHeader}>Mark your location</Text>
@@ -677,7 +662,7 @@ export default function Locationsetup({ navigation }) {
                         <ScrollView style={{ height: '100%', width: '100%' }}>
                           <View style={styles.locationInfos}>
                             <View style={{ alignItems: 'center', marginTop: 50 }}>
-                              <Text style={styles.locationHeader}>If you are at the {type} right now,</Text>
+                              <Text style={styles.locationHeader}>If you are at the {(type == 'hair' || type == 'nail') ? type + ' salon' : type} right now,</Text>
                               <TouchableOpacity style={[styles.locationActionOption, { width: width * 0.5 }]} disabled={loading} onPress={() => markLocation()}>
                                 <Text style={styles.locationActionOptionHeader}>Mark your location</Text>
                               </TouchableOpacity>
@@ -685,14 +670,14 @@ export default function Locationsetup({ navigation }) {
 
                             <Text style={{ fontSize: 20, fontWeight: 'bold', marginVertical: 30 }}>Or</Text>
 
-                            <Text style={styles.locationHeader}>Enter your {type} information</Text>
+                            <Text style={styles.locationHeader}>Enter your {(type == 'hair' || type == 'nail') ? type + ' salon' : type} information</Text>
 
                             <View style={styles.inputContainer}>
-                              <Text style={styles.inputHeader}>Enter {type}{'\n'}address #1:</Text>
+                              <Text style={styles.inputHeader}>Enter {(type == 'hair' || type == 'nail') ? type + ' salon' : type}{'\n'}address #1:</Text>
                               <TextInput style={styles.input} onChangeText={(addressOne) => setAddressone(addressOne)} value={addressOne} autoCorrect={false} autoCapitalize="none"/>
                             </View>
                             <View style={styles.inputContainer}>
-                              <Text style={styles.inputHeader}>Enter {type}{'\n'}address #2: (Optional)</Text>
+                              <Text style={styles.inputHeader}>Enter {(type == 'hair' || type == 'nail') ? type + ' salon' : type}{'\n'}address #2: (Optional)</Text>
                               <TextInput style={styles.input} onChangeText={(addressTwo) => setAddresstwo(addressTwo)} value={addressTwo} autoCorrect={false} autoCapitalize="none"/>
                             </View>
                             <View style={styles.inputContainer}>
@@ -711,7 +696,7 @@ export default function Locationsetup({ navigation }) {
                         </ScrollView>
                         :
                         <View style={{ alignItems: 'center', height: '100%', width: '100%' }}>
-                          <Text style={styles.locationHeader}>Your {type} is located at</Text>
+                          <Text style={styles.locationHeader}>Your {(type == 'hair' || type == 'nail') ? type + ' salon' : type} is located at</Text>
                           {(locationCoords.longitude && locationCoords.latitude) ? 
                             <>
                               <MapView
@@ -748,14 +733,14 @@ export default function Locationsetup({ navigation }) {
 
                 {setupType == "phonenumber" && (
                   <View style={styles.inputContainer}>
-                    <Text style={styles.inputHeader}>Enter {type}'s phone number:</Text>
+                    <Text style={styles.inputHeader}>Enter {(type == 'hair' || type == 'nail') ? type + ' salon' : type}'s phone number:</Text>
                     <TextInput style={styles.input} onChangeText={(num) => setPhonenumber(displayPhonenumber(phonenumber, num, () => Keyboard.dismiss()))} value={phonenumber} keyboardType="numeric" autoCorrect={false} autoCapitalize="none"/>
                   </View>
                 )}
 
                 {(setupType == "logo" && (cameraPermission || pickingPermission)) && (
                   <View style={styles.cameraContainer}>
-                    <Text style={styles.inputHeader}>Provide a photo for {type}</Text>
+                    <Text style={styles.inputHeader}>Provide a photo for {(type == 'hair' || type == 'nail') ? type + ' salon' : type}</Text>
 
                     {logo.uri ? (
                       <>
@@ -843,11 +828,11 @@ export default function Locationsetup({ navigation }) {
             <View style={styles.header}><Text style={styles.boxHeader}>Setup</Text></View>
 
             <View style={styles.days}>
-              <Text style={[styles.inputHeader, { marginBottom: 20, textAlign: 'center' }]}>Set the {type}'s opening hours</Text>
+              <Text style={[styles.inputHeader, { marginBottom: 20, textAlign: 'center' }]}>Set the {(type == 'hair' || type == 'nail') ? type + ' salon' : type}'s opening hours</Text>
 
               {!daysInfo.done ?
                 <View style={{ alignItems: 'center', marginBottom: 50, width: '100%' }}>
-                  <Text style={styles.openingDayHeader}>Tap on the days {type} open ?</Text>
+                  <Text style={styles.openingDayHeader}>Tap on the days {(type == 'hair' || type == 'nail') ? type + ' salon' : type} open ?</Text>
 
                   {daysArr.map((day, index) => (
                     <TouchableOpacity key={index} style={daysInfo.working.indexOf(day) > -1 ? styles.openingDayTouchSelected : styles.openingDayTouch} onPress={() => {
