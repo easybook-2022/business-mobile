@@ -103,8 +103,16 @@ export const deleteOwner = id => {
   return axios.get(`${url}/owners/delete_owner/${id}`)
 }
 
+export const getWorkers = locationid => {
+  return axios.get(`${url}/owners/get_workers/${locationid}`)
+}
+
 export const getWorkerInfo = id => {
   return axios.get(`${url}/owners/get_worker_info/${id}`)
+}
+
+export const getAllWorkersTime = id => {
+  return axios.get(`${url}/owners/get_all_workers_time/${id}`)
 }
 
 export const getOtherWorkers = data => {

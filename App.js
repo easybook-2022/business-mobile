@@ -21,6 +21,7 @@ import Locationsetup from './src/pages/locationsetup'
 import Workinghours from './src/pages/workinghours'
 
 import Main from './src/pages/main'
+import Booktime from './src/pages/booktime'
 import Cartorders from './src/pages/cartorders'
 
 // salons' components
@@ -32,12 +33,7 @@ import Menu from './src/pages/menu'
 import Settings from './src/pages/settings'
 
 const { height, width } = Dimensions.get('window')
-const wsize = p => {
-  return width * (p / 100)
-}
-const hsize = p => {
-  return height * (p / 100)
-}
+const wsize = p => {return width * (p / 100)}
 
 export default function App() {
   const Stack = createNativeStackNavigator();
@@ -112,13 +108,29 @@ export default function App() {
             <Stack.Screen name="locationsetup" component={Locationsetup} options={{ headerShown: false }}/>
             <Stack.Screen name="workinghours" component={Workinghours} options={{ headerShown: false }}/>
             <Stack.Screen name="main" component={Main} options={{ headerShown: false }}/>
+            <Stack.Screen name="booktime" component={Booktime} options={({ navigation, route }) => ({
+              headerTitle: () => <Text style={styles.header}>Request different time</Text>,
+              headerLeft: () => (
+                Platform.OS == 'ios' && (
+                  <TouchableOpacity style={styles.back} onPress={() => {
+                    if (route.params && route.params.refetch) {
+                      route.params.refetch()
+                    }
+
+                    navigation.goBack()
+                  }}>
+                    <Text style={styles.backHeader}>Go Back</Text>
+                  </TouchableOpacity>
+                )
+              )
+            })}/>
             <Stack.Screen name="cartorders" component={Cartorders} options={({ navigation, route }) => ({
               headerTitle: () => <Text style={styles.header}>#{route.params.ordernumber} Order(s)</Text>,
               headerLeft: () => (
                 Platform.OS == 'ios' && (
                   <TouchableOpacity style={styles.back} onPress={() => {
                     if (route.params && route.params.refetch) {
-                        route.params.refetch()
+                      route.params.refetch()
                     }
 
                     navigation.goBack()

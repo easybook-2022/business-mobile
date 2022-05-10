@@ -7,12 +7,7 @@ import { resetPassword } from '../apis/owners'
 import { userInfo } from '../../assets/info'
 
 const { height, width } = Dimensions.get('window')
-const wsize = p => {
-  return width * (p / 100)
-}
-const hsize = p => {
-  return height * (p / 100)
-}
+const wsize = p => {return width * (p / 100)}
 
 export default function Resetpassword(props) {
 	const offsetPadding = Constants.statusBarHeight

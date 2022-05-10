@@ -13,12 +13,7 @@ import AntDesign from 'react-native-vector-icons/AntDesign'
 import Loadingprogress from '../components/loadingprogress';
 
 const { height, width } = Dimensions.get('window')
-const wsize = p => {
-  return width * (p / 100)
-}
-const hsize = p => {
-  return height * (p / 100)
-}
+const wsize = p => {return width * (p / 100)}
 const daysArr = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
 export default function Workinghours({ navigation }) {

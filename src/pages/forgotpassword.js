@@ -8,12 +8,7 @@ import { loginInfo } from '../../assets/info'
 import { displayPhonenumber } from 'geottuse-tools'
 
 const { height, width } = Dimensions.get('window')
-const wsize = p => {
-	return width * (p / 100)
-}
-const hsize = p => {
-  return height * (p / 100)
-}
+const wsize = p => {return width * (p / 100)}
 
 export default function Forgotpassword({ navigation }) {
 	const [info, setInfo] = useState({ cellnumber: loginInfo.cellnumber, resetcode: '111111', sent: false })

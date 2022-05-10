@@ -10,6 +10,8 @@ import * as Notifications from 'expo-notifications';
 import { CommonActions } from '@react-navigation/native';
 import * as FileSystem from 'expo-file-system'
 import * as ImageManipulator from 'expo-image-manipulator'
+import * as Speech from 'expo-speech'
+import Voice from '@react-native-voice/voice';
 import { socket, logo_url } from '../../assets/info'
 import { displayTime, resizePhoto } from 'geottuse-tools'
 import { updateNotificationToken } from '../apis/owners'
@@ -25,12 +27,7 @@ import Entypo from 'react-native-vector-icons/Entypo'
 
 const { height, width } = Dimensions.get('window')
 const defaultFont = Platform.OS == 'ios' ? 'Arial' : 'normal'
-const wsize = p => {
-  return width * (p / 100)
-}
-const hsize = p => {
-  return height * (p / 100)
-}
+const wsize = p => {return width * (p / 100)}
 
 export default function Main(props) {
 	const firstTime = props.route.params ? 
@@ -200,6 +197,31 @@ export default function Main(props) {
 				}
 			})
 	}
+  const speakLatestClient = data => {
+    const { name, time, worker } = data.speak
+    let message = ""
+
+    switch (data.type) {
+      case "makeAppointment":
+        message += "New appointment" 
+
+        break;
+      case "remakeAppointment":
+        message += "Appointment rebook"
+
+        break;
+      case "cancelRequest":
+        message += "Appointment cancelled"
+
+        break;
+      default:
+    }
+
+    message += " for " + name + " " + displayTime(time) + " with stylist: " + worker
+
+    Speech.speak(message, { rate: 0.7 })
+  }
+
 	const getAllCartOrderers = async() => {
 		const locationid = await AsyncStorage.getItem("locationid")
 
@@ -345,42 +367,15 @@ export default function Main(props) {
   }
 	const startWebsocket = () => {
 		socket.on("updateSchedules", data => {
-      if (data.type == "makeAppointment") {
-        // if rebook 
-        const newAppointments = [...appointments]
-
-        newAppointments.forEach(function (info) {
-          if (info.id == data.id) {
-            info.time = data.time
-          }
-        })
-
-        setAppointments(newAppointments)
-
+      if (
+        data.type == "makeAppointment" || 
+        data.type == "cancelRequest" || 
+        data.type == "remakeAppointment"
+      ) {
         getAllAppointments()
-      } else if (data.type == "cancelRequest") {
-        const newAppointments = [...appointments]
 
-        newAppointments.forEach(function (item, index) {
-          if (item.id == data.scheduleid) {
-            newAppointments.splice(index, 1)
-          }
-        })
-
-        setAppointments(newAppointments)
-        fetchTheNumAppointments()
-			} else if (data.type == "cancelService") {
-				const newAppointments = [...appointments]
-
-        newAppointments.forEach(function(item, index) {
-          if (item.id == data.id) {
-            newAppointments.splice(index, 1)
-          }
-        })
-
-				setAppointments(newAppointments)
-				fetchTheNumAppointments()
-			}
+        speakLatestClient(data)
+      }
 		})
 		socket.on("updateOrders", () => getAllCartOrderers())
 		socket.io.on("open", () => {
@@ -451,12 +446,18 @@ export default function Main(props) {
                         Client: {item.client.username}
                         {'\nAppointment for: ' + item.name}
                         {'\n' + displayTime(item.time)}
+                        {'\nwith stylist: ' + item.worker.username}
                       </Text>
 
                       <View style={styles.scheduleActions}>
                         <View style={styles.column}>
                           <TouchableOpacity style={styles.scheduleAction} onPress={() => cancelTheSchedule(index, "appointment")}>
                             <Text style={styles.scheduleActionHeader}>Cancel</Text>
+                          </TouchableOpacity>
+                        </View>
+                        <View style={styles.column}>
+                          <TouchableOpacity style={styles.scheduleAction} onPress={() => props.navigation.navigate("booktime", { scheduleid: item.id, serviceinfo: item.name })}>
+                            <Text style={styles.scheduleActionHeader}>Pick another time for client</Text>
                           </TouchableOpacity>
                         </View>
                         <View style={styles.column}>
@@ -653,19 +654,7 @@ export default function Main(props) {
 			{showDisabledscreen && (
 				<Modal transparent={true}>
 					<SafeAreaView style={styles.disabled}>
-						<View style={styles.disabledContainer}>
-							<Text style={styles.disabledHeader}>
-								There is an update to the app{'\n\n'}
-								Please wait a moment{'\n\n'}
-								or tap 'Close'
-							</Text>
-
-							<TouchableOpacity style={styles.disabledClose} onPress={() => socket.emit("socket/business/login", ownerId, () => setShowdisabledscreen(false))}>
-								<Text style={styles.disabledCloseHeader}>Close</Text>
-							</TouchableOpacity>
-
-							<ActivityIndicator color="black" size="large"/>
-						</View>
+						<ActivityIndicator color="black" size="large"/>
 					</SafeAreaView>
 				</Modal>
 			)}
@@ -696,7 +685,7 @@ const styles = StyleSheet.create({
 	scheduleImage: { height: wsize(20), width: wsize(20) },
 	scheduleHeader: { fontSize: wsize(4), fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
 	scheduleActionsHeader: { fontSize: wsize(4), marginTop: 10, textAlign: 'center' },
-	scheduleActions: { flexDirection: 'row' },
+	scheduleActions: { flexDirection: 'row', justifyContent: 'space-around' },
   column: { flexDirection: 'column', justifyContent: 'space-around' },
 	scheduleAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, paddingVertical: 10, width: wsize(30) },
 	scheduleActionHeader: { fontSize: wsize(4), textAlign: 'center' },
@@ -750,11 +739,7 @@ const styles = StyleSheet.create({
 	firstTimeAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 10, width: wsize(30) },
 	firstTimeActionHeader: { fontSize: wsize(4), textAlign: 'center' },
 
-	disabled: { backgroundColor: 'black', flexDirection: 'column', justifyContent: 'space-around', height: '100%', opacity: 0.8, width: '100%' },
-	disabledContainer: { alignItems: 'center', width: '100%' },
-	disabledHeader: { color: 'white', fontWeight: 'bold', textAlign: 'center' },
-	disabledClose: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 10, width: wsize(20) },
-	disabledCloseHeader: { fontSize: wsize(4), textAlign: 'center' },
+	disabled: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.1)', flexDirection: 'column', justifyContent: 'space-around', height: '100%', width: '100%' },
 
   loading: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
   column: { flexDirection: 'column', justifyContent: 'space-around' },

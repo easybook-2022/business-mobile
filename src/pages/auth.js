@@ -3,12 +3,7 @@ import { SafeAreaView, Platform, View, Text, Image, TouchableOpacity, Dimensions
 import Constants from 'expo-constants';
 
 const { height, width } = Dimensions.get('window')
-const wsize = p => {
-  return width * (p / 100)
-}
-const hsize = p => {
-  return height * (p / 100)
-}
+const wsize = p => {return width * (p / 100)}
 
 export default function Auth({ navigation }) {
 	return (

@@ -7,7 +7,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { socket, logo_url } from '../../assets/info'
-import { seeUserOrders } from '../apis/schedules'
+import { getOrders } from '../apis/schedules'
 import { orderDone, setWaitTime } from '../apis/carts'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
@@ -15,12 +15,7 @@ import AntDesign from 'react-native-vector-icons/AntDesign'
 import Loadingprogress from '../components/loadingprogress'
 
 const { height, width } = Dimensions.get('window')
-const wsize = p => {
-  return width * (p / 100)
-}
-const hsize = p => {
-  return height * (p / 100)
-}
+const wsize = p => {return width * (p / 100)}
 
 export default function Cartorders(props) {
 	const { userid, type, ordernumber, refetch } = props.route.params
@@ -38,7 +33,7 @@ export default function Cartorders(props) {
 		const locationid = await AsyncStorage.getItem("locationid")
 		const data = { userid, locationid, ordernumber }
 
-		seeUserOrders(data)
+		getOrders(data)
 			.then((res) => {
 				if (res.status == 200) {
 					return res.data
