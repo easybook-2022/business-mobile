@@ -108,6 +108,10 @@ export const getLocationHours = data => {
 	)
 }
 
+export const getAllLocations = id => {
+  return axios.get(`${url}/locations/get_all_locations/${id}`)
+}
+
 export const getLocationProfile = data => {
 	return axios.post(
 		`${url}/locations/get_location_profile`,

@@ -85,23 +85,23 @@ export default function Verifyowner({ navigation }) {
 						</View>
             
 						<View style={styles.inputsBox}>
-							{!verifyCode ?
-								<View style={{ alignItems: 'center' }}>
-									<View style={styles.inputContainer}>
-										<Text style={styles.inputHeader}>Enter your cell number:</Text>
-										<TextInput 
-                      style={styles.input} 
-                      onChangeText={(num) => setCellnumber(displayPhonenumber(cellnumber, num, () => Keyboard.dismiss()))} 
-                      value={cellnumber} keyboardType="numeric" autoCorrect={false}
-                    />
-									</View>
-									<TouchableOpacity style={[styles.submit, { opacity: loading ? 0.3 : 1 }]} disabled={loading} onPress={() => verify()} disabled={loading}>
-										<Text style={styles.submitHeader}>Register</Text>
-									</TouchableOpacity>
-								</View>
-								:
-                <View style={{ alignItems: 'center' }}>
-                  {!verified ? 
+              <View style={{ alignItems: 'center' }}>
+  							{!verifyCode ?
+                  <>
+  									<View style={styles.inputContainer}>
+  										<Text style={styles.inputHeader}>Enter your cell number:</Text>
+  										<TextInput 
+                        style={styles.input} 
+                        onChangeText={(num) => setCellnumber(displayPhonenumber(cellnumber, num, () => Keyboard.dismiss()))} 
+                        value={cellnumber} keyboardType="numeric" autoCorrect={false}
+                      />
+  									</View>
+  									<TouchableOpacity style={[styles.submit, { opacity: loading ? 0.3 : 1 }]} disabled={loading} onPress={() => verify()} disabled={loading}>
+  										<Text style={styles.submitHeader}>Register</Text>
+  									</TouchableOpacity>
+                  </>
+  								:
+                  !verified ? 
     								<>
     									<View style={styles.inputContainer}>
     										<Text style={styles.inputHeader}>Enter verify code from your message:</Text>
@@ -155,9 +155,8 @@ export default function Verifyowner({ navigation }) {
                         </View>
                       </View>
                     </>
-                  }
-                </View>
-							}
+  							}
+              </View>
 
 							<Text style={styles.errorMsg}>{errorMsg}</Text>
 						</View>

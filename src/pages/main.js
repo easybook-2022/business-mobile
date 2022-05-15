@@ -5,6 +5,7 @@ import {
   Keyboard, StyleSheet, Modal 
 } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useKeepAwake } from 'expo-keep-awake'
 import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
 import { CommonActions } from '@react-navigation/native';
@@ -14,11 +15,12 @@ import * as Speech from 'expo-speech'
 import Voice from '@react-native-voice/voice';
 import { socket, logo_url } from '../../assets/info'
 import { displayTime, resizePhoto } from 'geottuse-tools'
-import { updateNotificationToken } from '../apis/owners'
+import { updateNotificationToken, getOwnerInfo } from '../apis/owners'
 import { fetchNumAppointments, fetchNumCartOrderers, getLocationProfile } from '../apis/locations'
 import { getMenus, removeMenu, addNewMenu } from '../apis/menus'
 import { cancelSchedule, doneService, getAppointments, getCartOrderers } from '../apis/schedules'
 import { removeProduct } from '../apis/products'
+import { setWaitTime } from '../apis/carts'
 
 import FontAwesome from 'react-native-vector-icons/FontAwesome'
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5'
@@ -26,10 +28,11 @@ import AntDesign from 'react-native-vector-icons/AntDesign'
 import Entypo from 'react-native-vector-icons/Entypo'
 
 const { height, width } = Dimensions.get('window')
-const defaultFont = Platform.OS == 'ios' ? 'Arial' : 'normal'
 const wsize = p => {return width * (p / 100)}
 
 export default function Main(props) {
+  useKeepAwake()
+
 	const firstTime = props.route.params ? 
     props.route.params.firstTime ?
       true 
@@ -40,6 +43,7 @@ export default function Main(props) {
 
 	const [notificationPermission, setNotificationpermission] = useState(null);
 	const [ownerId, setOwnerid] = useState(null)
+  const [isOwner, setIsowner] = useState(false)
 	const [storeIcon, setStoreicon] = useState('')
 	const [storeName, setStorename] = useState('')
 	const [locationType, setLocationtype] = useState('')
@@ -48,6 +52,7 @@ export default function Main(props) {
 	const [numAppointments, setNumappointments] = useState(0)
 
 	const [cartOrderers, setCartorderers] = useState([])
+  const [speakInfo, setSpeakinfo] = useState({ orderNumber: "" })
 	const [numCartorderers, setNumcartorderers] = useState(0)
 
   const [loaded, setLoaded] = useState(false)
@@ -171,6 +176,26 @@ export default function Main(props) {
 				}
 			})
 	}
+  const getTheOwnerInfo = async() => {
+    const ownerid = await AsyncStorage.getItem("ownerid")
+
+    getOwnerInfo(ownerid)
+      .then((res) => {
+        if (res.status == 200) {
+          return res.data
+        }
+      })
+      .then((res) => {
+        if (res) {
+          setIsowner(res.isOwner)
+        }
+      })
+      .catch((err) => {
+        if (err.response && err.response.status == 400) {
+          const { errormsg, status } = err.response.data
+        }
+      })
+  }
 
 	const getAllAppointments = async() => {
 		const ownerid = await AsyncStorage.getItem("ownerid")
@@ -197,29 +222,54 @@ export default function Main(props) {
 				}
 			})
 	}
-  const speakLatestClient = data => {
-    const { name, time, worker } = data.speak
-    let message = ""
+  const speakToWorker = async(data) => {
+    let message
 
-    switch (data.type) {
-      case "makeAppointment":
-        message += "New appointment" 
+    if (data.type == "makeAppointment" || data.type == "remakeAppointment" || data.type == "cancelRequest") {
+      const { name, time, worker } = data.speak
 
-        break;
-      case "remakeAppointment":
-        message += "Appointment rebook"
+      switch (data.type) {
+        case "makeAppointment":
+          message = "New appointment" 
 
-        break;
-      case "cancelRequest":
-        message += "Appointment cancelled"
+          break;
+        case "remakeAppointment":
+          message = "Appointment rebook"
 
-        break;
-      default:
+          break;
+        case "cancelRequest":
+          message = "Appointment cancelled"
+
+          break;
+        default:
+      }
+
+      message += " for " + name + " " + displayTime(time) + " with stylist: " + worker
+
+      Speech.speak(message, { rate: 0.7 })
+    } else {
+      const { name, quantity, customer, orderNumber } = data.speak
+
+      switch (data.type) {
+        case "checkout":
+          message = customer + " ordered " + quantity + " of " + name + ". How long will be the wait ?"
+
+          Speech.speak(message, {
+            rate: 0.7,
+            onDone: () => startVoice()
+          })
+
+          break;
+        default:
+      }
     }
+  }
+  const startVoice = async() => {
+    await Voice.start('en-US')
 
-    message += " for " + name + " " + displayTime(time) + " with stylist: " + worker
-
-    Speech.speak(message, { rate: 0.7 })
+    setTimeout(function () {
+      stopSpeech()
+    }, 5000)
   }
 
 	const getAllCartOrderers = async() => {
@@ -374,10 +424,14 @@ export default function Main(props) {
       ) {
         getAllAppointments()
 
-        speakLatestClient(data)
+        speakToWorker(data)
       }
 		})
-		socket.on("updateOrders", () => getAllCartOrderers())
+		socket.on("updateOrders", data => {
+      getAllCartOrderers()
+
+      speakToWorker(data)
+    })
 		socket.io.on("open", () => {
 			if (ownerId != null) {
 				socket.emit("socket/business/login", ownerId, () => setShowdisabledscreen(false))
@@ -385,12 +439,18 @@ export default function Main(props) {
 		})
 		socket.io.on("close", () => ownerId != null ? setShowdisabledscreen(true) : {})
 	}
-
+  
 	const initialize = () => {
 		getTheLocationProfile()
+    getTheOwnerInfo()
 
 		if (Constants.isDevice) getNotificationPermission()
 	}
+  const stopSpeech = async() => {
+    await Voice.stop()
+    await Voice.cancel()
+    await Voice.destroy();
+  }
   
 	useEffect(() => {
 		initialize()
@@ -407,9 +467,17 @@ export default function Main(props) {
 			Notifications.addNotificationResponseReceivedListener(res => {
 				const { data } = res.notification.request.content
 
-				if (data.type == "checkout") {
-					fetchTheNumCartOrderers()
-				}
+        if (
+          data.type == "makeAppointment" || 
+          data.type == "cancelRequest" || 
+          data.type == "remakeAppointment"
+        ) {
+          getAllAppointments()
+
+          speakToWorker(data)
+        } else if (data.type == "checkout") {
+          fetchTheNumCartOrderers()
+        }
 			});
 		}
 
@@ -418,6 +486,38 @@ export default function Main(props) {
 			socket.off("updateOrders")
 		}
 	}, [appointments.length, cartOrderers.length])
+
+  useEffect(() => {
+    Voice.onSpeechPartialResults = (e) => {
+      if (e.value.toString().toLowerCase().includes("minute")) {
+        stopSpeech()
+
+        let data = { type: "setWaitTime", ordernumber: speakInfo.orderNumber, waitTime: e.value.toString() }
+
+        setWaitTime(data)
+          .then((res) => {
+            if (res.status == 200) {
+              return res.data
+            }
+          })
+          .then((res) => {
+            if (res) {
+              data = { ...data, receiver: res.receiver }
+              socket.emit("socket/setWaitTime", data)
+            }
+          })
+          .catch((err) => {
+            if (err.response && err.response.status == 400) {
+              const { errormsg, status } = err.response.data
+            }
+          })
+      }
+    };
+
+    return () => {
+      Voice.destroy().then(Voice.removeAllListeners);
+    }
+  }, [speakInfo.orderNumber])
 
 	return (
 		<SafeAreaView style={styles.main}>
@@ -524,14 +624,31 @@ export default function Main(props) {
   				<View style={styles.bottomNavs}>
   					<View style={styles.bottomNavsRow}>
               <View style={styles.column}>
-    						<TouchableOpacity style={styles.bottomNav} onPress={() => props.navigation.navigate("settings", { refetch: () => getTheLocationProfile()})}>
+    						<TouchableOpacity style={styles.bottomNav} onPress={() => props.navigation.navigate("settings", { refetch: () => initialize()})}>
     							<AntDesign name="setting" size={wsize(7)}/>
     						</TouchableOpacity>
               </View>
 
-  						<TouchableOpacity style={styles.bottomNavButton} onPress={() => props.navigation.navigate("menu", { refetch: () => getTheLocationProfile()})}>
-  							<Text style={styles.bottomNavButtonHeader}>Edit Menu</Text>
-  						</TouchableOpacity>
+              {isOwner == true && (
+                <TouchableOpacity style={styles.bottomNavButton} onPress={() => {
+                  AsyncStorage.removeItem("locationid")
+                  AsyncStorage.removeItem("locationtype")
+                  AsyncStorage.setItem("phase", "list")
+
+                  props.navigation.dispatch(
+                    CommonActions.reset({
+                      index: 1,
+                      routes: [{ name: 'list' }]
+                    })
+                  );
+                }}>
+                  <Text style={styles.bottomNavButtonHeader}>Switch Business</Text>
+                </TouchableOpacity>
+              )}
+
+              <TouchableOpacity style={styles.bottomNavButton} onPress={() => props.navigation.navigate("menu", { refetch: () => initialize(), isOwner })}>
+                <Text style={styles.bottomNavButtonHeader}>{isOwner == true ? "Edit" : "View"} Menu</Text>
+              </TouchableOpacity>
 
               <View style={styles.column}>
     						<TouchableOpacity style={styles.bottomNav} onPress={() => logout()}>
@@ -663,7 +780,7 @@ export default function Main(props) {
 }
 
 const styles = StyleSheet.create({
-	main: { backgroundColor: 'white', height: '100%', paddingTop: Platform.OS == "ios" ? 0 : Constants.statusBarHeight, width: '100%' },
+	main: { backgroundColor: 'white', height: '100%', width: '100%' },
 	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 
 	navs: { alignItems: 'center', height: '10%', width: '100%' },
@@ -699,7 +816,7 @@ const styles = StyleSheet.create({
 	cartordererActionHeader: { fontSize: wsize(4), textAlign: 'center' },
 
 	bodyResult: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around' },
-	bodyResultHeader: { fontSize: wsize(4) },
+	bodyResultHeader: { fontSize: wsize(5) },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'column', height: '10%', justifyContent: 'space-around', width: '100%' },
 	bottomNavsRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },

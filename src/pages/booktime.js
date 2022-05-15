@@ -667,6 +667,21 @@ export default function Booktime(props) {
               </TouchableOpacity>
             </View>
 
+            <TouchableOpacity style={styles.bottomNavButton} onPress={() => {
+              AsyncStorage.clearItem("locationid")
+              AsyncStorage.clearItem("locationtype")
+              AsyncStorage.setItem("phase", "list")
+
+              props.navigation.dispatch(
+                CommonActions.reset({
+                  index: 1,
+                  routes: [{ name: 'list' }]
+                })
+              );
+            }}>
+              <Text style={styles.bottomNavButtonHeader}>Switch Business</Text>
+            </TouchableOpacity>
+
             <TouchableOpacity style={styles.bottomNavButton} onPress={() => props.navigation.navigate("menu", { refetch: () => getTheLocationProfile()})}>
               <Text style={styles.bottomNavButtonHeader}>Edit Menu</Text>
             </TouchableOpacity>

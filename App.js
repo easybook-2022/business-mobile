@@ -2,13 +2,9 @@ import 'react-native-gesture-handler';
 import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Platform, Text, View, TouchableOpacity, StyleSheet, Dimensions, LogBox } from 'react-native';
+import { Platform, Text, View, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Font from 'expo-font';
-
-LogBox.ignoreLogs([
-  'Non-serializable values were found in the navigation state',
-]);
 
 // pages
 import Auth from './src/pages/auth'
@@ -17,8 +13,8 @@ import Register from './src/pages/register'
 import Forgotpassword from './src/pages/forgotpassword'
 import Resetpassword from './src/pages/resetpassword'
 import Verifyowner from './src/pages/verifyowner'
+import List from './src/pages/list'
 import Locationsetup from './src/pages/locationsetup'
-import Workinghours from './src/pages/workinghours'
 
 import Main from './src/pages/main'
 import Booktime from './src/pages/booktime'
@@ -105,8 +101,8 @@ export default function App() {
                 )
               )
             })}/>
+            <Stack.Screen name="list" component={List} options={{ headerShown: false }}/>
             <Stack.Screen name="locationsetup" component={Locationsetup} options={{ headerShown: false }}/>
-            <Stack.Screen name="workinghours" component={Workinghours} options={{ headerShown: false }}/>
             <Stack.Screen name="main" component={Main} options={{ headerShown: false }}/>
             <Stack.Screen name="booktime" component={Booktime} options={({ navigation, route }) => ({
               headerTitle: () => <Text style={styles.header}>Request different time</Text>,
@@ -172,7 +168,7 @@ export default function App() {
             })}/>
             <Stack.Screen name="menu" component={Menu} disableMode={false} options={({ navigation, route }) => ({
               headerTitle: () => (
-                <Text style={styles.header}>Edit Menu
+                <Text style={styles.header}>{route.params.isOwner == true ? "Edit" : "View"} Menu
                     {route.params.name && <Text style={{ fontSize: 15 }}>: {route.params.name}</Text>}
                 </Text>
               ),
@@ -218,4 +214,4 @@ const styles = StyleSheet.create({
   header: { fontSize: wsize(5), fontWeight: 'bold' },
   back: { alignItems: 'center', borderRadius: 3, borderStyle: 'solid', borderWidth: 1, padding: 5, width: wsize(20) },
   backHeader: { fontSize: wsize(3), fontWeight: 'bold' },
-})
+});

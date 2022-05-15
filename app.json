@@ -5,6 +5,7 @@
     "version": "0.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
@@ -32,13 +33,14 @@
       "infoPlist": {
         "NSCameraUsageDescription": "EasyGO (Business) uses camera to allow you to capture a photo of your location/menu/product/service",
         "NSMicrophoneUsageDescription": "EasyGO (Business) does not need microphone",
-        "NSLocationUsageDescription": "EasyGO (Business) optionally marks your location using your geo coordinates so that clients/customers can find you"
+        "NSLocationUsageDescription": "EasyGO (Business) optionally marks your location using your geo coordinates so that clients/customers can find you",
+        "NSLocationWhenInUseUsageDescription": "EasyGO (Business) optionally marks your location using your geo coordinates so that clients/customers can find you"
       }
     },
     "android": {
       "package": "com.geottuse.serviceapp.business",
       "versionCode": 0,
-      "permissions": ["CAMERA","ACCESS_MEDIA_LOCATION", "ACCESS_FINE_LOCATION", "ACCESS_MICROPHONE"],
+      "permissions": ["CAMERA","ACCESS_MEDIA_LOCATION", "ACCESS_FINE_LOCATION", "MICROPHONE"],
       "googleServicesFile": "./google-services.json"
     },
     "notification": {
