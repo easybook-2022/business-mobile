@@ -17,7 +17,7 @@ import { logo_url, timeControl } from '../../assets/info'
 import { addOwner, updateOwner, deleteOwner, getWorkerInfo, getOtherWorkers, getAccounts, getOwnerInfo } from '../apis/owners'
 import { getLocationProfile, updateLocation, setLocationHours, setReceiveType } from '../apis/locations'
 import { loginInfo, ownerRegisterInfo } from '../../assets/info'
-import { displayPhonenumber } from 'geottuse-tools'
+import { displayPhonenumber, resizePhoto } from 'geottuse-tools'
 
 // bank account
 let { accountNumber, countryCode, currency, routingNumber, accountHolderName } = loginInfo
@@ -39,7 +39,6 @@ export default function Settings(props) {
 	const [camComp, setCamcomp] = useState(null)
   const [camType, setCamtype] = useState('back')
   const [choosing, setChoosing] = useState(false)
-	const [editType, setEdittype] = useState('')
 
 	// location information
   const [locationInfo, setLocationinfo] = useState('')
@@ -55,7 +54,6 @@ export default function Settings(props) {
 	const [logo, setLogo] = useState({ uri: '', name: '', size: { width: 0, height: 0 }, loading: false })
   const [locationReceivetype, setLocationreceivetype] = useState('')
 	const [type, setType] = useState('')
-	const [infoLoading, setInfoloading] = useState(true)
 
 	// location hours
 	const [days, setDays] = useState([
@@ -67,11 +65,9 @@ export default function Settings(props) {
 		{ key: "5", header: "Friday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, close: false },
 		{ key: "6", header: "Saturday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, close: false }
 	])
-	const [daysLoading, setDaysloading] = useState(true)
 
 	// co-owners
 	const [accountHolders, setAccountholders] = useState([])
-	const [accountHoldersloading, setAccountholdersloading] = useState(true)
   const [hoursRange, setHoursrange] = useState([
     { key: "0", header: "Sunday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, working: true, takeShift: "" },
     { key: "1", header: "Monday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, working: true, takeShift: "" },
@@ -81,8 +77,6 @@ export default function Settings(props) {
     { key: "5", header: "Friday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, working: true, takeShift: "" },
     { key: "6", header: "Saturday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, working: true, takeShift: "" }
   ])
-
-  const [receiveTypeloading, setReceivetypeloading] = useState(true)
 
 	const [errorMsg, setErrormsg] = useState('')
 	const [loading, setLoading] = useState(false)
@@ -101,6 +95,7 @@ export default function Settings(props) {
     show: false,
     id: -1, username: '', profile: '', numWorkingdays: 0
   })
+  const [editInfo, setEditinfo] = useState({ show: false, type: '' })
   const [getWorkersbox, setGetworkersbox] = useState({
     show: false,
     day: '',
@@ -139,7 +134,7 @@ export default function Settings(props) {
             if (res) {
               const { id } = res
 
-              setEdittype('')
+              setEditinfo({ ...editInfo, show: false, type: '' })
               setLoading(false)
             }
           })
@@ -332,7 +327,7 @@ export default function Settings(props) {
 			})
 			.then((res) => {
 				if (res) {
-					setEdittype('')
+          setEditinfo({ ...editInfo, show: false, type: '' })
 					setLoading(false)
 				}
 			})
@@ -765,11 +760,8 @@ export default function Settings(props) {
 					setLogo({ ...logo, uri: logo_url + logo.name })
 					setType(type)
           setLocationreceivetype(receiveType)
-          setReceivetypeloading(false)
-					setInfoloading(false)
 					setDays(hours)
           setHoursrange(hours)
-					setDaysloading(false)
 				}
 			})
 			.catch((err) => {
@@ -812,7 +804,6 @@ export default function Settings(props) {
 				if (res) {
 					setOwnerid(ownerid)
 					setAccountholders(res.accounts)
-					setAccountholdersloading(false)
 				}
 			})
 			.catch((err) => {
@@ -1131,436 +1122,36 @@ export default function Settings(props) {
 				<ScrollView style={{ width: '100%' }}>
 					<View style={[styles.box, { opacity: loading ? 0.6 : 1 }]}>
 						{isOwner == true && (
-              !infoLoading ?
-  							editType == 'information' ? 
-                  <>
-                    {!locationInfo ? 
-                      <>
-                        <TouchableOpacity style={[styles.locationActionOption, { width: width * 0.5 }]} disabled={loading} onPress={() => markLocation()}>
-                          <Text style={styles.locationActionOptionHeader}>Mark your location</Text>
-                        </TouchableOpacity>
-
-                        <Text style={styles.header}>Or</Text>
-
-                        <TouchableOpacity style={[styles.locationAction, { width: width * 0.6 }]} disabled={loading} onPress={() => {
-                          setLocationinfo('away')
-                          setErrormsg()
-                        }}>
-                          <Text style={styles.locationActionHeader}>Edit address instead</Text>
-                        </TouchableOpacity>
-                      </>
-                      :
-                      locationInfo == "away" ? 
-                        <>
-                          <TouchableOpacity style={[styles.locationActionOption, { width: width * 0.5 }]} disabled={loading} onPress={() => markLocation()}>
-                            <Text style={styles.locationActionOptionHeader}>Mark your location</Text>
-                          </TouchableOpacity>
-
-                          <Text style={styles.header}>Or</Text>
-
-                          <Text style={styles.header}>Edit Address</Text>
-
-                          <View style={styles.inputsBox}>
-                            <View style={styles.inputContainer}>
-                              <Text style={styles.inputHeader}>{(type == 'hair' || type == 'nail') ? type + ' salon' : type}'s name:</Text>
-                              <TextInput style={styles.input} onChangeText={(storeName) => setStorename(storeName)} value={storeName} autoCorrect={false}/>
-                            </View>
-                            <View style={styles.inputContainer}>
-                              <Text style={styles.inputHeader}>{(type == 'hair' || type == 'nail') ? type + ' salon' : type}'s Phone number:</Text>
-                              <TextInput style={styles.input} onChangeText={(num) => setPhonenumber(displayPhonenumber(phonenumber, num, () => Keyboard.dismiss()))} value={phonenumber} keyboardType="numeric" autoCorrect={false}/>
-                            </View>
-                            <View style={styles.inputContainer}>
-                              <Text style={styles.inputHeader}>{(type == 'hair' || type == 'nail') ? type + ' salon' : type}'s address #1:</Text>
-                              <TextInput style={styles.input} onChangeText={(addressOne) => setAddressone(addressOne)} value={addressOne} autoCorrect={false}/>
-                            </View>
-                            <View style={styles.inputContainer}>
-                              <Text style={styles.inputHeader}>{(type == 'hair' || type == 'nail') ? type + ' salon' : type}'s address #2:</Text>
-                              <TextInput style={styles.input} onChangeText={(addressTwo) => setAddresstwo(addressTwo)} value={addressTwo} autoCorrect={false}/>
-                            </View>
-                            <View style={styles.inputContainer}>
-                              <Text style={styles.inputHeader}>City:</Text>
-                              <TextInput style={styles.input} onChangeText={(city) => setCity(city)} value={city} keyboardType="numeric" autoCorrect={false}/>
-                            </View>
-                            <View style={styles.inputContainer}>
-                              <Text style={styles.inputHeader}>Province:</Text>
-                              <TextInput style={styles.input} onChangeText={(province) => setProvince(province)} value={province} keyboardType="numeric" autoCorrect={false}/>
-                            </View>
-                            <View style={styles.inputContainer}>
-                              <Text style={styles.inputHeader}>Postal Code:</Text>
-                              <TextInput style={styles.input} onChangeText={(postalcode) => setPostalcode(postalcode)} value={postalcode} keyboardType="numeric" autoCorrect={false}/>
-                            </View>
-
-                            {errorMsg ? <Text style={styles.errorMsg}>{errorMsg}</Text> : null }
-                          </View>
-                        </>
-                        :
-                        <View style={{ alignItems: 'center', width: '100%' }}>
-                          <Text style={styles.locationHeader}>
-                            Your {(type == 'hair' || type == 'nail') ? type + ' salon' : type} is located at
-                          </Text>
-                          {(locationCoords.longitude && locationCoords.latitude) ? 
-                            <>
-                              <MapView
-                                region={{
-                                  longitude: locationCoords.longitude,
-                                  latitude: locationCoords.latitude,
-                                  latitudeDelta: 0.003,
-                                  longitudeDelta: 0.003
-                                }}
-                                scrollEnabled={false}
-                                zoomEnabled={false}
-                                style={{ borderRadius: width * 0.4 / 2, height: width * 0.4, width: width * 0.4 }}
-                              >
-                                <Marker coordinate={{ longitude: locationCoords.longitude, latitude: locationCoords.latitude }}/>
-                              </MapView>
-                              <Text style={styles.locationAddressHeader}>{locationCoords.address}</Text>
-                            </>
-                            :
-                            <ActivityIndicator color="black" size="small"/>
-                          }
-
-                          <Text style={[styles.locationHeader, { marginVertical: 10 }]}>Or</Text>
-
-                          <TouchableOpacity style={styles.locationActionOption} onPress={() => {
-                            setLocationcoords({ longitude: null, latitude: null })
-                            setLocationinfo('away')
-                          }}>
-                            <Text style={styles.locationActionOptionHeader}>Enter address instead</Text>
-                          </TouchableOpacity>
-                        </View>
-                    }
-
-                    <View style={[styles.cameraContainer, { marginVertical: 100 }]}>
-                      <Text style={styles.inputHeader}>Store Logo</Text>
-
-                      {logo.uri ? (
-                        <>
-                          <Image style={styles.camera} source={{ uri: logo.uri }}/>
-
-                          <TouchableOpacity style={styles.cameraAction} onPress={() => {
-                            allowCamera()
-                            setLogo({ ...logo, uri: '' })
-                          }}>
-                            <Text style={styles.cameraActionHeader}>Cancel</Text>
-                          </TouchableOpacity>
-                        </>
-                      ) : (
-                        <>
-                          {!choosing && (
-                            <>
-                              <Camera 
-                                style={styles.camera} 
-                                type={camType} 
-                                ref={r => {setCamcomp(r)}}
-                                ratio="1:1"
-                              />
-
-                              <View style={{ alignItems: 'center', marginVertical: 10 }}>
-                                <Ionicons name="camera-reverse-outline" size={wsize(7)} onPress={() => setCamtype(camType == 'back' ? 'front' : 'back')}/>
-                              </View>
-                            </>
-                          )}
-
-                          <View style={styles.cameraActions}>
-                            <TouchableOpacity style={[styles.cameraAction, { opacity: logo.loading ? 0.5 : 1 }]} disabled={logo.loading} onPress={snapPhoto.bind(this)}>
-                              <Text style={styles.cameraActionHeader}>Take this photo</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity style={[styles.cameraAction, { opacity: logo.loading ? 0.5 : 1 }]} disabled={logo.loading} onPress={() => {
-                              allowChoosing()
-                              choosePhoto()
-                            }}>
-                              <Text style={styles.cameraActionHeader}>Choose from phone</Text>
-                            </TouchableOpacity>
-                          </View>
-                        </>
-                      )}  
-                    </View>
-
-                    <TouchableOpacity style={styles.updateButton} disabled={loading} onPress={() => updateYourLocation()}>
-                      <Text style={styles.updateButtonHeader}>Save</Text>
-                    </TouchableOpacity>
-                  </>
-  								:
-  								<TouchableOpacity style={styles.editButton} onPress={() => {
-                    setCamtype('back')
-                    setEdittype('information')
-                  }}>
-  									<Text style={styles.editButtonHeader}>Edit Location Info</Text>
-  								</TouchableOpacity>
-  							:
-                <View style={styles.loading}>
-                  <ActivityIndicator color="black" size="small"/>
-                </View>
+              <TouchableOpacity style={styles.editButton} onPress={() => {
+                setCamtype('back')
+                setEditinfo({ ...editInfo, show: true, type: 'information' })
+              }}>
+                <Text style={styles.editButtonHeader}>Edit Location Info</Text>
+              </TouchableOpacity>
 						)}
 
 						{isOwner == true && (
-              !daysLoading ?
-  							editType == 'hours' ? 
-  								<>
-  									<Text style={styles.header}>
-                      Edit 
-                      {(type === "hair" || type === "nail") && " Salon "} 
-                      {type === "restaurant" && " Restaurant "}
-                      {type === "store" && " Store "}
-                      Hour(s)
-                    </Text>
-
-  									{days.map((info, index) => (
-  										<View key={index} style={styles.workerHour}>
-  											{info.close == false ? 
-  												<>
-  													<View style={{ opacity: info.close ? 0.1 : 1, width: '100%' }}>
-  														<Text style={styles.workerHourHeader}><Text style={{ fontWeight: '300' }}>Open on</Text> {info.header}</Text>
-  														<View style={styles.timeSelectionContainer}>
-  															<View style={styles.timeSelection}>
-  																<View style={styles.selection}>
-  																	<TouchableOpacity onPress={() => updateTime(index, "hour", "up", true)}>
-  																		<AntDesign name="up" size={wsize(7)}/>
-  																	</TouchableOpacity>
-                                    <TextInput style={styles.selectionHeader} onChangeText={(hour) => {
-                                      const newDays = [...days]
-
-                                      newDays[index].opentime["hour"] = hour.toString()
-
-                                      setDays(newDays)
-                                    }} keyboardType="numeric" maxLength={2} value={info.opentime.hour}/>
-  																	<TouchableOpacity onPress={() => updateTime(index, "hour", "down", true)}>
-  																		<AntDesign name="down" size={wsize(7)}/>
-  																	</TouchableOpacity>
-  																</View>
-  																<View style={styles.column}>
-                                    <Text style={styles.selectionDiv}>:</Text>
-                                  </View>
-  																<View style={styles.selection}>
-  																	<TouchableOpacity onPress={() => updateTime(index, "minute", "up", true)}>
-  																		<AntDesign name="up" size={wsize(7)}/>
-  																	</TouchableOpacity>
-                                    <TextInput style={styles.selectionHeader} onChangeText={(minute) => {
-                                      const newDays = [...days]
-
-                                      newDays[index].opentime["minute"] = minute.toString()
-
-                                      setDays(newDays)
-                                    }} keyboardType="numeric" maxLength={2} value={info.opentime.minute}/>
-  																	<TouchableOpacity onPress={() => updateTime(index, "minute", "down", true)}>
-  																		<AntDesign name="down" size={wsize(7)}/>
-  																	</TouchableOpacity>
-  																</View>
-  																<View style={styles.selection}>
-  																	<TouchableOpacity onPress={() => updateTime(index, "period", "up", true)}>
-  																		<AntDesign name="up" size={wsize(7)}/>
-  																	</TouchableOpacity>
-  																	<Text style={styles.selectionHeader}>{info.opentime.period}</Text>
-  																	<TouchableOpacity onPress={() => updateTime(index, "period", "down", true)}>
-  																		<AntDesign name="down" size={wsize(7)}/>
-  																	</TouchableOpacity>
-  																</View>
-  															</View>
-  															<View style={styles.timeSelectionColumn}>
-                                  <Text style={styles.timeSelectionHeader}>To</Text>
-                                </View>
-  															<View style={styles.timeSelection}>
-  																<View style={styles.selection}>
-  																	<TouchableOpacity onPress={() => updateTime(index, "hour", "up", false)}>
-  																		<AntDesign name="up" size={wsize(7)}/>
-  																	</TouchableOpacity>
-                                    <TextInput style={styles.selectionHeader} onChangeText={(hour) => {
-                                      const newDays = [...days]
-
-                                      newDays[index].closetime["hour"] = hour.toString()
-
-                                      setDays(newDays)
-                                    }} keyboardType="numeric" maxLength={2} value={info.closetime.hour}/>
-  																	<TouchableOpacity onPress={() => updateTime(index, "hour", "down", false)}>
-  																		<AntDesign name="down" size={wsize(7)}/>
-  																	</TouchableOpacity>
-  																</View>
-                                  <View style={styles.column}>
-  																  <Text style={styles.selectionDiv}>:</Text>
-                                  </View>
-  																<View style={styles.selection}>
-  																	<TouchableOpacity onPress={() => updateTime(index, "minute", "up", false)}>
-  																		<AntDesign name="up" size={wsize(7)}/>
-  																	</TouchableOpacity>
-                                    <TextInput style={styles.selectionHeader} onChangeText={(minute) => {
-                                      const newDays = [...days]
-
-                                      newDays[index].closetime["minute"] = minute.toString()
-
-                                      setDays(newDays)
-                                    }} keyboardType="numeric" maxLength={2} value={info.closetime.minute}/>
-  																	<TouchableOpacity onPress={() => updateTime(index, "minute", "down", false)}>
-  																		<AntDesign name="down" size={wsize(7)}/>
-  																	</TouchableOpacity>
-  																</View>
-  																<View style={styles.selection}>
-  																	<TouchableOpacity onPress={() => updateTime(index, "period", "up", false)}>
-  																		<AntDesign name="up" size={wsize(7)}/>
-  																	</TouchableOpacity>
-  																	<Text style={styles.selectionHeader}>{info.closetime.period}</Text>
-  																	<TouchableOpacity onPress={() => updateTime(index, "period", "down", false)}>
-  																		<AntDesign name="down" size={wsize(7)}/>
-  																	</TouchableOpacity>
-  																</View>
-  															</View>
-  														</View>
-  													</View>
-  													<TouchableOpacity style={styles.workerTouch} onPress={() => {
-  														const newDays = [...days]
-
-  														newDays[index].close = true
-
-  														setDays(newDays)
-  													}}>
-  														<Text style={styles.workerTouchHeader}>Change to not open</Text>
-  													</TouchableOpacity>
-  												</>
-  												:
-  												<>
-  													<Text style={styles.workerHourHeader}><Text style={{ fontWeight: '300' }}>Not open on</Text> {info.header}</Text>
-
-  													<TouchableOpacity style={styles.workerTouch} onPress={() => {
-  														const newDays = [...days]
-
-  														newDays[index].close = false
-
-  														setDays(newDays)
-  													}}>
-  														<Text style={styles.workerTouchHeader}>Change to open</Text>
-  													</TouchableOpacity>
-  												</>
-  											}
-  										</View>
-  									))}
-
-  									<TouchableOpacity style={styles.updateButton} disabled={loading} onPress={() => updateLocationHours()}>
-  										<Text style={styles.updateButtonHeader}>Save</Text>
-  									</TouchableOpacity>
-  								</>
-  								:
-  								<TouchableOpacity style={styles.editButton} onPress={() => setEdittype('hours')}>
-  									<Text style={styles.editButtonHeader}>
-                      Edit 
-                      {(type === "hair" || type === "nail") && " Salon "} 
-                      {type === "restaurant" && " Restaurant "}
-                      {type === "store" && " Store "}
-                      Hour(s)
-                    </Text>
-  								</TouchableOpacity>
-  							:
-                <View style={styles.loading}>
-                  <ActivityIndicator color="black" size="small"/>
-                </View>
+              <TouchableOpacity style={styles.editButton} onPress={() => setEditinfo({ ...editInfo, show: true, type: 'hours' })}>
+                <Text style={styles.editButtonHeader}>
+                  Edit 
+                  {(type === "hair" || type === "nail") && " Salon "} 
+                  {type === "restaurant" && " Restaurant "}
+                  {type === "store" && " Store "}
+                  Hour(s)
+                </Text>
+              </TouchableOpacity>
 						)}
 
 						{(type == "hair" || type == "nail") && (
-              !accountHoldersloading ?
-  							editType == 'users' ? 
-                  <View style={styles.accountHolders}>
-                    <Text style={styles.header}>Edit Stylist(s)</Text>
-
-                    {isOwner == true && (
-                      <TouchableOpacity style={styles.accountHoldersAdd} onPress={() => {
-                        setAccountform({
-                          ...accountForm,
-                          show: true,
-                          type: 'add',
-                          username: ownerRegisterInfo.username,
-                          cellnumber: ownerRegisterInfo.cellnumber,
-                          currentPassword: ownerRegisterInfo.password, 
-                          newPassword: ownerRegisterInfo.password, 
-                          confirmPassword: ownerRegisterInfo.password,
-                          workerHours: [...hoursRange]
-                        })
-                      }}>
-                        <Text style={styles.accountHoldersAddHeader}>Add a new stylist</Text>
-                      </TouchableOpacity>
-                    )}
-
-                    {accountHolders.map((info, index) => (
-                      <View key={info.key} style={styles.account}>
-                        <View style={styles.column}>
-                          <Text style={styles.accountHeader}>#{index + 1}:</Text>
-                        </View>
-
-                        <View style={styles.accountEdit}>
-                          <View style={styles.column}>
-                            <Text style={styles.accountEditHeader}>{info.username}</Text>
-                          </View>
-
-                          {(type == "hair" || type == "nail") && (
-                            <>
-                              <View style={styles.column}>
-                                <TouchableOpacity style={styles.accountEditTouch} onPress={() => {
-                                  if (info.id == ownerId) {
-                                    setAccountform({
-                                      ...accountForm,
-                                      show: true, type: 'edit', 
-                                      id: info.id,
-                                      username: info.username,
-                                      cellnumber: info.cellnumber,
-                                      password: '',
-                                      confirmPassword: '',
-                                      profile: { ...accountForm.profioe, uri: logo_url + info.profile.name },
-                                      workerHours: info.hours
-                                    })
-                                  } else { // others can only edit other's hours
-                                    setAccountform({ 
-                                      ...accountForm, 
-                                      show: true, type: 'edit', editType: 'hours', 
-                                      id: info.id, workerHours: info.hours
-                                    })
-                                  }
-                                }}>
-                                  <Text style={styles.accountEditTouchHeader}>Change {ownerId === info.id ? " Info (your)" : " hours"}</Text>
-                                </TouchableOpacity>
-                              </View>
-                              {isOwner == true && (
-                                <View style={styles.column}>
-                                  <TouchableOpacity onPress={() => deleteTheOwner(info.id)}>
-                                    <AntDesign color="black" name="closecircleo" size={wsize(7)}/>
-                                  </TouchableOpacity>
-                                </View>
-                              )}
-                            </>
-                          )}
-                        </View>
-                      </View>
-                    ))}
-                  </View>
-  								:
-                  <TouchableOpacity style={styles.editButton} onPress={() => setEdittype('users')}>
-                    <Text style={styles.editButtonHeader}>Edit Stylist(s) Info</Text>
-                  </TouchableOpacity>
-  							:
-                <View style={styles.loading}>
-                  <ActivityIndicator color="black" size="small"/>
-                </View>
+              <TouchableOpacity style={styles.editButton} onPress={() => setEditinfo({ ...editInfo, show: true, type: 'users' })}>
+                <Text style={styles.editButtonHeader}>Edit Stylist(s) Info</Text>
+              </TouchableOpacity>
 						)}
 
             {((type == "hair" || type == "nail") && isOwner == true) && (
-              !receiveTypeloading ? 
-                editType == "receivetype" ? 
-                  <View style={styles.receiveTypesBox}>
-                    <Text style={styles.receiveTypesHeader}>How do you want to receive appointments</Text>
-
-                    <View style={styles.receiveTypes}>
-                      <TouchableOpacity style={[styles.receiveType, { backgroundColor: locationReceivetype == 'stylist' ? 'black' : 'white' }]} onPress={() => setTheReceiveType('stylist')}>
-                        <Text style={[styles.receiveTypeHeader, { color: locationReceivetype == 'stylist' ? 'white' : 'black' }]}>By each stylist</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity style={[styles.receiveType, { backgroundColor: locationReceivetype == 'computer' ? 'black' : 'white' }]} onPress={() => setTheReceiveType('computer')}>
-                        <Text style={[styles.receiveTypeHeader, { color: locationReceivetype == 'computer' ? 'white' : 'black' }]}>By main computer</Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                  :
-                  <TouchableOpacity style={styles.editButton} onPress={() => setEdittype('receivetype')}>
-                    <Text style={styles.editButtonHeader}>Edit Receive Type</Text>
-                  </TouchableOpacity>
-                :
-                <View style={styles.loading}>
-                  <ActivityIndicator color="black" size="small"/>
-                </View>
+              <TouchableOpacity style={styles.editButton} onPress={() => setEditinfo({ ...editInfo, show: true, type: 'receivetype' })}>
+                <Text style={styles.editButtonHeader}>Edit Receive Type</Text>
+              </TouchableOpacity>
             )}
 					</View>
 				</ScrollView>
@@ -2037,6 +1628,7 @@ export default function Settings(props) {
                                 workerHours: [], editHours: false,
                                 errorMsg: ""
                               })
+                              setEditinfo({ ...editInfo, show: true })
                             }}>
                               <Text style={styles.accountformSubmitHeader}>Cancel</Text>
                             </TouchableOpacity>
@@ -2414,6 +2006,422 @@ export default function Settings(props) {
             </SafeAreaView>
           </Modal>
         )}
+        {editInfo.show && (
+          <Modal transparent={true}>
+            <SafeAreaView style={styles.editInfoBox}>
+              <View style={
+                editInfo.type == 'information' ? 
+                  styles.editInfoInformationContainer 
+                  :
+                  editInfo.type == 'hours' ? 
+                    styles.editInfoHoursContainer
+                    :
+                    editInfo.type == 'users' ? 
+                      styles.editInfoUsersContainer
+                      :
+                      styles.editInfoReceiveTypeContainer
+              }>
+                <ScrollView style={{ height: '100%', width: '100%' }}>
+                  <View style={{ alignItems: 'center' }}>
+                    <View style={{ alignItems: 'center' }}>
+                      <TouchableOpacity style={styles.editInfoClose} onPress={() => setEditinfo({ ...editInfo, show: false, type: '' })}>
+                        <AntDesign name="closecircleo" size={30}/>
+                      </TouchableOpacity>
+                    </View>
+
+                    {editInfo.type == 'information' && (
+                      <>
+                        {locationInfo == '' && (
+                          <>
+                            <TouchableOpacity style={[styles.locationActionOption, { width: width * 0.5 }]} disabled={loading} onPress={() => markLocation()}>
+                              <Text style={styles.locationActionOptionHeader}>Mark your location</Text>
+                            </TouchableOpacity>
+
+                            <Text style={styles.header}>Or</Text>
+
+                            <TouchableOpacity style={[styles.locationAction, { width: width * 0.6 }]} disabled={loading} onPress={() => {
+                              setLocationinfo('away')
+                              setErrormsg()
+                            }}>
+                              <Text style={styles.locationActionHeader}>Edit address instead</Text>
+                            </TouchableOpacity>
+                          </>
+                        )}
+
+                        {locationInfo == 'destination' && (
+                          <View style={{ alignItems: 'center', width: '100%' }}>
+                            <Text style={styles.locationHeader}>
+                              Your {(type == 'hair' || type == 'nail') ? type + ' salon' : type} is located at
+                            </Text>
+                            {(locationCoords.longitude && locationCoords.latitude) ? 
+                              <>
+                                <MapView
+                                  region={{
+                                    longitude: locationCoords.longitude,
+                                    latitude: locationCoords.latitude,
+                                    latitudeDelta: 0.003,
+                                    longitudeDelta: 0.003
+                                  }}
+                                  scrollEnabled={false}
+                                  zoomEnabled={false}
+                                  style={{ borderRadius: width * 0.4 / 2, height: width * 0.4, width: width * 0.4 }}
+                                >
+                                  <Marker coordinate={{ longitude: locationCoords.longitude, latitude: locationCoords.latitude }}/>
+                                </MapView>
+                                <Text style={styles.locationAddressHeader}>{locationCoords.address}</Text>
+                              </>
+                              :
+                              <ActivityIndicator color="black" size="small"/>
+                            }
+
+                            <Text style={[styles.locationHeader, { marginVertical: 10 }]}>Or</Text>
+
+                            <TouchableOpacity style={styles.locationActionOption} onPress={() => {
+                              setLocationcoords({ longitude: null, latitude: null })
+                              setLocationinfo('away')
+                            }}>
+                              <Text style={styles.locationActionOptionHeader}>Enter address instead</Text>
+                            </TouchableOpacity>
+                          </View>
+                        )}
+
+                        {locationInfo == 'away' && (
+                          <>
+                            <TouchableOpacity style={[styles.locationActionOption, { width: width * 0.5 }]} disabled={loading} onPress={() => markLocation()}>
+                              <Text style={styles.locationActionOptionHeader}>Mark your location</Text>
+                            </TouchableOpacity>
+
+                            <Text style={styles.header}>Or</Text>
+
+                            <Text style={styles.header}>Edit Address</Text>
+
+                            <View style={styles.inputsBox}>
+                              <View style={styles.inputContainer}>
+                                <Text style={styles.inputHeader}>{(type == 'hair' || type == 'nail') ? type + ' salon' : type}'s name:</Text>
+                                <TextInput style={styles.input} onChangeText={(storeName) => setStorename(storeName)} value={storeName} autoCorrect={false}/>
+                              </View>
+                              <View style={styles.inputContainer}>
+                                <Text style={styles.inputHeader}>{(type == 'hair' || type == 'nail') ? type + ' salon' : type}'s Phone number:</Text>
+                                <TextInput style={styles.input} onChangeText={(num) => setPhonenumber(displayPhonenumber(phonenumber, num, () => Keyboard.dismiss()))} value={phonenumber} keyboardType="numeric" autoCorrect={false}/>
+                              </View>
+                              <View style={styles.inputContainer}>
+                                <Text style={styles.inputHeader}>{(type == 'hair' || type == 'nail') ? type + ' salon' : type}'s address #1:</Text>
+                                <TextInput style={styles.input} onChangeText={(addressOne) => setAddressone(addressOne)} value={addressOne} autoCorrect={false}/>
+                              </View>
+                              <View style={styles.inputContainer}>
+                                <Text style={styles.inputHeader}>{(type == 'hair' || type == 'nail') ? type + ' salon' : type}'s address #2:</Text>
+                                <TextInput style={styles.input} onChangeText={(addressTwo) => setAddresstwo(addressTwo)} value={addressTwo} autoCorrect={false}/>
+                              </View>
+                              <View style={styles.inputContainer}>
+                                <Text style={styles.inputHeader}>City:</Text>
+                                <TextInput style={styles.input} onChangeText={(city) => setCity(city)} value={city} keyboardType="numeric" autoCorrect={false}/>
+                              </View>
+                              <View style={styles.inputContainer}>
+                                <Text style={styles.inputHeader}>Province:</Text>
+                                <TextInput style={styles.input} onChangeText={(province) => setProvince(province)} value={province} keyboardType="numeric" autoCorrect={false}/>
+                              </View>
+                              <View style={styles.inputContainer}>
+                                <Text style={styles.inputHeader}>Postal Code:</Text>
+                                <TextInput style={styles.input} onChangeText={(postalcode) => setPostalcode(postalcode)} value={postalcode} keyboardType="numeric" autoCorrect={false}/>
+                              </View>
+
+                              {errorMsg ? <Text style={styles.errorMsg}>{errorMsg}</Text> : null }
+                            </View>
+                          </>
+                        )}
+
+                        <View style={[styles.cameraContainer, { marginVertical: 20 }]}>
+                          <Text style={styles.inputHeader}>Store Logo</Text>
+
+                          {logo.uri ? (
+                            <>
+                              <Image style={resizePhoto(logo, (width * 0.7))} source={{ uri: logo.uri }}/>
+
+                              <TouchableOpacity style={styles.cameraAction} onPress={() => {
+                                allowCamera()
+                                setLogo({ ...logo, uri: '' })
+                              }}>
+                                <Text style={styles.cameraActionHeader}>Cancel</Text>
+                              </TouchableOpacity>
+                            </>
+                          ) : (
+                            <>
+                              {!choosing && (
+                                <>
+                                  <Camera 
+                                    style={styles.camera} 
+                                    type={camType} 
+                                    ref={r => {setCamcomp(r)}}
+                                    ratio="1:1"
+                                  />
+
+                                  <View style={{ alignItems: 'center', marginVertical: 10 }}>
+                                    <Ionicons name="camera-reverse-outline" size={wsize(7)} onPress={() => setCamtype(camType == 'back' ? 'front' : 'back')}/>
+                                  </View>
+                                </>
+                              )}
+
+                              <View style={styles.cameraActions}>
+                                <TouchableOpacity style={[styles.cameraAction, { opacity: logo.loading ? 0.5 : 1 }]} disabled={logo.loading} onPress={snapPhoto.bind(this)}>
+                                  <Text style={styles.cameraActionHeader}>Take this photo</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity style={[styles.cameraAction, { opacity: logo.loading ? 0.5 : 1 }]} disabled={logo.loading} onPress={() => {
+                                  allowChoosing()
+                                  choosePhoto()
+                                }}>
+                                  <Text style={styles.cameraActionHeader}>Choose from phone</Text>
+                                </TouchableOpacity>
+                              </View>
+                            </>
+                          )}  
+                        </View>
+
+                        <TouchableOpacity style={styles.updateButton} disabled={loading} onPress={() => updateYourLocation()}>
+                          <Text style={styles.updateButtonHeader}>Save</Text>
+                        </TouchableOpacity>
+                      </>
+                    )}
+
+                    {editInfo.type == 'hours' && (
+                      <>
+                        <Text style={styles.header}>
+                          Edit 
+                          {(type === "hair" || type === "nail") && " Salon "} 
+                          {type === "restaurant" && " Restaurant "}
+                          {type === "store" && " Store "}
+                          Hour(s)
+                        </Text>
+
+                        {days.map((info, index) => (
+                          <View key={index} style={styles.workerHour}>
+                            {info.close == false ? 
+                              <>
+                                <View style={{ opacity: info.close ? 0.1 : 1, width: '100%' }}>
+                                  <Text style={styles.workerHourHeader}><Text style={{ fontWeight: '300' }}>Open on</Text> {info.header}</Text>
+                                  <View style={styles.timeSelectionContainer}>
+                                    <View style={styles.timeSelection}>
+                                      <View style={styles.selection}>
+                                        <TouchableOpacity onPress={() => updateTime(index, "hour", "up", true)}>
+                                          <AntDesign name="up" size={wsize(7)}/>
+                                        </TouchableOpacity>
+                                        <TextInput style={styles.selectionHeader} onChangeText={(hour) => {
+                                          const newDays = [...days]
+
+                                          newDays[index].opentime["hour"] = hour.toString()
+
+                                          setDays(newDays)
+                                        }} keyboardType="numeric" maxLength={2} value={info.opentime.hour}/>
+                                        <TouchableOpacity onPress={() => updateTime(index, "hour", "down", true)}>
+                                          <AntDesign name="down" size={wsize(7)}/>
+                                        </TouchableOpacity>
+                                      </View>
+                                      <View style={styles.column}>
+                                        <Text style={styles.selectionDiv}>:</Text>
+                                      </View>
+                                      <View style={styles.selection}>
+                                        <TouchableOpacity onPress={() => updateTime(index, "minute", "up", true)}>
+                                          <AntDesign name="up" size={wsize(7)}/>
+                                        </TouchableOpacity>
+                                        <TextInput style={styles.selectionHeader} onChangeText={(minute) => {
+                                          const newDays = [...days]
+
+                                          newDays[index].opentime["minute"] = minute.toString()
+
+                                          setDays(newDays)
+                                        }} keyboardType="numeric" maxLength={2} value={info.opentime.minute}/>
+                                        <TouchableOpacity onPress={() => updateTime(index, "minute", "down", true)}>
+                                          <AntDesign name="down" size={wsize(7)}/>
+                                        </TouchableOpacity>
+                                      </View>
+                                      <View style={styles.selection}>
+                                        <TouchableOpacity onPress={() => updateTime(index, "period", "up", true)}>
+                                          <AntDesign name="up" size={wsize(7)}/>
+                                        </TouchableOpacity>
+                                        <Text style={styles.selectionHeader}>{info.opentime.period}</Text>
+                                        <TouchableOpacity onPress={() => updateTime(index, "period", "down", true)}>
+                                          <AntDesign name="down" size={wsize(7)}/>
+                                        </TouchableOpacity>
+                                      </View>
+                                    </View>
+                                    <View style={styles.timeSelectionColumn}>
+                                      <Text style={styles.timeSelectionHeader}>To</Text>
+                                    </View>
+                                    <View style={styles.timeSelection}>
+                                      <View style={styles.selection}>
+                                        <TouchableOpacity onPress={() => updateTime(index, "hour", "up", false)}>
+                                          <AntDesign name="up" size={wsize(7)}/>
+                                        </TouchableOpacity>
+                                        <TextInput style={styles.selectionHeader} onChangeText={(hour) => {
+                                          const newDays = [...days]
+
+                                          newDays[index].closetime["hour"] = hour.toString()
+
+                                          setDays(newDays)
+                                        }} keyboardType="numeric" maxLength={2} value={info.closetime.hour}/>
+                                        <TouchableOpacity onPress={() => updateTime(index, "hour", "down", false)}>
+                                          <AntDesign name="down" size={wsize(7)}/>
+                                        </TouchableOpacity>
+                                      </View>
+                                      <View style={styles.column}>
+                                        <Text style={styles.selectionDiv}>:</Text>
+                                      </View>
+                                      <View style={styles.selection}>
+                                        <TouchableOpacity onPress={() => updateTime(index, "minute", "up", false)}>
+                                          <AntDesign name="up" size={wsize(7)}/>
+                                        </TouchableOpacity>
+                                        <TextInput style={styles.selectionHeader} onChangeText={(minute) => {
+                                          const newDays = [...days]
+
+                                          newDays[index].closetime["minute"] = minute.toString()
+
+                                          setDays(newDays)
+                                        }} keyboardType="numeric" maxLength={2} value={info.closetime.minute}/>
+                                        <TouchableOpacity onPress={() => updateTime(index, "minute", "down", false)}>
+                                          <AntDesign name="down" size={wsize(7)}/>
+                                        </TouchableOpacity>
+                                      </View>
+                                      <View style={styles.selection}>
+                                        <TouchableOpacity onPress={() => updateTime(index, "period", "up", false)}>
+                                          <AntDesign name="up" size={wsize(7)}/>
+                                        </TouchableOpacity>
+                                        <Text style={styles.selectionHeader}>{info.closetime.period}</Text>
+                                        <TouchableOpacity onPress={() => updateTime(index, "period", "down", false)}>
+                                          <AntDesign name="down" size={wsize(7)}/>
+                                        </TouchableOpacity>
+                                      </View>
+                                    </View>
+                                  </View>
+                                </View>
+                                <TouchableOpacity style={styles.workerTouch} onPress={() => {
+                                  const newDays = [...days]
+
+                                  newDays[index].close = true
+
+                                  setDays(newDays)
+                                }}>
+                                  <Text style={styles.workerTouchHeader}>Change to not open</Text>
+                                </TouchableOpacity>
+                              </>
+                              :
+                              <>
+                                <Text style={styles.workerHourHeader}><Text style={{ fontWeight: '300' }}>Not open on</Text> {info.header}</Text>
+
+                                <TouchableOpacity style={styles.workerTouch} onPress={() => {
+                                  const newDays = [...days]
+
+                                  newDays[index].close = false
+
+                                  setDays(newDays)
+                                }}>
+                                  <Text style={styles.workerTouchHeader}>Change to open</Text>
+                                </TouchableOpacity>
+                              </>
+                            }
+                          </View>
+                        ))}
+
+                        <TouchableOpacity style={styles.updateButton} disabled={loading} onPress={() => updateLocationHours()}>
+                          <Text style={styles.updateButtonHeader}>Save</Text>
+                        </TouchableOpacity>
+                      </>
+                    )}
+
+                    {editInfo.type == 'users' && (
+                      <View style={styles.accountHolders}>
+                        <Text style={styles.header}>Edit Stylist(s)</Text>
+
+                        {isOwner == true && (
+                          <TouchableOpacity style={styles.accountHoldersAdd} onPress={() => {
+                            setAccountform({
+                              ...accountForm,
+                              show: true,
+                              type: 'add',
+                              username: ownerRegisterInfo.username,
+                              cellnumber: ownerRegisterInfo.cellnumber,
+                              currentPassword: ownerRegisterInfo.password, 
+                              newPassword: ownerRegisterInfo.password, 
+                              confirmPassword: ownerRegisterInfo.password,
+                              workerHours: [...hoursRange]
+                            })
+                            setEditinfo({ ...editInfo, show: false })
+                          }}>
+                            <Text style={styles.accountHoldersAddHeader}>Add a new stylist</Text>
+                          </TouchableOpacity>
+                        )}
+
+                        {accountHolders.map((info, index) => (
+                          <View key={info.key} style={styles.account}>
+                            <View style={styles.column}>
+                              <Text style={styles.accountHeader}>#{index + 1}:</Text>
+                            </View>
+
+                            <View style={styles.accountEdit}>
+                              <View style={styles.column}>
+                                <Text style={styles.accountEditHeader}>{info.username}</Text>
+                              </View>
+
+                              {(type == "hair" || type == "nail") && (
+                                <>
+                                  <View style={styles.column}>
+                                    <TouchableOpacity style={styles.accountEditTouch} onPress={() => {
+                                      if (info.id == ownerId) {
+                                        setAccountform({
+                                          ...accountForm,
+                                          show: true, type: 'edit', 
+                                          id: info.id,
+                                          username: info.username,
+                                          cellnumber: info.cellnumber,
+                                          password: '',
+                                          confirmPassword: '',
+                                          profile: { ...accountForm.profioe, uri: logo_url + info.profile.name },
+                                          workerHours: info.hours
+                                        })
+                                      } else { // others can only edit other's hours
+                                        setAccountform({ 
+                                          ...accountForm, 
+                                          show: true, type: 'edit', editType: 'hours', 
+                                          id: info.id, workerHours: info.hours
+                                        })
+                                      }
+                                    }}>
+                                      <Text style={styles.accountEditTouchHeader}>Change {ownerId === info.id ? " Info (your)" : " hours"}</Text>
+                                    </TouchableOpacity>
+                                  </View>
+                                  {isOwner == true && (
+                                    <View style={styles.column}>
+                                      <TouchableOpacity onPress={() => deleteTheOwner(info.id)}>
+                                        <AntDesign color="black" name="closecircleo" size={wsize(7)}/>
+                                      </TouchableOpacity>
+                                    </View>
+                                  )}
+                                </>
+                              )}
+                            </View>
+                          </View>
+                        ))}
+                      </View>
+                    )}
+
+                    {editInfo.type == 'receivetype' && (
+                      <View style={styles.receiveTypesBox}>
+                        <Text style={styles.receiveTypesHeader}>How do you want to receive appointments</Text>
+
+                        <View style={styles.receiveTypes}>
+                          <TouchableOpacity style={[styles.receiveType, { backgroundColor: locationReceivetype == 'stylist' ? 'black' : 'white' }]} onPress={() => setTheReceiveType('stylist')}>
+                            <Text style={[styles.receiveTypeHeader, { color: locationReceivetype == 'stylist' ? 'white' : 'black' }]}>By each stylist</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity style={[styles.receiveType, { backgroundColor: locationReceivetype == 'computer' ? 'black' : 'white' }]} onPress={() => setTheReceiveType('computer')}>
+                            <Text style={[styles.receiveTypeHeader, { color: locationReceivetype == 'computer' ? 'white' : 'black' }]}>By main computer</Text>
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                    )}
+                  </View>
+                </ScrollView>
+              </View>
+            </SafeAreaView>
+          </Modal>
+        )}
         {(logo.loading || loading || accountForm.loading) && <Modal transparent={true}><Loadingprogress/></Modal>}
 			</View>
 		</SafeAreaView>
@@ -2433,52 +2441,6 @@ const styles = StyleSheet.create({
   locationActionHeader: { fontSize: wsize(5), textAlign: 'center' },
 
 	header: { fontFamily: 'appFont', fontSize: wsize(7), marginTop: 20, textAlign: 'center' },
-
-	inputsBox: { paddingHorizontal: 20, width: '100%' },
-	inputContainer: { marginVertical: 20 },
-	inputHeader: { fontFamily: 'appFont', fontSize: wsize(5) },
-	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), padding: 5 },
-	cameraContainer: { alignItems: 'center', width: '100%' },
-	cameraHeader: { fontSize: wsize(4), fontWeight: 'bold', paddingVertical: 5 },
-	camera: { height: wsize(80), width: wsize(80) },
-	cameraActions: { flexDirection: 'row' },
-	cameraAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginBottom: 50, margin: 5, padding: 5, width: wsize(30) },
-	cameraActionHeader: { fontSize: wsize(4), textAlign: 'center' },
-
-	updateButton: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 10 },
-	updateButtonHeader: { fontFamily: 'appFont', fontSize: wsize(4) },
-
-  workerHour: { alignItems: 'center', backgroundColor: 'rgba(127, 127, 127, 0.3)', borderRadius: 10, marginTop: 40, marginHorizontal: '5%', padding: '2%', width: '90%' },
-  workerHourHeader: { fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
-  timeSelectionContainer: { flexDirection: 'row', width: '100%' },
-  workerHourActions: { flexDirection: 'row', justifyContent: 'space-around' },
-  workerHourAction: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: wsize(35) },
-  workerHourActionHeader: { fontSize: wsize(4), textAlign: 'center' },
-  timeSelectionColumn: { flexDirection: 'column', justifyContent: 'space-around', width: '10%' },
-  timeSelection: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 3, flexDirection: 'row', justifyContent: 'space-around', width: '45%' },
-  timeSelectionHeader: { fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
-  selection: { alignItems: 'center' },
-  selectionHeader: { fontSize: wsize(6), textAlign: 'center' },
-  selectionDiv: { fontSize: wsize(6) },
-  workerTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5 },
-  workerTouchHeader: { fontSize: wsize(7), textAlign: 'center' },
-
-	accountHolders: { alignItems: 'center', marginHorizontal: 10, marginTop: 20 },
-	accountHoldersHeader: { fontFamily: 'appFont', fontSize: wsize(30), textAlign: 'center' },
-	accountHoldersAdd: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 3, padding: 5 },
-	accountHoldersAddHeader: { fontSize: wsize(5) },
-	account: { flexDirection: 'row', justifyContent: 'space-between', marginVertical: 10 },
-	accountHeader: { fontSize: wsize(5), fontWeight: 'bold', padding: 5 },
-	accountEdit: { backgroundColor: 'rgba(127, 127, 127, 0.3)', borderRadius: 4, flexDirection: 'row', justifyContent: 'space-around', width: '80%' },
-	accountEditHeader: { fontSize: wsize(5), paddingVertical: 8, textAlign: 'center' },
-	accountEditTouch: { borderRadius: 2, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: wsize(30) },
-  accountEditTouchHeader: { fontSize: wsize(4), textAlign: 'center' },
-	
-	receiveTypesBox: { alignItems: 'center', marginHorizontal: 10, marginTop: 20 },
-  receiveTypesHeader: { fontWeight: 'bold' },
-  receiveTypes: { flexDirection: 'row', justifyContent: 'space-between' },
-  receiveType: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: 150 },
-  receiveTypeHeader: { textAlign: 'center' },
 
   editButton: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 30, padding: 5, width: wsize(80) },
 	editButtonHeader: { fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
@@ -2510,6 +2472,59 @@ const styles = StyleSheet.create({
   deleteOwnerActions: { flexDirection: 'row', justifyContent: 'space-around' },
   deleteOwnerAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 10, width: wsize(30) },
   deleteOwnerActionHeader: { fontSize: wsize(4), textAlign: 'center' },
+
+  editInfoBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
+  editInfoInformationContainer: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '90%', justifyContent: 'space-between', paddingVertical: 20, width: '90%' },
+  editInfoHoursContainer: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '90%', justifyContent: 'space-between', paddingVertical: 20, width: '90%' },
+  editInfoUsersContainer: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-between', paddingVertical: 20, width: '90%' },
+  editInfoReceiveTypeContainer: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-between', paddingVertical: 20, width: '90%' },
+  editInfoClose: { height: 30, width: 30 },
+
+  inputsBox: { paddingHorizontal: 20, width: '100%' },
+  inputContainer: { marginVertical: 20 },
+  inputHeader: { fontFamily: 'appFont', fontSize: wsize(5) },
+  input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), padding: 5 },
+  cameraContainer: { alignItems: 'center', width: '80%' },
+  camera: { height: wsize(80), width: wsize(80) },
+  cameraHeader: { fontSize: wsize(4), fontWeight: 'bold', paddingVertical: 5 },
+  cameraActions: { flexDirection: 'row' },
+  cameraAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginBottom: 50, margin: 5, padding: 5, width: wsize(30) },
+  cameraActionHeader: { fontSize: wsize(4), textAlign: 'center' },
+
+  workerHour: { alignItems: 'center', backgroundColor: 'rgba(127, 127, 127, 0.3)', borderRadius: 10, marginTop: 40, marginHorizontal: '5%', padding: '2%', width: '90%' },
+  workerHourHeader: { fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
+  timeSelectionContainer: { flexDirection: 'row', width: '100%' },
+  workerHourActions: { flexDirection: 'row', justifyContent: 'space-around' },
+  workerHourAction: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: wsize(35) },
+  workerHourActionHeader: { fontSize: wsize(4), textAlign: 'center' },
+  timeSelectionColumn: { flexDirection: 'column', justifyContent: 'space-around', width: '10%' },
+  timeSelection: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 3, flexDirection: 'row', justifyContent: 'space-around', width: '45%' },
+  timeSelectionHeader: { fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
+  selection: { alignItems: 'center' },
+  selectionHeader: { fontSize: wsize(6), textAlign: 'center' },
+  selectionDiv: { fontSize: wsize(6) },
+  workerTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5 },
+  workerTouchHeader: { fontSize: wsize(7), textAlign: 'center' },
+
+  accountHolders: { alignItems: 'center', marginHorizontal: 10, marginTop: 20 },
+  accountHoldersHeader: { fontFamily: 'appFont', fontSize: wsize(30), textAlign: 'center' },
+  accountHoldersAdd: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 3, padding: 5 },
+  accountHoldersAddHeader: { fontSize: wsize(5) },
+  account: { flexDirection: 'row', justifyContent: 'space-between', marginVertical: 10 },
+  accountHeader: { fontSize: wsize(5), fontWeight: 'bold', padding: 5 },
+  accountEdit: { backgroundColor: 'rgba(127, 127, 127, 0.3)', borderRadius: 4, flexDirection: 'row', justifyContent: 'space-around', width: '80%' },
+  accountEditHeader: { fontSize: wsize(5), paddingVertical: 8, textAlign: 'center' },
+  accountEditTouch: { borderRadius: 2, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: wsize(30) },
+  accountEditTouchHeader: { fontSize: wsize(4), textAlign: 'center' },
+  
+  receiveTypesBox: { alignItems: 'center', marginHorizontal: 10, marginTop: 20 },
+  receiveTypesHeader: { fontWeight: 'bold' },
+  receiveTypes: { flexDirection: 'row', justifyContent: 'space-between' },
+  receiveType: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: 150 },
+  receiveTypeHeader: { textAlign: 'center' },
+
+  updateButton: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 10 },
+  updateButtonHeader: { fontFamily: 'appFont', fontSize: wsize(4) },
 
   row: { flexDirection: 'row', justifyContent: 'space-around' },
   loading: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
