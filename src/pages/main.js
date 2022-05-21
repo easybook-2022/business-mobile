@@ -256,7 +256,7 @@ export default function Main(props) {
 
           Speech.speak(message, {
             rate: 0.7,
-            onDone: () => startVoice()
+            onDone: () => Constants.isDevice ? startVoice() : {}
           })
 
           break;
@@ -488,34 +488,36 @@ export default function Main(props) {
 	}, [appointments.length, cartOrderers.length])
 
   useEffect(() => {
-    Voice.onSpeechPartialResults = (e) => {
-      if (e.value.toString().toLowerCase().includes("minute")) {
-        stopSpeech()
+    if (Constants.isDevice) {
+      Voice.onSpeechPartialResults = (e) => {
+        if (e.value.toString().toLowerCase().includes("minute")) {
+          stopSpeech()
 
-        let data = { type: "setWaitTime", ordernumber: speakInfo.orderNumber, waitTime: e.value.toString() }
+          let data = { type: "setWaitTime", ordernumber: speakInfo.orderNumber, waitTime: e.value.toString() }
 
-        setWaitTime(data)
-          .then((res) => {
-            if (res.status == 200) {
-              return res.data
-            }
-          })
-          .then((res) => {
-            if (res) {
-              data = { ...data, receiver: res.receiver }
-              socket.emit("socket/setWaitTime", data)
-            }
-          })
-          .catch((err) => {
-            if (err.response && err.response.status == 400) {
-              const { errormsg, status } = err.response.data
-            }
-          })
+          setWaitTime(data)
+            .then((res) => {
+              if (res.status == 200) {
+                return res.data
+              }
+            })
+            .then((res) => {
+              if (res) {
+                data = { ...data, receiver: res.receiver }
+                socket.emit("socket/setWaitTime", data)
+              }
+            })
+            .catch((err) => {
+              if (err.response && err.response.status == 400) {
+                const { errormsg, status } = err.response.data
+              }
+            })
+        }
+      };
+
+      return () => {
+        Voice.destroy().then(Voice.removeAllListeners);
       }
-    };
-
-    return () => {
-      Voice.destroy().then(Voice.removeAllListeners);
     }
   }, [speakInfo.orderNumber])
 
@@ -556,7 +558,7 @@ export default function Main(props) {
                           </TouchableOpacity>
                         </View>
                         <View style={styles.column}>
-                          <TouchableOpacity style={styles.scheduleAction} onPress={() => props.navigation.navigate("booktime", { scheduleid: item.id, serviceinfo: item.name })}>
+                          <TouchableOpacity style={styles.scheduleAction} onPress={() => props.navigation.navigate("booktime", { scheduleid: item.id, serviceid: item.serviceid, serviceinfo: item.name })}>
                             <Text style={styles.scheduleActionHeader}>Pick another time for client</Text>
                           </TouchableOpacity>
                         </View>

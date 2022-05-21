@@ -36,6 +36,7 @@ export default function Locationsetup({ navigation }) {
 	const [cameraPermission, setCamerapermission] = useState(null);
 	const [pickingPermission, setPickingpermission] = useState(null);
 	const [locationPermission, setLocationpermission] = useState(null)
+  const [newBusiness, setNewbusiness] = useState(null)
 
 	const [locationInfo, setLocationinfo] = useState('')
 	const [camComp, setCamcomp] = useState(null)
@@ -66,7 +67,6 @@ export default function Locationsetup({ navigation }) {
     setLoading(true)
 
 		const ownerid = await AsyncStorage.getItem("ownerid")
-    const newBusiness = await AsyncStorage.getItem("newBusiness")
     const hours = {}
 		let longitude, latitude, invalid = false
 
@@ -169,11 +169,20 @@ export default function Locationsetup({ navigation }) {
                 navigation.dispatch(
                   CommonActions.reset({
                     index: 0,
-                    routes: [{ name: "main", params: { firstTime: true } }]
+                    routes: [{ name: "main", params: { firstTime: !newBusiness ? true : false } }]
                   })
                 )
               } else {
-                if (!newBusiness) {
+                if (newBusiness) {
+                  AsyncStorage.setItem("phase", "main")
+
+                  navigation.dispatch(
+                    CommonActions.reset({
+                      index: 0,
+                      routes: [{ name: "main" }]
+                    })
+                  )
+                } else {
                   AsyncStorage.setItem("phase", "register")
 
                   navigation.dispatch(
@@ -545,6 +554,12 @@ export default function Locationsetup({ navigation }) {
       setPickingpermission(true)
     }
 	}
+
+  const initialize = async() => setNewbusiness(await AsyncStorage.getItem("newBusiness"))
+
+  useEffect(() => {
+    initialize()
+  }, [])
   
 	return (
 		<SafeAreaView style={[styles.locationsetup, { opacity: loading ? 0.5 : 1 }]}>
@@ -938,6 +953,17 @@ export default function Locationsetup({ navigation }) {
 
         <View style={styles.bottomNavs}>
           <View style={styles.bottomNavsRow}>
+            {newBusiness && <TouchableOpacity style={styles.bottomNav} onPress={() => {
+              AsyncStorage.removeItem("newBusiness")
+
+              navigation.dispatch(
+                CommonActions.reset({
+                  index: 1,
+                  routes: [{ name: 'list' }]
+                })
+              );
+            }}><Text style={styles.bottomNavHeader}>Cancel</Text></TouchableOpacity>}
+
             <TouchableOpacity style={styles.bottomNav} onPress={() => {
               AsyncStorage.clear()
 

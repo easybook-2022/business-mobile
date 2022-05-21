@@ -39,7 +39,7 @@ export const addOwner = data => {
 	const form = new FormData()
 	const { uri, name, type = "image/jpeg", size } = data.profile
 
-	form.append("ownerid", data.ownerid)
+	form.append("id", data.id)
 	form.append("cellnumber", data.cellnumber)
 	form.append("username", data.username)
 	form.append("password", data.password)

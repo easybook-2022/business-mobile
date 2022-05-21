@@ -84,9 +84,12 @@ export default function Locationslist(props) {
                   })
                 )
               }}>
-                <View style={[resizePhoto(item.logo, wsize(20)), { borderRadius: 40, overflow: 'hidden' }]}>
-                  <Image style={{ height: '100%', width: '100%' }} source={{ uri: logo_url + item.logo.name }}/>
-                </View>
+                {item.logo.name && (
+                  <View style={[resizePhoto(item.logo, wsize(20)), { borderRadius: wsize(20) / 2, overflow: 'hidden' }]}>
+                    <Image style={{ height: '100%', width: '100%' }} source={{ uri: logo_url + item.logo.name }}/>
+                  </View>
+                )}
+
                 <View style={styles.column}>
                   <Text style={styles.locationName}>{item.name}</Text>
                   <Text style={styles.locationAddress}>{item.address}</Text>

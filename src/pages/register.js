@@ -217,7 +217,7 @@ export default function Register(props) {
               props.navigation.dispatch(
                 CommonActions.reset({
                   index: 0,
-                  routes: [{ name: "main" }]
+                  routes: [{ name: "main", params: { firstTime: true } }]
                 })
               )
             }
@@ -725,8 +725,8 @@ export default function Register(props) {
 }
 
 const styles = StyleSheet.create({
-	register: { backgroundColor: 'white', height: '100%', paddingTop: Platform.OS == "ios" ? 0 : Constants.statusBarHeight, width: '100%' },
-	box: { alignItems: 'center', backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
+	register: { backgroundColor: 'white', height: '100%', width: '100%' },
+	box: { alignItems: 'center', backgroundColor: '#EAEAEA', flexDirection: 'column', height: '90%', justifyContent: 'space-between', width: '100%' },
 	boxHeader: { color: 'black', fontFamily: 'appFont', fontSize: wsize(7), fontWeight: 'bold' },
 
 	inputsBox: { alignItems: 'center', height: '90%', width: '100%' },
@@ -741,7 +741,7 @@ const styles = StyleSheet.create({
 	cameraAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: wsize(30) },
 	cameraActionHeader: { fontSize: wsize(4), textAlign: 'center' },
 
-  workerHours: { alignItems: 'center', marginBottom: 50, width: '100%' },
+  workerHours: { alignItems: 'center', marginBottom: 110, width: '100%' },
 
   // select working days
   workerDayHeader: { fontSize: wsize(6) },

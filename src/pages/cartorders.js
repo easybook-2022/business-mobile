@@ -56,7 +56,7 @@ export default function Cartorders(props) {
   const orderIsDone = async() => {
     const time = Date.now()
     const locationid = await AsyncStorage.getItem("locationid")
-    let data = { userid, ordernumber, locationid, type: "orderDone", receiver: ["user" + userid] }
+    const data = { userid, ordernumber, locationid, type: "orderDone", receiver: ["user" + userid] }
 
     setLoading(true)
 

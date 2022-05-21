@@ -116,9 +116,10 @@ export default function Settings(props) {
       }
 
       if (longitude && latitude) {
+        const id = await AsyncStorage.getItem("locationid")
         const time = (Date.now() / 1000).toString().split(".")[0]
         const data = {
-          storeName, phonenumber, addressOne, addressTwo, city, province, postalcode, logo,
+          id, storeName, phonenumber, addressOne, addressTwo, city, province, postalcode, logo,
           longitude, latitude, ownerid: ownerId, time
         }
 
@@ -402,8 +403,9 @@ export default function Settings(props) {
       }
 		})
 
+    const id = await AsyncStorage.getItem("locationid")
 		const { cellnumber, username, newPassword, confirmPassword, profile } = accountForm
-		const data = { ownerid: ownerId, cellnumber, username, password: newPassword, confirmPassword, hours, profile }
+		const data = { id, cellnumber, username, password: newPassword, confirmPassword, hours, profile }
 
 		addOwner(data)
 			.then((res) => {
@@ -729,7 +731,6 @@ export default function Settings(props) {
             closeHour = closeInfo.period == "PM" ? closeHour + 12 : closeHour
 
             currDate = new Date()
-
             calcDate = new Date(currDate.setDate(currDate.getDate() - currDate.getDay() + k)).toUTCString();
             calcDate = calcDate.split(" ")
             calcDate.pop()
@@ -757,7 +758,7 @@ export default function Settings(props) {
 					setCity(city)
 					setProvince(province)
 					setPostalcode(postalcode)
-					setLogo({ ...logo, uri: logo_url + logo.name })
+					setLogo({ ...logo, uri: logo_url + logo.name, size: { width: logo.width, height: logo.height }})
 					setType(type)
           setLocationreceivetype(receiveType)
 					setDays(hours)
@@ -1966,7 +1967,7 @@ export default function Settings(props) {
                         {info.row.map(worker => (
                           <TouchableOpacity key={worker.key} style={styles.worker} onPress={() => selectTheOtherWorker(worker.id)}>
                             <View style={styles.workerProfile}>
-                              <Image style={resizePhoto(worker.profile, wsize(20))} source={{ uri: logo_url + worker.profile.name }}/>
+                              {worker.profile.name && <Image style={resizePhoto(worker.profile, wsize(20))} source={{ uri: logo_url + worker.profile.name }}/>}
                             </View>
                             <Text style={styles.workerUsername}>{worker.username}</Text>
                           </TouchableOpacity>
@@ -1984,7 +1985,7 @@ export default function Settings(props) {
             <SafeAreaView style={styles.deleteOwnerBox}>
               <View style={styles.deleteOwnerContainer}>
                 <View style={styles.deleteOwnerProfile}>
-                  <Image style={resizePhoto(deleteOwnerbox.profile, wsize(40))} source={{ uri: logo_url + deleteOwnerbox.profile.name }}/>
+                  {deleteOwnerbox.profile.name && <Image style={resizePhoto(deleteOwnerbox.profile, wsize(40))} source={{ uri: logo_url + deleteOwnerbox.profile.name }}/>}
                 </View>
                 <Text style={styles.deleteOwnerHeader}>
                   {deleteOwnerbox.username}
@@ -2135,7 +2136,7 @@ export default function Settings(props) {
 
                           {logo.uri ? (
                             <>
-                              <Image style={resizePhoto(logo, (width * 0.7))} source={{ uri: logo.uri }}/>
+                              <Image style={resizePhoto(logo.size, (width * 0.7))} source={{ uri: logo.uri }}/>
 
                               <TouchableOpacity style={styles.cameraAction} onPress={() => {
                                 allowCamera()
@@ -2383,6 +2384,8 @@ export default function Settings(props) {
                                           id: info.id, workerHours: info.hours
                                         })
                                       }
+
+                                      setEditinfo({ ...editInfo, show: false })
                                     }}>
                                       <Text style={styles.accountEditTouchHeader}>Change {ownerId === info.id ? " Info (your)" : " hours"}</Text>
                                     </TouchableOpacity>
@@ -2484,7 +2487,7 @@ const styles = StyleSheet.create({
   inputContainer: { marginVertical: 20 },
   inputHeader: { fontFamily: 'appFont', fontSize: wsize(5) },
   input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), padding: 5 },
-  cameraContainer: { alignItems: 'center', width: '80%' },
+  cameraContainer: { alignItems: 'center', width: '100%' },
   camera: { height: wsize(80), width: wsize(80) },
   cameraHeader: { fontSize: wsize(4), fontWeight: 'bold', paddingVertical: 5 },
   cameraActions: { flexDirection: 'row' },

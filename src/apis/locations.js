@@ -48,6 +48,7 @@ export const updateLocation = data => {
 	const form = new FormData()
 	const { uri, name, type = "image/jpeg", size } = data.logo
 
+  form.append("id", data.id)
 	form.append("storeName", data.storeName)
 	form.append("phonenumber", data.phonenumber)
 	form.append("addressOne", data.addressOne)

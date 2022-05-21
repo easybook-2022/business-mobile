@@ -487,8 +487,9 @@ export default function Booktime(props) {
                           info.id ? 
                             <TouchableOpacity key={info.key} style={[styles.worker, { backgroundColor: (selectedWorkerinfo.worker && selectedWorkerinfo.worker.id == info.id) ? 'rgba(0, 0, 0, 0.3)' : null }]} disabled={selectedWorkerinfo.loading} onPress={() => selectWorker(info.id)}>
                               <View style={styles.workerProfile}>
-                                <Image source={{ uri: logo_url + info.profile.name }} style={resizePhoto(info.profile, wsize(20))}/>
+                                {info.profile.name && <Image source={{ uri: logo_url + info.profile.name }} style={resizePhoto(info.profile, wsize(20))}/>}
                               </View>
+
                               <Text style={styles.workerHeader}>{info.username}</Text>
                             </TouchableOpacity>
                             :

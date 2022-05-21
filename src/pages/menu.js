@@ -134,11 +134,9 @@ export default function Menu(props) {
 				{name ? 
 					<View style={styles.menu}>
 						<View style={{ flexDirection: 'row' }}>
-              {image.name ? 
-                <View style={styles.menuImageHolder}>
-                  <Image style={resizePhoto(image, wsize(10))} source={{ uri: logo_url + image.name }}/>
-                </View>
-              : null }
+              <View style={styles.menuImageHolder}>
+                {image.name && <Image style={resizePhoto(image, wsize(10))} source={{ uri: logo_url + image.name }}/>}
+              </View>
   							
               <View style={styles.column}>
                 <Text style={styles.menuName}>{name} (Menu)</Text>
@@ -502,7 +500,8 @@ export default function Menu(props) {
 				setUploadmenubox({ 
           ...uploadMenubox, 
           uri: `${FileSystem.documentDirectory}/${char}.jpg`, name: `${char}.jpg`, 
-          size: { width: photo.width, height: photo.height }, loading: false
+          size: { width: photo.width, height: photo.height }, loading: false,
+          action: 'choose'
         })
 			})
 		}
@@ -625,7 +624,7 @@ export default function Menu(props) {
 											<View key={info.key} style={styles.menuRow}>
 												{info.row.map(item => (
 													<View key={item.key} style={{ width: width * 0.3 }}>
-														{(item.photo && item.photo.name) && (
+														{item.photo && (
                               <>
                                 <View style={resizePhoto(item.photo, width * 0.3)}>
                                   <Image style={{ height: '100%', width: '100%' }} source={{ uri: logo_url + item.photo.name }}/>
@@ -893,9 +892,11 @@ export default function Menu(props) {
 					{menuPhotooption.show && (
 						<Modal transparent={true}>
 							<SafeAreaView style={styles.menuPhotoOptionContainer}>
-								<View style={resizePhoto(menuPhotooption.info, width * 0.8)}>
-									<Image style={{ height: '100%', width: '100%' }} source={{ uri: logo_url + menuPhotooption.info.name }}/>
-								</View>
+  							{menuPhotooption.info.name && (
+                  <View style={resizePhoto(menuPhotooption.info, width * 0.8)}>
+                    <Image style={{ height: '100%', width: '100%' }} source={{ uri: logo_url + menuPhotooption.info.name }}/>
+                  </View>
+                )}
 
 								{menuPhotooption.action == "delete" ? 
 									<View style={styles.menuPhotoOptionBottomContainer}>
@@ -928,11 +929,9 @@ export default function Menu(props) {
 									<Text style={styles.menuInfoBoxHeader}>Delete menu confirmation</Text>
 
 									<View style={{ alignItems: 'center' }}>
-  									{removeMenuinfo.image.name ? 
-                      <View style={styles.menuInfoImageHolder}>
-                        <Image source={{ uri: logo_url + removeMenuinfo.image.name }} style={resizePhoto(removeMenuinfo.image, wsize(50))}/>
-                      </View>
-                    : null}
+                    <View style={styles.menuInfoImageHolder}>
+                      {removeMenuinfo.image.name && <Image source={{ uri: logo_url + removeMenuinfo.image.name }} style={resizePhoto(removeMenuinfo.image, wsize(50))}/>}
+                    </View>
 										<Text style={styles.menuInfoName}>{removeMenuinfo.name}</Text>
 									</View>
 
@@ -956,11 +955,9 @@ export default function Menu(props) {
 								<View style={styles.productInfoBox}>
 									<Text style={styles.productInfoBoxHeader}>Delete product confirmation</Text>
 
-  								{removeProductinfo.image.name ? 
-                    <View style={styles.productInfoImageHolder}>
-                      <Image source={{ uri: logo_url + removeProductinfo.image.name }} style={resizePhoto(removeProductinfo.image, wsize(50))}/>
-                    </View>
-                  : null }
+                  <View style={styles.productInfoImageHolder}>
+                    {removeProductinfo.image.name && <Image source={{ uri: logo_url + removeProductinfo.image.name }} style={resizePhoto(removeProductinfo.image, wsize(50))}/>}
+                  </View>
 									<Text style={styles.productInfoName}>{removeProductinfo.name}</Text>
 
 									<View>
@@ -1011,11 +1008,10 @@ export default function Menu(props) {
 								<View style={styles.serviceInfoBox}>
 									<Text style={styles.serviceInfoBoxHeader}>Delete service confirmation</Text>
 
-  								{removeServiceinfo.image.name ? 
-                    <View style={styles.serviceInfoImageHolder}>
-                      <Image source={{ uri: logo_url + removeServiceinfo.image.name }} style={resizePhoto(removeServiceinfo.image, wsize(50))}/>
-                    </View>
-                  : null }
+                  <View style={styles.serviceInfoImageHolder}>
+                    {removeServiceinfo.image.name && <Image source={{ uri: logo_url + removeServiceinfo.image.name }} style={resizePhoto(removeServiceinfo.image, wsize(50))}/>}
+                  </View>
+
 									<Text style={styles.serviceInfoName}>{removeServiceinfo.name}</Text>
 									<Text style={styles.serviceInfoPrice}><Text style={{ fontWeight: 'bold' }}>Price: </Text>$ {(removeServiceinfo.price).toFixed(2)}</Text>
 									<Text style={styles.serviceInfoHeader}>Are you sure you want to delete this service</Text>
