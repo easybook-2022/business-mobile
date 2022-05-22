@@ -24,6 +24,13 @@
           "microphonePermission": "EasyGO (Business) uses microphone to enable users to reply to clients/customers",
           "speechRecognitionPermission": "EasyGO (Business) securely recognize user speech to reply to clients/customers"
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification.png",
+          "color": "#ffffff"
+        }
       ]
     ],
     "ios": {

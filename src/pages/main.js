@@ -79,7 +79,7 @@ export default function Main(props) {
     }
 
     const { data } = await Notifications.getExpoPushTokenAsync({
-      experienceId: "@robogram/EasyGO (Business)"
+      experienceId: "@robogram/easygo-business"
     })
 
     if (ownerid) {
@@ -773,7 +773,19 @@ export default function Main(props) {
 			{showDisabledscreen && (
 				<Modal transparent={true}>
 					<SafeAreaView style={styles.disabled}>
-						<ActivityIndicator color="black" size="large"/>
+						<View style={styles.disabledContainer}>
+              <Text style={styles.disabledHeader}>
+                There is an update to the app{'\n\n'}
+                Please wait a moment{'\n\n'}
+                or tap 'Close'
+              </Text>
+
+              <TouchableOpacity style={styles.disabledClose} onPress={() => socket.emit("socket/business/login", userId, () => setShowdisabledscreen(false))}>
+                <Text style={styles.disabledCloseHeader}>Close</Text>
+              </TouchableOpacity>
+
+              <ActivityIndicator size="large"/>
+            </View>
 					</SafeAreaView>
 				</Modal>
 			)}
@@ -858,7 +870,10 @@ const styles = StyleSheet.create({
 	firstTimeAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 10, width: wsize(30) },
 	firstTimeActionHeader: { fontSize: wsize(4), textAlign: 'center' },
 
-	disabled: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.1)', flexDirection: 'column', justifyContent: 'space-around', height: '100%', width: '100%' },
+	disabled: { backgroundColor: 'black', flexDirection: 'column', justifyContent: 'space-around', height: '100%', opacity: 0.8, width: '100%' },
+  disabledContainer: { alignItems: 'center', width: '100%' },
+  disabledHeader: { color: 'white', fontWeight: 'bold', textAlign: 'center' },
+  disabledClose: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 50, padding: 10 },
 
   loading: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
   column: { flexDirection: 'column', justifyContent: 'space-around' },
