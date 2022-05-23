@@ -377,7 +377,6 @@ export default function Addproduct(props) {
 		}
 	}
 	const choosePhoto = async() => {
-    setImage({ ...image, loading: true })
     setChoosing(true)
 
 		let letters = [

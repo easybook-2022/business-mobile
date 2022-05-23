@@ -36,7 +36,7 @@ const useInput = true
 
 const login = test_input ? testStores[0] : useInput ? realStores[0] : emptyStore
 const ownerLogin = test_input ? testOwners[0] : useInput ? realOwner : emptyOwner
-const register = test_input ? testStores[0] : useInput ? realStores[0] : emptyStore
+const register = test_input ? testStores[6] : useInput ? realStores[0] : emptyStore
 const ownerRegister = test_input ? testOwners[0] : useInput ? realOwner : emptyOwner
 
 const wifi_api_url = "http://192.168.0.172:5001/flask"

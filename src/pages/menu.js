@@ -775,7 +775,12 @@ export default function Menu(props) {
 												)
 											}
 										}}>
-											<Text style={styles.createOptionActionHeader}>Add {(locationType == "hair" || locationType == "nail") ? "service" : "food"}</Text>
+											<Text style={styles.createOptionActionHeader}>
+                        Add{' '}
+                        {(locationType == "hair" || locationType == "nail") && "service"}
+                        {locationType == "restaurant" && "meal"}
+                        {locationType == "store" && "product"}
+                      </Text>
 										</TouchableOpacity>
 									</View>
 								</View>

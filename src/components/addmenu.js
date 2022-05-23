@@ -311,7 +311,7 @@ export default function Addmenu(props) {
 								/>
 							</View>
 						)}
-
+            
 						{setupType == 'photo' && (
 							<View style={styles.cameraContainer}>
 								<Text style={styles.cameraHeader}>Provide a photo for {name} (Optional)</Text>
