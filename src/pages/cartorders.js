@@ -134,11 +134,9 @@ export default function Cartorders(props) {
 					renderItem={({ item, index }) => 
 						<View style={styles.item} key={item.key}>
 							<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-								{item.image ? 
-									<View style={styles.itemImageHolder}>
-										<Image source={{ uri: logo_url + item.image.name }} style={styles.itemImage}/>
-									</View>
-								: null }
+								<View style={styles.itemImageHolder}>
+                  {(item.image && item.image.name != "") && <Image source={{ uri: logo_url + item.image.name }} style={resizePhoto(item.image, wsize(30))}/>}
+                </View>
 
 								<View style={styles.itemInfos}>
 									<Text style={styles.itemName}>{item.name}</Text>
@@ -280,8 +278,7 @@ const styles = StyleSheet.create({
 	box: { backgroundColor: '#EAEAEA', height: '100%', width: '100%' },
 
 	item: { borderStyle: 'solid', borderBottomWidth: 0.5, borderTopWidth: 0.5, padding: 10 },
-	itemImageHolder: { backgroundColor: 'rgba(0, 0, 0, 0.1)', borderRadius: wsize(30) / 2, height: wsize(30), overflow: 'hidden', width: wsize(30) },
-	itemImage: { height: wsize(30), width: wsize(30) },
+	itemImageHolder: { backgroundColor: 'rgba(0, 0, 0, 0.1)', borderRadius: wsize(30) / 2, height: wsize(30), overflow: 'hidden' },
 	itemInfos: {  },
 	itemName: { fontSize: wsize(5), marginBottom: 10 },
 	itemInfo: { fontSize: wsize(4) },

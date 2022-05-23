@@ -84,11 +84,9 @@ export default function Locationslist(props) {
                   })
                 )
               }}>
-                {item.logo.name && (
-                  <View style={[resizePhoto(item.logo, wsize(20)), { borderRadius: wsize(20) / 2, overflow: 'hidden' }]}>
-                    <Image style={{ height: '100%', width: '100%' }} source={{ uri: logo_url + item.logo.name }}/>
-                  </View>
-                )}
+                <View style={styles.locationImageHolder}>
+                  <Image style={resizePhoto(item.logo, wsize(20))} source={{ uri: logo_url + item.logo.name }}/>
+                </View>
 
                 <View style={styles.column}>
                   <Text style={styles.locationName}>{item.name}</Text>
@@ -122,6 +120,7 @@ const styles = StyleSheet.create({
 
   body: { alignItems: 'center', height: '80%', width: '100%' },
   location: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, flexDirection: 'row', justifyContent: 'space-between', marginBottom: 5, padding: 5, width: width * 0.95 },
+  locationImageHolder: { borderRadius: wsize(20) / 2, overflow: 'hidden', height: wsize(20), width: wsize(20) },
   locationName: { fontSize: wsize(6), fontWeight: 'bold' },
   locationAddress: { fontSize: wsize(4), fontWeight: 'bold' },
 

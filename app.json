@@ -49,9 +49,6 @@
       "versionCode": 0,
       "permissions": ["CAMERA","ACCESS_MEDIA_LOCATION", "ACCESS_FINE_LOCATION", "MICROPHONE"],
       "googleServicesFile": "./google-services.json"
-    },
-    "notification": {
-      "icon": "./assets/notification.png"
     }
   }
 }

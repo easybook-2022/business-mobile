@@ -360,7 +360,9 @@ export default function Register(props) {
 				})
         setLoading(false)
 			})
-		}
+		} else {
+      setLoading(false)
+    }
 
     setChoosing(false)
 	}

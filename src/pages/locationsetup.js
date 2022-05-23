@@ -394,7 +394,6 @@ export default function Locationsetup({ navigation }) {
 		}
 	}
 	const choosePhoto = async() => {
-    setLoading(true)
     setChoosing(true)
 
 		let letters = [
@@ -431,7 +430,6 @@ export default function Locationsetup({ navigation }) {
           size: { width: photo.width, height: photo.height }
 				})
 				setErrormsg('')
-        setLoading(false)
 			})
 		}
 
@@ -917,7 +915,10 @@ export default function Locationsetup({ navigation }) {
                         <TouchableOpacity style={styles.cameraAction} onPress={snapPhoto.bind(this)}>
                           <Text style={styles.cameraActionHeader}>Take{'\n'}this photo</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={[styles.cameraAction, { opacity: loading ? 0.3 : 1 }]} disabled={loading} onPress={() => choosePhoto()}>
+                        <TouchableOpacity style={[styles.cameraAction, { opacity: loading ? 0.3 : 1 }]} disabled={loading} onPress={() => {
+                          allowChoosing()
+                          choosePhoto()
+                        }}>
                           <Text style={styles.cameraActionHeader}>Choose{'\n'}from phone</Text>
                         </TouchableOpacity>
                       </View>

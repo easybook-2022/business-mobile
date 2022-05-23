@@ -224,7 +224,6 @@ export default function Addservice(props) {
 		}
 	}
 	const choosePhoto = async() => {
-    setImage({ ...image, loading: true })
     setChoosing(true)
 
 		let letters = [
@@ -257,7 +256,7 @@ export default function Addservice(props) {
 			.then(() => {
 				setImage({ 
           ...image, 
-          uri: `${FileSystem.documentDirectory}/${char}.jpg`, name: `${char}.jpg`, loading: false, 
+          uri: `${FileSystem.documentDirectory}/${char}.jpg`, name: `${char}.jpg`, 
           size: { width, height: width }
         })
 				setErrormsg('')
@@ -325,7 +324,10 @@ export default function Addservice(props) {
 					const { serviceInfo } = res
 
 					setName(serviceInfo.name)
-					setImage({ ...image, uri: logo_url + serviceInfo.image.name })
+					setImage({ 
+            ...image, 
+            uri: serviceInfo.image.name != "" ? logo_url + serviceInfo.image.name : ""
+          })
 					setPrice(serviceInfo.price.toString())
 					setLoaded(true)
 				}

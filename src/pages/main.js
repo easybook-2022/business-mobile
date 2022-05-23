@@ -538,11 +538,9 @@ export default function Main(props) {
                   data={appointments}
                   renderItem={({ item, index }) => 
                     <View key={item.key} style={styles.schedule}>
-                      {item.image ?
-                        <View style={styles.scheduleImageHolder}>
-                          <Image style={resizePhoto(item.image, wsize(20))} source={{ uri: logo_url + item.image.name }}/>
-                        </View>
-                      : null }
+                      <View style={styles.scheduleImageHolder}>
+                        {(item.image && item.image.name != "") && <Image style={resizePhoto(item.image, wsize(20))} source={{ uri: logo_url + item.image.name }}/>}
+                      </View>
                         
                       <Text style={styles.scheduleHeader}>
                         Client: {item.client.username}
@@ -573,9 +571,7 @@ export default function Main(props) {
                 />
                 :
                 <View style={styles.bodyResult}>
-                  <Text style={styles.bodyResultHeader}>
-                    {numAppointments == 0 ? "No appointment(s) yet" : numAppointments + " appointment(s)"}
-                  </Text>
+                  <Text style={styles.bodyResultHeader}>{numAppointments == 0 ? "No appointment(s) yet" : numAppointments + " appointment(s)"}</Text>
                 </View>
             )}
             {viewType == "cartorderers" && (
@@ -812,7 +808,7 @@ const styles = StyleSheet.create({
 	// client's schedule
 	schedule: { alignItems: 'center', borderRadius: 5, backgroundColor: 'white', marginHorizontal: 5, marginVertical: 2.5 },
 	scheduleRow: { flexDirection: 'row', justifyContent: 'space-between' },
-	scheduleImageHolder: { borderRadius: wsize(20) / 2, height: wsize(20), margin: 5, overflow: 'hidden', width: wsize(20) },
+	scheduleImageHolder: { borderRadius: wsize(20) / 2, margin: 5, overflow: 'hidden', width: wsize(20) },
 	scheduleImage: { height: wsize(20), width: wsize(20) },
 	scheduleHeader: { fontSize: wsize(4), fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
 	scheduleActionsHeader: { fontSize: wsize(4), marginTop: 10, textAlign: 'center' },

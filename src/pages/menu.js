@@ -135,23 +135,23 @@ export default function Menu(props) {
 					<View style={styles.menu}>
 						<View style={{ flexDirection: 'row' }}>
               <View style={styles.menuImageHolder}>
-                {image.name && <Image style={resizePhoto(image, wsize(10))} source={{ uri: logo_url + image.name }}/>}
+                {image.name != "" && <Image style={resizePhoto(image, wsize(10))} source={{ uri: logo_url + image.name }}/>}
               </View>
-  							
-              <View style={styles.column}>
-                <Text style={styles.menuName}>{name} (Menu)</Text>
-              </View>
+              <View style={styles.column}><Text style={styles.menuName}>{name} (Menu)</Text></View>
+              {isOwner == true && (
+                <View style={styles.column}>
+                  <View style={styles.menuActions}>
+                    <TouchableOpacity style={styles.menuAction} onPress={() => props.navigation.navigate("addmenu", { parentMenuid: id, menuid: id, refetch: () => getAllMenus() })}>
+                      <Text style={styles.menuActionHeader}>Change</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.menuAction} onPress={() => removeTheMenu(info.id)}>
+                      <Text style={styles.menuActionHeader}>Delete</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
 						</View>
-            {isOwner == true && (
-              <View style={styles.menuActions}>
-                <TouchableOpacity style={styles.menuAction} onPress={() => props.navigation.navigate("addmenu", { parentMenuid: id, menuid: id, refetch: () => getAllMenus() })}>
-                  <Text style={styles.menuActionHeader}>Change</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.menuAction} onPress={() => removeTheMenu(info.id)}>
-                  <Text style={styles.menuActionHeader}>Delete</Text>
-                </TouchableOpacity>
-              </View>
-            )}
+              
 						{list.length == 0 ?
 							<View style={{ alignItems: 'center', marginTop: 10 }}>
 								<TouchableOpacity style={styles.itemAdd} onPress={() => {
@@ -186,11 +186,9 @@ export default function Menu(props) {
 										:
 										<View style={styles.item}>
 											<View style={{ flexDirection: 'row' }}>
-                        {info.image.name ? 
-                          <View style={styles.itemImageHolder}>
-                            <Image style={styles.itemImage} source={{ uri: logo_url + info.image.name }}/>
-                          </View>
-                        : null }
+                        <View style={styles.itemImageHolder}>
+                          {info.image.name != "" && <Image style={resizePhoto(info.image, wsize(10))} source={{ uri: logo_url + info.image.name }}/>}
+                        </View>
   												
                         <View style={styles.column}>
 												  <Text style={styles.itemHeader}>{info.name}</Text>
@@ -198,23 +196,26 @@ export default function Menu(props) {
                         <View style={styles.column}>
 												  <Text style={styles.itemHeader}>{info.price ? '$' + info.price : info.sizes.length + ' size(s)'}</Text>
                         </View>
+
+                        {isOwner == true && (
+                          <View style={styles.column}>
+                            <View style={styles.itemActions}>
+                              <TouchableOpacity style={styles.itemAction} onPress={() => {
+                                if ((locationType == "hair" || locationType == "nail")) {
+                                  props.navigation.navigate("addservice", { parentMenuid: id, serviceid: info.id, refetch: () => getAllMenus() })
+                                } else {
+                                  props.navigation.navigate("addproduct", { parentMenuid: id, productid: info.id, refetch: () => getAllMenus() })
+                                }
+                              }}>
+                                <Text style={styles.itemActionHeader}>Change</Text>
+                              </TouchableOpacity>
+                              <TouchableOpacity style={styles.itemAction} onPress={() => (locationType == "hair" || locationType == "nail") ? removeTheService(info.id) : removeTheProduct(info.id)}>
+                                <Text style={styles.itemActionHeader}>Delete</Text>
+                              </TouchableOpacity>
+                            </View>
+                          </View>
+                        )}
 											</View>
-                      {isOwner == true && (
-                        <View style={styles.itemActions}>
-                          <TouchableOpacity style={styles.itemAction} onPress={() => {
-                            if ((locationType == "hair" || locationType == "nail")) {
-                              props.navigation.navigate("addservice", { parentMenuid: id, serviceid: info.id, refetch: () => getAllMenus() })
-                            } else {
-                              props.navigation.navigate("addproduct", { parentMenuid: id, productid: info.id, refetch: () => getAllMenus() })
-                            }
-                          }}>
-                            <Text style={styles.itemActionHeader}>Change</Text>
-                          </TouchableOpacity>
-                          <TouchableOpacity style={styles.itemAction} onPress={() => (locationType == "hair" || locationType == "nail") ? removeTheService(info.id) : removeTheProduct(info.id)}>
-                            <Text style={styles.itemActionHeader}>Delete</Text>
-                          </TouchableOpacity>
-                        </View>
-                      )}
 										</View>
 									}
 
@@ -255,33 +256,64 @@ export default function Menu(props) {
 							{info.listType == "list" ? 
                 displayList({ id: info.id, name: info.name, image: info.image, list: info.list, left: left + 10 })
 								:
-								<View style={styles.item}>
-									<View style={{ flexDirection: 'row', }}>
-  									{info.image.name ? 
-                      <View style={styles.itemImageHolder}>
-                        <Image style={styles.itemImage} source={{ uri: logo_url + info.image.name }}/>
+                <>
+  								<View style={styles.item}>
+  									<View style={{ flexDirection: 'row', }}>
+    									<View style={styles.itemImageHolder}>
+                        {info.image.name != "" && <Image style={resizePhoto(info.image, wsize(10))} source={{ uri: logo_url + info.image.name }}/>}
                       </View>
-                    : null }
-										<Text style={styles.itemHeader}>{info.name}</Text>
-										<Text style={styles.itemHeader}>{info.price ? '$' + info.price : info.sizes.length + ' size(s)'}</Text>
-									</View>
-  								{isOwner == true && (
-                    <View style={styles.itemActions}>
-                      <TouchableOpacity style={styles.itemAction} onPress={() => {
+  										<View style={styles.column}><Text style={styles.itemHeader}>{info.name}</Text></View>
+  										<View style={styles.column}><Text style={styles.itemHeader}>{info.price ? '$' + info.price : info.sizes.length + ' size(s)'}</Text></View>
+
+                      {isOwner == true && (
+                        <View style={styles.column}>
+                          <View style={styles.itemActions}>
+                            <TouchableOpacity style={styles.itemAction} onPress={() => {
+                              if ((locationType == "hair" || locationType == "nail")) {
+                                props.navigation.navigate("addservice", { parentMenuid: id, serviceid: info.id, refetch: () => getAllMenus() })
+                              } else {
+                                props.navigation.navigate("addproduct", { parentMenuid: id, productid: info.id, refetch: () => getAllMenus() })
+                              }
+                            }}>
+                              <Text style={styles.itemActionHeader}>Change</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.itemAction} onPress={() => (locationType == "hair" || locationType == "nail") ? removeTheService(info.id) : removeTheProduct(info.id)}>
+                              <Text style={styles.itemActionHeader}>Delete</Text>
+                            </TouchableOpacity>
+                          </View>
+                        </View>
+                      )}
+  									</View>
+  								</View>
+
+                  {list.length - 1 == index && (
+                    <View style={{ alignItems: 'center' }}>
+                      <TouchableOpacity style={styles.itemAdd} onPress={() => {
                         if ((locationType == "hair" || locationType == "nail")) {
-                          props.navigation.navigate("addservice", { parentMenuid: id, serviceid: info.id, refetch: () => getAllMenus() })
+                          props.navigation.navigate(
+                            "addservice", 
+                            { parentMenuid: "", serviceid: null, refetch: () => getAllMenus() }
+                          )
                         } else {
-                          props.navigation.navigate("addproduct", { parentMenuid: id, productid: info.id, refetch: () => getAllMenus() })
+                          props.navigation.navigate(
+                            "addproduct", 
+                            { parentMenuid: "", productid: null, refetch: () => getAllMenus() }
+                          )
                         }
                       }}>
-                        <Text style={styles.itemActionHeader}>Change</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity style={styles.itemAction} onPress={() => (locationType == "hair" || locationType == "nail") ? removeTheService(info.id) : removeTheProduct(info.id)}>
-                        <Text style={styles.itemActionHeader}>Delete</Text>
+                        <View style={styles.column}>
+                          <Text style={styles.itemAddHeader}>
+                            Add more{' '}
+                            {(locationType == "hair" || locationType == "nail") && "service"}
+                            {locationType == "restaurant" && "meal"}
+                            {locationType == "store" && "product"}
+                          </Text>
+                        </View>
+                        <AntDesign name="pluscircleo" size={40}/>
                       </TouchableOpacity>
                     </View>
                   )}
-								</View>
+                </>
 							}
 						</View>
 					))
@@ -547,8 +579,8 @@ export default function Menu(props) {
 			})
 			.then((res) => {
 				if (res) {
-					setMenuinfo(res.menus)
 					setMenuphotooption({ ...menuPhotooption, show: false, action: '', photo: '', loading: false })
+          getAllMenus()
 				}
 			})
       .catch((err) => {
@@ -656,81 +688,23 @@ export default function Menu(props) {
 						</View>
 
             {isOwner == true && (
-              <>
-    						<View style={{ alignItems: 'center', marginTop: 20 }}>
-    							{menuInfo.photos.length > 0 && ( 
-    								!menuInfo.photos[0].row && 
-                      menuInfo.photos[0].listType == "list" ? 
-                        <TouchableOpacity style={styles.itemAdd} onPress={() => {
-                          if (menuInfo.photos.length == 0) {
-                            setCreateoptionbox({ show: true, id: "", allow: "both" })
-                          } else {
-                            props.navigation.navigate(
-                              "addmenu", 
-                              { parentMenuid: "", menuid: null, refetch: () => getAllMenus() }
-                            )
-                          }
-                        }}>
-                          <View style={styles.column}>
-                            <Text style={styles.itemAddHeader}>Add menu</Text>
-                          </View>
-                          <AntDesign name="pluscircleo" size={40}/>
-                        </TouchableOpacity>
-                        :
-                        <TouchableOpacity style={styles.itemAdd} onPress={() => {
-                          if (menuInfo.photos[0].listType != "list") {
-                            if ((locationType == "hair" || locationType == "nail")) {
-                              props.navigation.navigate(
-                                "addservice", 
-                                { parentMenuid: "", serviceid: null, refetch: () => getAllMenus() }
-                              )
-                            } else {
-                              props.navigation.navigate(
-                                "addproduct", 
-                                { parentMenuid: "", productid: null, refetch: () => getAllMenus() }
-                              )
-                            }
-                          } else {
-                            props.navigation.navigate(
-                              "addmenu", 
-                              { parentMenuid: "", menuid: null, refetch: () => getAllMenus() }
-                            )
-                          }
-                        }}>
-                          <View style={styles.column}>
-                            <Text style={styles.itemAddHeader}>
-                              Add {menuInfo.photos[0].listType != "list" ? (
-                                <>
-                                  {(locationType == "hair" || locationType == "nail") && "service"}
-                                  {locationType == "restaurant" && "meal"}
-                                  {locationType == "store" && "product"}
-                                </>
-                              ) : "menu"}
-                            </Text>
-                          </View>
-                          <AntDesign name="pluscircleo" size={40}/>
-                        </TouchableOpacity>
-    							)}
-    						</View>
-
-                <View style={{ alignItems: 'center', marginTop: 100 }}>
-                  <TouchableOpacity style={styles.menuStart} onPress={() => setCreateoptionbox({ show: true, id: "", allow: "both" })}>
-                    <Text style={styles.menuStartHeader}>
-                      Click to add menu/
-                      {(locationType == "hair" || locationType == "nail") && "service"}
-                      {locationType == "restaurant" && "meal"}
-                      {locationType == "store" && "product"}
-                    </Text>
-                  </TouchableOpacity>
-                  <Text style={styles.menuStartDiv}>Or</Text>
-                  <TouchableOpacity style={styles.menuStart} onPress={() => {
-                    allowCamera()
-                    setUploadmenubox({ ...uploadMenubox, show: true, uri: '', name: '' })
-                  }}>
-                    <Text style={styles.menuStartHeader}>Upload menu photo</Text>
-                  </TouchableOpacity>
-                </View>
-              </>
+              <View style={{ alignItems: 'center', marginTop: 50 }}>
+                {menuInfo.list.length == 0 && (
+                  <>
+                    <TouchableOpacity style={styles.menuStart} onPress={() => setCreateoptionbox({ ...createOptionbox, show: true, id: "", allow: "both" })}>
+                      <Text style={styles.menuStartHeader}>Add to list</Text>
+                    </TouchableOpacity>
+                    <Text style={styles.menuStartDiv}>Or</Text>
+                  </>
+                )}
+                  
+                <TouchableOpacity style={styles.menuStart} onPress={() => {
+                  allowCamera()
+                  setUploadmenubox({ ...uploadMenubox, show: true, uri: '', name: '' })
+                }}>
+                  <Text style={styles.menuStartHeader}>Upload menu photo</Text>
+                </TouchableOpacity>
+              </View>
             )}
 					</ScrollView>
 
@@ -928,13 +902,11 @@ export default function Menu(props) {
 								<View style={styles.menuInfoBox}>
 									<Text style={styles.menuInfoBoxHeader}>Delete menu confirmation</Text>
 
-									<View style={{ alignItems: 'center' }}>
-                    <View style={styles.menuInfoImageHolder}>
-                      {removeMenuinfo.image.name && <Image source={{ uri: logo_url + removeMenuinfo.image.name }} style={resizePhoto(removeMenuinfo.image, wsize(50))}/>}
-                    </View>
-										<Text style={styles.menuInfoName}>{removeMenuinfo.name}</Text>
-									</View>
-
+									<View style={styles.menuInfoImageHolder}>
+                    {removeMenuinfo.image.name != "" && <Image source={{ uri: logo_url + removeMenuinfo.image.name }} style={resizePhoto(removeMenuinfo.image, wsize(50))}/>}
+                  </View>
+                    
+                  <Text style={styles.menuInfoName}>Menu: {removeMenuinfo.name}</Text>
 									<Text style={styles.menuInfoHeader}>Are you sure you want to delete{'\n'}this menu and its items</Text>
 
 									<View style={styles.menuInfoActions}>
@@ -956,9 +928,10 @@ export default function Menu(props) {
 									<Text style={styles.productInfoBoxHeader}>Delete product confirmation</Text>
 
                   <View style={styles.productInfoImageHolder}>
-                    {removeProductinfo.image.name && <Image source={{ uri: logo_url + removeProductinfo.image.name }} style={resizePhoto(removeProductinfo.image, wsize(50))}/>}
+                    {removeProductinfo.image.name != "" && <Image source={{ uri: logo_url + removeProductinfo.image.name }} style={resizePhoto(removeProductinfo.image, wsize(50))}/>}
                   </View>
-									<Text style={styles.productInfoName}>{removeProductinfo.name}</Text>
+
+									<Text style={styles.productInfoName}>Item: {removeProductinfo.name}</Text>
 
 									<View>
 										{removeProductinfo.options.map((option, infoindex) => (
@@ -1009,10 +982,10 @@ export default function Menu(props) {
 									<Text style={styles.serviceInfoBoxHeader}>Delete service confirmation</Text>
 
                   <View style={styles.serviceInfoImageHolder}>
-                    {removeServiceinfo.image.name && <Image source={{ uri: logo_url + removeServiceinfo.image.name }} style={resizePhoto(removeServiceinfo.image, wsize(50))}/>}
+                    {removeServiceinfo.image.name != "" && <Image source={{ uri: logo_url + removeServiceinfo.image.name }} style={resizePhoto(removeServiceinfo.image, wsize(50))}/>}
                   </View>
 
-									<Text style={styles.serviceInfoName}>{removeServiceinfo.name}</Text>
+									<Text style={styles.serviceInfoName}>Service: {removeServiceinfo.name}</Text>
 									<Text style={styles.serviceInfoPrice}><Text style={{ fontWeight: 'bold' }}>Price: </Text>$ {(removeServiceinfo.price).toFixed(2)}</Text>
 									<Text style={styles.serviceInfoHeader}>Are you sure you want to delete this service</Text>
 
@@ -1056,8 +1029,7 @@ const styles = StyleSheet.create({
   menuStartDiv: { fontSize: wsize(7), fontWeight: 'bold', marginVertical: 20 },
 
 	menu: { backgroundColor: 'white', marginBottom: 30, padding: 3, width: '98%' },
-	menuImageHolder: { borderRadius: wsize(10) / 2, height: wsize(10), overflow: 'hidden', width: wsize(10) },
-	menuImage: { height: wsize(10), width: wsize(10) },
+	menuImageHolder: { borderRadius: wsize(10) / 2, height: wsize(10), overflow: 'hidden' },
   column: { flexDirection: 'column', justifyContent: 'space-around' },
 	menuName: { fontSize: wsize(5), fontWeight: 'bold', marginLeft: 5, textDecorationLine: 'underline' },
 	menuActions: { flexDirection: 'row' },
@@ -1065,9 +1037,8 @@ const styles = StyleSheet.create({
 	menuActionHeader: { fontSize: wsize(4), textAlign: 'center' },
   itemAdd: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, flexDirection: 'row', padding: 5 },
 	itemAddHeader: { fontWeight: 'bold', marginRight: 5 },
-  item: { backgroundColor: 'white', marginVertical: 10, paddingHorizontal: 3, paddingVertical: 10, width: '98%' },
-	itemImageHolder: { borderRadius: wsize(10) / 2, height: wsize(10), margin: 5, overflow: 'hidden', width: wsize(10) },
-	itemImage: { height: wsize(10), width: wsize(10) },
+  item: { backgroundColor: 'white', marginBottom: 5, marginHorizontal: '1%', width: '98%' },
+	itemImageHolder: { borderRadius: wsize(10) / 2, height: wsize(10), overflow: 'hidden' },
 	itemHeader: { fontSize: wsize(5), fontWeight: 'bold', marginHorizontal: 10, textDecorationStyle: 'solid' },
 	itemActions: { flexDirection: 'row' },
 	itemAction: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, marginLeft: 10, padding: 3 },
@@ -1113,8 +1084,7 @@ const styles = StyleSheet.create({
 	menuInfoContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	menuInfoBox: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '80%', justifyContent: 'space-between', padding: 10, width: '80%' },
 	menuInfoBoxHeader: { fontSize: wsize(6), textAlign: 'center' },
-	menuInfoImageHolder: { borderRadius: wsize(50) / 2, flexDirection: 'column', height: wsize(50), justifyContent: 'space-around', overflow: 'hidden', width: wsize(50) },
-	menuInfoImage: { height: wsize(50), width: wsize(50) },
+	menuInfoImageHolder: { borderRadius: wsize(50) / 2, flexDirection: 'column', justifyContent: 'space-around', overflow: 'hidden', width: wsize(50) },
 	menuInfoName: { fontSize: wsize(5), fontWeight: 'bold' },
 	menuInfoInfo: { fontSize: wsize(5), textAlign: 'center' },
 	menuInfoHeader: { fontSize: wsize(4), fontWeight: 'bold', paddingHorizontal: 10, textAlign: 'center' },
@@ -1126,8 +1096,7 @@ const styles = StyleSheet.create({
 	productInfoContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	productInfoBox: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '80%', justifyContent: 'space-between', padding: 10, width: '80%' },
 	productInfoBoxHeader: { fontSize: wsize(6), textAlign: 'center' },
-	productInfoImageHolder: { borderRadius: wsize(50) / 2, flexDirection: 'column', height: wsize(50), justifyContent: 'space-around', overflow: 'hidden', width: wsize(50) },
-	productInfoImage: { height: wsize(50), width: wsize(50) },
+	productInfoImageHolder: { borderRadius: wsize(50) / 2, flexDirection: 'column', justifyContent: 'space-around', overflow: 'hidden', width: wsize(50) },
 	productInfoName: { fontSize: wsize(5), fontWeight: 'bold' },
 	productInfoQuantity: {  },
 	productInfoPrice: { fontSize: wsize(5) },
@@ -1140,8 +1109,7 @@ const styles = StyleSheet.create({
 	serviceInfoContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	serviceInfoBox: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '80%', justifyContent: 'space-between', padding: 10, width: '80%' },
 	serviceInfoBoxHeader: { fontSize: wsize(6), textAlign: 'center' },
-	serviceInfoImageHolder: { borderRadius: wsize(50) / 2, flexDirection: 'column', height: wsize(50), justifyContent: 'space-around', overflow: 'hidden', width: wsize(50) },
-	serviceInfoImage: { height: wsize(50), width: wsize(50) },
+	serviceInfoImageHolder: { borderRadius: wsize(50) / 2, flexDirection: 'column', justifyContent: 'space-around', overflow: 'hidden', width: wsize(50) },
 	serviceInfoName: { fontSize: wsize(5), fontWeight: 'bold' },
 	serviceInfoQuantity: { fontSize: wsize(5) },
 	serviceInfoPrice: { fontSize: wsize(5) },
