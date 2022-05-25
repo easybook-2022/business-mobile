@@ -11,20 +11,21 @@ import * as FileSystem from 'expo-file-system'
 import { Camera } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator'
 import * as ImagePicker from 'expo-image-picker';
+import { getId } from 'geottuse-tools';
 import { logo_url } from '../../assets/info'
 import { resizePhoto } from 'geottuse-tools'
 import { getLocationProfile } from '../apis/locations'
 import { getOwnerInfo } from '../apis/owners'
 import { getMenus, addNewMenu, removeMenu, getMenuInfo, saveMenu, uploadMenu, deleteMenu } from '../apis/menus'
-import { getProducts, getProductInfo, removeProduct } from '../apis/products'
-import { getServices, getServiceInfo, removeService } from '../apis/services'
+import { getProductInfo, removeProduct } from '../apis/products'
+import { getServiceInfo, removeService } from '../apis/services'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import Entypo from 'react-native-vector-icons/Entypo'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 
-// components
-import Loadingprogress from '../components/loadingprogress';
+// widgets
+import Loadingprogress from '../widgets/loadingprogress';
 
 const { height, width } = Dimensions.get('window')
 const wsize = p => {return width * (p / 100)}
@@ -135,7 +136,10 @@ export default function Menu(props) {
 					<View style={styles.menu}>
 						<View style={{ flexDirection: 'row' }}>
               <View style={styles.menuImageHolder}>
-                {image.name != "" && <Image style={resizePhoto(image, wsize(10))} source={{ uri: logo_url + image.name }}/>}
+                <Image 
+                  style={resizePhoto(image, wsize(10))} 
+                  source={image.name ? { uri: logo_url + image.name } : require("../../assets/noimage.jpeg")}
+                />
               </View>
               <View style={styles.column}><Text style={styles.menuName}>{name} (Menu)</Text></View>
               {isOwner == true && (
@@ -144,7 +148,7 @@ export default function Menu(props) {
                     <TouchableOpacity style={styles.menuAction} onPress={() => props.navigation.navigate("addmenu", { parentMenuid: id, menuid: id, refetch: () => getAllMenus() })}>
                       <Text style={styles.menuActionHeader}>Change</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.menuAction} onPress={() => removeTheMenu(info.id)}>
+                    <TouchableOpacity style={styles.menuAction} onPress={() => removeTheMenu(id)}>
                       <Text style={styles.menuActionHeader}>Delete</Text>
                     </TouchableOpacity>
                   </View>
@@ -187,15 +191,14 @@ export default function Menu(props) {
 										<View style={styles.item}>
 											<View style={{ flexDirection: 'row' }}>
                         <View style={styles.itemImageHolder}>
-                          {info.image.name != "" && <Image style={resizePhoto(info.image, wsize(10))} source={{ uri: logo_url + info.image.name }}/>}
+                          <Image 
+                            style={resizePhoto(info.image, wsize(10))} 
+                            source={info.image.name ? { uri: logo_url + info.image.name } : require("../../assets/noimage.jpeg")}
+                          />
                         </View>
   												
-                        <View style={styles.column}>
-												  <Text style={styles.itemHeader}>{info.name}</Text>
-                        </View>
-                        <View style={styles.column}>
-												  <Text style={styles.itemHeader}>{info.price ? '$' + info.price : info.sizes.length + ' size(s)'}</Text>
-                        </View>
+                        <View style={styles.column}><Text style={styles.itemHeader}>{info.name}</Text></View>
+                        <View style={styles.column}><Text style={styles.itemHeader}>{info.price ? '$' + info.price : info.sizes.length + ' size(s)'}</Text></View>
 
                         {isOwner == true && (
                           <View style={styles.column}>
@@ -260,7 +263,10 @@ export default function Menu(props) {
   								<View style={styles.item}>
   									<View style={{ flexDirection: 'row', }}>
     									<View style={styles.itemImageHolder}>
-                        {info.image.name != "" && <Image style={resizePhoto(info.image, wsize(10))} source={{ uri: logo_url + info.image.name }}/>}
+                        <Image 
+                          style={resizePhoto(info.image, wsize(10))} 
+                          source={info.image.name ? { uri: logo_url + info.image.name } : require("../../assets/noimage.jpeg")}
+                        />
                       </View>
   										<View style={styles.column}><Text style={styles.itemHeader}>{info.name}</Text></View>
   										<View style={styles.column}><Text style={styles.itemHeader}>{info.price ? '$' + info.price : info.sizes.length + ' size(s)'}</Text></View>
@@ -452,12 +458,7 @@ export default function Menu(props) {
 	const snapPhoto = async() => {
     setUploadmenubox({ ...uploadMenubox, loading: true })
 
-		let letters = [
-			"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", 
-			"n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"
-		]
-		let photo_name_length = Math.floor(Math.random() * (15 - 10)) + 10
-		let char = "", captured, self = this
+		let char = getId()
 
 		if (camComp) {
       let options = { quality: 0, skipProcessing: true };
@@ -474,15 +475,6 @@ export default function Menu(props) {
         photo_option,
         photo_save_option
       )
-
-      for (let k = 0; k <= photo_name_length - 1; k++) {
-        char += "" + (
-          k % 2 == 0 ? 
-            letters[Math.floor(Math.random() * letters.length)].toUpperCase()
-            :
-            Math.floor(Math.random() * 9) + 0
-        )
-      }
 
       FileSystem.moveAsync({
         from: photo.uri,
@@ -501,27 +493,13 @@ export default function Menu(props) {
 	const choosePhoto = async() => {
     setUploadmenubox({ ...uploadMenubox, loading: true })
 
-		let letters = [
-			"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", 
-			"n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"
-		]
-		let photo_name_length = Math.floor(Math.random() * (15 - 10)) + 10
-		let char = "", captured, self = this
+		let char = getId()
 		let photo = await ImagePicker.launchImageLibraryAsync({
 			mediaTypes: ImagePicker.MediaTypeOptions.Images,
 			aspect: [1, 1],
 			quality: 0.1,
 			base64: true
 		});
-
-		for (let k = 0; k <= photo_name_length - 1; k++) {
-      char += "" + (
-        k % 2 == 0 ? 
-          letters[Math.floor(Math.random() * letters.length)].toUpperCase()
-          :
-          Math.floor(Math.random() * 9) + 0
-        )
-		}
 
 		if (!photo.cancelled) {
 			FileSystem.moveAsync({
@@ -908,7 +886,10 @@ export default function Menu(props) {
 									<Text style={styles.menuInfoBoxHeader}>Delete menu confirmation</Text>
 
 									<View style={styles.menuInfoImageHolder}>
-                    {removeMenuinfo.image.name != "" && <Image source={{ uri: logo_url + removeMenuinfo.image.name }} style={resizePhoto(removeMenuinfo.image, wsize(50))}/>}
+                    <Image 
+                      source={removeMenuinfo.image.name ? { uri: logo_url + removeMenuinfo.image.name } : require("../../assets/noimage.jpeg")} 
+                      style={resizePhoto(removeMenuinfo.image, wsize(50))}
+                    />
                   </View>
                     
                   <Text style={styles.menuInfoName}>Menu: {removeMenuinfo.name}</Text>
@@ -933,7 +914,10 @@ export default function Menu(props) {
 									<Text style={styles.productInfoBoxHeader}>Delete product confirmation</Text>
 
                   <View style={styles.productInfoImageHolder}>
-                    {removeProductinfo.image.name != "" && <Image source={{ uri: logo_url + removeProductinfo.image.name }} style={resizePhoto(removeProductinfo.image, wsize(50))}/>}
+                    <Image 
+                      source={removeProductinfo.image.name ? { uri: logo_url + removeProductinfo.image.name } : require("../../assets/noimage.jpeg")} 
+                      style={resizePhoto(removeProductinfo.image, wsize(50))}
+                    />
                   </View>
 
 									<Text style={styles.productInfoName}>Item: {removeProductinfo.name}</Text>
@@ -987,7 +971,10 @@ export default function Menu(props) {
 									<Text style={styles.serviceInfoBoxHeader}>Delete service confirmation</Text>
 
                   <View style={styles.serviceInfoImageHolder}>
-                    {removeServiceinfo.image.name != "" && <Image source={{ uri: logo_url + removeServiceinfo.image.name }} style={resizePhoto(removeServiceinfo.image, wsize(50))}/>}
+                    <Image 
+                      source={removeServiceinfo.image.name ? { uri: logo_url + removeServiceinfo.image.name } : require("../../assets/noimage.jpeg")} 
+                      style={resizePhoto(removeServiceinfo.image, wsize(50))}
+                    />
                   </View>
 
 									<Text style={styles.serviceInfoName}>Service: {removeServiceinfo.name}</Text>

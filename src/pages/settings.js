@@ -17,7 +17,7 @@ import { logo_url, timeControl } from '../../assets/info'
 import { addOwner, updateOwner, deleteOwner, getWorkerInfo, getOtherWorkers, getAccounts, getOwnerInfo } from '../apis/owners'
 import { getLocationProfile, updateLocation, setLocationHours, setReceiveType } from '../apis/locations'
 import { loginInfo, ownerRegisterInfo } from '../../assets/info'
-import { displayPhonenumber, resizePhoto } from 'geottuse-tools'
+import { getId, displayPhonenumber, resizePhoto } from 'geottuse-tools'
 
 // bank account
 let { accountNumber, countryCode, currency, routingNumber, accountHolderName } = loginInfo
@@ -26,8 +26,8 @@ import AntDesign from 'react-native-vector-icons/AntDesign'
 import Entypo from 'react-native-vector-icons/Entypo'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 
-// components
-import Loadingprogress from '../components/loadingprogress';
+// widgets
+import Loadingprogress from '../widgets/loadingprogress';
 
 const { height, width } = Dimensions.get('window')
 const wsize = p => {return width * (p / 100)}
@@ -914,12 +914,7 @@ export default function Settings(props) {
 	const snapPhoto = async() => {
     setLogo({ ...logo, loading: true })
 
-		let letters = [
-			"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", 
-			"n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"
-		]
-		let photo_name_length = Math.floor(Math.random() * (15 - 10)) + 10
-		let char = ""
+		let char = getId()
 
 		if (camComp) {
 			let options = { quality: 0 };
@@ -936,15 +931,6 @@ export default function Settings(props) {
 				photo_option,
 				photo_save_option
 			)
-
-			for (let k = 0; k < photo_name_length; k++) {
-        char += "" + (
-          k % 2 == 0 ? 
-            letters[Math.floor(Math.random() * letters.length)].toUpperCase()
-            :
-            Math.floor(Math.random() * 9) + 0
-        )
-			}
 
 			FileSystem.moveAsync({
 				from: photo.uri,
@@ -963,27 +949,13 @@ export default function Settings(props) {
     setLogo({ ...logo, loading: true })
     setChoosing(true)
 
-		let letters = [
-			"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", 
-			"n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"
-		]
-		let photo_name_length = Math.floor(Math.random() * (15 - 10)) + 10
-		let char = ""
+		let char = getId()
 		let photo = await ImagePicker.launchImageLibraryAsync({
 			mediaTypes: ImagePicker.MediaTypeOptions.Images,
 			aspect: [1, 1],
 			quality: 0.1,
 			base64: true
 		});
-
-		for (let k = 0; k < photo_name_length; k++) {
-      char += "" + (
-        k % 2 == 0 ? 
-          letters[Math.floor(Math.random() * letters.length)].toUpperCase()
-          :
-          Math.floor(Math.random() * 9) + 0
-      )
-		}
 
 		if (!photo.cancelled) {
 			FileSystem.moveAsync({
@@ -2443,7 +2415,7 @@ const styles = StyleSheet.create({
   locationAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 10, width: 100 },
   locationActionHeader: { fontSize: wsize(5), textAlign: 'center' },
 
-	header: { fontFamily: 'appFont', fontSize: wsize(7), marginTop: 20, textAlign: 'center' },
+	header: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(7), marginTop: 20, textAlign: 'center' },
 
   editButton: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 30, padding: 5, width: wsize(80) },
 	editButtonHeader: { fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
@@ -2457,7 +2429,7 @@ const styles = StyleSheet.create({
 	accountformInputHeader: { fontSize: wsize(5), fontWeight: 'bold' },
 	accountformInputInput: { borderRadius: 2, borderStyle: 'solid', borderWidth: 3, fontSize: wsize(5), padding: 5, width: '100%' },
 	accountformSubmit: { alignItems: 'center', borderRadius: 2, borderStyle: 'solid', borderWidth: 1, margin: 5, padding: 5, width: wsize(35) },
-	accountformSubmitHeader: { fontFamily: 'appFont', fontSize: wsize(5) },
+	accountformSubmitHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(5) },
   accountformEdit: { flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	
   workersBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
@@ -2485,7 +2457,7 @@ const styles = StyleSheet.create({
 
   inputsBox: { paddingHorizontal: 20, width: '100%' },
   inputContainer: { marginVertical: 20 },
-  inputHeader: { fontFamily: 'appFont', fontSize: wsize(5) },
+  inputHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(5) },
   input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), padding: 5 },
   cameraContainer: { alignItems: 'center', width: '100%' },
   camera: { height: wsize(80), width: wsize(80) },
@@ -2510,7 +2482,7 @@ const styles = StyleSheet.create({
   workerTouchHeader: { fontSize: wsize(7), textAlign: 'center' },
 
   accountHolders: { alignItems: 'center', marginHorizontal: 10, marginTop: 20 },
-  accountHoldersHeader: { fontFamily: 'appFont', fontSize: wsize(30), textAlign: 'center' },
+  accountHoldersHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(30), textAlign: 'center' },
   accountHoldersAdd: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 3, padding: 5 },
   accountHoldersAddHeader: { fontSize: wsize(5) },
   account: { flexDirection: 'row', justifyContent: 'space-between', marginVertical: 10 },
@@ -2527,7 +2499,7 @@ const styles = StyleSheet.create({
   receiveTypeHeader: { textAlign: 'center' },
 
   updateButton: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 10 },
-  updateButtonHeader: { fontFamily: 'appFont', fontSize: wsize(4) },
+  updateButtonHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(4) },
 
   row: { flexDirection: 'row', justifyContent: 'space-around' },
   loading: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },

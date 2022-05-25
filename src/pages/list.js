@@ -119,10 +119,10 @@ const styles = StyleSheet.create({
   listAddHeader: {  },
 
   body: { alignItems: 'center', height: '80%', width: '100%' },
-  location: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, flexDirection: 'row', justifyContent: 'space-between', marginBottom: 5, padding: 5, width: width * 0.95 },
-  locationImageHolder: { borderRadius: wsize(20) / 2, overflow: 'hidden', height: wsize(20), width: wsize(20) },
+  location: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, flexDirection: 'row', justifyContent: 'space-between', marginBottom: 5, padding: 5, width: wsize(95) },
+  locationImageHolder: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: wsize(20) / 2, flexDirection: 'column', overflow: 'hidden', height: wsize(20), justifyContent: 'space-around', width: wsize(20) },
   locationName: { fontSize: wsize(6), fontWeight: 'bold' },
-  locationAddress: { fontSize: wsize(4), fontWeight: 'bold' },
+  locationAddress: { fontSize: wsize(4), fontWeight: 'bold', width: wsize(95) - wsize(20) },
 
   bottomNavs: { backgroundColor: 'white', flexDirection: 'column', height: '10%', justifyContent: 'space-around', width: '100%' },
   bottomNavsRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },

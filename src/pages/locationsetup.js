@@ -14,15 +14,15 @@ import MapView, { Marker } from 'react-native-maps';
 import { CommonActions } from '@react-navigation/native';
 import { setupLocation } from '../apis/locations'
 import { registerInfo, timeControl } from '../../assets/info'
-import { displayPhonenumber } from 'geottuse-tools'
+import { getId, displayPhonenumber } from 'geottuse-tools'
 
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5'
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import Entypo from 'react-native-vector-icons/Entypo'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 
-// components
-import Loadingprogress from '../components/loadingprogress';
+// widgets
+import Loadingprogress from '../widgets/loadingprogress';
 
 const { height, width } = Dimensions.get('window')
 const wsize = p => {return width * (p / 100)}
@@ -346,12 +346,7 @@ export default function Locationsetup({ navigation }) {
 	const snapPhoto = async() => {
     setLoading(true)
 
-		let letters = [
-			"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", 
-			"n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"
-		]
-		let photo_name_length = Math.floor(Math.random() * (15 - 10)) + 10
-		let char = ""
+		let char = getId()
 
 		if (camComp) {
 			let options = { quality: 0, skipProcessing: true };
@@ -368,15 +363,6 @@ export default function Locationsetup({ navigation }) {
 				photo_option,
 				photo_save_option
 			)
-
-			for (let k = 0; k <= photo_name_length - 1; k++) {
-				char += "" + (
-          k % 2 == 0 ? 
-            letters[Math.floor(Math.random() * letters.length)].toUpperCase()
-            :
-            Math.floor(Math.random() * 9) + 0
-        )
-			}
 
 			FileSystem.moveAsync({
 				from: photo.uri,
@@ -396,26 +382,12 @@ export default function Locationsetup({ navigation }) {
 	const choosePhoto = async() => {
     setChoosing(true)
 
-		let letters = [
-			"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", 
-			"n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"
-		]
-		let photo_name_length = Math.floor(Math.random() * (15 - 10)) + 10
-		let char = "", photo = await ImagePicker.launchImageLibraryAsync({
+		let char = getId(), photo = await ImagePicker.launchImageLibraryAsync({
 			mediaTypes: ImagePicker.MediaTypeOptions.Images,
 			aspect: [1, 1],
 			quality: 0.1,
 			base64: true
 		});
-
-		for (let k = 0; k <= photo_name_length - 1; k++) {
-      char += "" + (
-        k % 2 == 0 ? 
-          letters[Math.floor(Math.random() * letters.length)].toUpperCase()
-          :
-          Math.floor(Math.random() * 9) + 0
-      )
-		}
 
 		if (!photo.cancelled) {
 			FileSystem.moveAsync({
@@ -990,7 +962,7 @@ const styles = StyleSheet.create({
   locationsetup: { backgroundColor: 'white', height: '100%', width: '100%' },
   box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
   header: { backgroundColor: 'red', flexDirection: 'column', height: '20%', justifyContent: 'space-around', width: '100%' },
-  boxHeader: { fontFamily: 'appFont', fontSize: wsize(7), textAlign: 'center' },
+  boxHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(7), textAlign: 'center' },
 
   inputsBox: { alignItems: 'center', flexDirection: 'column', height: '80%', justifyContent: 'space-around', width: '100%' },
   introHeader: { fontSize: wsize(6), fontWeight: 'bold', paddingHorizontal: 30, textAlign: 'center' },
@@ -1018,7 +990,7 @@ const styles = StyleSheet.create({
   locationInfos: { alignItems: 'center', paddingBottom: 100 },
 
   cameraContainer: { alignItems: 'center', height: '100%', width: '100%' },
-  cameraHeader: { fontFamily: 'appFont', fontWeight: 'bold', paddingVertical: 5 },
+  cameraHeader: { fontFamily: 'Chilanka_400Regular', fontWeight: 'bold', paddingVertical: 5 },
   camera: { height: width * 0.7, width: width * 0.7 },
   cameraActions: { flexDirection: 'row' },
   cameraAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: wsize(30) },
@@ -1034,10 +1006,10 @@ const styles = StyleSheet.create({
   openingDayTouchHeader: { fontSize: wsize(5), textAlign: 'center' },
 
   daysBack: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, marginBottom: 20, padding: 10 },
-  daysBackHeader: { fontFamily: 'appFont', fontSize: wsize(5), textAlign: 'center' },
+  daysBackHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(5), textAlign: 'center' },
 
   nextDay: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, padding: 10 },
-  nextDayHeader: { fontFamily: 'appFont', fontSize: wsize(5), textAlign: 'center' },
+  nextDayHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(5), textAlign: 'center' },
 
   // adjust working time for each day
   day: { alignItems: 'center', backgroundColor: '#EAEAEA', borderRadius: 10, marginTop: 30, padding: 5, width: '95%' },
@@ -1054,7 +1026,7 @@ const styles = StyleSheet.create({
   actionContainer: { flexDirection: 'column', height: '10%', justifyContent: 'space-around' },
   actions: { flexDirection: 'row', justifyContent: 'space-around' },
   action: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: wsize(30) },
-  actionHeader: { fontFamily: 'appFont', fontSize: wsize(5), textAlign: 'center' },
+  actionHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(5), textAlign: 'center' },
 
   bottomNavs: { backgroundColor: 'white', flexDirection: 'column', height: '10%', justifyContent: 'space-around', width: '100%' },
   bottomNavsRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },

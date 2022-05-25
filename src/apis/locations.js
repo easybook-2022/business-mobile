@@ -90,7 +90,7 @@ export const fetchNumorders = id => {
 
 export const setLocationHours = data => {
 	return axios.post(
-		`${url}/locations/set_hours`,
+		`${url}/locations/set_location_hours`,
 		data
 	)
 }

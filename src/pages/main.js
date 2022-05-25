@@ -246,7 +246,7 @@ export default function Main(props) {
 
       message += " for " + name + " " + displayTime(time) + " with stylist: " + worker
 
-      Speech.speak(message, { rate: 0.7 })
+      if (Constants.isDevice) Speech.speak(message, { rate: 0.7 })
     } else {
       const { name, quantity, customer, orderNumber } = data.speak
 
@@ -254,10 +254,12 @@ export default function Main(props) {
         case "checkout":
           message = customer + " ordered " + quantity + " of " + name + ". How long will be the wait ?"
 
-          Speech.speak(message, {
-            rate: 0.7,
-            onDone: () => Constants.isDevice ? startVoice() : {}
-          })
+          if (Constants.isDevice) {
+            Speech.speak(message, {
+              rate: 0.7,
+              onDone: () => Constants.isDevice ? startVoice() : {}
+            })
+          }
 
           break;
         default:
@@ -539,7 +541,10 @@ export default function Main(props) {
                   renderItem={({ item, index }) => 
                     <View key={item.key} style={styles.schedule}>
                       <View style={styles.scheduleImageHolder}>
-                        {(item.image && item.image.name != "") && <Image style={resizePhoto(item.image, wsize(20))} source={{ uri: logo_url + item.image.name }}/>}
+                        <Image 
+                          style={resizePhoto(item.image, wsize(20))} 
+                          source={item.image.name ? { uri: logo_url + item.image.name } : require("../../assets/noimage.jpeg")}
+                        />
                       </View>
                         
                       <Text style={styles.scheduleHeader}>
@@ -610,11 +615,7 @@ export default function Main(props) {
                 />
                 :
                 <View style={styles.bodyResult}>
-                  {numCartorderers == 0 ? 
-                    <Text style={styles.bodyResultHeader}>No order(s) yet</Text>
-                    :
-                    <Text style={styles.bodyResultHeader}>{numCartorderers} order(s)</Text>
-                  }
+                  <Text style={styles.bodyResultHeader}>{numCartorderers == 0 ? 'No order(s) yet' : numCartorderers + ' order(s)'}</Text>
                 </View>
             )}
   				</View>
@@ -834,9 +835,9 @@ const styles = StyleSheet.create({
 	bottomNavHeader: { color: 'black', fontSize: wsize(4), fontWeight: 'bold', paddingVertical: 5 },
 	bottomNavButton: { backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5 },
 	bottomNavButtonHeader: { color: 'white', fontSize: wsize(4), fontWeight: 'bold', textAlign: 'center' },
-
+  
 	cancelRequestBox: { backgroundColor: 'white', height: '100%', width: '100%' },
-	cancelRequestHeader: { fontFamily: 'appFont', fontSize: wsize(6), marginHorizontal: 30, marginTop: 50, textAlign: 'center' },
+	cancelRequestHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(6), marginHorizontal: 30, marginTop: 50, textAlign: 'center' },
 	cancelRequestInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), height: 200, margin: '5%', padding: 10, width: '90%' },
 	cancelRequestActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	cancelRequestTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 5, width: wsize(30) },
@@ -845,7 +846,7 @@ const styles = StyleSheet.create({
 	requiredBoxContainer: { backgroundColor: 'rgba(0, 0, 0, 0.7)' },
 	requiredBox: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	requiredContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },
-	requiredHeader: { fontFamily: 'appFont', fontSize: wsize(6), fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
+	requiredHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(6), fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
 	requiredActions: { alignItems: 'center', justifyContent: 'space-around' },
 	requiredAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: wsize(30) },
 	requiredActionHeader: { fontSize: wsize(4), textAlign: 'center' },
@@ -853,7 +854,7 @@ const styles = StyleSheet.create({
 	alertBoxContainer: { backgroundColor: 'rgba(0, 0, 0, 0.7)' },
 	alertBox: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	alertContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },
-	alertHeader: { fontFamily: 'appFont', fontSize: wsize(6), fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
+	alertHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(6), fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
 	alertActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	alertAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: wsize(30) },
 	alertActionHeader: { fontSize: wsize(4), textAlign: 'center' },

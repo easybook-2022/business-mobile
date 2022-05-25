@@ -2,19 +2,19 @@ import axios from 'axios'
 import { url } from '../../assets/info'
 
 export const verifyUser = cellnumber => {
-	return axios.get(`${url}/owners/verify/${cellnumber}`)
+	return axios.get(`${url}/owners/owner_verify/${cellnumber}`)
 }
 
 export const loginUser = data => {
 	return axios.post(
-		`${url}/owners/login`,
+		`${url}/owners/owner_login`,
 		data
 	)
 }
 
 export const registerUser = data => {
   return axios.post(
-    `${url}/owners/register`,
+    `${url}/owners/owner_register`,
     data
   )
 }
@@ -129,14 +129,14 @@ export const getOwnerInfo = id => {
 
 export const setOwnerHours = data => {
   return axios.post(
-    `${url}/owners/set_hours`,
+    `${url}/owners/set_owner_hours`,
     data
   )
 }
 
 export const updateNotificationToken = data => {
 	return axios.post(
-		`${url}/owners/update_notification_token`,
+		`${url}/owners/update_owner_notification_token`,
 		data
 	)
 }

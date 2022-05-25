@@ -5,6 +5,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Platform, Text, View, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Font from 'expo-font';
+import { useFonts, Chilanka_400Regular } from '@expo-google-fonts/chilanka';
 
 // pages
 import Auth from './src/pages/auth'
@@ -15,7 +16,6 @@ import Resetpassword from './src/pages/resetpassword'
 import Verifyowner from './src/pages/verifyowner'
 import List from './src/pages/list'
 import Locationsetup from './src/pages/locationsetup'
-
 import Main from './src/pages/main'
 import Booktime from './src/pages/booktime'
 import Cartorders from './src/pages/cartorders'
@@ -34,10 +34,10 @@ const wsize = p => {return width * (p / 100)}
 export default function App() {
   const Stack = createNativeStackNavigator();
 
-  const [loaded] = Font.useFonts({ appFont: require('./assets/Chilanka-Regular.ttf') });
+  const [fontLoaded] = useFonts({ Chilanka_400Regular });
   const [route, setRoute] = useState(null)
 
-  if (loaded) {
+  if (fontLoaded) {
     const retrieveId = async() => {
       const ownerid = await AsyncStorage.getItem("ownerid")
       const phase = await AsyncStorage.getItem("phase")
@@ -54,8 +54,8 @@ export default function App() {
     }
 
     retrieveId()
-
-    if (route != null) {
+    
+    if (route != null && fontLoaded) {
       return (
         <NavigationContainer>
           <Stack.Navigator initialRouteName={route}>

@@ -107,16 +107,16 @@ const styles = StyleSheet.create({
 	forgotpassword: { backgroundColor: 'white', height: '100%', width: '100%' },
 	box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 	background: { alignItems: 'center', flexDirection: 'column', height, justifyContent: 'space-around', position: 'absolute', top: 0, width: width },
-	
+  
 	inputsBox: { flexDirection: 'column', height: height / 2, justifyContent: 'space-around', width: '80%' },
 	inputContainer: { marginBottom: 30, width: '100%' },
   resetCodeHeader: { fontSize: wsize(4) },
-	inputHeader: { fontFamily: 'appFont', fontSize: wsize(7) },
+	inputHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(7) },
 	input: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(7), padding: 5, width: '100%' },
 	errorMsg: { color: 'darkred', fontSize: wsize(10), fontWeight: 'bold', textAlign: 'center' },
 	
-	submit: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontFamily: 'appFont', margin: 5, padding: 10 },
-  submitHeader: { fontFamily: 'appFont', fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
+	submit: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontFamily: 'Chilanka_400Regular', margin: 5, padding: 10 },
+  submitHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
 	
 	option: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, marginVertical: 10, paddingHorizontal: 10 },
   optionHeader: { fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },

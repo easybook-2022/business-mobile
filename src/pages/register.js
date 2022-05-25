@@ -10,6 +10,7 @@ import { Camera } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator'
 import * as ImagePicker from 'expo-image-picker';
 import { CommonActions } from '@react-navigation/native';
+import { getId } from 'geottuse-tools';
 import { saveUserInfo } from '../apis/owners'
 import { getLocationProfile } from '../apis/locations'
 import { ownerRegisterInfo, registerInfo, timeControl } from '../../assets/info'
@@ -18,8 +19,8 @@ import AntDesign from 'react-native-vector-icons/AntDesign'
 import Entypo from 'react-native-vector-icons/Entypo'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 
-// components
-import Loadingprogress from '../components/loadingprogress';
+// widgets
+import Loadingprogress from '../widgets/loadingprogress';
 
 const { height, width } = Dimensions.get('window')
 const wsize = p => {return width * (p / 100)}
@@ -278,12 +279,7 @@ export default function Register(props) {
 	const snapPhoto = async() => {
     setLoading(true)
 
-		let letters = [
-			"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", 
-			"n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"
-		]
-		let photo_name_length = Math.floor(Math.random() * (15 - 10)) + 10
-		let char = ""
+		let char = getId()
 
 		if (camComp) {
 			let options = { quality: 0, skipProcessing: true };
@@ -300,15 +296,6 @@ export default function Register(props) {
         photo_option,
         photo_save_option
       )
-
-      for (let k = 0; k <= photo_name_length - 1; k++) {
-        char += "" + (
-          k % 2 == 0 ? 
-            letters[Math.floor(Math.random() * letters.length)].toUpperCase()
-            :
-            Math.floor(Math.random() * 9) + 0
-        )
-      }
 
       FileSystem.moveAsync({
         from: photo.uri,
@@ -327,26 +314,12 @@ export default function Register(props) {
     setLoading(true)
     setChoosing(true)
 
-		let letters = [
-			"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", 
-			"n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"
-		]
-		let photo_name_length = Math.floor(Math.random() * (15 - 10)) + 10
-		let char = "", photo = await ImagePicker.launchImageLibraryAsync({
+		let char = getId(), photo = await ImagePicker.launchImageLibraryAsync({
 			mediaTypes: ImagePicker.MediaTypeOptions.Images,
 			aspect: [1, 1],
 			quality: 0.1,
 			base64: true
 		});
-
-		for (let k = 0; k <= photo_name_length - 1; k++) {
-      char += "" + (
-        k % 2 == 0 ? 
-          letters[Math.floor(Math.random() * letters.length)].toUpperCase()
-          :
-          Math.floor(Math.random() * 9) + 0
-      )
-		}
 
 		if (!photo.cancelled) {
 			FileSystem.moveAsync({
@@ -729,11 +702,11 @@ export default function Register(props) {
 const styles = StyleSheet.create({
 	register: { backgroundColor: 'white', height: '100%', width: '100%' },
 	box: { alignItems: 'center', backgroundColor: '#EAEAEA', flexDirection: 'column', height: '90%', justifyContent: 'space-between', width: '100%' },
-	boxHeader: { color: 'black', fontFamily: 'appFont', fontSize: wsize(7), fontWeight: 'bold' },
+	boxHeader: { color: 'black', fontFamily: 'Chilanka_400Regular', fontSize: wsize(7), fontWeight: 'bold' },
 
 	inputsBox: { alignItems: 'center', height: '90%', width: '100%' },
 	inputContainer: { width: '80%' },
-	inputHeader: { fontFamily: 'appFont', fontSize: wsize(5) },
+	inputHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(5) },
   inputInfo: { fontSize: wsize(5), margin: 10, textAlign: 'center' },
 	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), padding: 5, width: '100%' },
 
@@ -753,7 +726,7 @@ const styles = StyleSheet.create({
   workerDayTouchHeader: { fontSize: wsize(6), textAlign: 'center' },
 
   workerHoursBack: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, marginBottom: 20, padding: 10 },
-  workerHoursBackHeader: { fontFamily: 'appFont', fontSize: wsize(6), textAlign: 'center' },
+  workerHoursBackHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(6), textAlign: 'center' },
 
   // adjust working time for each day
   workerHour: { alignItems: 'center', backgroundColor: 'white', borderRadius: 10, marginTop: 30, padding: 5, width: '95%' },
@@ -772,11 +745,11 @@ const styles = StyleSheet.create({
   selectionDiv: { fontSize: wsize(6) },
 
   submit: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 30, padding: 5 },
-  submitHeader: { fontFamily: 'appFont', fontSize: wsize(7), textAlign: 'center' },
+  submitHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(7), textAlign: 'center' },
 
 	actions: { flexDirection: 'row', justifyContent: 'space-around' },
 	action: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 10, width: wsize(30) },
-	actionHeader: { fontFamily: 'appFont', fontSize: wsize(5), textAlign: 'center' },
+	actionHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(5), textAlign: 'center' },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'column', height: '10%', justifyContent: 'space-around', width: '100%' },
 	bottomNavsRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },

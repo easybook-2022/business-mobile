@@ -96,11 +96,11 @@ const style = StyleSheet.create({
 	
 	inputsBox: { alignItems: 'center', width: '80%' },
 	inputContainer: { marginBottom: 30, width: '100%' },
-	inputHeader: { fontFamily: 'appFont', fontSize: wsize(7) },
+	inputHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(7) },
 	input: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(7), padding: 5, width: '100%' },
 
-	submit: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontFamily: 'appFont', padding: 10, width: wsize(30) },
-	submitHeader: { fontFamily: 'appFont', fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
+	submit: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontFamily: 'Chilanka_400Regular', padding: 10, width: wsize(30) },
+	submitHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
 	
 	option: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, marginVertical: 10, padding: 5 },
 	optionHeader: { fontSize: wsize(4), fontWeight: 'bold' },

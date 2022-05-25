@@ -94,13 +94,13 @@ export default function Resetpassword(props) {
 const style = StyleSheet.create({
 	resetpassword: { backgroundColor: '#3C74FF', height: '100%', paddingTop: Platform.OS == "ios" ? 0 : Constants.statusBarHeight, width: '100%' },
 	box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-between', paddingVertical: 30, width: '100%' },
-	
+  
 	inputsBox: { alignItems: 'center', backgroundColor: 'rgba(2, 136, 255, 0.1)', paddingHorizontal: 20, width: '80%' },
 	inputContainer: { marginVertical: 5 },
-	inputHeader: { fontFamily: 'appFont', fontSize: wsize(5), fontWeight: 'bold' },
+	inputHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(5), fontWeight: 'bold' },
 	input: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), padding: 10, width: width - 100 },
 	
-	submit: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontFamily: 'appFont', marginVertical: 40, padding: 10, width: 100 },
+	submit: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontFamily: 'Chilanka_400Regular', marginVertical: 40, padding: 10, width: 100 },
 	submitHeader: { fontWeight: 'bold', textAlign: 'center' },
 	
 	options: {  },

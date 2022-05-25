@@ -10,6 +10,7 @@ import * as FileSystem from 'expo-file-system'
 import { Camera } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator'
 import * as ImagePicker from 'expo-image-picker';
+import { getId } from 'geottuse-tools';
 import { logo_url } from '../../assets/info'
 import { getProductInfo, addNewProduct, updateProduct } from '../apis/products'
 
@@ -18,8 +19,8 @@ import AntDesign from 'react-native-vector-icons/AntDesign'
 import Entypo from 'react-native-vector-icons/Entypo'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 
-// components
-import Loadingprogress from '../components/loadingprogress';
+// widgets
+import Loadingprogress from '../widgets/loadingprogress';
 
 const { height, width } = Dimensions.get('window')
 const wsize = p => {return width * (p / 100)}
@@ -330,12 +331,7 @@ export default function Addproduct(props) {
 	const snapPhoto = async() => {
     setImage({ ...image, loading: true })
 
-		let letters = [
-			"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", 
-			"n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"
-		]
-		let photo_name_length = Math.floor(Math.random() * (15 - 10)) + 10
-		let char = "", captured, self = this
+		let char = getId()
 
 		if (camComp) {
 			let options = { quality: 0, skipProcessing: true };
@@ -352,15 +348,6 @@ export default function Addproduct(props) {
 				photo_option,
 				photo_save_option
 			)
-
-			for (let k = 0; k <= photo_name_length - 1; k++) {
-				char += "" + (
-          k % 2 == 0 ? 
-            letters[Math.floor(Math.random() * letters.length)].toUpperCase()
-            :
-            Math.floor(Math.random() * 9) + 0
-        )
-			}
 
 			FileSystem.moveAsync({
 				from: photo.uri,
@@ -379,27 +366,13 @@ export default function Addproduct(props) {
 	const choosePhoto = async() => {
     setChoosing(true)
 
-		let letters = [
-			"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", 
-			"n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"
-		]
-		let photo_name_length = Math.floor(Math.random() * (15 - 10)) + 10
-		let char = "", captured, self = this
+		let char = getId(), captured, self = this
 		let photo = await ImagePicker.launchImageLibraryAsync({
 			mediaTypes: ImagePicker.MediaTypeOptions.Images,
 			aspect: [4, 3],
 			quality: 0.1,
 			base64: true
 		});
-
-		for (let k = 0; k <= photo_name_length - 1; k++) {
-			char += "" + (
-        k % 2 == 0 ? 
-          letters[Math.floor(Math.random() * letters.length)].toUpperCase() 
-          : 
-          Math.floor(Math.random() * 9) + 0
-        )
-		}
 
 		if (!photo.cancelled) {
 			FileSystem.moveAsync({
@@ -478,7 +451,7 @@ export default function Addproduct(props) {
 					const newOptions = [], newOthers = [], newSizes = []
 
 					setName(name)
-					setImage({ ...image, uri: logo_url + image.name })
+					setImage({ ...image, uri: image.name ? logo_url + image.name : "" })
 					setPrice(price)
 
 					options.forEach(function (option, index) {

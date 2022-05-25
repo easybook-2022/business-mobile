@@ -13,7 +13,8 @@ import { orderDone, setWaitTime } from '../apis/carts'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
 
-import Loadingprogress from '../components/loadingprogress'
+// widgets
+import Loadingprogress from '../widgets/loadingprogress'
 
 const { height, width } = Dimensions.get('window')
 const wsize = p => {return width * (p / 100)}
@@ -136,7 +137,10 @@ export default function Cartorders(props) {
 						<View style={styles.item} key={item.key}>
 							<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
 								<View style={styles.itemImageHolder}>
-                  {(item.image && item.image.name != "") && <Image source={{ uri: logo_url + item.image.name }} style={resizePhoto(item.image, wsize(30))}/>}
+                  <Image 
+                    source={item.image.name ? { uri: logo_url + item.image.name } : require("../../assets/noimage.jpeg")} 
+                    style={resizePhoto(item.image, wsize(30))}
+                  />
                 </View>
 
 								<View style={styles.itemInfos}>
@@ -295,11 +299,11 @@ const styles = StyleSheet.create({
   actions: { flexDirection: 'row', justifyContent: 'space-around' },
 	action: { borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, margin: 10, padding: 10, width: wsize(30) },
 	actionHeader: { fontSize: wsize(4), textAlign: 'center' },
-
+  
 	requiredBoxContainer: { backgroundColor: 'rgba(0, 0, 0, 0.7)' },
 	requiredBox: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	requiredContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },
-	requiredHeader: { fontFamily: 'appFont', fontSize: wsize(5), fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
+	requiredHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(5), fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
 	requiredActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	requiredAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: wsize(30) },
 	requiredActionHeader: { fontSize: wsize(4), textAlign: 'center' },

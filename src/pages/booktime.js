@@ -810,7 +810,7 @@ const styles = StyleSheet.create({
   bottomNavHeader: { color: 'black', fontSize: wsize(4), fontWeight: 'bold', paddingVertical: 5 },
   bottomNavButton: { backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5 },
   bottomNavButtonHeader: { color: 'white', fontSize: wsize(4), fontWeight: 'bold', textAlign: 'center' },
-
+  
   // confirm & requested box
   confirmBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
   confirmContainer: { backgroundColor: 'white', flexDirection: 'column', justifyContent: 'space-around', padding: 10, width: '80%' },
@@ -822,8 +822,8 @@ const styles = StyleSheet.create({
   confirmOptionHeader: { fontSize: wsize(4) },
   requestedHeaders: { alignItems: 'center', paddingHorizontal: 20 },
   requestedClose: { borderRadius: 5, borderStyle: 'solid', borderWidth: 1, marginVertical: 10, padding: 5, width: 100 },
-  requestedCloseHeader: { fontFamily: 'appFont', fontSize: wsize(5), textAlign: 'center' },
-  requestedHeader: { fontFamily: 'appFont', fontSize: wsize(5), textAlign: 'center' },
+  requestedCloseHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(5), textAlign: 'center' },
+  requestedHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(5), textAlign: 'center' },
   requestedHeaderInfo: { fontSize: wsize(5), textAlign: 'center' },
 
   column: { flexDirection: 'column', justifyContent: 'space-around' }
