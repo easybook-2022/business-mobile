@@ -4,12 +4,12 @@ import {
   TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet, Modal 
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { CommonActions } from '@react-navigation/native';
+import { StackActions } from '@react-navigation/native';
 import { socket, logo_url } from '../../assets/info'
 import { displayTime, resizePhoto } from 'geottuse-tools'
 
 import { getLocationHours } from '../apis/locations'
-import { getWorkers, getWorkerInfo, getAllWorkersTime } from '../apis/owners'
+import { getWorkers, getWorkerInfo, getAllWorkersTime, logoutUser } from '../apis/owners'
 import { getAppointmentInfo, salonChangeAppointment } from '../apis/schedules'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
@@ -89,6 +89,7 @@ export default function Booktime(props) {
           setName(name)
           setOldtime(unixtime)
           setSelectedworkerinfo(prev => ({ ...prev, worker }))
+          getTheLocationHours(unixtime)
         }
       })
       .catch((err) => {
@@ -262,10 +263,10 @@ export default function Booktime(props) {
           selectedMonth = months[selectedTime.getMonth()]
 
           getCalendar(selectedTime.getMonth(), selectedTime.getFullYear())
-          setSelecteddateinfo({ month: selectedMonth, year: selectedTime.getFullYear(), day: selectedDay.substr(0, 3), date: selectedDate, time })
+          setSelecteddateinfo({ ...selectedDateinfo, month: selectedMonth, year: selectedTime.getFullYear(), day: selectedDay.substr(0, 3), date: selectedDate, time })
           setScheduledtimes(scheduled)
-          setOpentime({ hour: openHour, minute: openMinute })
-          setClosetime({ hour: closeHour, minute: closeMinute })
+          setOpentime({ ...openTime, hour: openHour, minute: openMinute })
+          setClosetime({ ...closeTime, hour: closeHour, minute: closeMinute })
           setLoaded(true)
         }
       })
@@ -418,12 +419,7 @@ export default function Booktime(props) {
               setConfirm({ ...confirm, show: false, requested: false })
 
               setTimeout(function () {
-                props.navigation.dispatch(
-                  CommonActions.reset({
-                    index: 0,
-                    routes: [{ name: "main" }]
-                  })
-                )
+                props.navigation.dispatch(StackActions.replace("main"))
               }, 1000)
             }, 2000)
           })
@@ -441,16 +437,26 @@ export default function Booktime(props) {
   const logout = async() => {
     const ownerid = await AsyncStorage.getItem("ownerid")
 
-    socket.emit("socket/business/logout", ownerid, () => {
-      AsyncStorage.clear()
+    logoutUser(ownerid)
+      .then((res) => {
+        if (res.status == 200) {
+          return res.data
+        }
+      })
+      .then((res) => {
+        if (res) {
+          socket.emit("socket/business/logout", ownerid, () => {
+            AsyncStorage.clear()
 
-      props.navigation.dispatch(
-        CommonActions.reset({
-          index: 1,
-          routes: [{ name: 'auth' }]
-        })
-      );
-    })
+            props.navigation.dispatch(StackActions.replace('auth'))
+          })
+        }
+      })
+      .catch((err) => {
+        if (err.response && err.response.status == 400) {
+          const { errormsg, status } = err.response.data
+        }
+      })  
   }
 
   useEffect(() => {
@@ -458,10 +464,6 @@ export default function Booktime(props) {
     getAllTheWorkersTime()
     getTheAppointmentInfo()
   }, [])
-
-  useEffect(() => {
-    getTheLocationHours(oldTime)
-  }, [selectedWorkerinfo.worker != null])
 
   return (
     <SafeAreaView style={styles.booktime}>
@@ -488,7 +490,10 @@ export default function Booktime(props) {
                           info.id ? 
                             <TouchableOpacity key={info.key} style={[styles.worker, { backgroundColor: (selectedWorkerinfo.worker && selectedWorkerinfo.worker.id == info.id) ? 'rgba(0, 0, 0, 0.3)' : null }]} disabled={selectedWorkerinfo.loading} onPress={() => selectWorker(info.id)}>
                               <View style={styles.workerProfile}>
-                                {info.profile.name && <Image source={{ uri: logo_url + info.profile.name }} style={resizePhoto(info.profile, wsize(20))}/>}
+                                <Image 
+                                  source={info.profile.name ? { uri: logo_url + info.profile.name } : require("../../assets/profilepicture.jpeg")} 
+                                  style={resizePhoto(info.profile, wsize(20))}
+                                />
                               </View>
 
                               <Text style={styles.workerHeader}>{info.username}</Text>
@@ -674,12 +679,7 @@ export default function Booktime(props) {
               AsyncStorage.clearItem("locationtype")
               AsyncStorage.setItem("phase", "list")
 
-              props.navigation.dispatch(
-                CommonActions.reset({
-                  index: 1,
-                  routes: [{ name: 'list' }]
-                })
-              );
+              props.navigation.dispatch(StackActions.replace('list'));
             }}>
               <Text style={styles.bottomNavButtonHeader}>Switch Business</Text>
             </TouchableOpacity>

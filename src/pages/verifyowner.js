@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { SafeAreaView, Platform, ActivityIndicator, Dimensions, View, ImageBackground, Text, TextInput, Image, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
-import { CommonActions } from '@react-navigation/native';
 import { verifyUser, registerUser } from '../apis/owners'
 import { ownerRegisterInfo, registerInfo, isLocal } from '../../assets/info'
 import { displayPhonenumber } from 'geottuse-tools'

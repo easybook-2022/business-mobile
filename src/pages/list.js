@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { SafeAreaView, ActivityIndicator, Dimensions, FlatList, View, Image, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { CommonActions } from '@react-navigation/native';
+import { StackActions } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getAllLocations } from '../apis/locations'
 import { resizePhoto } from 'geottuse-tools';
@@ -35,12 +35,7 @@ export default function Locationslist(props) {
     socket.emit("socket/business/logout", ownerid, () => {
       AsyncStorage.clear()
 
-      props.navigation.dispatch(
-        CommonActions.reset({
-          index: 1,
-          routes: [{ name: 'auth' }]
-        })
-      );
+      props.navigation.dispatch(StackActions.replace('auth'));
     })
   }
 
@@ -56,12 +51,7 @@ export default function Locationslist(props) {
             AsyncStorage.setItem("phase", "locationsetup")
             AsyncStorage.setItem("newBusiness", "true")
 
-            props.navigation.dispatch(
-              CommonActions.reset({
-                index: 0,
-                routes: [{ name: "locationsetup" }]
-              })
-            )
+            props.navigation.dispatch(StackActions.replace('locationsetup'))
           }}>
             <View style={styles.column}><Text style={styles.listAddHeader}>Add a business</Text></View>
             <View style={styles.column}><AntDesign name="pluscircleo" size={30}/></View>
@@ -77,12 +67,7 @@ export default function Locationslist(props) {
                 AsyncStorage.setItem("locationtype", item.type)
                 AsyncStorage.setItem("phase", "main")
 
-                props.navigation.dispatch(
-                  CommonActions.reset({
-                    index: 0,
-                    routes: [{ name: "main" }]
-                  })
-                )
+                props.navigation.dispatch(StackActions.replace('main'))
               }}>
                 <View style={styles.locationImageHolder}>
                   <Image style={resizePhoto(item.logo, wsize(20))} source={{ uri: logo_url + item.logo.name }}/>

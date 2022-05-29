@@ -5,7 +5,6 @@ import {
 } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
-import { CommonActions } from '@react-navigation/native';
 import * as FileSystem from 'expo-file-system'
 import { Camera } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator'
@@ -299,7 +298,7 @@ export default function Addservice(props) {
 					setName(serviceInfo.name)
 					setImage({ 
             ...image, 
-            uri: serviceInfo.image.name ? logo_url + serviceInfo.image.name : ""
+            uri: serviceInfo.serviceImage.name ? logo_url + serviceInfo.serviceImage.name : ""
           })
 					setPrice(serviceInfo.price.toString())
 					setLoaded(true)

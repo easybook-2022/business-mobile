@@ -1,6 +1,7 @@
 import React from 'react';
 import { SafeAreaView, Platform, View, Text, Image, TouchableOpacity, Dimensions, StyleSheet } from 'react-native';
 import Constants from 'expo-constants';
+import * as Speech from 'expo-speech';
 
 const { height, width } = Dimensions.get('window')
 const wsize = p => {return width * (p / 100)}

@@ -12,6 +12,10 @@ export const loginUser = data => {
 	)
 }
 
+export const logoutUser = id => {
+  return axios.get(`${url}/owners/owner_logout/${id}`)
+}
+
 export const registerUser = data => {
   return axios.post(
     `${url}/owners/owner_register`,
@@ -25,7 +29,11 @@ export const saveUserInfo = data => {
   
   form.append("id", data.id)
   form.append("username", data.username)
-  form.append("profile", { uri, name, type })
+
+  if (data.profile.uri.includes("file")) {
+    form.append("profile", { uri, name, type })
+  }
+  
   form.append("size", JSON.stringify(size))
   form.append("hours", JSON.stringify(data.hours))
 

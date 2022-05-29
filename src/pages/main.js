@@ -8,14 +8,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useKeepAwake } from 'expo-keep-awake'
 import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
-import { CommonActions } from '@react-navigation/native';
+import { StackActions } from '@react-navigation/native';
 import * as FileSystem from 'expo-file-system'
 import * as ImageManipulator from 'expo-image-manipulator'
 import * as Speech from 'expo-speech'
 import Voice from '@react-native-voice/voice';
 import { socket, logo_url } from '../../assets/info'
 import { displayTime, resizePhoto } from 'geottuse-tools'
-import { updateNotificationToken, getOwnerInfo } from '../apis/owners'
+import { updateNotificationToken, getOwnerInfo, logoutUser } from '../apis/owners'
 import { fetchNumAppointments, fetchNumCartOrderers, getLocationProfile } from '../apis/locations'
 import { getMenus, removeMenu, addNewMenu } from '../apis/menus'
 import { cancelSchedule, doneService, getAppointments, getCartOrderers } from '../apis/schedules'
@@ -91,7 +91,7 @@ export default function Main(props) {
         })
         .then((res) => {
           if (res) {
-
+            
           }
         })
         .catch((err) => {
@@ -406,16 +406,21 @@ export default function Main(props) {
   const logout = async() => {
     const ownerid = await AsyncStorage.getItem("ownerid")
 
-    socket.emit("socket/business/logout", ownerid, () => {
-      AsyncStorage.clear()
+    logoutUser(ownerid)
+      .then((res) => {
+        if (res.status == 200) {
+          return res.data
+        }
+      })
+      .then((res) => {
+        if (res) {
+          socket.emit("socket/business/logout", ownerid, () => {
+            AsyncStorage.clear()
 
-      props.navigation.dispatch(
-        CommonActions.reset({
-          index: 1,
-          routes: [{ name: 'auth' }]
-        })
-      );
-    })
+            props.navigation.dispatch(StackActions.replace("auth"));
+          })
+        }
+      })
   }
 	const startWebsocket = () => {
 		socket.on("updateSchedules", data => {
@@ -623,7 +628,7 @@ export default function Main(props) {
   				<View style={styles.bottomNavs}>
   					<View style={styles.bottomNavsRow}>
               <View style={styles.column}>
-    						<TouchableOpacity style={styles.bottomNav} onPress={() => props.navigation.navigate("settings", { refetch: () => initialize()})}>
+    						<TouchableOpacity style={styles.bottomNav} onPress={() => props.navigation.navigate("settings", { refetch: () => initialize() })}>
     							<AntDesign name="setting" size={wsize(7)}/>
     						</TouchableOpacity>
               </View>
@@ -634,12 +639,7 @@ export default function Main(props) {
                   AsyncStorage.removeItem("locationtype")
                   AsyncStorage.setItem("phase", "list")
 
-                  props.navigation.dispatch(
-                    CommonActions.reset({
-                      index: 1,
-                      routes: [{ name: 'list' }]
-                    })
-                  );
+                  props.navigation.dispatch(StackActions.replace("list"));
                 }}>
                   <Text style={styles.bottomNavButtonHeader}>Switch Business</Text>
                 </TouchableOpacity>

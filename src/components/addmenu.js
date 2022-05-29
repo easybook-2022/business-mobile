@@ -6,7 +6,6 @@ import {
 } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
-import { CommonActions } from '@react-navigation/native';
 import * as FileSystem from 'expo-file-system'
 import { Camera } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator'
@@ -139,10 +138,10 @@ export default function Addmenu(props) {
 			})
 			.then((res) => {
 				if (res) {
-					const { name, image } = res.info
+					const { name, menuImage } = res.info
 
 					setName(name)
-					setImage({ ...image, uri: logo_url + image.name })
+					setImage({ ...image, uri: menuImage.name ? logo_url + menuImage.name : "" })
 					setLoaded(true)
 				}
 			})

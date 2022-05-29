@@ -6,7 +6,7 @@ import {
 } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
-import { CommonActions } from '@react-navigation/native';
+import { StackActions } from '@react-navigation/native';
 import * as FileSystem from 'expo-file-system'
 import { Camera } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator'
@@ -670,8 +670,9 @@ export default function Menu(props) {
                 {menuInfo.list.length == 0 && (
                   <>
                     <TouchableOpacity style={styles.menuStart} onPress={() => setCreateoptionbox({ ...createOptionbox, show: true, id: "", allow: "both" })}>
-                      <Text style={styles.menuStartHeader}>Add to list</Text>
+                      <Text style={styles.menuStartHeader}>Create manually</Text>
                     </TouchableOpacity>
+                    <Text>(Easier for {locationType == "nail" || locationType == "hair" ? "clients to book" : "customers to order"})</Text>
                     <Text style={styles.menuStartDiv}>Or</Text>
                   </>
                 )}
@@ -680,8 +681,9 @@ export default function Menu(props) {
                   allowCamera()
                   setUploadmenubox({ ...uploadMenubox, show: true, uri: '', name: '' })
                 }}>
-                  <Text style={styles.menuStartHeader}>Upload menu photo</Text>
+                  <Text style={styles.menuStartHeader}>Upload photo</Text>
                 </TouchableOpacity>
+                <Text>(Easier for you)</Text>
               </View>
             )}
 					</ScrollView>
@@ -692,26 +694,14 @@ export default function Menu(props) {
 								<AntDesign name="setting" size={wsize(7)}/>
 							</TouchableOpacity>
 
-							<TouchableOpacity style={styles.bottomNav} onPress={() => {
-								props.navigation.dispatch(
-									CommonActions.reset({
-										index: 1,
-										routes: [{ name: 'main' }]
-									})
-								);
-							}}>
+							<TouchableOpacity style={styles.bottomNav} onPress={() => props.navigation.dispatch(StackActions.replace('main'))}>
 								<Entypo name="home" size={wsize(7)}/>
 							</TouchableOpacity>
 
 							<TouchableOpacity style={styles.bottomNav} onPress={() => {
 								AsyncStorage.clear()
 
-								props.navigation.dispatch(
-									CommonActions.reset({
-										index: 1,
-										routes: [{ name: 'auth' }]
-									})
-								);
+								props.navigation.dispatch(StackActions.replace('auth'));
 							}}>
 								<Text style={styles.bottomNavHeader}>Log-Out</Text>
 							</TouchableOpacity>

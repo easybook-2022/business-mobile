@@ -5,7 +5,6 @@ import {
 } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
-import { CommonActions } from '@react-navigation/native';
 import * as FileSystem from 'expo-file-system'
 import { Camera } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator'
@@ -447,11 +446,11 @@ export default function Addproduct(props) {
 			})
 			.then((res) => {
 				if (res) {
-					const { image, name, options, others, sizes, price } = res.productInfo
+					const { productImage, name, options, others, sizes, price } = res.productInfo
 					const newOptions = [], newOthers = [], newSizes = []
 
 					setName(name)
-					setImage({ ...image, uri: image.name ? logo_url + image.name : "" })
+					setImage({ ...image, uri: productImage.name ? logo_url + productImage.name : "" })
 					setPrice(price)
 
 					options.forEach(function (option, index) {
