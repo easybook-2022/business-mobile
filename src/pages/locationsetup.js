@@ -65,7 +65,7 @@ export default function Locationsetup({ navigation }) {
 	const [errorMsg, setErrormsg] = useState('')
 
 	const setupYourLocation = async() => {
-    //setLoading(true)
+    setLoading(true)
 
 		const ownerid = await AsyncStorage.getItem("ownerid")
     const hours = {}
@@ -157,30 +157,28 @@ export default function Locationsetup({ navigation }) {
           })
           .then((res) => {
             if (res) {
-              // const { id } = res
+              const { id } = res
 
-              // AsyncStorage.setItem("locationid", id.toString())
-              // AsyncStorage.setItem("locationtype", type)
+              AsyncStorage.setItem("locationid", id.toString())
+              AsyncStorage.setItem("locationtype", type)
 
-              // setLoading(false)
+              setLoading(false)
 
-              // if (type == "restaurant" || type == "store") {
-              //   AsyncStorage.setItem("phase", "main")
+              if (type == "restaurant" || type == "store") {
+                AsyncStorage.setItem("phase", "main")
 
-              //   navigation.dispatch(StackActions.replace('main', { firstTime: !newBusiness ? true : false }))
-              // } else {
-              //   if (newBusiness) {
-              //     AsyncStorage.setItem("phase", "main")
+                navigation.dispatch(StackActions.replace('main', { firstTime: !newBusiness ? true : false }))
+              } else {
+                if (newBusiness) {
+                  AsyncStorage.setItem("phase", "main")
 
-              //     navigation.dispatch(StackActions.replace('main'))
-              //   } else {
-              //     AsyncStorage.setItem("phase", "register")
+                  navigation.dispatch(StackActions.replace('main'))
+                } else {
+                  AsyncStorage.setItem("phase", "register")
 
-              //     navigation.dispatch(StackActions.replace('register'))
-              //   }
-              // }
-
-              alert(JSON.stringify(res))
+                  navigation.dispatch(StackActions.replace('register'))
+                }
+              }
             }
           })
           .catch((err) => {

@@ -19,7 +19,7 @@ const realStores = [
 const emptyStore = { storeName: "", storeType: "", phonenumber: "", addressOne: "", addressTwo: "", city: "", province: "", postalcode: "", longitude: 0, latitude: 0 }
 
 const testOwners = [
-	{ id: 0, username: 'owner1', cellnumber: "(000) 000-0000", password: "password" },
+	{ id: 0, username: 'owner1', cellnumber: "(647) 926-3868", password: "password" },
 	{ id: 1, username: 'owner2', cellnumber: "(111) 111-1111", password: "password" },
 	{ id: 2, username: 'owner3', cellnumber: "(222) 222-2222", password: "password" },
 	{ id: 3, username: 'owner4', cellnumber: "(333) 333-3333", password: "password" },
@@ -70,6 +70,7 @@ export const registerInfo = {
 }
 export const url = local_url ? wifi_api_url : server_api_url
 export const isLocal = test_input
+export const useSpeech = false
 export const logo_url = url + "/static/"
 export const timeControl = (timetype, value, dir, open) => {
   let hour, minute, period

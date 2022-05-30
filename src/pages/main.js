@@ -13,7 +13,7 @@ import * as FileSystem from 'expo-file-system'
 import * as ImageManipulator from 'expo-image-manipulator'
 import * as Speech from 'expo-speech'
 import Voice from '@react-native-voice/voice';
-import { socket, logo_url } from '../../assets/info'
+import { socket, logo_url, useSpeech } from '../../assets/info'
 import { displayTime, resizePhoto } from 'geottuse-tools'
 import { updateNotificationToken, getOwnerInfo, logoutUser } from '../apis/owners'
 import { fetchNumAppointments, fetchNumCartOrderers, getLocationProfile } from '../apis/locations'
@@ -91,7 +91,7 @@ export default function Main(props) {
         })
         .then((res) => {
           if (res) {
-            
+
           }
         })
         .catch((err) => {
@@ -246,7 +246,7 @@ export default function Main(props) {
 
       message += " for " + name + " " + displayTime(time) + " with stylist: " + worker
 
-      if (Constants.isDevice) Speech.speak(message, { rate: 0.7 })
+      if (Constants.isDevice && useSpeech == true) Speech.speak(message, { rate: 0.7 })
     } else {
       const { name, quantity, customer, orderNumber } = data.speak
 
@@ -254,7 +254,7 @@ export default function Main(props) {
         case "checkout":
           message = customer + " ordered " + quantity + " of " + name + ". How long will be the wait ?"
 
-          if (Constants.isDevice) {
+          if (Constants.isDevice && useSpeech == true) {
             Speech.speak(message, {
               rate: 0.7,
               onDone: () => Constants.isDevice ? startVoice() : {}

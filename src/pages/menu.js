@@ -640,7 +640,7 @@ export default function Menu(props) {
                                   <Image style={{ height: '100%', width: '100%' }} source={{ uri: logo_url + item.photo.name }}/>
                                 </View>
 
-                                <View style={styles.menuPhotoActions}>
+                                <View style={[styles.menuPhotoActions, { marginTop: -30 }]}>
                                   {isOwner == true && (
                                     <TouchableOpacity style={styles.menuPhotoAction} onPress={() => setMenuphotooption({ ...menuPhotooption, show: true, action: 'delete', info: item.photo })}>
                                       <Text style={styles.menuPhotoActionHeader}>Delete</Text>
@@ -1003,7 +1003,7 @@ const styles = StyleSheet.create({
 	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 
 	menuRow: { flexDirection: 'row', justifyContent: 'space-between', padding: 5 },
-	menuPhotoActions: { flexDirection: 'row', justifyContent: 'space-around', marginTop: -50 },
+	menuPhotoActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	menuPhotoAction: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 3 },
 	menuPhotoActionHeader: { fontSize: wsize(3), textAlign: 'center' },
 	menuStart: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5 },
