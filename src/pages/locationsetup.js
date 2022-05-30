@@ -157,7 +157,7 @@ export default function Locationsetup({ navigation }) {
           })
           .then((res) => {
             if (res) {
-              const { id } = res
+              const { id, ownerProfile } = res
 
               AsyncStorage.setItem("locationid", id.toString())
               AsyncStorage.setItem("locationtype", type)
@@ -169,7 +169,7 @@ export default function Locationsetup({ navigation }) {
 
                 navigation.dispatch(StackActions.replace('main', { firstTime: !newBusiness ? true : false }))
               } else {
-                if (newBusiness) {
+                if (ownerProfile["name"] != "") {
                   AsyncStorage.setItem("phase", "main")
 
                   navigation.dispatch(StackActions.replace('main'))
@@ -553,7 +553,7 @@ export default function Locationsetup({ navigation }) {
                       )}
 
                       {locationInfo === 'destination' && (
-                        <View style={{ alignItems: 'center', height: '100%', width: '100%' }}>
+                        <View style={{ alignItems: 'center', width: '100%' }}>
                           <Text style={styles.locationHeader}>Your {(type == 'hair' || type == 'nail') ? type + ' salon' : type} is located at</Text>
                           {(locationCoords.longitude && locationCoords.latitude) ? 
                             <>

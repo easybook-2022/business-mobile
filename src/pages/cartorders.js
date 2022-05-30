@@ -28,6 +28,7 @@ export default function Cartorders(props) {
 	const [ready, setReady] = useState(false)
 	const [loading, setLoading] = useState(false)
 	const [showNoorders, setShownoorders] = useState(false)
+  const [showNowaittime, setShownowaittime] = useState(false)
   const [showSetwaittime, setShowsetwaittime] = useState({ show: false, waitTime: '' })
 
 	const getTheOrders = async() => {
@@ -89,6 +90,10 @@ export default function Cartorders(props) {
             switch (status) {
               case "nonexist":
                 setShownoorders(true)
+
+                break
+              case "nowaittime":
+                setShownowaittime(true)
 
                 break
               default:
@@ -226,6 +231,23 @@ export default function Cartorders(props) {
 					</SafeAreaView>
 				</Modal>
 			)}
+      {showNowaittime && (
+        <Modal transparent={true}>
+          <SafeAreaView style={styles.requiredBoxContainer}>
+            <View style={styles.requiredBox}>
+              <View style={styles.requiredContainer}>
+                <Text style={styles.requiredHeader}>Please tell the customer the wait time for this order</Text>
+
+                <View style={styles.requiredActions}>
+                  <TouchableOpacity style={styles.requiredAction} onPress={() => setShownowaittime(false)}>
+                    <Text style={styles.requiredActionHeader}>Close</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </SafeAreaView>
+        </Modal>
+      )}
       {showSetwaittime.show && (
         <Modal transparent={true}>
           <SafeAreaView style={styles.waitTimeBox}>

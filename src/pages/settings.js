@@ -50,7 +50,7 @@ export default function Settings(props) {
 	const [postalcode, setPostalcode] = useState(loginInfo.postalcode)
 	const [logo, setLogo] = useState({ uri: '', name: '', size: { width: 0, height: 0 }, loading: false })
   const [locationReceivetype, setLocationreceivetype] = useState('')
-	const [type, setType] = useState('')
+	const [type, setType] = useState(props.route.params.type)
 
 	// location hours
 	const [days, setDays] = useState([
@@ -118,7 +118,7 @@ export default function Settings(props) {
         const time = (Date.now() / 1000).toString().split(".")[0]
         const data = {
           id, storeName, phonenumber, addressOne, addressTwo, city, province, postalcode, logo,
-          longitude, latitude, ownerid: ownerId, time
+          longitude, latitude
         }
 
         setLoading(true)
@@ -786,7 +786,6 @@ export default function Settings(props) {
 					setProvince(province)
 					setPostalcode(postalcode)
 					setLogo({ ...logo, uri: logo_url + logo.name, size: { width: logo.width, height: logo.height }})
-					setType(type)
           setLocationreceivetype(receiveType)
 					setDays(hours)
           setHoursrange(hours)
@@ -1113,7 +1112,8 @@ export default function Settings(props) {
 	useEffect(() => {
 		getTheLocationProfile()
     getTheOwnerInfo()
-		getAllAccounts()
+
+		if (type == "hair" || type == "nail") getAllAccounts()
 	}, [])
 
 	return (

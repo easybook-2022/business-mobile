@@ -31,7 +31,6 @@ export const setupLocation = data => {
   form.append("longitude", data.longitude)
   form.append("latitude", data.latitude)
   form.append("ownerid", data.ownerid)
-  form.append("time", data.time)
   form.append("logo", { uri, name, type })
   form.append("size", JSON.stringify(size))
 
@@ -55,8 +54,6 @@ export const updateLocation = data => {
 	form.append("postalcode", data.postalcode)
 	form.append("longitude", data.longitude)
 	form.append("latitude", data.latitude)
-	form.append("ownerid", data.ownerid)
-	form.append("time", data.time)
 
 	if (data.logo.uri.includes("file")) {
 		form.append("logo", { uri, name, type })

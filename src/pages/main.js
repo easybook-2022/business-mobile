@@ -628,7 +628,7 @@ export default function Main(props) {
   				<View style={styles.bottomNavs}>
   					<View style={styles.bottomNavsRow}>
               <View style={styles.column}>
-    						<TouchableOpacity style={styles.bottomNav} onPress={() => props.navigation.navigate("settings", { refetch: () => initialize() })}>
+    						<TouchableOpacity style={styles.bottomNav} onPress={() => props.navigation.navigate("settings", { type: locationType, refetch: () => initialize() })}>
     							<AntDesign name="setting" size={wsize(7)}/>
     						</TouchableOpacity>
               </View>

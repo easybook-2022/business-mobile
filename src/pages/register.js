@@ -50,6 +50,7 @@ export default function Register(props) {
   const getInfo = async() => {
     const locationid = await AsyncStorage.getItem("locationid")
     const locationtype = await AsyncStorage.getItem("locationtype")
+    const newBusiness = await AsyncStorage.getItem("newBusiness")
     const data = { locationid }
 
     getLocationProfile(data)
@@ -416,9 +417,7 @@ export default function Register(props) {
     }
   }
 
-  useEffect(() => {
-    getInfo()
-  }, [])
+  useEffect(() => getInfo(), [])
 
 	return (
 		<SafeAreaView style={styles.register}>
