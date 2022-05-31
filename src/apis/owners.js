@@ -131,6 +131,10 @@ export const getOtherWorkers = data => {
   )
 }
 
+export const getWorkersTime = locationid => {
+  return axios.get(`${url}/owners/get_workers_time/${locationid}`)
+}
+
 export const getOwnerInfo = id => {
   return axios.get(`${url}/owners/get_owner_info/${id}`)
 }

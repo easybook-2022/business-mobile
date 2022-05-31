@@ -169,7 +169,7 @@ export default function Locationsetup({ navigation }) {
 
                 navigation.dispatch(StackActions.replace('main', { firstTime: !newBusiness ? true : false }))
               } else {
-                if (ownerProfile["name"] != "") {
+                if (ownerProfile["name"] != undefined) {
                   AsyncStorage.setItem("phase", "main")
 
                   navigation.dispatch(StackActions.replace('main'))
@@ -516,6 +516,8 @@ export default function Locationsetup({ navigation }) {
   useEffect(() => {
     initialize()
   }, [])
+
+  const header = type == 'hair' || type == 'nail' ? type + ' salon' : type
   
 	return (
 		<SafeAreaView style={[styles.locationsetup, { opacity: loading ? 0.5 : 1 }]}>
@@ -529,7 +531,7 @@ export default function Locationsetup({ navigation }) {
                     <View style={styles.locationContainer}>
                       {locationInfo === '' && (
                         <View style={{ alignItems: 'center', height: '100%' }}>
-                          <Text style={styles.locationHeader}>If you are at the {(type == 'hair' || type == 'nail') ? type + ' salon' : type} right now,</Text>
+                          <Text style={styles.locationHeader}>If you are at the {header} right now,</Text>
 
                           <TouchableOpacity style={[styles.locationActionOption, { width: width * 0.5 }]} disabled={loading} onPress={() => markLocation()}>
                             <Text style={styles.locationActionOptionHeader}>Mark your location</Text>
@@ -554,7 +556,7 @@ export default function Locationsetup({ navigation }) {
 
                       {locationInfo === 'destination' && (
                         <View style={{ alignItems: 'center', width: '100%' }}>
-                          <Text style={styles.locationHeader}>Your {(type == 'hair' || type == 'nail') ? type + ' salon' : type} is located at</Text>
+                          <Text style={styles.locationHeader}>Your {header} is located at</Text>
                           {(locationCoords.longitude && locationCoords.latitude) ? 
                             <>
                               <MapView
@@ -593,14 +595,14 @@ export default function Locationsetup({ navigation }) {
 
                       {locationInfo === 'away' && (
                         <View style={styles.locationInfos}>
-                          <Text style={styles.locationHeader}>If you are at the {(type == 'hair' || type == 'nail') ? type + ' salon' : type} right now,</Text>
+                          <Text style={styles.locationHeader}>If you are at the {header} right now,</Text>
                           <TouchableOpacity style={[styles.locationActionOption, { width: width * 0.5 }]} disabled={loading} onPress={() => markLocation()}>
                             <Text style={styles.locationActionOptionHeader}>Mark your location</Text>
                           </TouchableOpacity>
 
                           <Text style={{ fontSize: 20, fontWeight: 'bold', marginVertical: 30 }}>Or</Text>
 
-                          <Text style={styles.locationHeader}>Enter your {(type == 'hair' || type == 'nail') ? type + ' salon' : type} information</Text>
+                          <Text style={styles.locationHeader}>Enter your {header} information</Text>
 
                           <View style={styles.inputContainer}>
                             <Text style={styles.inputHeader}>Enter address #1:</Text>
@@ -631,11 +633,9 @@ export default function Locationsetup({ navigation }) {
                     <View style={styles.days}>
                       {!daysInfo.done ?
                         <>
-                          <Text style={[styles.inputHeader, { marginBottom: 20, textAlign: 'center' }]}>Set the {(type == 'hair' || type == 'nail') ? type + ' salon' : type}'s opening hours</Text>
+                          <Text style={[styles.inputHeader, { marginBottom: 20, textAlign: 'center' }]}>What days are you open ?</Text>
 
                           <View style={{ alignItems: 'center', width: '100%' }}>
-                            <Text style={styles.openingDayHeader}>Tap on the days {(type == 'hair' || type == 'nail') ? type + ' salon' : type} open ?</Text>
-
                             {daysArr.map((day, index) => (
                               <TouchableOpacity key={index} style={daysInfo.working.indexOf(day) > -1 ? styles.openingDayTouchSelected : styles.openingDayTouch} onPress={() => {
                                 const newWorking = [...daysInfo.working]
@@ -656,13 +656,13 @@ export default function Locationsetup({ navigation }) {
                         :
                         <View style={styles.daysContainer}>
                           <TouchableOpacity style={styles.daysBack} disabled={loading} onPress={() => setDaysinfo({ ...daysInfo, working: ['', '', '', '', '', '', ''], done: false, step: 0 })}>
-                            <Text style={styles.daysBackHeader}>Re-select days</Text>
+                            <Text style={styles.daysBackHeader}>Change days</Text>
                           </TouchableOpacity>
 
                           {days.map((info, index) => (
                             !info.close &&
                               <View key={index} style={styles.day}>
-                                <Text style={styles.dayHeader}><Text style={{ fontWeight: '300' }}>Opening time for</Text> {info.header}</Text>
+                                <Text style={styles.dayHeader}>Set hours for {info.header}</Text>
 
                                 <View style={styles.timeSelectionContainer}>
                                   <View style={styles.timeSelection}>
@@ -860,21 +860,21 @@ export default function Locationsetup({ navigation }) {
 
                 {setupType == "name" && (
                   <View style={styles.inputContainer}>
-                    <Text style={styles.inputHeader}>Enter {(type == 'hair' || type == 'nail') ? type + ' salon' : type} name:</Text>
+                    <Text style={styles.inputHeader}>Enter {header} name:</Text>
                     <TextInput style={styles.input} onChangeText={(storeName) => setStorename(storeName)} value={storeName} autoCorrect={false} autoCapitalize="none"/>
                   </View>
                 )}   
 
                 {setupType == "phonenumber" && (
                   <View style={styles.inputContainer}>
-                    <Text style={styles.inputHeader}>Enter {(type == 'hair' || type == 'nail') ? type + ' salon' : type}'s phone number:</Text>
+                    <Text style={styles.inputHeader}>Enter {header}'s phone number:</Text>
                     <TextInput style={styles.input} onChangeText={(num) => setPhonenumber(displayPhonenumber(phonenumber, num, () => Keyboard.dismiss()))} value={phonenumber} keyboardType="numeric" autoCorrect={false} autoCapitalize="none"/>
                   </View>
                 )}
 
                 {(setupType == "logo" && (cameraPermission || pickingPermission)) && (
                   <View style={styles.cameraContainer}>
-                    <Text style={styles.inputHeader}>Provide a photo for {(type == 'hair' || type == 'nail') ? type + ' salon' : type}</Text>
+                    <Text style={styles.inputHeader}>Take a picture of your {header}</Text>
 
                     {logo.uri ? (
                       <>
@@ -996,7 +996,7 @@ const styles = StyleSheet.create({
 
   cameraContainer: { alignItems: 'center', width: '100%' },
   cameraHeader: { fontFamily: 'Chilanka_400Regular', fontWeight: 'bold', paddingVertical: 5 },
-  camera: { height: width * 0.7, width: width * 0.7 },
+  camera: { height: width, width },
   cameraActions: { flexDirection: 'row' },
   cameraAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: wsize(30) },
   cameraActionHeader: { fontSize: wsize(4), textAlign: 'center' },
@@ -1005,19 +1005,18 @@ const styles = StyleSheet.create({
   daysContainer: { alignItems: 'center' },
 
   // select opening days
-  openingDayHeader: { fontSize: wsize(5) },
   openingDayTouch: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: '90%' },
   openingDayTouchSelected: { backgroundColor: 'rgba(0, 0, 0, 0.6)', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: '90%' },
   openingDayTouchHeader: { fontSize: wsize(5), textAlign: 'center' },
 
   daysBack: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, marginTop: 20, padding: 10 },
-  daysBackHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(5), textAlign: 'center' },
+  daysBackHeader: { fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
 
   nextDay: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, padding: 10 },
   nextDayHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(5), textAlign: 'center' },
 
   // adjust working time for each day
-  day: { alignItems: 'center', backgroundColor: '#EAEAEA', borderRadius: 10, marginTop: 30, padding: 5, width: '95%' },
+  day: { alignItems: 'center', backgroundColor: 'white', borderRadius: 10, marginTop: 30, padding: 5, width: '95%' },
   dayHeader: { fontSize: wsize(5), fontWeight: 'bold', marginBottom: 10, marginHorizontal: 10, textAlign: 'center' },
   timeSelectionContainer: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
   timeSelection: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, flexDirection: 'row', justifyContent: 'space-between', width: '45%' },

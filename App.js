@@ -9,11 +9,9 @@ import { useFonts, Chilanka_400Regular } from '@expo-google-fonts/chilanka';
 
 // pages
 import Auth from './src/pages/auth'
-import Login from './src/pages/login'
 import Register from './src/pages/register'
 import Forgotpassword from './src/pages/forgotpassword'
 import Resetpassword from './src/pages/resetpassword'
-import Verifyowner from './src/pages/verifyowner'
 import List from './src/pages/list'
 import Locationsetup from './src/pages/locationsetup'
 import Main from './src/pages/main'
@@ -60,16 +58,6 @@ export default function App() {
         <NavigationContainer>
           <Stack.Navigator initialRouteName={route}>
             <Stack.Screen name="auth" component={Auth} options={{ headerShown: false }}/>
-            <Stack.Screen name="login" component={Login} options={({ navigation, route }) => ({
-              headerTitle: () => <Text style={styles.header}>Log-In</Text>,
-              headerLeft: () => (
-                Platform.OS == 'ios' && (
-                  <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>
-                    <Text style={styles.backHeader}>Go Back</Text>
-                  </TouchableOpacity>
-                )
-              )
-            })}/>
             <Stack.Screen name="register" component={Register} options={{ headerShown: false }}/>
             <Stack.Screen name="forgotpassword" component={Forgotpassword} options={({ navigation, route }) => ({
               headerTitle: () => <Text style={styles.header}>Forget your password</Text>,
@@ -83,16 +71,6 @@ export default function App() {
             })}/>
             <Stack.Screen name="resetpassword" component={Resetpassword} options={({ navigation, route }) => ({
               headerTitle: () => <Text style={styles.header}>Resetting your password</Text>,
-              headerLeft: () => (
-                Platform.OS == 'ios' && (
-                  <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>
-                      <Text style={styles.backHeader}>Go Back</Text>
-                  </TouchableOpacity>
-                )
-              )
-            })}/>
-            <Stack.Screen name="verifyowner" component={Verifyowner} options={({ navigation, route }) => ({
-              headerTitle: () => <Text style={styles.header}>Registration</Text>,
               headerLeft: () => (
                 Platform.OS == 'ios' && (
                   <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>

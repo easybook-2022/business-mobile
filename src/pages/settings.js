@@ -12,6 +12,7 @@ import { Camera } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator'
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
+import { StackActions } from '@react-navigation/native';
 import MapView, { Marker } from 'react-native-maps';
 import { logo_url, timeControl, isLocal } from '../../assets/info'
 import { verifyUser, addOwner, updateOwner, deleteOwner, getWorkerInfo, getOtherWorkers, getAccounts, getOwnerInfo } from '../apis/owners'
@@ -1157,6 +1158,18 @@ export default function Settings(props) {
             {((type == "hair" || type == "nail") && isOwner == true) && (
               <TouchableOpacity style={styles.editButton} onPress={() => setEditinfo({ ...editInfo, show: true, type: 'receivetype' })}>
                 <Text style={styles.editButtonHeader}>Edit Appointment Alert Type</Text>
+              </TouchableOpacity>
+            )}
+
+            {isOwner == true && (
+              <TouchableOpacity style={styles.editButton} onPress={() => {
+                AsyncStorage.removeItem("locationid")
+                AsyncStorage.removeItem("locationtype")
+                AsyncStorage.setItem("phase", "list")
+
+                props.navigation.dispatch(StackActions.replace("list"));
+              }}>
+                <Text style={styles.editButtonHeader}>Switch Business</Text>
               </TouchableOpacity>
             )}
 					</View>

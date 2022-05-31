@@ -14,7 +14,7 @@ import { StackActions } from '@react-navigation/native';
 import { getId } from 'geottuse-tools';
 import { saveUserInfo } from '../apis/owners'
 import { getLocationProfile } from '../apis/locations'
-import { ownerRegisterInfo, registerInfo, timeControl } from '../../assets/info'
+import { ownerGetinInfo, registerInfo, timeControl } from '../../assets/info'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import Entypo from 'react-native-vector-icons/Entypo'
@@ -35,7 +35,7 @@ export default function Register(props) {
 	const [camComp, setCamcomp] = useState(null)
   const [camType, setCamtype] = useState('front')
   const [choosing, setChoosing] = useState(false)
-	const [username, setUsername] = useState(ownerRegisterInfo.username)
+	const [username, setUsername] = useState(ownerGetinInfo.username)
 	const [profile, setProfile] = useState({ uri: '', name: '', size: { width: 0, height: 0 }})
 
   const [type, setType] = useState('')
@@ -417,7 +417,9 @@ export default function Register(props) {
     }
   }
 
-  useEffect(() => getInfo(), [])
+  useEffect(() => {
+    getInfo()
+  }, [])
 
 	return (
 		<SafeAreaView style={styles.register}>
@@ -437,8 +439,7 @@ export default function Register(props) {
 
                 {(setupType == "profile" && (cameraPermission || pickingPermission)) && (
     							<View style={styles.cameraContainer}>
-    								<Text style={styles.inputHeader}>Provide a photo of yourself (Optional)</Text>
-                    <Text style={styles.inputInfo}>clients will be able to find and book you easily</Text>
+    								<Text style={[styles.inputHeader, { fontSize: wsize(5) }]}>Take a picture of your face for clients (Optional)</Text>
 
     								{profile.uri ? (
     									<>
@@ -459,8 +460,8 @@ export default function Register(props) {
                           />
                         )}
 
-                        <View style={{ alignItems: 'center', marginVertical: 10 }}>
-                          <Ionicons name="camera-reverse-outline" size={wsize(7)} onPress={() => setCamtype(camType == 'back' ? 'front' : 'back')}/>
+                        <View style={{ alignItems: 'center', marginTop: -wsize(7) }}>
+                          <Ionicons color="white" name="camera-reverse-outline" size={wsize(7)} onPress={() => setCamtype(camType == 'back' ? 'front' : 'back')}/>
                         </View>
 
     										<View style={styles.cameraActions}>
@@ -505,7 +506,7 @@ export default function Register(props) {
               <KeyboardAvoidingView behavior={Platform.OS == "ios" ? "padding" : "position"}>
                 {!daysInfo.done ? 
                   <View style={{ alignItems: 'center', width: '100%' }}>
-                    <Text style={styles.workerDayHeader}>Tap the days you work on</Text>
+                    <Text style={styles.workerDayHeader}>What days do you work ?</Text>
 
                     {daysArr.map((day, index) => (
                       <TouchableOpacity key={index} disabled={hoursRange[index].close} style={
@@ -537,13 +538,13 @@ export default function Register(props) {
                   <>
                     <View style={styles.workerHours}>
                       <TouchableOpacity style={styles.workerHoursBack} onPress={() => setDaysinfo({ working: ['', '', '', '', '', '', ''], done: false })}>
-                        <Text style={styles.workerHoursBackHeader}>Go Back</Text>
+                        <Text style={styles.workerHoursBackHeader}>Change days</Text>
                       </TouchableOpacity>
 
                       {workerHours.map((info, index) => (
                         info.working ?
                           <View key={index} style={styles.workerHour}>
-                            <Text style={styles.workerHourHeader}><Text style={{ fontWeight: '300' }}>Your working time for</Text> {info.header}</Text>
+                            <Text style={styles.workerHourHeader}>Your hours on {info.header}</Text>
 
                             <View style={styles.timeSelectionContainer}>
                               <View style={styles.timeSelection}>
@@ -691,13 +692,13 @@ const styles = StyleSheet.create({
 	boxHeader: { color: 'black', fontFamily: 'Chilanka_400Regular', fontSize: wsize(7), fontWeight: 'bold' },
 
 	inputsBox: { alignItems: 'center', height: '90%', width: '100%' },
-	inputContainer: { width: '80%' },
-	inputHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(4) },
+	inputContainer: { width: '90%' },
+	inputHeader: { fontSize: wsize(10) },
   inputInfo: { fontSize: wsize(4), margin: 10, textAlign: 'center' },
-	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), padding: 5, width: '100%' },
+	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(10), paddingHorizontal: 5, width: '100%' },
 
 	cameraContainer: { alignItems: 'center', width: '100%' },
-	camera: { height: width * 0.7, width: width * 0.7 },
+	camera: { height: width, width },
 	cameraActions: { flexDirection: 'row' },
 	cameraAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: wsize(30) },
 	cameraActionHeader: { fontSize: wsize(4), textAlign: 'center' },
@@ -705,7 +706,7 @@ const styles = StyleSheet.create({
   workerHours: { alignItems: 'center', width: '100%' },
 
   // select working days
-  workerDayHeader: { fontSize: wsize(6) },
+  workerDayHeader: { fontSize: wsize(10), textAlign: 'center' },
   workerDayTouch: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: '90%' },
   workerDayTouchSelected: { backgroundColor: 'rgba(0, 0, 0, 0.6)', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: '90%' },
   workerDayTouchOff: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, margin: 5, opacity: 0.2, padding: 5, width: '90%' },

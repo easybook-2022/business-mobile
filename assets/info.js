@@ -35,9 +35,8 @@ const emptyOwner = { username: "", cellnumber: "", password: "" }
 const useInput = true
 
 const login = test_input ? testStores[0] : useInput ? realStores[0] : emptyStore
-const ownerLogin = test_input ? testOwners[0] : useInput ? realOwner : emptyOwner
+const ownerGetin = test_input ? testOwners[1] : useInput ? realOwner : emptyOwner
 const register = test_input ? testStores[0] : useInput ? realStores[0] : emptyStore
-const ownerRegister = test_input ? testOwners[0] : useInput ? realOwner : emptyOwner
 
 const wifi_api_url = "http://192.168.0.172:5001/flask"
 const wifi_socket_url = "http://192.168.0.172:5002"
@@ -46,20 +45,16 @@ const server_socket_url = "wss://www.easygo-dev.tk"
 const socket_url = local_url ? wifi_socket_url : server_socket_url
 
 export const loginInfo = { 
-	cellnumber: ownerLogin.cellnumber, password: ownerLogin.password, storeName: login.storeName, 
+	cellnumber: ownerGetin.cellnumber, password: ownerGetin.password, storeName: login.storeName, 
 	storeType: login.storeType, phonenumber: login.phonenumber, addressOne: login.addressOne, 
 	addressTwo: login.addressTwo, city: login.city, province: login.province, 
 	postalcode: login.postalcode
 }
-export const ownerLoginInfo = {
-	username: ownerLogin.username,
-	cellnumber: ownerLogin.cellnumber,
-	password: ownerLogin.password
-}
-export const ownerRegisterInfo = {
-	username: ownerRegister.username,
-	cellnumber: ownerRegister.cellnumber,
-	password: ownerRegister.password
+export const ownerGetinInfo = {
+	username: ownerGetin.username,
+	cellnumber: ownerGetin.cellnumber,
+	password: ownerGetin.password,
+  confirmPassword: ""
 }
 export const socket = io.connect(socket_url)
 export const registerInfo = {
@@ -69,8 +64,7 @@ export const registerInfo = {
 	postalcode: register.postalcode, longitude: register.longitude, latitude: register.latitude
 }
 export const url = local_url ? wifi_api_url : server_api_url
-export const isLocal = test_input
-export const useSpeech = false
+export const useSpeech = true
 export const logo_url = url + "/static/"
 export const timeControl = (timetype, value, dir, open) => {
   let hour, minute, period
