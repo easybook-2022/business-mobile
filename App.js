@@ -24,7 +24,6 @@ import Addproduct from './src/components/addproduct'
 import Addservice from './src/components/addservice'
 
 import Menu from './src/pages/menu'
-import Settings from './src/pages/settings'
 
 const { height, width } = Dimensions.get('window')
 const wsize = p => {return width * (p / 100)}
@@ -156,22 +155,6 @@ export default function App() {
                     const { refetch } = route.params
 
                     refetch()
-                    navigation.goBack()
-                  }}>
-                    <Text style={styles.backHeader}>Go Back</Text>
-                  </TouchableOpacity>
-                )
-              )
-            })}/>
-            <Stack.Screen name="settings" component={Settings} options={({ navigation, route }) => ({
-              headerTitle: () => <Text style={styles.header}>Setting(s)</Text>,
-              headerLeft: () => (
-                Platform.OS == 'ios' && (
-                  <TouchableOpacity style={styles.back} onPress={() => {
-                    if (route.params && route.params.refetch) {
-                        route.params.refetch()
-                    }
-
                     navigation.goBack()
                   }}>
                     <Text style={styles.backHeader}>Go Back</Text>

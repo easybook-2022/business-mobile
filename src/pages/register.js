@@ -439,7 +439,7 @@ export default function Register(props) {
 
                 {(setupType == "profile" && (cameraPermission || pickingPermission)) && (
     							<View style={styles.cameraContainer}>
-    								<Text style={[styles.inputHeader, { fontSize: wsize(5) }]}>Take a picture of your face for clients (Optional)</Text>
+    								<Text style={[styles.inputHeader, { fontSize: wsize(5), textAlign: 'center' }]}>Take a picture of your face for clients (Optional)</Text>
 
     								{profile.uri ? (
     									<>
@@ -460,7 +460,7 @@ export default function Register(props) {
                           />
                         )}
 
-                        <View style={{ alignItems: 'center', marginTop: -wsize(7) }}>
+                        <View style={{ alignItems: 'center' }}>
                           <Ionicons color="white" name="camera-reverse-outline" size={wsize(7)} onPress={() => setCamtype(camType == 'back' ? 'front' : 'back')}/>
                         </View>
 
@@ -712,7 +712,7 @@ const styles = StyleSheet.create({
   workerDayTouchOff: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, margin: 5, opacity: 0.2, padding: 5, width: '90%' },
   workerDayTouchHeader: { fontSize: wsize(6), textAlign: 'center' },
 
-  workerHoursBack: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, marginBottom: 20, padding: 10 },
+  workerHoursBack: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, padding: 10 },
   workerHoursBackHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(6), textAlign: 'center' },
 
   // adjust working time for each day

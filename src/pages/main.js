@@ -14,11 +14,16 @@ import * as ImageManipulator from 'expo-image-manipulator'
 import * as Speech from 'expo-speech'
 import { Camera } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
+import * as Location from 'expo-location';
+import MapView, { Marker } from 'react-native-maps';
 import Voice from '@react-native-voice/voice';
-import { ownerGetinInfo, socket, logo_url, useSpeech, timeControl } from '../../assets/info'
-import { displayTime, resizePhoto, displayPhonenumber } from 'geottuse-tools'
-import { updateNotificationToken, verifyUser, getOwnerInfo, logoutUser, getWorkersTime } from '../apis/owners'
-import { fetchNumAppointments, fetchNumCartOrderers, getLocationProfile } from '../apis/locations'
+import { loginInfo, ownerGetinInfo, socket, logo_url, useSpeech, timeControl } from '../../assets/info'
+import { getId, displayTime, resizePhoto, displayPhonenumber } from 'geottuse-tools'
+import { 
+  updateNotificationToken, verifyUser, addOwner, updateOwner, deleteOwner, getWorkerInfo, 
+  getOtherWorkers, getAccounts, getOwnerInfo, logoutUser, getWorkersTime 
+} from '../apis/owners'
+import { getLocationProfile, setLocationHours, updateLocation, setReceiveType, getDayHours } from '../apis/locations'
 import { getMenus, removeMenu, addNewMenu } from '../apis/menus'
 import { cancelSchedule, doneService, getAppointments, getCartOrderers } from '../apis/schedules'
 import { removeProduct } from '../apis/products'
@@ -40,15 +45,13 @@ export default function Main(props) {
 	const [ownerId, setOwnerid] = useState(null)
   const [isOwner, setIsowner] = useState(false)
 	const [storeIcon, setStoreicon] = useState('')
-	const [storeName, setStorename] = useState('')
 	const [locationType, setLocationtype] = useState('')
 
 	const [appointments, setAppointments] = useState([])
-	const [numAppointments, setNumappointments] = useState(0)
+  const [chartInfo, setChartinfo] = useState({ items: [], workers: [], scheduled: [] })
 
 	const [cartOrderers, setCartorderers] = useState([])
   const [speakInfo, setSpeakinfo] = useState({ orderNumber: "" })
-	const [numCartorderers, setNumcartorderers] = useState(0)
 
   const [loaded, setLoaded] = useState(false)
 
@@ -57,11 +60,13 @@ export default function Main(props) {
 
 	const [showMenurequired, setShowmenurequired] = useState(false)
 	const [showDisabledscreen, setShowdisabledscreen] = useState(false)
-  const [showInfo, setShowinfo] = useState({ show: false, workers: [], locationHours: [] })
+  const [showInfo, setShowinfo] = useState(false)
+  const [locationHours, setLocationhours] = useState([])
+  const [workersHours, setWorkershours] = useState([])
 
 
   const [showMoreoptions, setShowmoreoptions] = useState({ show: false, loading: false, infoType: '' })
-  const [editInfo, setEditinfo] = useState({ show: false, type: '' })
+  const [editInfo, setEditinfo] = useState({ show: false, type: '', loading: false })
   const [accountForm, setAccountform] = useState({
     show: false,
     type: '', editType: '', addStep: 0, id: -1,
@@ -73,6 +78,28 @@ export default function Main(props) {
     loading: false,
     errorMsg: ''
   })
+
+  const [locationInfo, setLocationinfo] = useState('')
+  const [locationCoords, setLocationcoords] = useState({ longitude: null, latitude: null, address: '' })
+  const [storeName, setStorename] = useState(loginInfo.storeName)
+  const [phonenumber, setPhonenumber] = useState(loginInfo.phonenumber)
+  const [addressOne, setAddressone] = useState(loginInfo.addressOne)
+  const [addressTwo, setAddresstwo] = useState(loginInfo.addressTwo)
+  const [city, setCity] = useState(loginInfo.city)
+  const [province, setProvince] = useState(loginInfo.province)
+  const [postalcode, setPostalcode] = useState(loginInfo.postalcode)
+  const [logo, setLogo] = useState({ uri: '', name: '', size: { width: 0, height: 0 }, loading: false })
+  const [locationReceivetype, setLocationreceivetype] = useState('')
+
+  const [days, setDays] = useState([
+    { key: "0", header: "Sunday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, close: false },
+    { key: "1", header: "Monday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, close: false },
+    { key: "2", header: "Tuesday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, close: false },
+    { key: "3", header: "Wednesday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, close: false },
+    { key: "4", header: "Thursday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, close: false },
+    { key: "5", header: "Friday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, close: false },
+    { key: "6", header: "Saturday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, close: false }
+  ])
   const [deleteOwnerbox, setDeleteownerbox] = useState({
     show: false,
     id: -1, username: '', 
@@ -94,7 +121,6 @@ export default function Main(props) {
     { key: "6", header: "Saturday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, working: true, takeShift: "" }
   ])
   const [getWorkersbox, setGetworkersbox] = useState({ show: false, day: '', workers: [] })
-  const [logo, setLogo] = useState({ uri: '', name: '', size: { width: 0, height: 0 }, loading: false })
 
 	const getNotificationPermission = async() => {
 		const ownerid = await AsyncStorage.getItem("ownerid")
@@ -133,43 +159,6 @@ export default function Main(props) {
         })
     }
 	}
-	
-	const fetchTheNumAppointments = async() => {
-    const ownerid = await AsyncStorage.getItem("ownerid")
-
-		fetchNumAppointments(ownerid)
-      .then((res) => {
-        if (res.status == 200) {
-          return res.data
-        }
-      })
-      .then((res) => {
-        if (res) setNumappointments(res.numAppointments)
-      })
-      .catch((err) => {
-        if (err.response && err.response.status == 400) {
-          const { errormsg, status } = err.response.data
-        }
-      })
-	}
-	const fetchTheNumCartOrderers = async() => {
-		const locationid = await AsyncStorage.getItem("locationid")
-
-		fetchNumCartOrderers(locationid)
-			.then((res) => {
-				if (res.status == 200) {
-					return res.data
-				}
-			})
-			.then((res) => {
-				if (res) setNumcartorderers(res.numCartorderers)
-			})
-			.catch((err) => {
-				if (err.response && err.response.status == 400) {
-          const { errormsg, status } = err.response.data
-				}
-			})
-	}
 
 	const getTheLocationProfile = async() => {
 		const ownerid = await AsyncStorage.getItem("ownerid")
@@ -184,20 +173,60 @@ export default function Main(props) {
 			})
 			.then((res) => {
 				if (res) {
-					const { name, fullAddress, logo, type } = res.info
+					const { name, fullAddress, logo, type, receiveType, hours } = res.info
 
 					socket.emit("socket/business/login", ownerid, () => {
+            for (let k = 0; k < 7; k++) {
+              openInfo = hours[k].opentime
+              closeInfo = hours[k].closetime
+
+              openMinute = parseInt(openInfo.minute)
+              openHour = parseInt(openInfo.hour)
+              openHour = openInfo.period == "PM" ? openHour + 12 : openHour
+
+              closeMinute = parseInt(closeInfo.minute)
+              closeHour = parseInt(closeInfo.hour)
+              closeHour = closeInfo.period == "PM" ? closeHour + 12 : closeHour
+
+              currDate = new Date()
+              calcDate = new Date(currDate.setDate(currDate.getDate() - currDate.getDay() + k)).toUTCString();
+              calcDate = calcDate.split(" ")
+              calcDate.pop()
+              calcDate.pop()
+
+              calcDate = calcDate.join(" ") + " "
+
+              openTime = (openHour < 10 ? "0" + openHour : openHour)
+              openTime += ":"
+              openTime += (openMinute < 10 ? "0" + openMinute : openMinute)
+
+              closeTime = (closeHour < 10 ? "0" + closeHour : closeHour)
+              closeTime += ":"
+              closeTime += (closeMinute < 10 ? "0" + closeMinute : closeMinute)
+
+              hours[k]["calcDate"] = calcDate
+              hours[k]["openunix"] = Date.parse(calcDate + openTime)
+              hours[k]["closeunix"] = Date.parse(calcDate + closeTime)
+            }
+
 						setOwnerid(ownerid)
 						setStorename(name)
-						setStoreicon(logo)
-						setLocationtype(type)
+            setPhonenumber(phonenumber)
+            setAddressone(addressOne)
+            setAddresstwo(addressTwo)
+            setCity(city)
+            setProvince(province)
+            setPostalcode(postalcode)
+            setLogo({ ...logo, uri: logo_url + logo.name, size: { width: logo.width, height: logo.height }})
+            setLocationtype(type)
+            setLocationreceivetype(receiveType)
+            setDays(hours)
+            setHoursrange(hours)
 
 						if (type == 'store' || type == 'restaurant') {
-							fetchTheNumCartOrderers()
               getAllCartOrderers()
 						} else {
-							fetchTheNumAppointments()
-							getAllAppointments()
+							getListAppointments()
 						}
 					})
 				}
@@ -239,7 +268,9 @@ export default function Main(props) {
       })
       .then((res) => {
         if (res) {
-          setShowinfo({ ...showInfo, show: true, workers: res.workers, locationHours: res.locationHours })
+          setShowinfo(true)
+          setWorkershours(res.workers)
+          setLocationhours(locationHours)
         }
       })
       .catch((err) => {
@@ -249,7 +280,7 @@ export default function Main(props) {
       })
   }
 
-	const getAllAppointments = async() => {
+	const getListAppointments = async() => {
 		const ownerid = await AsyncStorage.getItem("ownerid")
 		const locationid = await AsyncStorage.getItem("locationid")
 		const data = { ownerid, locationid }
@@ -260,11 +291,10 @@ export default function Main(props) {
 					return res.data
 				}
 			})
-			.then((res) => {
+			.then(async(res) => {
 				if (res) {
 					setAppointments(res.appointments)
-					setNumappointments(res.numappointments)
-					setViewtype('appointments')
+					setViewtype('appointments_book')
           setLoaded(true)
 				}
 			})
@@ -274,6 +304,44 @@ export default function Main(props) {
 				}
 			})
 	}
+  const getAppointmentsChart = async() => {
+    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+    const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+    const locationid = await AsyncStorage.getItem("locationid")
+    const today = new Date(), todayJson = {"day":days[today.getDay()],"month":months[today.getMonth()],"date":today.getDate(),"year":today.getFullYear()}
+    const data = { locationid, day: today.getDay(), todayJson }
+
+    getDayHours(data)
+      .then((res) => {
+        if (res.status == 200) {
+          return res.data
+        }
+      })
+      .then((res) => {
+        if (res) {
+          const { opentime, closetime, chart, workers, scheduled } = res
+          const newScheduled = {}
+
+          for (let k in scheduled) {
+            scheduled[k].forEach(function (time) {
+              if (k in newScheduled) {
+                newScheduled[k].push(jsonDateToUnix(JSON.parse(time)))
+              } else {
+                newScheduled[k] = [jsonDateToUnix(JSON.parse(time))]
+              }
+            })
+          }
+
+          setViewtype("appointments_chart")
+          setChartinfo({ ...chartInfo, items: chart, workers, scheduled: newScheduled })
+        }
+      })
+      .catch((err) => {
+        if (err.response && err.response.status == 400) {
+          const { errormsg, status } = err.response.data
+        }
+      })
+  }
   const speakToWorker = async(data) => {
     let message
 
@@ -338,7 +406,6 @@ export default function Main(props) {
 			.then((res) => {
 				if (res) {
 					setCartorderers(res.cartOrderers)
-					setNumcartorderers(res.numCartorderers)
 					setViewtype('cartorderers')
           setLoaded(true)
 				}
@@ -378,7 +445,6 @@ export default function Main(props) {
                   newAppointments.splice(index, 1)
 
                   setAppointments(newAppointments)
-                  fetchTheNumAppointments()
 
                   break
                 default:
@@ -411,7 +477,6 @@ export default function Main(props) {
           newAppointments.splice(index, 1)
 
           socket.emit("socket/doneService", data, () => {
-            fetchTheNumAppointments()
             setAppointments(newAppointments)
           })
         }
@@ -481,7 +546,7 @@ export default function Main(props) {
         data.type == "cancelRequest" || 
         data.type == "remakeAppointment"
       ) {
-        getAllAppointments()
+        getListAppointments()
 
         speakToWorker(data)
       }
@@ -539,7 +604,6 @@ export default function Main(props) {
   }
   const getAllAccounts = async() => {
     const locationid = await AsyncStorage.getItem("locationid")
-    const ownerid = await AsyncStorage.getItem("ownerid")
 
     getAccounts(locationid)
       .then((res) => {
@@ -549,7 +613,6 @@ export default function Main(props) {
       })
       .then((res) => {
         if (res) {
-          setOwnerid(ownerid)
           setAccountholders(res.accounts)
         }
       })
@@ -558,6 +621,93 @@ export default function Main(props) {
           const { errormsg, status } = err.response.data
         }
       })
+  }
+  const updateYourLocation = async() => {
+    if (storeName && phonenumber && addressOne && city && province && postalcode) {
+      let longitude = null, latitude = null
+
+      try {
+        const [info] = await Location.geocodeAsync(`${addressOne}${addressTwo ? ' ' + addressTwo : ''}, ${city} ${province}, ${postalcode}`)
+
+        longitude = info.longitude
+        latitude = info.latitude
+      } catch(err) {
+
+      }
+
+      if (longitude && latitude) {
+        const id = await AsyncStorage.getItem("locationid")
+        const time = (Date.now() / 1000).toString().split(".")[0]
+        const data = {
+          id, storeName, phonenumber, addressOne, addressTwo, city, province, postalcode, logo,
+          longitude, latitude
+        }
+
+        updateLocation(data)
+          .then((res) => {
+            if (res.status == 200) {
+              return res.data
+            }
+          })
+          .then((res) => {
+            if (res) {
+              const { id } = res
+
+              setShowmoreoptions({ ...showMoreoptions, infoType: '' })
+              setEditinfo({ ...editInfo, show: false, type: '', loading: false })
+            }
+          })
+          .catch((err) => {
+            if (err.response && err.response.status == 400) {
+              const { errormsg, status } = err.response.data
+
+              setEditinfo({ ...editInfo, errorMsg: errormsg, loading: false })
+            }
+          })
+      }
+    } else {
+      if (!storeName) {
+        setEditinfo({ ...editInfo, errorMsg: "Please enter your store name" })
+
+        return
+      }
+
+      if (!phonenumber) {
+        setEditinfo({ ...editInfo, errorMsg: "Please enter your store phone number" })
+
+        return
+      }
+
+      if (!addressOne) {
+        setEditinfo({ ...editInfo, errorMsg: "Please enter the Address # 1" })
+
+        return
+      }
+
+      if (!addressTwo) {
+        setEditinfo({ ...editInfo, errorMsg: "Please enter the Address # 2" })
+
+        return
+      }
+
+      if (!city) {
+        setEditinfo({ ...editInfo, errorMsg: "Please enter the city" })
+
+        return
+      }
+
+      if (!province) {
+        setEditinfo({ ...editInfo, errorMsg: "Please enter the province" })
+
+        return
+      }
+
+      if (!postalcode) {
+        setEditinfo({ ...editInfo, errorMsg: "Please enter the postal code" })
+
+        return
+      }
+    }
   }
   const snapProfile = async() => {
     setAccountform({ ...accountForm, loading: true })
@@ -657,6 +807,108 @@ export default function Main(props) {
 
     setChoosing(false)
   }
+  const snapPhoto = async() => {
+    setLogo({ ...logo, loading: true })
+
+    let char = getId()
+
+    if (camComp) {
+      let options = { quality: 0 };
+      let photo = await camComp.takePictureAsync(options)
+      let photo_option = [{ resize: { width, height: width }}]
+      let photo_save_option = { format: ImageManipulator.SaveFormat.JPEG, base64: true }
+
+      if (camType == "front") {
+        photo_option.push({ flip: ImageManipulator.FlipType.Horizontal })
+      }
+
+      photo = await ImageManipulator.manipulateAsync(
+        photo.localUri || photo.uri,
+        photo_option,
+        photo_save_option
+      )
+
+      FileSystem.moveAsync({
+        from: photo.uri,
+        to: `${FileSystem.documentDirectory}/${char}.jpg`
+      })
+      .then(() => {
+        setLogo({
+          uri: `${FileSystem.documentDirectory}/${char}.jpg`,
+          name: `${char}.jpg`, size: { width, height: width }, 
+          loading: false
+        })
+      })
+    }
+  }
+  const choosePhoto = async() => {
+    setLogo({ ...logo, loading: true })
+    setChoosing(true)
+
+    let char = getId()
+    let photo = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      aspect: [1, 1],
+      quality: 0.1,
+      base64: true
+    });
+
+    if (!photo.cancelled) {
+      FileSystem.moveAsync({
+        from: photo.uri,
+        to: `${FileSystem.documentDirectory}/${char}.jpg`
+      })
+      .then(() => {
+        setLogo({
+          uri: `${FileSystem.documentDirectory}/${char}.jpg`,
+          name: `${char}.jpg`, size: { width: photo.width, height: photo.height },
+          loading: false
+        })
+      })
+    } else {
+      setLogo({ ...logo, loading: false })
+    }
+
+    setChoosing(false)
+  }
+  const markLocation = async() => {
+    const getGeocoding = async() => {
+      setLocationinfo('destination')
+
+      const location = await Location.getCurrentPositionAsync({});
+      const { longitude, latitude } = location.coords
+      let address = await Location.reverseGeocodeAsync({
+        latitude,
+        longitude
+      });
+
+      for (let item of address) {
+        setLocationcoords({ 
+          longitude, 
+          latitude,
+          address: `${item.name}, ${item.subregion} ${item.region}, ${item.postalCode}`
+        })
+        setAddressone(item.name)
+        setCity(item.subregion)
+        setProvince(item.region)
+        setPostalcode(item.postalCode)
+      }
+      
+      setEditinfo({ ...editInfo, errorMsg: '' })
+    }
+
+    const { status } = await Location.getForegroundPermissionsAsync()
+
+    if (status == 'granted') {
+      getGeocoding()
+    } else {
+      const { status } = await Location.requestForegroundPermissionsAsync()
+
+      if (status == 'granted') {
+        getGeocoding()
+      }
+    }
+  }
   const addNewOwner = async() => {
     setAccountform({ ...accountForm, loading: true, errorMsg: "" })
 
@@ -734,12 +986,15 @@ export default function Main(props) {
       .then((res) => {
         if (res) {
           setAccountform({
-            ...accountForm, show: false, 
+            ...accountForm, 
+            show: false, 
             type: '', editType: '', addStep: 0, id: -1, 
             username: '', cellnumber: '', 
-            password: '', confirmPassword: '', profile: { uri: '', name: '', size: { width: 0, height: 0 } }, 
+            currentPassword: '', newPassword: '', confirmPassword: '', 
+            profile: { uri: '', name: '', size: { width: 0, height: 0 } }, 
             loading: false, errorMsg: ""
           })
+          setEditinfo({ ...editInfo, show: true })
           getAllAccounts()
         }
       })
@@ -902,6 +1157,8 @@ export default function Main(props) {
             profile: { name: "", uri: "" }, editProfile: false, 
             loading: false, errorMsg: ""
           })
+          setEditinfo({ ...editInfo, show: true })
+          getAllAccounts()
         }
       })
       .catch((err) => {
@@ -980,7 +1237,127 @@ export default function Main(props) {
 
     setAccountform({...accountForm, workerHours: newWorkerhours })
   }
+  const getTheOtherWorkers = async(day) => {
+    const locationid = await AsyncStorage.getItem("locationid")
+    const data = { ownerid: accountForm.id, locationid, day }
 
+    getOtherWorkers(data)
+      .then((res) => {
+        if (res.status == 200) {
+          return res.data
+        }
+      })
+      .then((res) => {
+        if (res) {
+          setGetworkersbox({
+            ...getWorkersbox,
+            show: true,
+            workers: res.workers,
+            day
+          })
+        }
+      })
+      .catch((err) => {
+        if (err.response && err.response.status == 400) {
+          const { errormsg, status } = err.response.data
+        }
+      })
+  }
+  const selectTheOtherWorker = id => {
+    const { day } = getWorkersbox
+
+    const newWorkerhours = [...accountForm.workerHours]
+
+    newWorkerhours.forEach(function (info) {
+      if (info.header.substr(0, 3) == day) {
+        info.takeShift = id.toString()
+      }
+    })
+
+    setAccountform({...accountForm, workerHours: newWorkerhours })
+    setGetworkersbox({ ...getWorkersbox, show: false })
+  }
+  const updateLocationHours = async() => {
+    setEditinfo({ ...editInfo, loading: true })
+
+    const locationid = await AsyncStorage.getItem("locationid")
+    const hours = {}
+
+    days.forEach(function (day) {
+      let { opentime, closetime, close } = day
+      let newOpentime = {...opentime}, newClosetime = {...closetime}
+      let openhour = parseInt(newOpentime.hour), closehour = parseInt(newClosetime.hour)
+      let openperiod = newOpentime.period, closeperiod = newClosetime.period
+
+      if (openperiod == "PM") {
+        if (openhour < 12) {
+          openhour += 12
+        }
+
+        openhour = openhour < 10 ? 
+          "0" + openhour
+          :
+          openhour.toString()
+      } else {
+        if (openhour == 12) {
+          openhour = "00"
+        } else if (openhour < 10) {
+          openhour = "0" + openhour
+        } else {
+          openhour = openhour.toString()
+        }
+      }
+
+      if (closeperiod == "PM") {
+        if (closehour < 12) {
+          closehour += 12
+        }
+
+        closehour = closehour < 10 ? 
+          "0" + closehour
+          :
+          closehour.toString()
+      } else {
+        if (closehour == 12) {
+          closehour = "00"
+        } else if (closehour < 10) {
+          closehour = "0" + closehour
+        } else {
+          closehour = closehour.toString()
+        }
+      }
+
+      newOpentime.hour = openhour
+      newClosetime.hour = closehour
+
+      delete newOpentime.period
+      delete newClosetime.period
+
+      hours[day.header.substr(0, 3)] = { opentime: newOpentime, closetime: newClosetime, close }
+    })
+
+    const data = { locationid, hours: JSON.stringify(hours) }
+
+    setLocationHours(data)
+      .then((res) => {
+        if (res.status == 200) {
+          return res.data
+        }
+      })
+      .then((res) => {
+        if (res) {
+          setShowmoreoptions({ ...showMoreoptions, infoType: '' })
+          setEditinfo({ ...editInfo, show: false, type: '', loading: false })
+        }
+      })
+      .catch((err) => {
+        if (err.response && err.response.status == 400) {
+          const { errormsg, status } = err.response.data
+
+          setEditinfo({ ...editInfo, loading: false })
+        }
+      })
+  }
   const allowCamera = async() => {
     if (Platform.OS === "ios") {
       const { status } = await Camera.getCameraPermissionsAsync()
@@ -1029,6 +1406,30 @@ export default function Main(props) {
       setPickingpermission(true)
     }
   }
+  const setTheReceiveType = async(type) => {
+    const locationid = await AsyncStorage.getItem("locationid")
+    const data = { locationid, type }
+
+    setReceiveType(data)
+      .then((res) => {
+        if (res.status == 200) {
+          return res.data
+        }
+      })
+      .then((res) => {
+        if (res) {
+          setLocationreceivetype(type)
+        }
+      })
+      .catch((err) => {
+        if (err.response && err.response.status == 400) {
+          const { errormsg, status } = err.response.data
+        }
+      })
+  }
+  const jsonDateToUnix = date => {
+    return Date.parse(date["day"] + " " + date["month"] + " " + date["date"] + " " + date["year"] + " " + date["hour"] + ":" + date["minute"])
+  }
   
 	useEffect(() => {
     if (!loaded) initialize()
@@ -1046,11 +1447,11 @@ export default function Main(props) {
           data.type == "cancelRequest" || 
           data.type == "remakeAppointment"
         ) {
-          getAllAppointments()
+          getListAppointments()
 
           speakToWorker(data)
         } else if (data.type == "checkout") {
-          fetchTheNumCartOrderers()
+          getCartOrderers()
         }
 			});
 		}
@@ -1095,6 +1496,10 @@ export default function Main(props) {
     }
   }, [speakInfo.orderNumber])
 
+  const header = (locationType == "hair" || locationType == "nail") && " Salon " || 
+                  locationType == "restaurant" && " Restaurant " || 
+                  locationType == "store" && " Store "
+
 	return (
 		<SafeAreaView style={styles.main}>
       {loaded ?
@@ -1104,7 +1509,16 @@ export default function Main(props) {
               <Text style={styles.header}>{(locationType == 'hair' || locationType == 'nail') ? 'Appointment(s)' : 'Orderer(s)'}</Text>
   					</View>
 
-            {viewType == "appointments" && (
+            <View style={styles.viewTypes}>
+              <TouchableOpacity style={styles.viewType} onPress={() => setViewtype("appointments_list")}>
+                <Text style={styles.viewTypeHeader}>List in order</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.viewType} onPress={() => getAppointmentsChart()}>
+                <Text style={styles.viewTypeHeader}>Chart</Text>
+              </TouchableOpacity>
+            </View>
+
+            {viewType == "appointments_list" ? 
               appointments.length > 0 ? 
                 <FlatList
                   data={appointments}
@@ -1146,9 +1560,41 @@ export default function Main(props) {
                 />
                 :
                 <View style={styles.bodyResult}>
-                  <Text style={styles.bodyResultHeader}>You will see your appointment(s) here</Text>
+                  <Text style={styles.bodyResultHeader}>You will see your appointment(s) here in order</Text>
                 </View>
-            )}
+              :
+              <>
+                <View style={styles.chartRow}>
+                  {chartInfo.workers.map(worker => (
+                    <View key={worker.key} style={styles.chartWorker}>
+                      <Text style={styles.chartWorkerHeader}>{worker.username}</Text>
+                      <View style={styles.chartWorkerProfile}>
+                        <Image
+                          style={resizePhoto(worker.profile, 40)}
+                          source={worker.profile.name ? { uri: logo_url + worker.profile.name } : require("../../assets/profilepicture.jpeg")}
+                        />
+                      </View>
+                    </View>
+                  ))}
+                </View>
+
+                <FlatList
+                  data={chartInfo.items}
+                  style={{ width: '100%' }}
+                  renderItem={({ item, index }) => 
+                    <View key={item.key} style={styles.chartRow}>
+                      <View style={styles.chartRow}>
+                        {chartInfo.workers.map(worker => (
+                          <View key={worker.key} style={[styles.chartWorker, { backgroundColor: worker.id in chartInfo.scheduled && chartInfo.scheduled[worker.id].includes(jsonDateToUnix(item.dateJson)) ? 'black' : '' }]}>
+                            <Text style={[styles.chartTimeHeader, { color: worker.id in chartInfo.scheduled && chartInfo.scheduled[worker.id].includes(jsonDateToUnix(item.dateJson)) ? 'white' : 'black' }]}>{item.time}</Text>
+                          </View>
+                        ))}
+                      </View>
+                    </View>
+                  }
+                />
+              </>
+            }
             {viewType == "cartorderers" && (
               cartOrderers.length > 0 ? 
                 <FlatList
@@ -1185,7 +1631,7 @@ export default function Main(props) {
                 />
                 :
                 <View style={styles.bodyResult}>
-                  <Text style={styles.bodyResultHeader}>{numCartorderers == 0 ? 'No order(s) yet' : numCartorderers + ' order(s)'}</Text>
+                  <Text style={styles.bodyResultHeader}>You will see all order(s) here</Text>
                 </View>
             )}
   				</View>
@@ -1193,8 +1639,8 @@ export default function Main(props) {
   				<View style={styles.bottomNavs}>
   					<View style={styles.bottomNavsRow}>
               <View style={styles.column}>
-                <TouchableOpacity style={styles.bottomNavButton} onPress={() => setShowmoreoptions(true)}>
-                  <Text style={styles.bottomNavButtonHeader}>More Info</Text>
+                <TouchableOpacity style={styles.bottomNavButton} onPress={() => setShowmoreoptions({ ...showMoreoptions, show: true })}>
+                  <Text style={styles.bottomNavButtonHeader}>Change Info</Text>
                 </TouchableOpacity>
               </View>
 
@@ -1276,7 +1722,7 @@ export default function Main(props) {
 					</SafeAreaView>
 				</Modal>
 			)}
-      {showInfo.show && (
+      {showInfo && (
         <Modal transparent={true}>
           <View style={styles.showInfoContainer}>
             <View style={styles.showInfoBox}>
@@ -1288,7 +1734,7 @@ export default function Main(props) {
 
                   <Text style={styles.showInfoHeader}>Salon's hour(s)</Text>
 
-                  {showInfo.locationHours.map(info => (
+                  {locationHours.map(info => (
                     !info.close && (
                       <View style={styles.workerTimeContainer} key={info.key}>
                         <Text style={styles.dayHeader}>{info.header}: </Text>
@@ -1310,8 +1756,8 @@ export default function Main(props) {
                   ))}
 
                   <View style={styles.workerInfoList}>
-                    {showInfo.workers.map(worker => (
-                      <View key={worker.key} style={styles.worker}>
+                    {workersHours.map(worker => (
+                      <View key={worker.key} style={styles.workerRow}>
                         <View style={styles.workerInfo}>
                           <View style={styles.workerInfoProfile}>
                             <Image 
@@ -1352,18 +1798,18 @@ export default function Main(props) {
           </View>
         </Modal>
       )}
-      {showMoreoptions && (
+      {showMoreoptions.show && (
         <Modal transparent={true}>
           <View style={styles.moreOptionsContainer}>
             <View style={styles.moreOptionsBox}>
               {showMoreoptions.infoType == '' ? 
                 <>
-                  <TouchableOpacity style={styles.moreOptionsClose} onPress={() => setShowmoreoptions(false)}>
+                  <TouchableOpacity style={styles.moreOptionsClose} onPress={() => setShowmoreoptions({ ...showMoreoptions, show: false })}>
                     <AntDesign name="close" size={wsize(7)}/>
                   </TouchableOpacity>
 
                   <TouchableOpacity style={styles.moreOptionTouch} onPress={() => {
-                    setShowmoreoptions(false)
+                    setShowmoreoptions({ ...showMoreoptions, show: false })
                     props.navigation.navigate("menu", { refetch: () => initialize(), isOwner })
                   }}>
                     <Text style={styles.moreOptionTouchHeader}>{isOwner == true ? "Change" : "Read"} Menu</Text>
@@ -1373,6 +1819,7 @@ export default function Main(props) {
                     <TouchableOpacity style={styles.moreOptionTouch} onPress={() => {
                       setEditinfo({ ...editInfo, show: true, type: 'users' })
                       setShowmoreoptions({ ...showMoreoptions, infoType: 'users' })
+                      getAllAccounts()
                     }}>
                       <Text style={styles.moreOptionTouchHeader}>Change Workers Info</Text>
                     </TouchableOpacity>
@@ -1384,13 +1831,7 @@ export default function Main(props) {
                         setShowmoreoptions({ ...showMoreoptions, infoType: 'information' })
                         setEditinfo({ ...editInfo, show: true, type: 'information' })
                       }}>
-                        <Text style={styles.moreOptionTouchHeader}>
-                          Change 
-                          {(locationType == "hair" || locationType == "nail") && " Salon "} 
-                          {locationType == "restaurant" && " Restaurant "}
-                          {locationType == "store" && " Store "}
-                          Info
-                        </Text>
+                        <Text style={styles.moreOptionTouchHeader}>Change {header} Info</Text>
                       </TouchableOpacity>
 
                       <TouchableOpacity style={styles.moreOptionTouch} onPress={() => {
@@ -1398,11 +1839,7 @@ export default function Main(props) {
                         setEditinfo({ ...editInfo, show: true, type: 'hours' })
                       }}>
                         <Text style={styles.moreOptionTouchHeader}>
-                          Change 
-                          {(locationType == "hair" || locationType == "nail") && " Salon "} 
-                          {locationType == "restaurant" && " Restaurant "}
-                          {locationType == "store" && " Store "}
-                          Hour(s)
+                          Change {header} Hour(s)
                         </Text>
                       </TouchableOpacity>
 
@@ -1431,102 +1868,418 @@ export default function Main(props) {
                 :
                 <>
                   {editInfo.show && (
-                    <View style={styles.editInfoBox}>
-                      <View style={styles.editInfoContainer}>
-                        {editInfo.type == 'users' && (
-                          <View style={styles.accountHolders}>
-                            <Text style={styles.header}>Edit Stylist(s)</Text>
+                    <ScrollView style={{ height: '100%', width: '100%' }}>
+                      <View style={styles.editInfoBox}>
+                        <View style={styles.editInfoContainer}>
+                          <View style={{ alignItems: 'center' }}>
+                            <TouchableOpacity style={styles.editInfoClose} onPress={() => {
+                              setShowmoreoptions({ ...showMoreoptions, infoType: '' })
+                              setEditinfo({ ...editInfo, show: false, type: '' })
+                            }}>
+                              <AntDesign name="closecircleo" size={30}/>
+                            </TouchableOpacity>
+                          </View>
 
-                            {isOwner == true && (
-                              <TouchableOpacity style={styles.accountHoldersAdd} onPress={() => {
-                                setAccountform({
-                                  ...accountForm,
-                                  show: true,
-                                  type: 'add',
-                                  username: ownerGetinInfo.username,
-                                  cellnumber: ownerGetinInfo.cellnumber,
-                                  currentPassword: ownerGetinInfo.password, 
-                                  newPassword: ownerGetinInfo.password, 
-                                  confirmPassword: ownerGetinInfo.password,
-                                  workerHours: [...hoursRange]
-                                })
-                                setEditinfo({ ...editInfo, show: false })
-                              }}>
-                                <Text style={styles.accountHoldersAddHeader}>Add a new stylist</Text>
-                              </TouchableOpacity>
-                            )}
+                          {editInfo.type == 'information' && (
+                            <>
+                              {locationInfo == '' && (
+                                <>
+                                  <TouchableOpacity style={[styles.locationActionOption, { width: width * 0.5 }]} disabled={editInfo.loading} onPress={() => markLocation()}>
+                                    <Text style={styles.locationActionOptionHeader}>Mark your location</Text>
+                                  </TouchableOpacity>
 
-                            {accountHolders.map((info, index) => (
-                              <View key={info.key} style={styles.account}>
-                                <View style={styles.row}>
-                                  <View style={styles.column}>
-                                    <Text style={styles.accountHeader}>#{index + 1}:</Text>
-                                  </View>
+                                  <Text style={[styles.header, { fontSize: wsize(4) }]}>Or</Text>
 
-                                  <View style={styles.accountEdit}>
-                                    <View style={styles.column}>
-                                      <View style={styles.accountEditProfile}>
-                                        <Image 
-                                          source={info.profile.name ? { uri: logo_url + info.profile.name } : require("../../assets/profilepicture.jpeg")}
-                                          style={resizePhoto(info.profile, wsize(20))}
-                                        />
-                                      </View>
+                                  <TouchableOpacity style={[styles.locationAction, { width: width * 0.6 }]} disabled={editInfo.loading} onPress={() => {
+                                    setLocationinfo('away')
+                                    setEditinfo({ ...editInfo, errorMsg: '' })
+                                  }}>
+                                    <Text style={styles.locationActionHeader}>Edit address instead</Text>
+                                  </TouchableOpacity>
+                                </>
+                              )}
+
+                              {locationInfo == 'destination' && (
+                                <View style={{ alignItems: 'center', width: '100%' }}>
+                                  <Text style={styles.locationHeader}>Your {header} is located at</Text>
+
+                                  {(locationCoords.longitude && locationCoords.latitude) ? 
+                                    <>
+                                      <MapView
+                                        region={{
+                                          longitude: locationCoords.longitude,
+                                          latitude: locationCoords.latitude,
+                                          latitudeDelta: 0.003,
+                                          longitudeDelta: 0.003
+                                        }}
+                                        scrollEnabled={false}
+                                        zoomEnabled={false}
+                                        style={{ borderRadius: width * 0.4 / 2, height: width * 0.4, width: width * 0.4 }}
+                                      >
+                                        <Marker coordinate={{ longitude: locationCoords.longitude, latitude: locationCoords.latitude }}/>
+                                      </MapView>
+                                      <Text style={styles.locationAddressHeader}>{locationCoords.address}</Text>
+                                    </>
+                                    :
+                                    <ActivityIndicator color="black" size="small"/>
+                                  }
+
+                                  <Text style={[styles.locationHeader, { marginVertical: 10 }]}>Or</Text>
+
+                                  <TouchableOpacity style={styles.locationActionOption} onPress={() => {
+                                    setLocationcoords({ longitude: null, latitude: null })
+                                    setLocationinfo('away')
+                                  }}>
+                                    <Text style={styles.locationActionOptionHeader}>Enter address instead</Text>
+                                  </TouchableOpacity>
+                                </View>
+                              )}
+
+                              {locationInfo == 'away' && (
+                                <>
+                                  <TouchableOpacity style={[styles.locationActionOption, { width: width * 0.5 }]} disabled={editInfo.loading} onPress={() => markLocation()}>
+                                    <Text style={styles.locationActionOptionHeader}>Mark your location</Text>
+                                  </TouchableOpacity>
+
+                                  <Text style={[styles.header, { fontSize: wsize(4) }]}>Or</Text>
+
+                                  <Text style={styles.header}>Edit Address</Text>
+
+                                  <View style={styles.inputsBox}>
+                                    <View style={styles.inputContainer}>
+                                      <Text style={styles.inputHeader}>{header}'s name:</Text>
+                                      <TextInput style={styles.input} onChangeText={(storeName) => setStorename(storeName)} value={storeName} autoCorrect={false}/>
+                                    </View>
+                                    <View style={styles.inputContainer}>
+                                      <Text style={styles.inputHeader}>{header}'s Phone number:</Text>
+                                      <TextInput style={styles.input} onChangeText={(num) => setPhonenumber(displayPhonenumber(phonenumber, num, () => Keyboard.dismiss()))} value={phonenumber} keyboardType="numeric" autoCorrect={false}/>
+                                    </View>
+                                    <View style={styles.inputContainer}>
+                                      <Text style={styles.inputHeader}>{header}'s address #1:</Text>
+                                      <TextInput style={styles.input} onChangeText={(addressOne) => setAddressone(addressOne)} value={addressOne} autoCorrect={false}/>
+                                    </View>
+                                    <View style={styles.inputContainer}>
+                                      <Text style={styles.inputHeader}>{header}'s address #2:</Text>
+                                      <TextInput style={styles.input} onChangeText={(addressTwo) => setAddresstwo(addressTwo)} value={addressTwo} autoCorrect={false}/>
+                                    </View>
+                                    <View style={styles.inputContainer}>
+                                      <Text style={styles.inputHeader}>City:</Text>
+                                      <TextInput style={styles.input} onChangeText={(city) => setCity(city)} value={city} keyboardType="numeric" autoCorrect={false}/>
+                                    </View>
+                                    <View style={styles.inputContainer}>
+                                      <Text style={styles.inputHeader}>Province:</Text>
+                                      <TextInput style={styles.input} onChangeText={(province) => setProvince(province)} value={province} keyboardType="numeric" autoCorrect={false}/>
+                                    </View>
+                                    <View style={styles.inputContainer}>
+                                      <Text style={styles.inputHeader}>Postal Code:</Text>
+                                      <TextInput style={styles.input} onChangeText={(postalcode) => setPostalcode(postalcode)} value={postalcode} keyboardType="numeric" autoCorrect={false}/>
                                     </View>
 
-                                    <View style={styles.column}><Text style={styles.accountEditHeader}>{info.username}</Text></View>
-
-                                    {(locationType == "hair" || locationType == "nail") && (
-                                      isOwner == true && (
-                                        <View style={styles.column}>
-                                          <TouchableOpacity onPress={() => deleteTheOwner(info.id)}>
-                                            <AntDesign color="black" name="closecircleo" size={wsize(7)}/>
-                                          </TouchableOpacity>
-                                        </View>
-                                      )
-                                    )}
+                                    {editInfo.errorMsg ? <Text style={styles.errorMsg}>{editInfo.errorMsg}</Text> : null }
                                   </View>
-                                </View>
+                                </>
+                              )}
 
-                                {(locationType == "hair" || locationType == "nail") && (
-                                  <View style={styles.column}>
-                                    <TouchableOpacity style={styles.accountEditTouch} onPress={() => {
-                                      if (info.id == ownerId) {
-                                        setAccountform({
-                                          ...accountForm,
-                                          show: true, type: 'edit', 
-                                          id: info.id,
-                                          username: info.username,
-                                          cellnumber: info.cellnumber,
-                                          password: '',
-                                          confirmPassword: '',
-                                          profile: { 
-                                            ...accountForm.profile,  
-                                            uri: info.profile.name ? logo_url + info.profile.name : "",
-                                            name: info.profile.name ? info.profile.name : "",
-                                            size: { width: info.profile.width, height: info.profile.height }
-                                          },
-                                          workerHours: info.hours
-                                        })
-                                      } else { // others can only edit other's hours
-                                        setAccountform({ 
-                                          ...accountForm, 
-                                          show: true, type: 'edit', editType: 'hours', 
-                                          id: info.id, workerHours: info.hours
-                                        })
-                                      }
+                              <View style={[styles.cameraContainer, { marginVertical: 20 }]}>
+                                <Text style={styles.header}>Store Logo</Text>
 
-                                      setEditinfo({ ...editInfo, show: false })
+                                {logo.uri ? (
+                                  <>
+                                    <Image style={resizePhoto(logo.size, width)} source={{ uri: logo.uri }}/>
+
+                                    <TouchableOpacity style={styles.cameraAction} onPress={() => {
+                                      allowCamera()
+                                      setLogo({ ...logo, uri: '' })
                                     }}>
-                                      <Text style={styles.accountEditTouchHeader}>Change {ownerId === info.id ? "Info (your)" : "hours"}</Text>
+                                      <Text style={styles.cameraActionHeader}>Cancel</Text>
                                     </TouchableOpacity>
-                                  </View>
-                                )}
+                                  </>
+                                ) : (
+                                  <>
+                                    {!choosing && (
+                                      <>
+                                        <Camera 
+                                          style={styles.camera} 
+                                          type={camType} 
+                                          ref={r => {setCamcomp(r)}}
+                                          ratio="1:1"
+                                        />
+
+                                        <View style={{ alignItems: 'center', marginVertical: 10 }}>
+                                          <Ionicons name="camera-reverse-outline" size={wsize(7)} onPress={() => setCamtype(camType == 'back' ? 'front' : 'back')}/>
+                                        </View>
+                                      </>
+                                    )}
+
+                                    <View style={styles.cameraActions}>
+                                      <TouchableOpacity style={[styles.cameraAction, { opacity: logo.loading ? 0.5 : 1 }]} disabled={logo.loading} onPress={snapPhoto.bind(this)}>
+                                        <Text style={styles.cameraActionHeader}>Take this photo</Text>
+                                      </TouchableOpacity>
+                                      <TouchableOpacity style={[styles.cameraAction, { opacity: logo.loading ? 0.5 : 1 }]} disabled={logo.loading} onPress={() => {
+                                        allowChoosing()
+                                        choosePhoto()
+                                      }}>
+                                        <Text style={styles.cameraActionHeader}>Choose from phone</Text>
+                                      </TouchableOpacity>
+                                    </View>
+                                  </>
+                                )}  
                               </View>
-                            ))}
-                          </View>
-                        )}
+
+                              <TouchableOpacity style={styles.updateButton} disabled={editInfo.loading} onPress={() => updateYourLocation()}>
+                                <Text style={styles.updateButtonHeader}>Save</Text>
+                              </TouchableOpacity>
+                            </>
+                          )}
+
+                          {editInfo.type == 'hours' && (
+                            <>
+                              <Text style={[styles.header, { fontSize: wsize(6) }]}>Edit {header} Hour(s)</Text>
+
+                              {days.map((info, index) => (
+                                <View key={index} style={styles.workerHour}>
+                                  {info.close == false ? 
+                                    <>
+                                      <View style={{ opacity: info.close ? 0.1 : 1, width: '100%' }}>
+                                        <Text style={styles.workerHourHeader}><Text style={{ fontWeight: '300' }}>Open on</Text> {info.header}</Text>
+                                        <View style={styles.timeSelectionContainer}>
+                                          <View style={styles.timeSelection}>
+                                            <View style={styles.selection}>
+                                              <TouchableOpacity onPress={() => updateTime(index, "hour", "up", true)}>
+                                                <AntDesign name="up" size={wsize(7)}/>
+                                              </TouchableOpacity>
+                                              <TextInput style={styles.selectionHeader} onChangeText={(hour) => {
+                                                const newDays = [...days]
+
+                                                newDays[index].opentime["hour"] = hour.toString()
+
+                                                setDays(newDays)
+                                              }} keyboardType="numeric" maxLength={2} value={info.opentime.hour}/>
+                                              <TouchableOpacity onPress={() => updateTime(index, "hour", "down", true)}>
+                                                <AntDesign name="down" size={wsize(7)}/>
+                                              </TouchableOpacity>
+                                            </View>
+                                            <View style={styles.column}>
+                                              <Text style={styles.selectionDiv}>:</Text>
+                                            </View>
+                                            <View style={styles.selection}>
+                                              <TouchableOpacity onPress={() => updateTime(index, "minute", "up", true)}>
+                                                <AntDesign name="up" size={wsize(7)}/>
+                                              </TouchableOpacity>
+                                              <TextInput style={styles.selectionHeader} onChangeText={(minute) => {
+                                                const newDays = [...days]
+
+                                                newDays[index].opentime["minute"] = minute.toString()
+
+                                                setDays(newDays)
+                                              }} keyboardType="numeric" maxLength={2} value={info.opentime.minute}/>
+                                              <TouchableOpacity onPress={() => updateTime(index, "minute", "down", true)}>
+                                                <AntDesign name="down" size={wsize(7)}/>
+                                              </TouchableOpacity>
+                                            </View>
+                                            <View style={styles.selection}>
+                                              <TouchableOpacity onPress={() => updateTime(index, "period", "up", true)}>
+                                                <AntDesign name="up" size={wsize(7)}/>
+                                              </TouchableOpacity>
+                                              <Text style={styles.selectionHeader}>{info.opentime.period}</Text>
+                                              <TouchableOpacity onPress={() => updateTime(index, "period", "down", true)}>
+                                                <AntDesign name="down" size={wsize(7)}/>
+                                              </TouchableOpacity>
+                                            </View>
+                                          </View>
+                                          <View style={styles.timeSelectionColumn}>
+                                            <Text style={styles.timeSelectionHeader}>To</Text>
+                                          </View>
+                                          <View style={styles.timeSelection}>
+                                            <View style={styles.selection}>
+                                              <TouchableOpacity onPress={() => updateTime(index, "hour", "up", false)}>
+                                                <AntDesign name="up" size={wsize(7)}/>
+                                              </TouchableOpacity>
+                                              <TextInput style={styles.selectionHeader} onChangeText={(hour) => {
+                                                const newDays = [...days]
+
+                                                newDays[index].closetime["hour"] = hour.toString()
+
+                                                setDays(newDays)
+                                              }} keyboardType="numeric" maxLength={2} value={info.closetime.hour}/>
+                                              <TouchableOpacity onPress={() => updateTime(index, "hour", "down", false)}>
+                                                <AntDesign name="down" size={wsize(7)}/>
+                                              </TouchableOpacity>
+                                            </View>
+                                            <View style={styles.column}>
+                                              <Text style={styles.selectionDiv}>:</Text>
+                                            </View>
+                                            <View style={styles.selection}>
+                                              <TouchableOpacity onPress={() => updateTime(index, "minute", "up", false)}>
+                                                <AntDesign name="up" size={wsize(7)}/>
+                                              </TouchableOpacity>
+                                              <TextInput style={styles.selectionHeader} onChangeText={(minute) => {
+                                                const newDays = [...days]
+
+                                                newDays[index].closetime["minute"] = minute.toString()
+
+                                                setDays(newDays)
+                                              }} keyboardType="numeric" maxLength={2} value={info.closetime.minute}/>
+                                              <TouchableOpacity onPress={() => updateTime(index, "minute", "down", false)}>
+                                                <AntDesign name="down" size={wsize(7)}/>
+                                              </TouchableOpacity>
+                                            </View>
+                                            <View style={styles.selection}>
+                                              <TouchableOpacity onPress={() => updateTime(index, "period", "up", false)}>
+                                                <AntDesign name="up" size={wsize(7)}/>
+                                              </TouchableOpacity>
+                                              <Text style={styles.selectionHeader}>{info.closetime.period}</Text>
+                                              <TouchableOpacity onPress={() => updateTime(index, "period", "down", false)}>
+                                                <AntDesign name="down" size={wsize(7)}/>
+                                              </TouchableOpacity>
+                                            </View>
+                                          </View>
+                                        </View>
+                                      </View>
+                                      <TouchableOpacity style={styles.workerTouch} onPress={() => {
+                                        const newDays = [...days]
+
+                                        newDays[index].close = true
+
+                                        setDays(newDays)
+                                      }}>
+                                        <Text style={styles.workerTouchHeader}>Change to not open</Text>
+                                      </TouchableOpacity>
+                                    </>
+                                    :
+                                    <>
+                                      <Text style={styles.workerHourHeader}><Text style={{ fontWeight: '300' }}>Not open on</Text> {info.header}</Text>
+
+                                      <TouchableOpacity style={styles.workerTouch} onPress={() => {
+                                        const newDays = [...days]
+
+                                        newDays[index].close = false
+
+                                        setDays(newDays)
+                                      }}>
+                                        <Text style={styles.workerTouchHeader}>Change to open</Text>
+                                      </TouchableOpacity>
+                                    </>
+                                  }
+                                </View>
+                              ))}
+
+                              <TouchableOpacity style={styles.updateButton} disabled={editInfo.loading} onPress={() => updateLocationHours()}>
+                                <Text style={styles.updateButtonHeader}>Save</Text>
+                              </TouchableOpacity>
+                            </>
+                          )}
+
+                          {editInfo.type == 'users' && (
+                            <View style={styles.accountHolders}>
+                              <Text style={styles.header}>Edit Stylist(s)</Text>
+
+                              {isOwner == true && (
+                                <TouchableOpacity style={styles.accountHoldersAdd} onPress={() => {
+                                  setAccountform({
+                                    ...accountForm,
+                                    show: true,
+                                    type: 'add',
+                                    username: ownerGetinInfo.username,
+                                    cellnumber: ownerGetinInfo.cellnumber,
+                                    currentPassword: ownerGetinInfo.password, 
+                                    newPassword: ownerGetinInfo.password, 
+                                    confirmPassword: ownerGetinInfo.password,
+                                    workerHours: [...hoursRange]
+                                  })
+                                  setEditinfo({ ...editInfo, show: false })
+                                }}>
+                                  <Text style={styles.accountHoldersAddHeader}>Add a new stylist</Text>
+                                </TouchableOpacity>
+                              )}
+
+                              {accountHolders.map((info, index) => (
+                                <View key={info.key} style={styles.account}>
+                                  <View style={styles.row}>
+                                    <View style={styles.column}>
+                                      <Text style={styles.accountHeader}>#{index + 1}:</Text>
+                                    </View>
+
+                                    <View style={styles.accountEdit}>
+                                      <View style={styles.column}>
+                                        <View style={styles.accountEditProfile}>
+                                          <Image 
+                                            source={info.profile.name ? { uri: logo_url + info.profile.name } : require("../../assets/profilepicture.jpeg")}
+                                            style={resizePhoto(info.profile, wsize(20))}
+                                          />
+                                        </View>
+                                      </View>
+
+                                      <View style={styles.column}><Text style={styles.accountEditHeader}>{info.username}</Text></View>
+
+                                      {(locationType == "hair" || locationType == "nail") && (
+                                        isOwner == true && (
+                                          <View style={styles.column}>
+                                            <TouchableOpacity onPress={() => deleteTheOwner(info.id)}>
+                                              <AntDesign color="black" name="closecircleo" size={wsize(7)}/>
+                                            </TouchableOpacity>
+                                          </View>
+                                        )
+                                      )}
+                                    </View>
+                                  </View>
+
+                                  {(locationType == "hair" || locationType == "nail") && (
+                                    <View style={styles.column}>
+                                      <TouchableOpacity style={styles.accountEditTouch} onPress={() => {
+                                        if (info.id == ownerId) {
+                                          setAccountform({
+                                            ...accountForm,
+                                            show: true, type: 'edit', 
+                                            id: info.id,
+                                            username: info.username,
+                                            cellnumber: info.cellnumber,
+                                            password: '',
+                                            confirmPassword: '',
+                                            profile: { 
+                                              ...accountForm.profile,  
+                                              uri: info.profile.name ? logo_url + info.profile.name : "",
+                                              name: info.profile.name ? info.profile.name : "",
+                                              size: { width: info.profile.width, height: info.profile.height }
+                                            },
+                                            workerHours: info.hours
+                                          })
+                                        } else { // others can only edit other's hours
+                                          setAccountform({ 
+                                            ...accountForm, 
+                                            show: true, type: 'edit', editType: 'hours', 
+                                            id: info.id, workerHours: info.hours
+                                          })
+                                        }
+
+                                        setEditinfo({ ...editInfo, show: false })
+                                      }}>
+                                        <Text style={styles.accountEditTouchHeader}>Change {ownerId === info.id ? "Info (your)" : "hours"}</Text>
+                                      </TouchableOpacity>
+                                    </View>
+                                  )}
+                                </View>
+                              ))}
+                            </View>
+                          )}
+
+                          {editInfo.type == 'receivetype' && (
+                            <View style={styles.receiveTypesBox}>
+                              <Text style={styles.receiveTypesHeader}>How do you want to receive appointments</Text>
+
+                              <View style={styles.receiveTypes}>
+                                <TouchableOpacity style={[styles.receiveType, { backgroundColor: locationReceivetype == 'stylist' ? 'black' : 'white' }]} onPress={() => setTheReceiveType('stylist')}>
+                                  <Text style={[styles.receiveTypeHeader, { color: locationReceivetype == 'stylist' ? 'white' : 'black' }]}>By each stylist</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity style={[styles.receiveType, { backgroundColor: locationReceivetype == 'owner' ? 'black' : 'white' }]} onPress={() => setTheReceiveType('owner')}>
+                                  <Text style={[styles.receiveTypeHeader, { color: locationReceivetype == 'owner' ? 'white' : 'black' }]}>By each owner</Text>
+                                </TouchableOpacity>
+                              </View>
+                            </View>
+                          )}
+                        </View>
                       </View>
-                    </View>
+                    </ScrollView>
                   )}
                   {accountForm.show && (
                     <>
@@ -1538,13 +2291,13 @@ export default function Main(props) {
                                 <TouchableOpacity onPress={() => {
                                   setAccountform({
                                     ...accountForm,
-
                                     show: false,
                                     username: '',
                                     cellnumber: '', password: '', confirmPassword: '',
                                     profile: { uri: '', name: '', size: { width: 0, height: 0 }},
                                     errorMsg: ""
                                   })
+                                  setEditinfo({ ...editInfo, show: true })
                                 }}>
                                   <AntDesign name="closecircleo" size={wsize(7)}/>
                                 </TouchableOpacity>
@@ -1729,8 +2482,6 @@ export default function Main(props) {
                                         } else {
                                           updateTheOwner()
                                         }
-
-                                        getAllAccounts()
                                       }}>
                                         <Text style={styles.accountformSubmitHeader}>{accountForm.type == 'add' ? 'Add' : 'Save'} Account</Text>
                                       </TouchableOpacity>
@@ -1766,7 +2517,7 @@ export default function Main(props) {
                                               Keyboard.dismiss()
 
                                               if (usercode == accountForm.verifyCode || (usercode == '111111')) {
-                                                setAccountform({ ...accountForm, verified: true, addStep: accountForm.addStep + 1, errorMsg: "" })
+                                                setAccountform({ ...accountForm, verified: true, verifyCode: '', addStep: accountForm.addStep + 1, errorMsg: "" })
                                               } else {
                                                 setAccountform({ ...accountForm, errorMsg: "The verify code is wrong" })
                                               }
@@ -1789,7 +2540,7 @@ export default function Main(props) {
                                   {accountForm.addStep == 2 && (
                                     <View style={styles.cameraContainer}>
                                       <Text style={styles.cameraHeader}>Profile Picture (Optional)</Text>
-                                      <Text style={styles.cameraHeader}>Take a picture of {accountForm.username} for clients (Optional)</Text>
+                                      <Text style={[styles.cameraHeader, { fontSize: wsize(4) }]}>Take a picture of {accountForm.username} for clients (Optional)</Text>
 
                                       {accountForm.profile.uri ? 
                                         <>
@@ -1992,15 +2743,22 @@ export default function Main(props) {
                                               </View>
                                             </>
                                             : 
-                                            <Text style={styles.workerHourHeader}><Text style={{ fontWeight: '300' }}>Not open on</Text> {info.header}</Text>
+                                            <>
+                                              <Text style={styles.workerHourHeader}><Text style={{ fontWeight: '300' }}>Not open on</Text> {info.header}</Text>
+
+                                              <View style={styles.workerHourActions}>
+                                              </View>
+                                            </>
+                                            
                                         }
                                       </View>
                                     ))
                                   )}
 
                                   {accountForm.errorMsg ? <Text style={styles.errorMsg}>{accountForm.errorMsg}</Text> : null}
+                                  {accountForm.loading ? <ActivityIndicator marginBottom={10} size="small"/> : null}
 
-                                  {accountForm.addStep != 0 && accountForm.verified && (
+                                  {!accountForm.verifyCode && (
                                     <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
                                       <View style={{ flexDirection: 'row' }}>
                                         <TouchableOpacity style={[styles.accountformSubmit, { opacity: accountForm.loading ? 0.3 : 1 }]} disabled={accountForm.loading} onPress={() => {
@@ -2022,7 +2780,8 @@ export default function Main(props) {
                                         <TouchableOpacity style={[styles.accountformSubmit, { opacity: accountForm.loading ? 0.3 : 1 }]} disabled={accountForm.loading} onPress={() => {
                                           if (accountForm.addStep == 4) {
                                             addNewOwner()
-                                            getAllAccounts()
+                                          } else if (accountForm.addStep == 0 && !accountForm.verified) {
+                                            verify()
                                           } else {
                                             setAccountform({ ...accountForm, addStep: accountForm.addStep + 1 })
                                           }
@@ -2301,6 +3060,7 @@ export default function Main(props) {
                                   )}
 
                                   {accountForm.errorMsg ? <Text style={styles.errorMsg}>{accountForm.errorMsg}</Text> : null}
+                                  {accountForm.loading ? <ActivityIndicator marginBottom={10} size="small"/> : null}
 
                                   <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
                                     <View style={{ flexDirection: 'row' }}>
@@ -2309,6 +3069,7 @@ export default function Main(props) {
                                           if (info.id == accountForm.id) {
                                             setAccountform({ 
                                               ...accountForm, 
+                                              show: false,
                                               editType: '',
                                               username: info.username, editUsername: false,
                                               cellnumber: info.cellnumber, verified: false, verifyCode: '', editCellnumber: false,
@@ -2321,6 +3082,7 @@ export default function Main(props) {
                                               workerHours: info.hours, editHours: false,
                                               errorMsg: ""
                                             })
+                                            setEditinfo({ ...editInfo, show: true })
                                           }
                                         })
                                       }}>
@@ -2332,8 +3094,6 @@ export default function Main(props) {
                                         } else {
                                           updateTheOwner()
                                         }
-
-                                        getAllAccounts()
                                       }}>
                                         <Text style={styles.accountformSubmitHeader}>{accountForm.type == 'add' ? 'Add' : 'Save'}</Text>
                                       </TouchableOpacity>
@@ -2370,6 +3130,39 @@ export default function Main(props) {
                       )}
                     </>
                   )}
+
+                  {deleteOwnerbox.show && (
+                    <View style={styles.deleteOwnerBox}>
+                      <View style={styles.deleteOwnerContainer}>
+                        <View style={styles.deleteOwnerProfile}>
+                          <Image 
+                            style={resizePhoto(deleteOwnerbox.profile, wsize(40))} 
+                            source={deleteOwnerbox.profile.name ? { uri: logo_url + deleteOwnerbox.profile.name } : require("../../assets/profilepicture.jpeg")}
+                          />
+                        </View>
+
+                        <Text style={styles.deleteOwnerHeader}>
+                          {deleteOwnerbox.username}
+                          {'\n\nWorking ' + deleteOwnerbox.numWorkingdays + ' day(s)'}
+                        </Text>
+
+                        <View>
+                          <Text style={styles.deleteOwnerActionsHeader}>Are you sure you want to remove this stylist</Text>
+                          <View style={styles.deleteOwnerActions}>
+                            <TouchableOpacity style={styles.deleteOwnerAction} onPress={() => {
+                              setEditinfo({ ...editInfo, show: true })
+                              setDeleteownerbox({ ...deleteOwnerbox, show: false })
+                            }}>
+                              <Text style={styles.deleteOwnerActionHeader}>No</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.deleteOwnerAction} onPress={() => deleteTheOwner()}>
+                              <Text style={styles.deleteOwnerActionHeader}>Yes</Text>
+                            </TouchableOpacity>
+                          </View>
+                        </View>
+                      </View>
+                    </View>
+                  )}
                 </>
               }
             </View>
@@ -2403,11 +3196,15 @@ const styles = StyleSheet.create({
 	main: { backgroundColor: 'white', height: '100%', width: '100%' },
 	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 
-	navs: { alignItems: 'center', height: '10%', width: '100%' },
+	navs: { alignItems: 'center', width: '100%' },
   header: { fontSize: wsize(10), fontWeight: 'bold' },
 
+  viewTypes: { flexDirection: 'row', justifyContent: 'space-around', marginVertical: 20, width: '100%' },
+  viewType: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: '40%' },
+  viewTypeHeader: { textAlign: 'center' },
+
 	// body
-	body: { height: '90%' },
+	body: { height: '90%', width: '100%' },
 
 	// client appointment & orders
 	orderRequest: { borderRadius: 5, backgroundColor: 'white', marginHorizontal: 5, marginVertical: 2.5, padding: 10 },
@@ -2426,6 +3223,13 @@ const styles = StyleSheet.create({
   column: { flexDirection: 'column', justifyContent: 'space-around' },
 	scheduleAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, paddingVertical: 10, width: wsize(30) },
 	scheduleActionHeader: { fontSize: wsize(4), textAlign: 'center' },
+
+  chartRow: { flexDirection: 'row', width: '100%' },
+  chartTime: { height: 70, width: 100 },
+  chartTimeHeader: { fontSize: wsize(4), textAlign: 'center' },
+  chartWorker: { alignItems: 'center', borderColor: 'grey', borderStyle: 'solid', borderWidth: 1, height: 70, width: 100 },
+  chartWorkerHeader: { fontSize: wsize(4), textAlign: 'center' },
+  chartWorkerProfile: { borderRadius: 20, height: 40, overflow: 'hidden', width: 40 },
 
 	cartorderer: { backgroundColor: 'white', borderRadius: 5, flexDirection: 'row', justifyContent: 'space-around', margin: 10, padding: 5, width: wsize(100) - 20 },
 	cartordererInfo: { alignItems: 'center' },
@@ -2466,7 +3270,7 @@ const styles = StyleSheet.create({
   showInfoHeader: { fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
   showInfoPhonenumber: { fontSize: wsize(5), fontWeight: 'bold', marginHorizontal: 10, marginVertical: 8, textAlign: 'center' },
   workerInfoList: { width: '100%' },
-  worker: { flexDirection: 'row', justifyContent: 'space-around', marginVertical: 30, width: '100%' },
+  workerRow: { flexDirection: 'row', justifyContent: 'space-around', marginVertical: 30, width: '100%' },
   workerInfo: {  },
   workerInfoProfile: { borderRadius: 25, height: 50, overflow: 'hidden', width: 50 },
   workerInfoName: { color: 'black', textAlign: 'center' },
@@ -2477,10 +3281,17 @@ const styles = StyleSheet.create({
   timeHeader: { fontSize: wsize(4), fontWeight: 'bold' },
 
   moreOptionsContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
-  moreOptionsBox: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '80%', justifyContent: 'space-around', width: '80%' },
+  moreOptionsBox: { alignItems: 'center', backgroundColor: 'white', height: '80%', width: '80%' },
   moreOptionsClose: { alignItems: 'center', borderRadius: 20, borderStyle: 'solid', borderWidth: 2, marginVertical: 30 },
-  moreOptionTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: '90%' },
+  moreOptionTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 20, padding: 5, width: '90%' },
   moreOptionTouchHeader: { fontSize: 20, textAlign: 'center' },
+
+  locationHeader: { fontSize: wsize(5), fontWeight: 'bold', marginHorizontal: 20, textAlign: 'center' },
+  locationAddressHeader: { fontSize: wsize(5), fontWeight: 'bold', margin: 20, textAlign: 'center' },
+  locationActionOption: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 10, width: wsize(50) },
+  locationActionOptionHeader: { fontSize: wsize(5), textAlign: 'center' },
+  locationAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 10, width: 100 },
+  locationActionHeader: { fontSize: wsize(5), textAlign: 'center' },
 
   // account form
   accountform: { backgroundColor: 'white', height: '100%', width: '100%' },
@@ -2494,6 +3305,10 @@ const styles = StyleSheet.create({
   accountformSubmit: { alignItems: 'center', borderRadius: 2, borderStyle: 'solid', borderWidth: 1, margin: 5, padding: 5, width: wsize(35) },
   accountformSubmitHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(5) },
 
+  inputsBox: { paddingHorizontal: 20, width: '100%' },
+  inputContainer: { marginVertical: 20 },
+  inputHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(5) },
+  input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), padding: 5 },
   cameraContainer: { alignItems: 'center', width: '100%' },
   camera: { height: wsize(80), width: wsize(80) },
   cameraHeader: { fontSize: wsize(6), fontWeight: 'bold', textAlign: 'center' },
@@ -2524,7 +3339,7 @@ const styles = StyleSheet.create({
   workerTouchHeader: { fontSize: wsize(7), textAlign: 'center' },
   
   deleteOwnerBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
-  deleteOwnerContainer: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '80%', justifyContent: 'space-between', paddingVertical: 20, width: '80%' },
+  deleteOwnerContainer: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '100%', justifyContent: 'space-between', paddingVertical: 20, width: '100%' },
   deleteOwnerProfile: { borderRadius: wsize(40) / 2, height: wsize(40), overflow: 'hidden', width: wsize(40) },
   deleteOwnerHeader: { fontSize: wsize(5), fontWeight: 'bold', marginVertical: 30, textAlign: 'center' },
   deleteOwnerActionsHeader: { fontSize: wsize(6), fontWeight: 'bold', textAlign: 'center' },
@@ -2554,12 +3369,16 @@ const styles = StyleSheet.create({
   receiveType: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: 150 },
   receiveTypeHeader: { textAlign: 'center' },
 
+  updateButton: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 10 },
+  updateButtonHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(4) },
+
 	disabled: { backgroundColor: 'black', flexDirection: 'column', justifyContent: 'space-around', height: '100%', opacity: 0.8, width: '100%' },
   disabledContainer: { alignItems: 'center', width: '100%' },
   disabledHeader: { color: 'white', fontWeight: 'bold', textAlign: 'center' },
   disabledClose: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 50, padding: 10 },
 
   loading: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
+  row: { flexDirection: 'row', justifyContent: 'space-around' },
   column: { flexDirection: 'column', justifyContent: 'space-around' },
   errorMsg: { color: 'darkred', textAlign: 'center' }
 })

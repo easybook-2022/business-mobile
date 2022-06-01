@@ -690,21 +690,19 @@ export default function Menu(props) {
 
 					<View style={styles.bottomNavs}>
 						<View style={styles.bottomNavsRow}>
-							<TouchableOpacity style={styles.bottomNav} onPress={() => props.navigation.navigate("settings", { refetch: () => getTheLocationProfile() })}>
-								<AntDesign name="setting" size={wsize(7)}/>
-							</TouchableOpacity>
-
 							<TouchableOpacity style={styles.bottomNav} onPress={() => props.navigation.dispatch(StackActions.replace('main'))}>
 								<Entypo name="home" size={wsize(7)}/>
 							</TouchableOpacity>
 
-							<TouchableOpacity style={styles.bottomNav} onPress={() => {
-								AsyncStorage.clear()
+  						<View style={styles.column}>
+                <TouchableOpacity style={styles.bottomNavButton} onPress={() => {
+                  AsyncStorage.clear()
 
-								props.navigation.dispatch(StackActions.replace('auth'));
-							}}>
-								<Text style={styles.bottomNavHeader}>Log-Out</Text>
-							</TouchableOpacity>
+                  props.navigation.dispatch(StackActions.replace('auth'));
+                }}>
+                  <Text style={styles.bottomNavButtonHeader}>Log-Out</Text>
+                </TouchableOpacity>
+              </View>
 						</View>
 					</View>
 
@@ -1030,6 +1028,8 @@ const styles = StyleSheet.create({
 	bottomNavsRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
 	bottomNav: { flexDirection: 'row', justifyContent: 'space-around', margin: 5, width: wsize(30) },
 	bottomNavHeader: { fontSize: wsize(5), fontWeight: 'bold' },
+  bottomNavButton: { backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5 },
+  bottomNavButtonHeader: { color: 'white', fontSize: wsize(4), fontWeight: 'bold', textAlign: 'center' },
 
 	// hidden boxes
 

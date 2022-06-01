@@ -104,7 +104,7 @@ export default function Auth({ navigation }) {
           AsyncStorage.setItem("ownerid", id.toString())
           AsyncStorage.setItem("phase", "locationsetup")
 
-          navigation.dispatch("locationsetup")
+          navigation.dispatch(StackActions.replace("locationsetup"))
         }
       })
       .catch((err) => {
@@ -123,81 +123,81 @@ export default function Auth({ navigation }) {
 	return (
 		<SafeAreaView style={styles.auth}>
       <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
-        <>
-    			<View style={styles.box}>
-            <View style={{ alignItems: 'center' }}>
-              <Image style={styles.icon} source={require("../../assets/icon.png")}/>
+  			<View style={styles.box}>
+          <View style={{ alignItems: 'center' }}>
+            <Image style={styles.icon} source={require("../../assets/icon.png")}/>
 
-              <Text style={styles.boxHeader}>Welcome to EasyGO (Business)</Text>
-            </View>
+            <Text style={styles.boxHeader}>Welcome to EasyGO (Business)</Text>
+          </View>
 
-            <View style={styles.inputsBox}>
-              {!noAccount ? 
+          <View style={styles.inputsBox}>
+            {!noAccount ? 
+              <>
+                <View style={styles.inputContainer}>
+                  <Text style={styles.inputHeader}>Phone number:</Text>
+                  <TextInput style={styles.input} onChangeText={(num) => setCellnumber(displayPhonenumber(cellnumber, num, () => Keyboard.dismiss()))} value={cellnumber} keyboardType="numeric" autoCorrect={false}/>
+                </View>
+
+                <View style={styles.inputContainer}>
+                  <Text style={styles.inputHeader}>Password:</Text>
+                  <TextInput style={styles.input} secureEntry={true} onChangeText={(password) => setPassword(password)} secureTextEntry={true} value={password} autoCorrect={false}/>
+                </View>
+
+                <Text style={styles.errorMsg}>{errorMsg}</Text>
+
+                <TouchableOpacity style={styles.submit} onPress={() => login()}>
+                  <Text style={styles.submitHeader}>Get in work</Text>
+                </TouchableOpacity>
+              </>
+              :
+              !verified ? 
                 <>
                   <View style={styles.inputContainer}>
-                    <Text style={styles.inputHeader}>Phone number:</Text>
-                    <TextInput style={styles.input} onChangeText={(num) => setCellnumber(displayPhonenumber(cellnumber, num, () => Keyboard.dismiss()))} value={cellnumber} keyboardType="numeric" autoCorrect={false}/>
+                    <Text style={styles.inputHeader}>Enter verify code from your message:</Text>
+                    <TextInput style={styles.input} onChangeText={(usercode) => {
+                      if (usercode.length == 6) {
+                        Keyboard.dismiss()
+
+                        if (usercode == verifyCode || (usercode == '111111')) {
+                          setVerified(true)
+                          setErrormsg("")
+                        } else {
+                          setErrormsg("The verify code is wrong")
+                        }
+                      } else {
+                        setErrormsg("")
+                      }
+                    }} keyboardType="numeric" autoCorrect={false}/>
                   </View>
-
-                  <View style={styles.inputContainer}>
-                    <Text style={styles.inputHeader}>Password:</Text>
-                    <TextInput style={styles.input} secureEntry={true} onChangeText={(password) => setPassword(password)} secureTextEntry={true} value={password} autoCorrect={false}/>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-around', width: '100%' }}>
+                    <View style={{ flexDirection: 'row' }}>
+                      <TouchableOpacity style={[styles.submit, { opacity: loading ? 0.3 : 1 }]} disabled={loading} onPress={() => {
+                        setVerifycode('')
+                        setVerified(false)
+                        setNoaccount(false)
+                        setErrormsg('')
+                      }}>
+                        <Text style={styles.submitHeader}>Back</Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
-
-                  <Text style={styles.errorMsg}>{errorMsg}</Text>
-
-                  <TouchableOpacity style={styles.submit} onPress={() => login()}>
-                    <Text style={styles.submitHeader}>Get in work</Text>
-                  </TouchableOpacity>
                 </>
                 :
-                !verified ? 
-                  <>
-                    <View style={styles.inputContainer}>
-                      <Text style={styles.inputHeader}>Enter verify code from your message:</Text>
-                      <TextInput style={styles.input} onChangeText={(usercode) => {
-                        if (usercode.length == 6) {
-                          Keyboard.dismiss()
-
-                          if (usercode == verifyCode || (usercode == '111111')) {
-                            setVerified(true)
-                            setErrormsg("")
-                          } else {
-                            setErrormsg("The verify code is wrong")
-                          }
-                        } else {
-                          setErrormsg("")
-                        }
-                      }} keyboardType="numeric" autoCorrect={false}/>
-                    </View>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-around', width: '100%' }}>
-                      <View style={{ flexDirection: 'row' }}>
-                        <TouchableOpacity style={[styles.submit, { opacity: loading ? 0.3 : 1 }]} disabled={loading} onPress={() => {
-                          setVerifycode('')
-                          setErrormsg('')
-                        }}>
-                          <Text style={styles.submitHeader}>Back</Text>
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-                  </>
-                  :
-                  <>
-                    <View style={styles.inputContainer}>
-                      <Text style={styles.inputHeader}>Enter a password:</Text>
-                      <TextInput style={styles.input} secureTextEntry onChangeText={(password) => setPassword(password)} value={password} autoCorrect={false}/>
-                    </View>
-                    <View style={styles.inputContainer}>
-                      <Text style={styles.inputHeader}>Confirm your password:</Text>
-                      <TextInput style={styles.input} secureTextEntry onChangeText={(confirmPassword) => setConfirmpassword(confirmPassword)} value={confirmPassword} autoCorrect={false}/>
-                    </View>
-                  </>
-              }
-            </View>
+                <>
+                  <View style={styles.inputContainer}>
+                    <Text style={styles.inputHeader}>Enter a password:</Text>
+                    <TextInput style={styles.input} secureTextEntry onChangeText={(password) => setPassword(password)} value={password} autoCorrect={false}/>
+                  </View>
+                  <View style={styles.inputContainer}>
+                    <Text style={styles.inputHeader}>Confirm your password:</Text>
+                    <TextInput style={styles.input} secureTextEntry onChangeText={(confirmPassword) => setConfirmpassword(confirmPassword)} value={confirmPassword} autoCorrect={false}/>
+                  </View>
+                </>
+            }
           </View>
 
           {loading && <Modal transparent={true}><Loadingprogress/></Modal>}
-        </>
+        </View>
       </TouchableWithoutFeedback>
 		</SafeAreaView>
 	)

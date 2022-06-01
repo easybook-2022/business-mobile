@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { SafeAreaView, ActivityIndicator, Dimensions, FlatList, View, Image, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { SafeAreaView, ActivityIndicator, Dimensions, FlatList, View, Image, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import { StackActions } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getAllLocations } from '../apis/locations'
 import { resizePhoto } from 'geottuse-tools';
 import { socket, logo_url } from '../../assets/info'
+
+import Loadingprogress from '../widgets/loadingprogress'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
 
@@ -13,6 +15,7 @@ const wsize = p => {return width * (p / 100)}
 
 export default function Locationslist(props) {
   const [locations, setLocations] = useState([])
+  const [loaded, setLoaded] = useState(false)
 
   const getTheAllLocations = async() => {
     const ownerid = await AsyncStorage.getItem("ownerid")
@@ -26,6 +29,7 @@ export default function Locationslist(props) {
       .then((res) => {
         if (res) {
           setLocations(res.locations)
+          setLoaded(true)
         }
       })
   }
@@ -40,57 +44,63 @@ export default function Locationslist(props) {
   }
 
   useEffect(() => {
-    getTheAllLocations()
+    if (!loaded) getTheAllLocations()
   }, [])
 
   return (
     <SafeAreaView style={styles.list}>
       <View style={styles.box}>
-        <View style={styles.header}>
-          <TouchableOpacity style={styles.listAdd} onPress={() => {
-            AsyncStorage.setItem("phase", "locationsetup")
-            AsyncStorage.setItem("newBusiness", "true")
+        {loaded ? 
+          <>
+            <View style={styles.header}>
+              <TouchableOpacity style={styles.listAdd} onPress={() => {
+                AsyncStorage.setItem("phase", "locationsetup")
+                AsyncStorage.setItem("newBusiness", "true")
 
-            props.navigation.dispatch(StackActions.replace('locationsetup'))
-          }}>
-            <View style={styles.column}><Text style={styles.listAddHeader}>Add a business</Text></View>
-            <View style={styles.column}><AntDesign name="pluscircleo" size={30}/></View>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.body}>
-          <FlatList
-            data={locations}
-            renderItem={({ item, index }) => 
-              <TouchableOpacity key={item.key} style={styles.location} onPress={() => {
-                AsyncStorage.setItem("locationid", item.id.toString())
-                AsyncStorage.setItem("locationtype", item.type)
-                AsyncStorage.setItem("phase", "main")
-
-                props.navigation.dispatch(StackActions.replace('main'))
+                props.navigation.dispatch(StackActions.replace('locationsetup'))
               }}>
-                <View style={styles.locationImageHolder}>
-                  <Image style={resizePhoto(item.logo, wsize(20))} source={{ uri: logo_url + item.logo.name }}/>
-                </View>
-
-                <View style={styles.column}>
-                  <Text style={styles.locationName}>{item.name}</Text>
-                  <Text style={styles.locationAddress}>{item.address}</Text>
-                </View>
-              </TouchableOpacity>
-            }
-          />
-        </View>
-
-        <View style={styles.bottomNavs}>
-          <View style={styles.bottomNavsRow}>
-            <View style={styles.column}>
-              <TouchableOpacity style={styles.bottomNav} onPress={() => logout()}>
-                <Text style={styles.bottomNavHeader}>Log-Out</Text>
+                <View style={styles.column}><Text style={styles.listAddHeader}>Add a business</Text></View>
+                <View style={styles.column}><AntDesign name="pluscircleo" size={30}/></View>
               </TouchableOpacity>
             </View>
-          </View>
-        </View>
+
+            <View style={styles.body}>
+              <FlatList
+                data={locations}
+                renderItem={({ item, index }) => 
+                  <TouchableOpacity key={item.key} style={styles.location} onPress={() => {
+                    AsyncStorage.setItem("locationid", item.id.toString())
+                    AsyncStorage.setItem("locationtype", item.type)
+                    AsyncStorage.setItem("phase", "main")
+
+                    props.navigation.dispatch(StackActions.replace('main'))
+                  }}>
+                    <View style={styles.locationImageHolder}>
+                      <Image style={resizePhoto(item.logo, wsize(20))} source={{ uri: logo_url + item.logo.name }}/>
+                    </View>
+
+                    <View style={styles.column}>
+                      <Text style={styles.locationName}>{item.name}</Text>
+                      <Text style={styles.locationAddress}>{item.address}</Text>
+                    </View>
+                  </TouchableOpacity>
+                }
+              />
+            </View>
+
+            <View style={styles.bottomNavs}>
+              <View style={styles.bottomNavsRow}>
+                <View style={styles.column}>
+                  <TouchableOpacity style={styles.bottomNav} onPress={() => logout()}>
+                    <Text style={styles.bottomNavHeader}>Log-Out</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </>
+          :
+          <Modal transparent={true}><Loadingprogress/></Modal>
+        }
       </View>
     </SafeAreaView>
   )
