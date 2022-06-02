@@ -27,7 +27,6 @@ export default function Booktime(props) {
   const [clientInfo, setClientinfo] = useState({ id: -1, name: "" })
   const [name, setName] = useState()
   const [allWorkers, setAllworkers] = useState({})
-  const [scheduledTimes, setScheduledtimes] = useState([])
   const [oldTime, setOldtime] = useState(0)
   const [openTime, setOpentime] = useState({ hour: 0, minute: 0 })
   const [closeTime, setClosetime] = useState({ hour: 0, minute: 0 })
@@ -66,6 +65,7 @@ export default function Booktime(props) {
   ], loading: false, errorMsg: "" })
   const [times, setTimes] = useState([])
   const [selectedWorkerinfo, setSelectedworkerinfo] = useState({ worker: null, workers: [], numWorkers: 0, loading: false })
+  const [scheduledInfo, setScheduledinfo] = useState({ scheduledIds: {}, scheduledWorkers: {} })
   const [loaded, setLoaded] = useState(false)
   const [step, setStep] = useState(0)
 
@@ -80,7 +80,7 @@ export default function Booktime(props) {
       })
       .then((res) => {
         if (res) {
-          const { client, locationId, name, time, worker } = res.appointmentInfo
+          const { client, locationId, name, time, worker } = res
 
           const { day, month, date, year, hour, minute } = time
           const unixtime = Date.parse(day + " " + month + " " + date + " " + year + " " + hour + ":" + minute)
@@ -177,7 +177,7 @@ export default function Booktime(props) {
         (minute < 10 ? '0' + minute : minute) + " " + period
 
       let timepassed = currenttime > calcDateStr
-      let timetaken = scheduledTimes.indexOf(calcDateStr) > -1
+      let timetaken = JSON.stringify(scheduledInfo.scheduledIds).includes(calcDateStr.toString())
       let availableService = false, workerIds = []
 
       if (selectedWorkerinfo.worker != null && day.substr(0, 3) in selectedWorkerinfo.worker.days) {
@@ -250,7 +250,7 @@ export default function Booktime(props) {
       })
       .then((res) => {
         if (res) {
-          const { openTime, closeTime, scheduled } = res
+          const { openTime, closeTime } = res
 
           let openHour = openTime.hour, openMinute = openTime.minute, openPeriod = openTime.period
           let closeHour = closeTime.hour, closeMinute = closeTime.minute, closePeriod = closeTime.period
@@ -264,7 +264,6 @@ export default function Booktime(props) {
 
           getCalendar(selectedTime.getMonth(), selectedTime.getFullYear())
           setSelecteddateinfo({ ...selectedDateinfo, month: selectedMonth, year: selectedTime.getFullYear(), day: selectedDay.substr(0, 3), date: selectedDate, time })
-          setScheduledtimes(scheduled)
           setOpentime({ ...openTime, hour: openHour, minute: openMinute })
           setClosetime({ ...closeTime, hour: closeHour, minute: closeMinute })
           setLoaded(true)
@@ -308,6 +307,29 @@ export default function Booktime(props) {
       .then((res) => {
         if (res) {
           setAllworkers(res.workers)
+        }
+      })
+      .catch((err) => {
+        if (err.response && err.response.status == 400) {
+          const { errormsg, status } = err.response.data
+        }
+      })
+  }
+  const getScheduledAppointments = async() => {
+    const locationid = await AsyncStorage.getItem("locationid")
+    const { day, month, date, year } = selectedDateinfo
+    let jsonDate = { day, month, date, year }
+    const data = { locationid, jsonDate }
+
+    getDayHours(data)
+      .then((res) => {
+        if (res.status == 200) {
+          return res.data
+        }
+      })
+      .thne((res) => {
+        if (res) {
+
         }
       })
       .catch((err) => {
@@ -645,7 +667,8 @@ export default function Booktime(props) {
                     case 1:
                       if (selectedDateinfo.date > 0) {
                         setStep(2)
-                        getTimes()
+                        getScheduledAppointments()
+                        //getTimes()
                       } else {
                         setCalendar({ ...calendar, errorMsg: "Please tap on a day" })
                       }

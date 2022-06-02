@@ -160,7 +160,7 @@ export default function Menu(props) {
 						</View>
               
 						{list.length == 0 ?
-							<View style={{ alignItems: 'center', marginTop: 10 }}>
+							<View style={{ alignItems: 'center', backgroundColor: 'white', marginTop: 10 }}>
                 {isOwner == true && (
                   <TouchableOpacity style={styles.itemAdd} onPress={() => {
                     if ((locationType == "hair" || locationType == "nail")) {
@@ -178,7 +178,7 @@ export default function Menu(props) {
                     <View style={styles.column}>
                       <Text style={styles.itemAddHeader}>Add {header}</Text>
                     </View>
-                    <AntDesign color="white" name="pluscircleo" size={wsize(7)}/>
+                    <AntDesign color="black" name="pluscircleo" size={wsize(7)}/>
                   </TouchableOpacity>
                 )}
 							</View>
@@ -223,7 +223,7 @@ export default function Menu(props) {
 									}
 
 									{(list.length - 1 == index && info.listType != "list") && (
-										<View style={{ alignItems: 'center' }}>
+										<View style={{ alignItems: 'center', backgroundColor: 'white' }}>
                       {isOwner == true && (
                         <TouchableOpacity style={styles.itemAdd} onPress={() => {
                           if ((locationType == "hair" || locationType == "nail")) {
@@ -241,7 +241,7 @@ export default function Menu(props) {
                           <View style={styles.column}>
                             <Text style={styles.itemAddHeader}>Add {header}</Text>
                           </View>
-                          <AntDesign color="white" name="pluscircleo" size={wsize(7)}/>
+                          <AntDesign color="black" name="pluscircleo" size={wsize(7)}/>
                         </TouchableOpacity>
                       )}
 										</View>
@@ -625,6 +625,7 @@ export default function Menu(props) {
 				<View style={styles.box}>
 					<ScrollView style={{ height: '90%', width: '100%' }}>
 						<View style={{ paddingVertical: 10 }}>
+              <Text style={styles.menusHeader}>Photo(s)</Text>
 							{menuInfo.photos.length > 0 && (
 								menuInfo.photos[0].row && ( 
 									<ScrollView style={{ width: '100%' }}>
@@ -658,13 +659,15 @@ export default function Menu(props) {
 								)
 							)}
 
-              <View style={{ marginTop: 20 }}>
+              <View style={{ marginTop: 100 }}>
+                <Text style={styles.menusHeader}>List(s)</Text>
                 {displayList({ id: "", name: "", image: "", list: menuInfo.list })}
               </View>
 						</View>
 
             {isOwner == true && (
-              <View style={{ alignItems: 'center', marginTop: 50 }}>
+              <View style={{ alignItems: 'center', marginVertical: 100 }}>
+                <Text style={styles.menusHeader}>Menu Option(s)</Text>
                 <TouchableOpacity style={styles.menuStart} onPress={() => setCreateoptionbox({ ...createOptionbox, show: true, id: "", allow: "both" })}>
                   <Text style={styles.menuStartHeader}>Create manually</Text>
                 </TouchableOpacity>
@@ -989,6 +992,7 @@ const styles = StyleSheet.create({
 	menuBox: { backgroundColor: 'white', height: '100%', width: '100%' },
 	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 
+  menusHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(10), fontWeight: 'bold', textAlign: 'center' },
 	menuRow: { flexDirection: 'row', justifyContent: 'space-between', padding: 5 },
 	menuPhotoActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	menuPhotoAction: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 3 },
@@ -1004,9 +1008,9 @@ const styles = StyleSheet.create({
 	menuActions: { flexDirection: 'row' },
 	menuAction: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, marginLeft: 10, padding: 3 },
 	menuActionHeader: { fontSize: wsize(4), textAlign: 'center' },
-  itemAdd: { borderColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, flexDirection: 'row', marginVertical: 10, padding: 5 },
-	itemAddHeader: { color: 'white', fontWeight: 'bold', marginRight: 5 },
-  item: { backgroundColor: 'grey', borderRadius: 5, margin: 3 },
+  itemAdd: { borderColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, flexDirection: 'row', marginVertical: 10, padding: 5 },
+	itemAddHeader: { color: 'black', fontWeight: 'bold', marginRight: 5 },
+  item: { backgroundColor: 'white' },
 	itemImageHolder: { borderRadius: wsize(10) / 2, height: wsize(10), overflow: 'hidden' },
 	itemHeader: { fontSize: wsize(5), fontWeight: 'bold', marginHorizontal: 10, textDecorationStyle: 'solid' },
 	itemActions: { flexDirection: 'row' },

@@ -48,9 +48,9 @@ export default function Main(props) {
 	const [locationType, setLocationtype] = useState('')
 
 	const [appointments, setAppointments] = useState([])
-  const [chartInfo, setChartinfo] = useState({ charts: [], workers: [], workersTime: {}, scheduledWorkers: [], scheduledTimes: {}, dayDir: 0, loading: false })
+  const [chartInfo, setChartinfo] = useState({ chart: [], workers: [], workersTime: {}, scheduledWorkers: [], scheduledIds: {}, dayDir: 0, loading: false })
   const [bookWalkinconfirm, setBookwalkinconfirm] = useState({ show: false, worker: {}, client: { name: "", cellnumber: "" }, date: {}, confirm: false, note: "", errorMsg: "" })
-  const [removeBookingconfirm, setRemovebookingconfirm] = useState({ show: false, scheduleid: -1, client: { name: "", cellnumber: "" }, date: {}, confirm: false })
+  const [removeBookingconfirm, setRemovebookingconfirm] = useState({ show: false, scheduleid: -1, client: { name: "", cellnumber: "" }, workerid: -1, date: {}, confirm: false })
 
 	const [cartOrderers, setCartorderers] = useState([])
   const [speakInfo, setSpeakinfo] = useState({ orderNumber: "" })
@@ -175,6 +175,8 @@ export default function Main(props) {
 					const { name, fullAddress, logo, type, receiveType, hours } = res.info
 
 					socket.emit("socket/business/login", ownerid, () => {
+            setShowinfo({ ...showInfo, locationHours: hours })
+
             for (let k = 0; k < 7; k++) {
               openInfo = hours[k].opentime
               closeInfo = hours[k].closetime
@@ -267,11 +269,7 @@ export default function Main(props) {
       })
       .then((res) => {
         if (res) {
-          setShowinfo({ 
-            ...showInfo, 
-            show: true, 
-            workersHours: res.workers, locationHours: res.locationHours 
-          })
+          setShowinfo({ ...showInfo, show: true, workersHours: res.workers })
         }
       })
       .catch((err) => {
@@ -306,20 +304,17 @@ export default function Main(props) {
 			})
 	}
   const getAppointmentsChart = async(dayDir) => {
-    setViewtype("appointments_chart")
-
-    if (dayDir == 0) setChartinfo({ ...chartInfo, loading: true })
+    setViewtype("appointments_chart") 
+    setChartinfo({ ...chartInfo, loading: true })
 
     const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
     const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
-    const newCharts = chartInfo.charts, locationid = await AsyncStorage.getItem("locationid"), today = new Date()
-    let date = new Date(today.getTime()), jsonDate, newWorkersTime = {}
+    const locationid = await AsyncStorage.getItem("locationid"), today = new Date(), pushtime = 1000 * (60 * 15)
+    let chart, date = new Date(today.getTime()), jsonDate, newWorkersTime = {}
 
-    if (dayDir != 0) {
-      date.setDate(today.getDate() + dayDir);
-    }
+    if (dayDir != 0) date.setDate(today.getDate() + dayDir)
 
-    jsonDate = {"day":days[date.getDay()],"month":months[date.getMonth()],"date":date.getDate(),"year":date.getFullYear()}
+    jsonDate = {"day":days[date.getDay()].substr(0, 3),"month":months[date.getMonth()],"date":date.getDate(),"year":date.getFullYear()}
 
     getAllWorkersTime(locationid)
       .then((res) => {
@@ -348,7 +343,7 @@ export default function Main(props) {
             newWorkersTime[workerId]["end"] = jsonDateToUnix(jsonDate)
           })
 
-          const data = { locationid, jsonDate, dayDir }
+          const data = { locationid, jsonDate }
 
           getDayHours(data)
             .then((res) => {
@@ -358,75 +353,78 @@ export default function Main(props) {
             })
             .then((res) => {
               if (res) {
-                const { opentime, closetime, workers, scheduledWorkers, scheduledTimes } = res
-                const newScheduledWorkers = {}, newScheduledTimes = {}
+                const { opentime, closetime, workers, scheduledWorkers, scheduledIds } = res
+                const newScheduledWorkers = {}, newScheduledIds = {}
                 let times = [], chart = {}
                 let openhour = parseInt(opentime["hour"]), openminute = parseInt(opentime["minute"])
                 let closehour = parseInt(closetime["hour"]), closeminute = parseInt(closetime["minute"])
-                let displayOpenhour, displayClosehour, displayPeriod, key = 0
+                let openStr = jsonDate["month"] + " " + jsonDate["date"] + ", " + jsonDate["year"] + " " + openhour + ":" + openminute
+                let closeStr = jsonDate["month"] + " " + jsonDate["date"] + ", " + jsonDate["year"] + " " + closehour + ":" + closeminute
+                let openTimeStr = Date.parse(openStr), closeTimeStr = Date.parse(closeStr), calcTimeStr = openTimeStr
+                let currenttime = Date.now(), key = 0
 
                 for (let k in scheduledWorkers) {
                   scheduledWorkers[k].forEach(function (time) {
                     if (k in newScheduledWorkers) {
-                      newScheduledWorkers[k].push(jsonDateToUnix(JSON.parse(time)))
+                      newScheduledWorkers[k].push(jsonDateToUnix(JSON.parse(time)).toString())
                     } else {
-                      newScheduledWorkers[k] = [jsonDateToUnix(JSON.parse(time))]
+                      newScheduledWorkers[k] = [jsonDateToUnix(JSON.parse(time)).toString()]
                     }
                   })
                 }
 
-                for (let k in scheduledTimes) {
+                for (let k in scheduledIds) {
                   let info = k.split("-")
                   let date = jsonDateToUnix(JSON.parse(info[0]))
                   let worker = info[1]
 
-                  newScheduledTimes[date + "-" + worker] = scheduledTimes[k]
+                  newScheduledIds[date + "-" + worker] = scheduledIds[k]
                 }
 
-                while (openhour < closehour || openminute < closeminute) {
-                  openminute += 15
+                while (calcTimeStr < closeTimeStr - pushtime) {
+                  calcTimeStr += pushtime
 
-                  if (openminute > 59) {
-                    openminute = 0
-                    openhour += 1
+                  let timestr = new Date(calcTimeStr)
+                  let hour = timestr.getHours()
+                  let minute = timestr.getMinutes()
+                  let period = hour < 12 ? "AM" : "PM"
+                  let timeDisplay = (
+                    hour <= 12 ? 
+                      (hour == 0 ? 12 : hour)
+                      :
+                      hour - 12
+                    )
+                    + ":" + 
+                    (minute < 10 ? '0' + minute : minute) + " " + period
+                  let timepassed = currenttime > calcTimeStr
+
+                  jsonDate = {
+                    day: days[date.getDay()], month: jsonDate["month"], date: jsonDate["date"], year: jsonDate["year"],
+                    hour, minute
                   }
 
-                  displayOpenhour = openhour < 10 ? openhour : openhour < 13 ? openhour : openhour - 12
-                  displayClosehour = openminute < 10 ? "0" + openminute : openminute
-                  displayPeriod = openhour < 13 ? "AM" : "PM"
+                  if (!timepassed) {
+                    times.push({
+                      key: "time-" + key + "-" + dayDir,
+                      timeDisplay, time: calcTimeStr, jsonDate
+                    })
 
-                  jsonDate["hour"] = openhour
-                  jsonDate["minute"] = openminute
-
-                  times.push({
-                    key: "time-" + key + "-" + dayDir,
-                    "timeDisplay": displayOpenhour + ":" + displayClosehour + " " + displayPeriod,
-                    "time": jsonDateToUnix(jsonDate),
-                    "date": jsonDate
-                  })
-
-                  key += 1
+                    key += 1
+                  }
                 }
 
                 chart = { 
                   "key": dayDir.toString(), 
                   "times": times, 
-                  "date": jsonDate["day"] + ", " + jsonDate["month"] + " " + jsonDate["date"] + ", " + jsonDate["year"]
-                }
-
-                if (dayDir > 0) {
-                  newCharts.push(chart)
-                } else if (dayDir < 0) {
-                  newCharts.unshift(chart)
+                  "dateHeader": days[date.getDay()] + ", " + jsonDate["month"] + " " + jsonDate["date"] + ", " + jsonDate["year"]
                 }
 
                 setChartinfo({ 
-                  ...chartInfo, 
-                  charts: dayDir == 0 ? [chart] : newCharts, 
+                  ...chartInfo, chart, 
                   workersTime: newWorkersTime, 
                   workers, 
                   scheduledWorkers: newScheduledWorkers, 
-                  scheduledTimes: newScheduledTimes,
+                  scheduledIds: newScheduledIds,
                   dayDir, loading: false 
                 })
               }
@@ -449,17 +447,25 @@ export default function Main(props) {
         })
         .then((res) => {
           if (res) {
-            const { client, time } = res
+            const { client, worker, time } = res
 
             setRemovebookingconfirm({ 
               ...removeBookingconfirm, 
-              show: true, scheduleid: id, client: { name: client.name, cellnumber: client.cellnumber }, 
-              date: time 
+              show: true, scheduleid: id, workerid: worker.id, 
+              client: { name: client.name, cellnumber: client.cellnumber }, 
+              date: jsonDateToUnix(time) 
             })
           }
         })
     } else {
-      const { scheduleid } = removeBookingconfirm
+      const { scheduleid, workerid, date } = removeBookingconfirm
+      const newScheduledworkers = {...chartInfo.scheduledWorkers}
+
+      if (workerid in newScheduledworkers) {
+        if (newScheduledworkers[workerid].includes(date)) {
+          newScheduledworkers[workerid].splice(newScheduledworkers[workerid].indexOf(date), 1)
+        }
+      }
 
       removeBooking(scheduleid)
         .then((res) => {
@@ -470,6 +476,7 @@ export default function Main(props) {
         .then((res) => {
           if (res) {
             setRemovebookingconfirm({ ...removeBookingconfirm, confirm: true })
+            setChartinfo({ ...chartInfo, scheduledWorkers: newScheduledworkers })
 
             setTimeout(function () {
               setRemovebookingconfirm({ ...removeBookingconfirm, show: false, confirm: false })
@@ -483,18 +490,20 @@ export default function Main(props) {
         })
     }
   }
-  const bookTheWalkIn = async(worker, date) => {
+  const bookTheWalkIn = async(worker, jsonDate) => {
     if (!bookWalkinconfirm.show) {
-      setBookwalkinconfirm({ ...bookWalkinconfirm, show: true, worker, date })
+      setBookwalkinconfirm({ ...bookWalkinconfirm, show: true, worker, jsonDate })
     } else {
-      const { worker, date, note, client } = bookWalkinconfirm
+      const { worker, jsonDate, note, client } = bookWalkinconfirm
 
       if (client.name && client.cellnumber) {
         const locationid = await AsyncStorage.getItem("locationid")
-        const newScheduledworkers = {...chartInfo.scheduledWorkers}, unix = jsonDateToUnix(date)
+        const newScheduledworkers = {...chartInfo.scheduledWorkers}
+        const newScheduledIds = {...chartInfo.scheduledIds}
+        const unix = jsonDateToUnix(jsonDate)
 
         let data = { 
-          workerid: worker.id, locationid, time: date, note: note ? note : "", 
+          workerid: worker.id, locationid, time: jsonDate, note: note ? note : "", 
           type: locationType, client
         }
 
@@ -507,16 +516,18 @@ export default function Main(props) {
           .then((res) => {
             if (res) {
               if (worker.id in newScheduledworkers) {
-                newScheduledworkers[worker.id].push(unix)
+                newScheduledworkers[worker.id.toString()].push(unix)
               } else {
-                newScheduledworkers[worker.id] = [unix]
+                newScheduledworkers[worker.id.toString()] = [unix]
               }
 
+              newScheduledIds[unix + "-" + worker.id] = res.id
+
               setBookwalkinconfirm({ ...bookWalkinconfirm, confirm: true })
-              setChartinfo({ ...chartInfo, scheduledWorkers: newScheduledworkers })
+              setChartinfo({ ...chartInfo, scheduledWorkers: newScheduledworkers, scheduledIds: newScheduledIds })
 
               setTimeout(function () {
-                setBookwalkinconfirm({ ...bookWalkinconfirm, show: false, client: { name: "", cellnumber: "" }, date: {}, confirm: false })
+                setBookwalkinconfirm({ ...bookWalkinconfirm, show: false, client: { name: "", cellnumber: "" }, jsonDate: {}, confirm: false })
               }, 2000)
             }
           })
@@ -1624,9 +1635,7 @@ export default function Main(props) {
     return Date.parse(date["day"] + " " + date["month"] + " " + date["date"] + " " + date["year"] + " " + date["hour"] + ":" + date["minute"])
   }
   
-	useEffect(() => {
-    if (!loaded) initialize()
-	}, [])
+	useEffect(() => initialize(), [])
 
 	useEffect(() => {
 		startWebsocket()
@@ -1705,10 +1714,10 @@ export default function Main(props) {
             <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginVertical: 10 }}>
               <View style={styles.viewTypes}>
                 <TouchableOpacity style={styles.viewType} onPress={() => setViewtype("appointments_list")}>
-                  <Text style={styles.viewTypeHeader}>List in order</Text>
+                  <Text style={styles.viewTypeHeader}>See{'\n'}<Text style={{ fontWeight: 'bold' }}>Your(s)</Text></Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.viewType} onPress={() => getAppointmentsChart(0)}>
-                  <Text style={styles.viewTypeHeader}>Chart</Text>
+                  <Text style={styles.viewTypeHeader}>See{'\n'}<Text style={{ fontWeight: 'bold' }}>All Stylist(s)</Text></Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -1759,73 +1768,66 @@ export default function Main(props) {
                 </View>
               :
               !chartInfo.loading ? 
-                <FlatList
-                  data={chartInfo.charts}
-                  horizontal
-                  style={{ width: '100%' }}
-                  onEndReached={() => {
-                    if (chartInfo.charts.length < 7) {
-                      getAppointmentsChart(chartInfo.dayDir + 1)
-                    }
-                  }}
-                  ListFooterComponent={() => {
-                    return (
-                      chartInfo.charts.length < 7 && (
-                        <View style={{ flexDirection: 'column', height: '100%', justifyContent: 'space-around', marginHorizontal: 50 }}>
-                          <ActivityIndicator color="black" size="large"/>
-                        </View>
-                      )
-                    )
-                  }}
-                  renderItem={({ item, index }) => 
-                    <ScrollView horizontal>
-                      <View style={{ borderColor: 'black', borderStyle: 'solid', borderWidth: 2 }}>
-                        <Text style={{ fontSize: wsize(8), fontWeight: 'bold', textAlign: 'center' }}>{item.date}</Text>
-                        <View style={styles.chartRow}>
-                          {chartInfo.workers.map(worker => (
-                            <View key={worker.key} style={styles.chartWorker}>
-                              <Text style={styles.chartWorkerHeader}>{worker.username}</Text>
-                              <View style={styles.chartWorkerProfile}>
-                                <Image
-                                  style={resizePhoto(worker.profile, 40)}
-                                  source={worker.profile.name ? { uri: logo_url + worker.profile.name } : require("../../assets/profilepicture.jpeg")}
-                                />
-                              </View>
-                            </View>
-                          ))}
-                        </View>
-                        <ScrollView>
-                          {item.times.map(item => (
-                            <View key={item.key} style={styles.chartRow}>
-                              <View style={styles.chartRow}>
-                                {chartInfo.workers.map(worker => (
-                                  <TouchableOpacity 
-                                    key={worker.key}
-                                    style={[
-                                      styles.chartWorker, 
-                                      { 
-                                        backgroundColor: worker.id in chartInfo.scheduledWorkers && chartInfo.scheduledWorkers[worker.id].includes(item.time) ? 'black' : '', 
-                                      }
-                                    ]} 
-                                    onPress={() => {
-                                      if (worker.id in chartInfo.scheduledWorkers && chartInfo.scheduledWorkers[worker.id].includes(item.time)) {
-                                        removeTheBooking(chartInfo.scheduledTimes[item.time + "-" + worker.id])
-                                      } else {
-                                        bookTheWalkIn(worker, item.date)
-                                      }
-                                    }
-                                  }>
-                                    <Text style={[styles.chartTimeHeader, { color: worker.id in chartInfo.scheduledWorkers && chartInfo.scheduledWorkers[worker.id].includes(item.time) ? 'white' : 'black' }]}>{item.timeDisplay}</Text>
-                                  </TouchableOpacity>
-                                ))}
-                              </View>
-                            </View>
-                          ))}
-                        </ScrollView>
+                <ScrollView horizontal>
+                  <View style={{ borderColor: 'black', borderStyle: 'solid', borderWidth: 2 }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+                      <View style={styles.column}>
+                        <TouchableOpacity onPress={() => getAppointmentsChart(chartInfo.dayDir - 1)}>
+                          <AntDesign name="left" size={wsize(7)}/>
+                        </TouchableOpacity>
                       </View>
+                      <View style={styles.column}>
+                        <Text style={{ fontSize: wsize(8), fontWeight: 'bold', textAlign: 'center' }}>{chartInfo.chart.dateHeader}</Text>
+                      </View>
+                      <View style={styles.column}>
+                        <TouchableOpacity onPress={() => getAppointmentsChart(chartInfo.dayDir + 1)}>
+                          <AntDesign name="right" size={wsize(7)}/>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                    <View style={styles.chartRow}>
+                      {chartInfo.workers.map(worker => (
+                        <View key={worker.key} style={styles.chartWorker}>
+                          <Text style={styles.chartWorkerHeader}>{worker.username}</Text>
+                          <View style={styles.chartWorkerProfile}>
+                            <Image
+                              style={resizePhoto(worker.profile, 40)}
+                              source={worker.profile.name ? { uri: logo_url + worker.profile.name } : require("../../assets/profilepicture.jpeg")}
+                            />
+                          </View>
+                        </View>
+                      ))}
+                    </View>
+                    <ScrollView>
+                      {chartInfo.chart.times.map(item => (
+                        <View key={item.key} style={styles.chartRow}>
+                          <View style={styles.chartRow}>
+                            {chartInfo.workers.map(worker => (
+                              <TouchableOpacity 
+                                key={worker.key}
+                                style={[
+                                  styles.chartWorker, 
+                                  { 
+                                    backgroundColor: worker.id in chartInfo.scheduledWorkers && chartInfo.scheduledWorkers[worker.id].includes(item.time) ? 'black' : '#EAEAEA', 
+                                  }
+                                ]} 
+                                onPress={() => {
+                                  if (worker.id in chartInfo.scheduledWorkers && chartInfo.scheduledWorkers[worker.id].includes(item.time)) {
+                                    removeTheBooking(chartInfo.scheduledIds[item.time + "-" + worker.id])
+                                  } else {
+                                    bookTheWalkIn(worker, item.jsonDate)
+                                  }
+                                }
+                              }>
+                                <Text style={[styles.chartTimeHeader, { color: worker.id in chartInfo.scheduledWorkers && chartInfo.scheduledWorkers[worker.id].includes(item.time) ? 'white' : 'black' }]}>{item.timeDisplay}</Text>
+                              </TouchableOpacity>
+                            ))}
+                          </View>
+                        </View>
+                      ))}
                     </ScrollView>
-                  }
-                />
+                  </View>
+                </ScrollView>
                 :
                 <View style={styles.loading}>
                   <ActivityIndicator color="black" size="small"/>
@@ -2486,7 +2488,7 @@ export default function Main(props) {
                                           setAccountform({ 
                                             ...accountForm, 
                                             show: true, type: 'edit', editType: 'hours', 
-                                            id: info.id, workerHours: info.hours
+                                            id: info.id, workerHours: info.hours, editHours: true
                                           })
                                         }
 
@@ -2523,7 +2525,7 @@ export default function Main(props) {
                     <>
                       <ScrollView style={{ height: '100%', width: '100%' }}>
                         <KeyboardAvoidingView behavior={Platform.OS == "ios" ? "padding" : "position"}>
-                          {(!accountForm.editCellnumber && !accountForm.editUsername && !accountForm.editProfile && !accountForm.editPassword && !accountForm.editHours && accountForm.type != 'add') ? 
+                          {(!accountForm.editCellnumber && !accountForm.editUsername && !accountForm.editProfile && !accountForm.editPassword && !accountForm.editHours && !accountForm.type) ? 
                             <>
                               <View style={{ alignItems: 'center', marginVertical: 10 }}>
                                 <TouchableOpacity onPress={() => {
@@ -3323,9 +3325,9 @@ export default function Main(props) {
                                               workerHours: info.hours, editHours: false,
                                               errorMsg: ""
                                             })
-                                            setEditinfo({ ...editInfo, show: true })
                                           }
                                         })
+                                        setEditinfo({ ...editInfo, show: true })
                                       }}>
                                         <Text style={styles.accountformSubmitHeader}>Cancel</Text>
                                       </TouchableOpacity>
@@ -3371,7 +3373,6 @@ export default function Main(props) {
                       )}
                     </>
                   )}
-
                   {deleteOwnerbox.show && (
                     <View style={styles.deleteOwnerBox}>
                       <View style={styles.deleteOwnerContainer}>
@@ -3419,14 +3420,20 @@ export default function Main(props) {
                   <>
                     <Text style={styles.bookWalkInHeader}>
                       Make appointment for
-                      {'\n\n'}
+                      {'\n\n' + bookWalkinconfirm.worker.username + '\n\n'}
                       (walk-in) or (call)
-                      {'\n\n' + displayTime(bookWalkinconfirm.date)}
+                      {'\n\n' + displayTime(bookWalkinconfirm.jsonDate)}
                     </Text>
 
                     <View style={{ alignItems: 'center' }}>
                       <TextInput style={styles.bookWalkInInput} placeholder="Enter client name" onChangeText={(name) => setBookwalkinconfirm({ ...bookWalkinconfirm, client: {...bookWalkinconfirm.client, name }, errorMsg: "" })} value={bookWalkinconfirm.client.name}/>
-                      <TextInput style={styles.bookWalkInInput} placeholder="Enter client's number" keyboardType="numeric" onChangeText={(cellnumber) => setBookwalkinconfirm({ ...bookWalkinconfirm, client: {...bookWalkinconfirm.client, cellnumber: displayPhonenumber(bookWalkinconfirm.client.cellnumber, cellnumber, () => Keyboard.dismiss()) }, errorMsg: "" })} value={bookWalkinconfirm.client.cellnumber}/>
+                      <TextInput 
+                        style={styles.bookWalkInInput} placeholder="Enter client's number" keyboardType="numeric" 
+                        onChangeText={(cellnumber) => setBookwalkinconfirm({ 
+                          ...bookWalkinconfirm, 
+                          client: {...bookWalkinconfirm.client, cellnumber: displayPhonenumber(bookWalkinconfirm.client.cellnumber, cellnumber, () => Keyboard.dismiss()) }, 
+                          errorMsg: "" 
+                        })} value={bookWalkinconfirm.client.cellnumber}/>
                     </View>
 
                     <Text style={styles.errorMsg}>{bookWalkinconfirm.errorMsg}</Text>
@@ -3443,7 +3450,7 @@ export default function Main(props) {
                   :
                   <Text style={styles.bookWalkInHeader}>
                     Appointment set for client: {bookWalkinconfirm.client.name}
-                    {'\n' + displayTime(bookWalkinconfirm.date)}
+                    {'\n' + displayTime(bookWalkinconfirm.jsonDate)}
                   </Text>
                 }
               </View>
@@ -3462,6 +3469,7 @@ export default function Main(props) {
                     {'\n\n'}
                     (walk-in) or (call)
                     {'\n\n' + displayTime(removeBookingconfirm.date)}
+                    {'\nwith ' + removeBookingconfirm.client.name}
                   </Text>
 
                   <View style={styles.removeBookingActions}>
@@ -3541,7 +3549,7 @@ const styles = StyleSheet.create({
   chartRow: { flexDirection: 'row', width: '100%' },
   chartTime: { height: 70, width: 100 },
   chartTimeHeader: { fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
-  chartWorker: { alignItems: 'center', borderColor: 'grey', borderStyle: 'solid', borderWidth: 1, width: 100 },
+  chartWorker: { alignItems: 'center', borderColor: 'grey', borderStyle: 'solid', borderWidth: 1, paddingVertical: 10, width: 100 },
   chartWorkerHeader: { fontSize: wsize(5), textAlign: 'center' },
   chartWorkerProfile: { borderRadius: 20, height: 40, overflow: 'hidden', width: 40 },
 
@@ -3688,7 +3696,7 @@ const styles = StyleSheet.create({
 
   bookWalkInContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
   bookWalkInBox: { backgroundColor: 'white', flexDirection: 'column', height: '70%', justifyContent: 'space-around', width: '70%' },
-  bookWalkInHeader: { fontSize: wsize(4), fontWeight: 'bold', textAlign: 'center' },
+  bookWalkInHeader: { fontSize: wsize(6), fontWeight: 'bold', textAlign: 'center' },
   bookWalkInInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), marginVertical: 10, padding: 2, width: '90%' },
   bookWalkInActions: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
   bookWalkInAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: '40%' },
@@ -3696,7 +3704,7 @@ const styles = StyleSheet.create({
 
   removeBookingContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
   removeBookingBox: { backgroundColor: 'white', flexDirection: 'column', height: '70%', justifyContent: 'space-around', width: '70%' },
-  removeBookingHeader: { fontSize: wsize(4), fontWeight: 'bold', textAlign: 'center' },
+  removeBookingHeader: { fontSize: wsize(6), fontWeight: 'bold', textAlign: 'center' },
   removeBookingInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), marginVertical: 10, padding: 2, width: '90%' },
   removeBookingActions: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
   removeBookingAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: '40%' },
