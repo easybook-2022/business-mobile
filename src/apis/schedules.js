@@ -34,6 +34,17 @@ export const getCartOrders = id => {
 	return axios.get(`${url}/schedules/get_cart_orders/${id}`)
 }
 
+export const bookWalkIn = data => {
+  return axios.post(
+    `${url}/schedules/book_walk_in`,
+    data
+  )
+}
+
+export const removeBooking = id => {
+  return axios.get(`${url}/schedules/remove_booking/${id}`)
+}
+
 export const getOrders = data => {
 	return axios.post(
 		`${url}/schedules/get_orders`,

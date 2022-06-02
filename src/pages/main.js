@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { 
-  SafeAreaView, Platform, ScrollView, ActivityIndicator, Dimensions, 
+  SafeAreaView, Platform, ScrollView, HorizontalScrollView, ActivityIndicator, Dimensions, 
   View, FlatList, Image, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, 
   Keyboard, StyleSheet, Modal, KeyboardAvoidingView
 } from 'react-native'
@@ -21,11 +21,11 @@ import { loginInfo, ownerGetinInfo, socket, logo_url, useSpeech, timeControl } f
 import { getId, displayTime, resizePhoto, displayPhonenumber } from 'geottuse-tools'
 import { 
   updateNotificationToken, verifyUser, addOwner, updateOwner, deleteOwner, getWorkerInfo, 
-  getOtherWorkers, getAccounts, getOwnerInfo, logoutUser, getWorkersTime 
+  getOtherWorkers, getAccounts, getOwnerInfo, logoutUser, getWorkersTime, getAllWorkersTime
 } from '../apis/owners'
 import { getLocationProfile, setLocationHours, updateLocation, setReceiveType, getDayHours } from '../apis/locations'
 import { getMenus, removeMenu, addNewMenu } from '../apis/menus'
-import { cancelSchedule, doneService, getAppointments, getCartOrderers } from '../apis/schedules'
+import { cancelSchedule, doneService, getAppointments, getCartOrderers, bookWalkIn, removeBooking, getAppointmentInfo } from '../apis/schedules'
 import { removeProduct } from '../apis/products'
 import { setWaitTime } from '../apis/carts'
 
@@ -48,7 +48,9 @@ export default function Main(props) {
 	const [locationType, setLocationtype] = useState('')
 
 	const [appointments, setAppointments] = useState([])
-  const [chartInfo, setChartinfo] = useState({ items: [], workers: [], scheduled: [] })
+  const [chartInfo, setChartinfo] = useState({ charts: [], workers: [], workersTime: {}, scheduledWorkers: [], scheduledTimes: {}, dayDir: 0, loading: false })
+  const [bookWalkinconfirm, setBookwalkinconfirm] = useState({ show: false, worker: {}, client: { name: "", cellnumber: "" }, date: {}, confirm: false, note: "", errorMsg: "" })
+  const [removeBookingconfirm, setRemovebookingconfirm] = useState({ show: false, scheduleid: -1, client: { name: "", cellnumber: "" }, date: {}, confirm: false })
 
 	const [cartOrderers, setCartorderers] = useState([])
   const [speakInfo, setSpeakinfo] = useState({ orderNumber: "" })
@@ -60,10 +62,7 @@ export default function Main(props) {
 
 	const [showMenurequired, setShowmenurequired] = useState(false)
 	const [showDisabledscreen, setShowdisabledscreen] = useState(false)
-  const [showInfo, setShowinfo] = useState(false)
-  const [locationHours, setLocationhours] = useState([])
-  const [workersHours, setWorkershours] = useState([])
-
+  const [showInfo, setShowinfo] = useState({ show: false, workersHours: [], locationHours: [] })
 
   const [showMoreoptions, setShowmoreoptions] = useState({ show: false, loading: false, infoType: '' })
   const [editInfo, setEditinfo] = useState({ show: false, type: '', loading: false })
@@ -268,9 +267,11 @@ export default function Main(props) {
       })
       .then((res) => {
         if (res) {
-          setShowinfo(true)
-          setWorkershours(res.workers)
-          setLocationhours(locationHours)
+          setShowinfo({ 
+            ...showInfo, 
+            show: true, 
+            workersHours: res.workers, locationHours: res.locationHours 
+          })
         }
       })
       .catch((err) => {
@@ -294,7 +295,7 @@ export default function Main(props) {
 			.then(async(res) => {
 				if (res) {
 					setAppointments(res.appointments)
-					setViewtype('appointments_book')
+					setViewtype('appointments_list')
           setLoaded(true)
 				}
 			})
@@ -304,14 +305,23 @@ export default function Main(props) {
 				}
 			})
 	}
-  const getAppointmentsChart = async() => {
+  const getAppointmentsChart = async(dayDir) => {
+    setViewtype("appointments_chart")
+
+    if (dayDir == 0) setChartinfo({ ...chartInfo, loading: true })
+
     const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
     const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
-    const locationid = await AsyncStorage.getItem("locationid")
-    const today = new Date(), todayJson = {"day":days[today.getDay()],"month":months[today.getMonth()],"date":today.getDate(),"year":today.getFullYear()}
-    const data = { locationid, day: today.getDay(), todayJson }
+    const newCharts = chartInfo.charts, locationid = await AsyncStorage.getItem("locationid"), today = new Date()
+    let date = new Date(today.getTime()), jsonDate, newWorkersTime = {}
 
-    getDayHours(data)
+    if (dayDir != 0) {
+      date.setDate(today.getDate() + dayDir);
+    }
+
+    jsonDate = {"day":days[date.getDay()],"month":months[date.getMonth()],"date":date.getDate(),"year":date.getFullYear()}
+
+    getAllWorkersTime(locationid)
       .then((res) => {
         if (res.status == 200) {
           return res.data
@@ -319,28 +329,211 @@ export default function Main(props) {
       })
       .then((res) => {
         if (res) {
-          const { opentime, closetime, chart, workers, scheduled } = res
-          const newScheduled = {}
+          const { workers } = res
+          const hours = workers[jsonDate["day"].substr(0, 3)]
 
-          for (let k in scheduled) {
-            scheduled[k].forEach(function (time) {
-              if (k in newScheduled) {
-                newScheduled[k].push(jsonDateToUnix(JSON.parse(time)))
-              } else {
-                newScheduled[k] = [jsonDateToUnix(JSON.parse(time))]
+          hours.forEach(function ({ start, end, workerId }) {
+            const startTime = start.split(":")
+            const endTime = end.split(":")
+
+            jsonDate["hour"] = startTime[0]
+            jsonDate["minute"] = startTime[1]
+
+            newWorkersTime[workerId] = { "start": 0, "end": 0 }
+            newWorkersTime[workerId]["start"] = jsonDateToUnix(jsonDate)
+
+            jsonDate["hour"] = endTime[0]
+            jsonDate["minute"] = endTime[1]
+
+            newWorkersTime[workerId]["end"] = jsonDateToUnix(jsonDate)
+          })
+
+          const data = { locationid, jsonDate, dayDir }
+
+          getDayHours(data)
+            .then((res) => {
+              if (res.status == 200) {
+                return res.data
               }
             })
-          }
+            .then((res) => {
+              if (res) {
+                const { opentime, closetime, workers, scheduledWorkers, scheduledTimes } = res
+                const newScheduledWorkers = {}, newScheduledTimes = {}
+                let times = [], chart = {}
+                let openhour = parseInt(opentime["hour"]), openminute = parseInt(opentime["minute"])
+                let closehour = parseInt(closetime["hour"]), closeminute = parseInt(closetime["minute"])
+                let displayOpenhour, displayClosehour, displayPeriod, key = 0
 
-          setViewtype("appointments_chart")
-          setChartinfo({ ...chartInfo, items: chart, workers, scheduled: newScheduled })
+                for (let k in scheduledWorkers) {
+                  scheduledWorkers[k].forEach(function (time) {
+                    if (k in newScheduledWorkers) {
+                      newScheduledWorkers[k].push(jsonDateToUnix(JSON.parse(time)))
+                    } else {
+                      newScheduledWorkers[k] = [jsonDateToUnix(JSON.parse(time))]
+                    }
+                  })
+                }
+
+                for (let k in scheduledTimes) {
+                  let info = k.split("-")
+                  let date = jsonDateToUnix(JSON.parse(info[0]))
+                  let worker = info[1]
+
+                  newScheduledTimes[date + "-" + worker] = scheduledTimes[k]
+                }
+
+                while (openhour < closehour || openminute < closeminute) {
+                  openminute += 15
+
+                  if (openminute > 59) {
+                    openminute = 0
+                    openhour += 1
+                  }
+
+                  displayOpenhour = openhour < 10 ? openhour : openhour < 13 ? openhour : openhour - 12
+                  displayClosehour = openminute < 10 ? "0" + openminute : openminute
+                  displayPeriod = openhour < 13 ? "AM" : "PM"
+
+                  jsonDate["hour"] = openhour
+                  jsonDate["minute"] = openminute
+
+                  times.push({
+                    key: "time-" + key + "-" + dayDir,
+                    "timeDisplay": displayOpenhour + ":" + displayClosehour + " " + displayPeriod,
+                    "time": jsonDateToUnix(jsonDate),
+                    "date": jsonDate
+                  })
+
+                  key += 1
+                }
+
+                chart = { 
+                  "key": dayDir.toString(), 
+                  "times": times, 
+                  "date": jsonDate["day"] + ", " + jsonDate["month"] + " " + jsonDate["date"] + ", " + jsonDate["year"]
+                }
+
+                if (dayDir > 0) {
+                  newCharts.push(chart)
+                } else if (dayDir < 0) {
+                  newCharts.unshift(chart)
+                }
+
+                setChartinfo({ 
+                  ...chartInfo, 
+                  charts: dayDir == 0 ? [chart] : newCharts, 
+                  workersTime: newWorkersTime, 
+                  workers, 
+                  scheduledWorkers: newScheduledWorkers, 
+                  scheduledTimes: newScheduledTimes,
+                  dayDir, loading: false 
+                })
+              }
+            })
+            .catch((err) => {
+              if (err.response && err.response.status == 400) {
+                const { errormsg, status } = err.response.data
+              }
+            })
         }
       })
-      .catch((err) => {
-        if (err.response && err.response.status == 400) {
-          const { errormsg, status } = err.response.data
+  }
+  const removeTheBooking = id => {
+    if (!removeBookingconfirm.show) {
+      getAppointmentInfo(id)
+        .then((res) => {
+          if (res.status == 200) {
+            return res.data
+          }
+        })
+        .then((res) => {
+          if (res) {
+            const { client, time } = res
+
+            setRemovebookingconfirm({ 
+              ...removeBookingconfirm, 
+              show: true, scheduleid: id, client: { name: client.name, cellnumber: client.cellnumber }, 
+              date: time 
+            })
+          }
+        })
+    } else {
+      const { scheduleid } = removeBookingconfirm
+
+      removeBooking(scheduleid)
+        .then((res) => {
+          if (res.status == 200) {
+            return res.data
+          }
+        })
+        .then((res) => {
+          if (res) {
+            setRemovebookingconfirm({ ...removeBookingconfirm, confirm: true })
+
+            setTimeout(function () {
+              setRemovebookingconfirm({ ...removeBookingconfirm, show: false, confirm: false })
+            }, 2000)
+          }
+        })
+        .catch((err) => {
+          if (err.response && err.response.status == 400) {
+            const { errormsg, status } = err.response.data
+          }
+        })
+    }
+  }
+  const bookTheWalkIn = async(worker, date) => {
+    if (!bookWalkinconfirm.show) {
+      setBookwalkinconfirm({ ...bookWalkinconfirm, show: true, worker, date })
+    } else {
+      const { worker, date, note, client } = bookWalkinconfirm
+
+      if (client.name && client.cellnumber) {
+        const locationid = await AsyncStorage.getItem("locationid")
+        const newScheduledworkers = {...chartInfo.scheduledWorkers}, unix = jsonDateToUnix(date)
+
+        let data = { 
+          workerid: worker.id, locationid, time: date, note: note ? note : "", 
+          type: locationType, client
         }
-      })
+
+        bookWalkIn(data)
+          .then((res) => {
+            if (res.status == 200) {
+              return res.data
+            }
+          })
+          .then((res) => {
+            if (res) {
+              if (worker.id in newScheduledworkers) {
+                newScheduledworkers[worker.id].push(unix)
+              } else {
+                newScheduledworkers[worker.id] = [unix]
+              }
+
+              setBookwalkinconfirm({ ...bookWalkinconfirm, confirm: true })
+              setChartinfo({ ...chartInfo, scheduledWorkers: newScheduledworkers })
+
+              setTimeout(function () {
+                setBookwalkinconfirm({ ...bookWalkinconfirm, show: false, client: { name: "", cellnumber: "" }, date: {}, confirm: false })
+              }, 2000)
+            }
+          })
+          .catch((err) => {
+            if (err.response && err.response.status == 400) {
+              const { errormsg, status } = err.response.data
+
+            }
+          })
+      } else {
+        if (!client.name) {
+          setBookwalkinconfirm({ ...bookWalkinconfirm, errorMsg: "Please enter the client's name" })
+        } else {
+          setBookwalkinconfirm({ ...bookWalkinconfirm, errorMsg: "Please enter the client's cell number" })
+        }
+      }
+    }
   }
   const speakToWorker = async(data) => {
     let message
@@ -1509,13 +1702,15 @@ export default function Main(props) {
               <Text style={styles.header}>{(locationType == 'hair' || locationType == 'nail') ? 'Appointment(s)' : 'Orderer(s)'}</Text>
   					</View>
 
-            <View style={styles.viewTypes}>
-              <TouchableOpacity style={styles.viewType} onPress={() => setViewtype("appointments_list")}>
-                <Text style={styles.viewTypeHeader}>List in order</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.viewType} onPress={() => getAppointmentsChart()}>
-                <Text style={styles.viewTypeHeader}>Chart</Text>
-              </TouchableOpacity>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginVertical: 10 }}>
+              <View style={styles.viewTypes}>
+                <TouchableOpacity style={styles.viewType} onPress={() => setViewtype("appointments_list")}>
+                  <Text style={styles.viewTypeHeader}>List in order</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.viewType} onPress={() => getAppointmentsChart(0)}>
+                  <Text style={styles.viewTypeHeader}>Chart</Text>
+                </TouchableOpacity>
+              </View>
             </View>
 
             {viewType == "appointments_list" ? 
@@ -1563,37 +1758,78 @@ export default function Main(props) {
                   <Text style={styles.bodyResultHeader}>You will see your appointment(s) here in order</Text>
                 </View>
               :
-              <>
-                <View style={styles.chartRow}>
-                  {chartInfo.workers.map(worker => (
-                    <View key={worker.key} style={styles.chartWorker}>
-                      <Text style={styles.chartWorkerHeader}>{worker.username}</Text>
-                      <View style={styles.chartWorkerProfile}>
-                        <Image
-                          style={resizePhoto(worker.profile, 40)}
-                          source={worker.profile.name ? { uri: logo_url + worker.profile.name } : require("../../assets/profilepicture.jpeg")}
-                        />
-                      </View>
-                    </View>
-                  ))}
-                </View>
-
+              !chartInfo.loading ? 
                 <FlatList
-                  data={chartInfo.items}
+                  data={chartInfo.charts}
+                  horizontal
                   style={{ width: '100%' }}
+                  onEndReached={() => {
+                    if (chartInfo.charts.length < 7) {
+                      getAppointmentsChart(chartInfo.dayDir + 1)
+                    }
+                  }}
+                  ListFooterComponent={() => {
+                    return (
+                      chartInfo.charts.length < 7 && (
+                        <View style={{ flexDirection: 'column', height: '100%', justifyContent: 'space-around', marginHorizontal: 50 }}>
+                          <ActivityIndicator color="black" size="large"/>
+                        </View>
+                      )
+                    )
+                  }}
                   renderItem={({ item, index }) => 
-                    <View key={item.key} style={styles.chartRow}>
-                      <View style={styles.chartRow}>
-                        {chartInfo.workers.map(worker => (
-                          <View key={worker.key} style={[styles.chartWorker, { backgroundColor: worker.id in chartInfo.scheduled && chartInfo.scheduled[worker.id].includes(jsonDateToUnix(item.dateJson)) ? 'black' : '' }]}>
-                            <Text style={[styles.chartTimeHeader, { color: worker.id in chartInfo.scheduled && chartInfo.scheduled[worker.id].includes(jsonDateToUnix(item.dateJson)) ? 'white' : 'black' }]}>{item.time}</Text>
-                          </View>
-                        ))}
+                    <ScrollView horizontal>
+                      <View style={{ borderColor: 'black', borderStyle: 'solid', borderWidth: 2 }}>
+                        <Text style={{ fontSize: wsize(8), fontWeight: 'bold', textAlign: 'center' }}>{item.date}</Text>
+                        <View style={styles.chartRow}>
+                          {chartInfo.workers.map(worker => (
+                            <View key={worker.key} style={styles.chartWorker}>
+                              <Text style={styles.chartWorkerHeader}>{worker.username}</Text>
+                              <View style={styles.chartWorkerProfile}>
+                                <Image
+                                  style={resizePhoto(worker.profile, 40)}
+                                  source={worker.profile.name ? { uri: logo_url + worker.profile.name } : require("../../assets/profilepicture.jpeg")}
+                                />
+                              </View>
+                            </View>
+                          ))}
+                        </View>
+                        <ScrollView>
+                          {item.times.map(item => (
+                            <View key={item.key} style={styles.chartRow}>
+                              <View style={styles.chartRow}>
+                                {chartInfo.workers.map(worker => (
+                                  <TouchableOpacity 
+                                    key={worker.key}
+                                    style={[
+                                      styles.chartWorker, 
+                                      { 
+                                        backgroundColor: worker.id in chartInfo.scheduledWorkers && chartInfo.scheduledWorkers[worker.id].includes(item.time) ? 'black' : '', 
+                                      }
+                                    ]} 
+                                    onPress={() => {
+                                      if (worker.id in chartInfo.scheduledWorkers && chartInfo.scheduledWorkers[worker.id].includes(item.time)) {
+                                        removeTheBooking(chartInfo.scheduledTimes[item.time + "-" + worker.id])
+                                      } else {
+                                        bookTheWalkIn(worker, item.date)
+                                      }
+                                    }
+                                  }>
+                                    <Text style={[styles.chartTimeHeader, { color: worker.id in chartInfo.scheduledWorkers && chartInfo.scheduledWorkers[worker.id].includes(item.time) ? 'white' : 'black' }]}>{item.timeDisplay}</Text>
+                                  </TouchableOpacity>
+                                ))}
+                              </View>
+                            </View>
+                          ))}
+                        </ScrollView>
                       </View>
-                    </View>
+                    </ScrollView>
                   }
                 />
-              </>
+                :
+                <View style={styles.loading}>
+                  <ActivityIndicator color="black" size="small"/>
+                </View>
             }
             {viewType == "cartorderers" && (
               cartOrderers.length > 0 ? 
@@ -1722,19 +1958,19 @@ export default function Main(props) {
 					</SafeAreaView>
 				</Modal>
 			)}
-      {showInfo && (
+      {showInfo.show && (
         <Modal transparent={true}>
           <View style={styles.showInfoContainer}>
             <View style={styles.showInfoBox}>
               <ScrollView style={{ width: '100%' }}>
                 <View style={{ alignItems: 'center' }}>
-                  <TouchableOpacity style={styles.showInfoClose} onPress={() => setShowinfo(false)}>
+                  <TouchableOpacity style={styles.showInfoClose} onPress={() => setShowinfo({ ...showInfo, show: false })}>
                     <AntDesign name="close" size={wsize(7)}/>
                   </TouchableOpacity>
 
                   <Text style={styles.showInfoHeader}>Salon's hour(s)</Text>
 
-                  {locationHours.map(info => (
+                  {showInfo.locationHours.map(info => (
                     !info.close && (
                       <View style={styles.workerTimeContainer} key={info.key}>
                         <Text style={styles.dayHeader}>{info.header}: </Text>
@@ -1756,7 +1992,7 @@ export default function Main(props) {
                   ))}
 
                   <View style={styles.workerInfoList}>
-                    {workersHours.map(worker => (
+                    {showInfo.workersHours.map(worker => (
                       <View key={worker.key} style={styles.workerRow}>
                         <View style={styles.workerInfo}>
                           <View style={styles.workerInfoProfile}>
@@ -1808,62 +2044,64 @@ export default function Main(props) {
                     <AntDesign name="close" size={wsize(7)}/>
                   </TouchableOpacity>
 
-                  <TouchableOpacity style={styles.moreOptionTouch} onPress={() => {
-                    setShowmoreoptions({ ...showMoreoptions, show: false })
-                    props.navigation.navigate("menu", { refetch: () => initialize(), isOwner })
-                  }}>
-                    <Text style={styles.moreOptionTouchHeader}>{isOwner == true ? "Change" : "Read"} Menu</Text>
-                  </TouchableOpacity>
-
-                  {(locationType == "hair" || locationType == "nail") && (
+                  <ScrollView style={{ width: '80%' }}>
                     <TouchableOpacity style={styles.moreOptionTouch} onPress={() => {
-                      setEditinfo({ ...editInfo, show: true, type: 'users' })
-                      setShowmoreoptions({ ...showMoreoptions, infoType: 'users' })
-                      getAllAccounts()
+                      setShowmoreoptions({ ...showMoreoptions, show: false })
+                      props.navigation.navigate("menu", { refetch: () => initialize(), isOwner })
                     }}>
-                      <Text style={styles.moreOptionTouchHeader}>Change Workers Info</Text>
+                      <Text style={styles.moreOptionTouchHeader}>{isOwner == true ? "Change" : "Read"} Menu</Text>
                     </TouchableOpacity>
-                  )}
 
-                  {isOwner == true && (
-                    <>
+                    {(locationType == "hair" || locationType == "nail") && (
                       <TouchableOpacity style={styles.moreOptionTouch} onPress={() => {
-                        setShowmoreoptions({ ...showMoreoptions, infoType: 'information' })
-                        setEditinfo({ ...editInfo, show: true, type: 'information' })
+                        setEditinfo({ ...editInfo, show: true, type: 'users' })
+                        setShowmoreoptions({ ...showMoreoptions, infoType: 'users' })
+                        getAllAccounts()
                       }}>
-                        <Text style={styles.moreOptionTouchHeader}>Change {header} Info</Text>
+                        <Text style={styles.moreOptionTouchHeader}>Change Workers Info</Text>
                       </TouchableOpacity>
+                    )}
 
-                      <TouchableOpacity style={styles.moreOptionTouch} onPress={() => {
-                        setShowmoreoptions({ ...showMoreoptions, infoType: 'hours' })
-                        setEditinfo({ ...editInfo, show: true, type: 'hours' })
-                      }}>
-                        <Text style={styles.moreOptionTouchHeader}>
-                          Change {header} Hour(s)
-                        </Text>
-                      </TouchableOpacity>
-
-                      <TouchableOpacity style={styles.moreOptionTouch} onPress={() => {
-                        AsyncStorage.removeItem("locationid")
-                        AsyncStorage.removeItem("locationtype")
-                        AsyncStorage.setItem("phase", "list")
-
-                        setShowmoreoptions({ ...showMoreoptions, show: false })
-                        props.navigation.dispatch(StackActions.replace("list"));
-                      }}>
-                        <Text style={styles.moreOptionTouchHeader}>Switch Business</Text>
-                      </TouchableOpacity>
-
-                      {(locationType == "hair" || locationType == "nail") && (
+                    {isOwner == true && (
+                      <>
                         <TouchableOpacity style={styles.moreOptionTouch} onPress={() => {
-                          setShowmoreoptions({ ...showMoreoptions, infoType: 'receivetype' })
-                          setEditinfo({ ...editInfo, show: true, type: 'receivetype' })
+                          setShowmoreoptions({ ...showMoreoptions, infoType: 'information' })
+                          setEditinfo({ ...editInfo, show: true, type: 'information' })
                         }}>
-                          <Text style={styles.moreOptionTouchHeader}>Edit Appointment Alert Type</Text>
+                          <Text style={styles.moreOptionTouchHeader}>Change {header} Info</Text>
                         </TouchableOpacity>
-                      )}
-                    </>
-                  )}
+
+                        <TouchableOpacity style={styles.moreOptionTouch} onPress={() => {
+                          setShowmoreoptions({ ...showMoreoptions, infoType: 'hours' })
+                          setEditinfo({ ...editInfo, show: true, type: 'hours' })
+                        }}>
+                          <Text style={styles.moreOptionTouchHeader}>
+                            Change {header} Hour(s)
+                          </Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity style={styles.moreOptionTouch} onPress={() => {
+                          AsyncStorage.removeItem("locationid")
+                          AsyncStorage.removeItem("locationtype")
+                          AsyncStorage.setItem("phase", "list")
+
+                          setShowmoreoptions({ ...showMoreoptions, show: false })
+                          props.navigation.dispatch(StackActions.replace("list"));
+                        }}>
+                          <Text style={styles.moreOptionTouchHeader}>Switch Business</Text>
+                        </TouchableOpacity>
+
+                        {(locationType == "hair" || locationType == "nail") && (
+                          <TouchableOpacity style={styles.moreOptionTouch} onPress={() => {
+                            setShowmoreoptions({ ...showMoreoptions, infoType: 'receivetype' })
+                            setEditinfo({ ...editInfo, show: true, type: 'receivetype' })
+                          }}>
+                            <Text style={styles.moreOptionTouchHeader}>Edit Appointment Alert Type</Text>
+                          </TouchableOpacity>
+                        )}
+                      </>
+                    )}
+                  </ScrollView>
                 </>
                 :
                 <>
@@ -2787,10 +3025,13 @@ export default function Main(props) {
                                           }
                                         }}>
                                           <Text style={styles.accountformSubmitHeader}>
-                                            {accountForm.addStep == 4 ? 
-                                              (accountForm.type == 'add' ? 'Add' : 'Save') + ' Account'
+                                            {accountForm.addStep == 2 ? 
+                                              accountForm.profile.uri ? "Next" : "Skip"
                                               :
-                                              'Next'
+                                              accountForm.addStep == 4 ? 
+                                                (accountForm.type == 'add' ? 'Add' : 'Save') + ' Account'
+                                                :
+                                                'Next'
                                             }
                                           </Text>
                                         </TouchableOpacity>
@@ -3169,6 +3410,79 @@ export default function Main(props) {
           </View>
         </Modal>
       )}
+      {bookWalkinconfirm.show && (
+        <Modal transparent={true}>
+          <View style={styles.bookWalkInContainer}>
+            <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+              <View style={styles.bookWalkInBox}>
+                {!bookWalkinconfirm.confirm ? 
+                  <>
+                    <Text style={styles.bookWalkInHeader}>
+                      Make appointment for
+                      {'\n\n'}
+                      (walk-in) or (call)
+                      {'\n\n' + displayTime(bookWalkinconfirm.date)}
+                    </Text>
+
+                    <View style={{ alignItems: 'center' }}>
+                      <TextInput style={styles.bookWalkInInput} placeholder="Enter client name" onChangeText={(name) => setBookwalkinconfirm({ ...bookWalkinconfirm, client: {...bookWalkinconfirm.client, name }, errorMsg: "" })} value={bookWalkinconfirm.client.name}/>
+                      <TextInput style={styles.bookWalkInInput} placeholder="Enter client's number" keyboardType="numeric" onChangeText={(cellnumber) => setBookwalkinconfirm({ ...bookWalkinconfirm, client: {...bookWalkinconfirm.client, cellnumber: displayPhonenumber(bookWalkinconfirm.client.cellnumber, cellnumber, () => Keyboard.dismiss()) }, errorMsg: "" })} value={bookWalkinconfirm.client.cellnumber}/>
+                    </View>
+
+                    <Text style={styles.errorMsg}>{bookWalkinconfirm.errorMsg}</Text>
+
+                    <View style={styles.bookWalkInActions}>
+                      <TouchableOpacity style={styles.bookWalkInAction} onPress={() => setBookwalkinconfirm({ ...bookWalkinconfirm, show: false })}>
+                        <Text style={styles.bookWalkInActionHeader}>Cancel</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity style={styles.bookWalkInAction} onPress={() => bookTheWalkIn()}>
+                        <Text style={styles.bookWalkInActionHeader}>Ok</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </>
+                  :
+                  <Text style={styles.bookWalkInHeader}>
+                    Appointment set for client: {bookWalkinconfirm.client.name}
+                    {'\n' + displayTime(bookWalkinconfirm.date)}
+                  </Text>
+                }
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
+        </Modal>
+      )}
+      {removeBookingconfirm.show && (
+        <Modal transparent={true}>
+          <View style={styles.removeBookingContainer}>
+            <View style={styles.removeBookingBox}>
+              {!removeBookingconfirm.confirm ? 
+                <>
+                  <Text style={styles.removeBookingHeader}>
+                    Delete appointment for
+                    {'\n\n'}
+                    (walk-in) or (call)
+                    {'\n\n' + displayTime(removeBookingconfirm.date)}
+                  </Text>
+
+                  <View style={styles.removeBookingActions}>
+                    <TouchableOpacity style={styles.removeBookingAction} onPress={() => setRemovebookingconfirm({ ...removeBookingconfirm, show: false })}>
+                      <Text style={styles.removeBookingActionHeader}>Cancel</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.removeBookingAction} onPress={() => removeTheBooking()}>
+                      <Text style={styles.removeBookingActionHeader}>Ok</Text>
+                    </TouchableOpacity>
+                  </View>
+                </>
+                :
+                <Text style={styles.removeBookingHeader}>
+                  Appointment removed for client: {removeBookingconfirm.client.name}
+                  {'\n' + displayTime(removeBookingconfirm.date)}
+                </Text>
+              }
+            </View>
+          </View>
+        </Modal>
+      )}
 			{showDisabledscreen && (
 				<Modal transparent={true}>
 					<SafeAreaView style={styles.disabled}>
@@ -3199,7 +3513,7 @@ const styles = StyleSheet.create({
 	navs: { alignItems: 'center', width: '100%' },
   header: { fontSize: wsize(10), fontWeight: 'bold' },
 
-  viewTypes: { flexDirection: 'row', justifyContent: 'space-around', marginVertical: 20, width: '100%' },
+  viewTypes: { flexDirection: 'row', justifyContent: 'space-around' },
   viewType: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: '40%' },
   viewTypeHeader: { textAlign: 'center' },
 
@@ -3226,9 +3540,9 @@ const styles = StyleSheet.create({
 
   chartRow: { flexDirection: 'row', width: '100%' },
   chartTime: { height: 70, width: 100 },
-  chartTimeHeader: { fontSize: wsize(4), textAlign: 'center' },
-  chartWorker: { alignItems: 'center', borderColor: 'grey', borderStyle: 'solid', borderWidth: 1, height: 70, width: 100 },
-  chartWorkerHeader: { fontSize: wsize(4), textAlign: 'center' },
+  chartTimeHeader: { fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
+  chartWorker: { alignItems: 'center', borderColor: 'grey', borderStyle: 'solid', borderWidth: 1, width: 100 },
+  chartWorkerHeader: { fontSize: wsize(5), textAlign: 'center' },
   chartWorkerProfile: { borderRadius: 20, height: 40, overflow: 'hidden', width: 40 },
 
 	cartorderer: { backgroundColor: 'white', borderRadius: 5, flexDirection: 'row', justifyContent: 'space-around', margin: 10, padding: 5, width: wsize(100) - 20 },
@@ -3283,7 +3597,7 @@ const styles = StyleSheet.create({
   moreOptionsContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
   moreOptionsBox: { alignItems: 'center', backgroundColor: 'white', height: '80%', width: '80%' },
   moreOptionsClose: { alignItems: 'center', borderRadius: 20, borderStyle: 'solid', borderWidth: 2, marginVertical: 30 },
-  moreOptionTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 20, padding: 5, width: '90%' },
+  moreOptionTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 5, padding: 5, width: '100%' },
   moreOptionTouchHeader: { fontSize: 20, textAlign: 'center' },
 
   locationHeader: { fontSize: wsize(5), fontWeight: 'bold', marginHorizontal: 20, textAlign: 'center' },
@@ -3303,7 +3617,7 @@ const styles = StyleSheet.create({
   accountformInputHeader: { fontSize: wsize(5), fontWeight: 'bold' },
   accountformInputInput: { borderRadius: 2, borderStyle: 'solid', borderWidth: 3, fontSize: wsize(5), padding: 5, width: '100%' },
   accountformSubmit: { alignItems: 'center', borderRadius: 2, borderStyle: 'solid', borderWidth: 1, margin: 5, padding: 5, width: wsize(35) },
-  accountformSubmitHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(5) },
+  accountformSubmitHeader: { fontSize: wsize(5) },
 
   inputsBox: { paddingHorizontal: 20, width: '100%' },
   inputContainer: { marginVertical: 20 },
@@ -3371,6 +3685,22 @@ const styles = StyleSheet.create({
 
   updateButton: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 10 },
   updateButtonHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(4) },
+
+  bookWalkInContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
+  bookWalkInBox: { backgroundColor: 'white', flexDirection: 'column', height: '70%', justifyContent: 'space-around', width: '70%' },
+  bookWalkInHeader: { fontSize: wsize(4), fontWeight: 'bold', textAlign: 'center' },
+  bookWalkInInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), marginVertical: 10, padding: 2, width: '90%' },
+  bookWalkInActions: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
+  bookWalkInAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: '40%' },
+  bookWalkInActionHeader: { textAlign: 'center' },
+
+  removeBookingContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
+  removeBookingBox: { backgroundColor: 'white', flexDirection: 'column', height: '70%', justifyContent: 'space-around', width: '70%' },
+  removeBookingHeader: { fontSize: wsize(4), fontWeight: 'bold', textAlign: 'center' },
+  removeBookingInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), marginVertical: 10, padding: 2, width: '90%' },
+  removeBookingActions: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
+  removeBookingAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: '40%' },
+  removeBookingActionHeader: { textAlign: 'center' },
 
 	disabled: { backgroundColor: 'black', flexDirection: 'column', justifyContent: 'space-around', height: '100%', opacity: 0.8, width: '100%' },
   disabledContainer: { alignItems: 'center', width: '100%' },

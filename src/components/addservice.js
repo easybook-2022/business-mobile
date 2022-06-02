@@ -355,8 +355,8 @@ export default function Addservice(props) {
                           ratio="1:1"
                         />
 
-                        <View style={{ alignItems: 'center', marginVertical: 10 }}>
-                          <Ionicons name="camera-reverse-outline" size={wsize(7)} onPress={() => setCamtype(camType == 'back' ? 'front' : 'back')}/>
+                        <View style={{ alignItems: 'center', marginTop: -wsize(7) }}>
+                          <Ionicons color="white" name="camera-reverse-outline" size={wsize(7)} onPress={() => setCamtype(camType == 'back' ? 'front' : 'back')}/>
                         </View>
                       </>
                     )}
@@ -415,9 +415,9 @@ export default function Addservice(props) {
 							}}>
 								<Text style={styles.addActionHeader}>{
 									!serviceid ? 
-										setupType == steps[steps.length - 1] ? "Done" : "Next"
+										setupType == steps[steps.length - 1] ? "Done" : setupType == "photo" ? image.uri ? "Next" : "Skip" : "Next"
 										: 
-										setupType == steps[steps.length - 1] ? "Save" : "Next"
+										setupType == steps[steps.length - 1] ? "Save" : setupType == "photo" ? image.uri ? "Next" : "Skip" : "Next"
 								}</Text>
 							</TouchableOpacity>
 						</View>
@@ -443,14 +443,14 @@ const styles = StyleSheet.create({
 	infoInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, fontSize: wsize(5), height: 100, marginVertical: 5, padding: 10, textAlignVertical: 'top', width: '90%' },
 	cameraContainer: { alignItems: 'center', width: '100%' },
 	cameraHeader: { fontSize: wsize(5), fontWeight: 'bold', paddingVertical: 5 },
-	camera: { height: wsize(70), width: wsize(70) },
+	camera: { height: width, width },
 	cameraActions: { flexDirection: 'row' },
-	cameraAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginBottom: 50, margin: 5, padding: 5, width: wsize(30) },
+	cameraAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: wsize(30) },
 	cameraActionHeader: { fontSize: wsize(3), textAlign: 'center' },
 	
 	addActions: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
   addAction: { alignItems: 'center', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(6), padding: 5, width: wsize(30) },
-  addActionHeader: { fontSize: wsize(5) },
+  addActionHeader: { fontSize: wsize(3) },
 
   loading: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
   errorMsg: { color: 'darkred', fontSize: wsize(4), textAlign: 'center' },

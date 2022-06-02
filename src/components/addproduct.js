@@ -805,9 +805,9 @@ export default function Addproduct(props) {
 								}}>
 									<Text style={styles.addActionHeader}>{
 										!productid ? 
-											setupType == "sizes" ? "Done" : "Next" 
+											setupType == "sizes" ? "Done" : setupType == "photo" ? "Skip" : "Next" 
 											: 
-											setupType == "sizes" ? "Save" : "Next"
+											setupType == "sizes" ? "Save" : setupType == "photo" ? "Skip" : "Next"
 									}</Text>
 								</TouchableOpacity>
 							</View>
@@ -834,7 +834,7 @@ const styles = StyleSheet.create({
 	
 	cameraContainer: { alignItems: 'center', width: '100%' },
 	cameraHeader: { fontSize: wsize(5), fontWeight: 'bold', paddingVertical: 5 },
-	camera: { height: wsize(70), width: wsize(70) },
+	camera: { height: width, width },
 	cameraActions: { flexDirection: 'row' },
 	cameraAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginBottom: 50, margin: 5, padding: 5, width: wsize(30) },
 	cameraActionHeader: { fontSize: wsize(3), textAlign: 'center' },
@@ -874,7 +874,7 @@ const styles = StyleSheet.create({
 	
 	addActions: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
 	addAction: { alignItems: 'center', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(6), padding: 5, width: wsize(30) },
-	addActionHeader: { fontSize: wsize(5) },
+	addActionHeader: { fontSize: wsize(4) },
 
   loading: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
   errorMsg: { color: 'darkred', fontSize: wsize(4), textAlign: 'center' },

@@ -352,9 +352,9 @@ export default function Addmenu(props) {
 							}}>
 								<Text style={styles.addActionHeader}>{
 									!menuid ? 
-										setupType == "photo" ? "Done" : "Next"
+										setupType == "photo" ? image.uri ? "Save" : "Skip" : "Next"
 										:
-										setupType == "photo" ? "Save" : "Next"
+										setupType == "photo" ? image.uri ? "Next" : "Skip" : "Next"
 								}</Text>
 							</TouchableOpacity>
 						</View>
@@ -380,14 +380,14 @@ const styles = StyleSheet.create({
   
 	cameraContainer: { alignItems: 'center', width: '100%' },
 	cameraHeader: { fontSize: wsize(5), fontWeight: 'bold', paddingVertical: 5 },
-	camera: { height: wsize(70), width: wsize(70) },
+	camera: { height: width, width },
 	cameraActions: { flexDirection: 'row' },
-	cameraAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginBottom: 50, margin: 5, padding: 5, width: wsize(30) },
-	cameraActionHeader: { fontSize: wsize(4), textAlign: 'center' },
+	cameraAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: wsize(30) },
+	cameraActionHeader: { fontSize: wsize(3), textAlign: 'center' },
 	
 	addActions: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 50, width: '100%' },
 	addAction: { alignItems: 'center', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(0.07), padding: 5, width: wsize(30) },
-	addActionHeader: { fontSize: wsize(5) },
+	addActionHeader: { fontSize: wsize(3) },
 
   loading: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
   errorMsg: { color: 'darkred', fontSize: wsize(4), textAlign: 'center' },
