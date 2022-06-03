@@ -229,7 +229,8 @@ export default function Main(props) {
 						if (type == 'store' || type == 'restaurant') {
               getAllCartOrderers()
 						} else {
-							getListAppointments()
+							//getListAppointments()
+              getAppointmentsChart(0)
 						}
 					})
 				}
@@ -335,15 +336,8 @@ export default function Main(props) {
               if (day != "scheduled") {
                 let { open, close } = workersHour[worker][day]
 
-                jsonDate["hour"] = open["hour"]
-                jsonDate["minute"] = open["minute"]
-
-                workersHour[worker][day]["open"] = jsonDateToUnix(jsonDate)
-
-                jsonDate["hour"] = close["hour"]
-                jsonDate["minute"] = close["minute"]
-
-                workersHour[worker][day]["close"] = jsonDateToUnix(jsonDate)
+                workersHour[worker][day]["open"] = jsonDateToUnix({ ...jsonDate, "hour": open["hour"], "minute": open["minute"] })
+                workersHour[worker][day]["close"] = jsonDateToUnix({ ...jsonDate, "hour": close["hour"], "minute": close["minute"] })
               } else {
                 let scheduled = workersHour[worker][day]
 
@@ -396,10 +390,7 @@ export default function Main(props) {
                     (minute < 10 ? '0' + minute : minute) + " " + period
                   let timepassed = currenttime > calcTimeStr
 
-                  jsonDate = {
-                    day: days[date.getDay()], month: jsonDate["month"], date: jsonDate["date"], year: jsonDate["year"],
-                    hour, minute
-                  }
+                  jsonDate = { ...jsonDate, day: days[date.getDay()], hour, minute }
 
                   if (!timepassed) {
                     times.push({
@@ -424,6 +415,7 @@ export default function Main(props) {
                   dayDir, date: jsonDate, 
                   loading: false 
                 })
+                setLoaded(true)
               }
             })
             .catch((err) => {
@@ -1634,7 +1626,7 @@ export default function Main(props) {
       })
   }
   const jsonDateToUnix = date => {
-    return Date.parse(date["day"] + " " + date["month"] + " " + date["date"] + " " + date["year"] + " " + date["hour"] + ":" + date["minute"])
+    return Date.parse(date["month"] + " " + date["date"] + ", " + date["year"] + " " + date["hour"] + ":" + date["minute"])
   }
   
 	useEffect(() => initialize(), [])
@@ -1705,7 +1697,7 @@ export default function Main(props) {
                   locationType == "store" && " Store "
   const currenttime = Date.now()
   const { date, workersHour } = chartInfo
-  const { day } = date
+  let currDay = date.day ? date.day.substr(0, 3) : ""
 
 	return (
 		<SafeAreaView style={styles.main}>
@@ -1809,24 +1801,34 @@ export default function Main(props) {
                         <View key={item.key} style={styles.chartRow}>
                           <View style={styles.chartRow}>
                             {chartInfo.workers.map(worker => (
-                              <TouchableOpacity 
+                              <TouchableOpacity
+                                disabled={
+                                  !(
+                                    item.time >= workersHour[worker.id][currDay]["open"] && item.time < workersHour[worker.id][currDay]["close"]
+                                  )
+                                }
                                 key={worker.key}
-                                // style={[
-                                //   styles.chartWorker, 
-                                //   { 
-                                //     //backgroundColor: currenttime < chartInfo.workersHour[worker.id][day]["open"] || currenttime < chartInfo.workersHour[worker.id][day]["close"] ? 'black' : '#EAEAEA', 
-                                //     //opacity: currenttime < chartInfo.workersHour[worker.id][day]["open"] || currenttime < chartInfo.workersHour[worker.id][day]["close"] ? 0.1 : 1
-                                //   }
-                                // ]} 
-                                // onPress={() => {
-                                //   if (worker.id in chartInfo.scheduledWorkers && chartInfo.scheduledWorkers[worker.id].includes(item.time)) {
-                                //     removeTheBooking(chartInfo.scheduledIds[item.time + "-" + worker.id])
-                                //   } else {
-                                //     bookTheWalkIn(worker, item.jsonDate)
-                                //   }
-                                // }
+                                style={[
+                                  styles.chartWorker,
+                                  {
+                                    backgroundColor: item.time >= workersHour[worker.id][currDay]["open"] && item.time < workersHour[worker.id][currDay]["close"] ? 'white' : 'black'
+                                  }
+                                ]}
+                                onPress={() => {
+                                  if (item.time in workersHour[worker.id]["scheduled"]) {
+                                    removeTheBooking(workersHour[worker.id]["scheduled"][item.time])
+                                  } else {
+                                    if (item.time >= workersHour[worker.id][currDay]["open"] && item.time < workersHour[worker.id][currDay]["close"]) bookTheWalkIn(worker, item.jsonDate)
+                                  }
+                                }}
                               >
-                                <Text style={[styles.chartTimeHeader, { color: worker.id in chartInfo.scheduledWorkers && chartInfo.scheduledWorkers[worker.id].includes(item.time) ? 'white' : 'black' }]}>{item.timeDisplay}</Text>
+                                <Text style={[
+                                  styles.chartTimeHeader, 
+                                  { 
+                                    color: item.time >= workersHour[worker.id][currDay]["open"] && item.time < workersHour[worker.id][currDay]["close"] ? 'black' : 'white' 
+                                  }
+                                ]}
+                                >{item.timeDisplay}</Text>
                               </TouchableOpacity>
                             ))}
                           </View>
