@@ -229,8 +229,7 @@ export default function Main(props) {
 						if (type == 'store' || type == 'restaurant') {
               getAllCartOrderers()
 						} else {
-							//getListAppointments()
-              getAppointmentsChart(0)
+							getListAppointments()
 						}
 					})
 				}
@@ -453,12 +452,10 @@ export default function Main(props) {
         })
     } else {
       const { scheduleid, workerid, date } = removeBookingconfirm
-      const newScheduledworkers = {...chartInfo.scheduledWorkers}
+      const newWorkershour = {...chartInfo.workersHour}
 
-      if (workerid in newScheduledworkers) {
-        if (newScheduledworkers[workerid].includes(date)) {
-          newScheduledworkers[workerid].splice(newScheduledworkers[workerid].indexOf(date), 1)
-        }
+      if (date in newWorkershour[workerid]["scheduled"]) {
+        delete newWorkershour[workerid]["scheduled"][date]
       }
 
       removeBooking(scheduleid)
@@ -470,7 +467,7 @@ export default function Main(props) {
         .then((res) => {
           if (res) {
             setRemovebookingconfirm({ ...removeBookingconfirm, confirm: true })
-            setChartinfo({ ...chartInfo, scheduledWorkers: newScheduledworkers })
+            setChartinfo({ ...chartInfo, workersHour: newWorkershour })
 
             setTimeout(function () {
               setRemovebookingconfirm({ ...removeBookingconfirm, show: false, confirm: false })
@@ -492,8 +489,7 @@ export default function Main(props) {
 
       if (client.name && client.cellnumber) {
         const locationid = await AsyncStorage.getItem("locationid")
-        const newScheduledworkers = {...chartInfo.scheduledWorkers}
-        const newScheduledIds = {...chartInfo.scheduledIds}
+        const newWorkershour = {...chartInfo.workersHour}
         const unix = jsonDateToUnix(jsonDate)
 
         let data = { 
@@ -509,16 +505,10 @@ export default function Main(props) {
           })
           .then((res) => {
             if (res) {
-              if (worker.id in newScheduledworkers) {
-                newScheduledworkers[worker.id.toString()].push(unix)
-              } else {
-                newScheduledworkers[worker.id.toString()] = [unix]
-              }
-
-              newScheduledIds[unix + "-" + worker.id] = res.id
+              newWorkershour[worker.id]["scheduled"][unix] = res.id
 
               setBookwalkinconfirm({ ...bookWalkinconfirm, confirm: true })
-              setChartinfo({ ...chartInfo, scheduledWorkers: newScheduledworkers, scheduledIds: newScheduledIds })
+              setChartinfo({ ...chartInfo, workersHour: newWorkershour })
 
               setTimeout(function () {
                 setBookwalkinconfirm({ ...bookWalkinconfirm, show: false, client: { name: "", cellnumber: "" }, jsonDate: {}, confirm: false })
@@ -1710,7 +1700,7 @@ export default function Main(props) {
 
             <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginVertical: 10 }}>
               <View style={styles.viewTypes}>
-                <TouchableOpacity style={styles.viewType} onPress={() => setViewtype("appointments_list")}>
+                <TouchableOpacity style={styles.viewType} onPress={() => getListAppointments()}>
                   <Text style={styles.viewTypeHeader}>See{'\n'}<Text style={{ fontWeight: 'bold' }}>Your(s)</Text></Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.viewType} onPress={() => getAppointmentsChart(0)}>
@@ -1811,7 +1801,8 @@ export default function Main(props) {
                                 style={[
                                   styles.chartWorker,
                                   {
-                                    backgroundColor: item.time >= workersHour[worker.id][currDay]["open"] && item.time < workersHour[worker.id][currDay]["close"] ? 'white' : 'black'
+                                    backgroundColor: item.time in workersHour[worker.id]["scheduled"] ? 'black' : 'transparent',
+                                    opacity: item.time >= workersHour[worker.id][currDay]["open"] && item.time < workersHour[worker.id][currDay]["close"] ? 1 : 0.3
                                   }
                                 ]}
                                 onPress={() => {
@@ -1825,7 +1816,15 @@ export default function Main(props) {
                                 <Text style={[
                                   styles.chartTimeHeader, 
                                   { 
-                                    color: item.time >= workersHour[worker.id][currDay]["open"] && item.time < workersHour[worker.id][currDay]["close"] ? 'black' : 'white' 
+                                    color: (
+                                      item.time >= workersHour[worker.id][currDay]["open"] && item.time < workersHour[worker.id][currDay]["close"] ?
+                                        item.time in workersHour[worker.id]["scheduled"] ? 
+                                          'white'
+                                          :
+                                          'black'
+                                        :
+                                        'black'
+                                    )
                                   }
                                 ]}
                                 >{item.timeDisplay}</Text>
@@ -2120,7 +2119,7 @@ export default function Main(props) {
                     <ScrollView style={{ height: '100%', width: '100%' }}>
                       <View style={styles.editInfoBox}>
                         <View style={styles.editInfoContainer}>
-                          <View style={{ alignItems: 'center' }}>
+                          <View style={{ alignItems: 'center', marginVertical: 30 }}>
                             <TouchableOpacity style={styles.editInfoClose} onPress={() => {
                               setShowmoreoptions({ ...showMoreoptions, infoType: '' })
                               setEditinfo({ ...editInfo, show: false, type: '' })
@@ -2234,7 +2233,7 @@ export default function Main(props) {
 
                                 {logo.uri ? (
                                   <>
-                                    <Image style={resizePhoto(logo.size, width)} source={{ uri: logo.uri }}/>
+                                    <Image style={resizePhoto(logo.size, width * 0.8)} source={{ uri: logo.uri }}/>
 
                                     <TouchableOpacity style={styles.cameraAction} onPress={() => {
                                       allowCamera()
@@ -3053,6 +3052,40 @@ export default function Main(props) {
                                 </>
                                 :
                                 <>
+                                  <View style={{ alignItems: 'center', marginVertical: 20 }}>
+                                    <TouchableOpacity style={styles.editInfoClose} onPress={() => {
+                                      accountHolders.forEach(function (info) {
+                                        if (info.id == accountForm.id) {
+                                          if (accountForm.self == true) {
+                                            setAccountform({ 
+                                              ...accountForm, 
+                                              editType: '',
+                                              username: info.username, editUsername: false,
+                                              cellnumber: info.cellnumber, verified: false, verifyCode: '', editCellnumber: false,
+                                              currentPassword: '', newPassword: '', confirmPassword: '', editPassword: false,
+                                              profile: { 
+                                                uri: info.profile.name ? logo_url + info.profile.name : "", 
+                                                name: info.profile.name ? info.profile.name : "", 
+                                                size: { width: info.profile.width, height: info.profile.height }
+                                              }, editProfile: false,
+                                              workerHours: info.hours, editHours: false,
+                                              errorMsg: ""
+                                            })
+                                          } else {
+                                            setAccountform({
+                                              ...accountForm,
+                                              show: false,
+                                              workerHours: info.hours, editHours: false,
+                                            })
+                                            setEditinfo({ ...editInfo, show: true })
+                                          }
+                                        }
+                                      })
+                                    }}>
+                                      <AntDesign name="closecircleo" size={30}/>
+                                    </TouchableOpacity>
+                                  </View>
+
                                   {accountForm.editCellnumber && (
                                     <View style={styles.accountformInputField}>
                                       <Text style={styles.accountformInputHeader}>Cell number:</Text>
@@ -3702,10 +3735,10 @@ const styles = StyleSheet.create({
   accountEditTouch: { borderRadius: 2, borderStyle: 'solid', borderWidth: 2, marginTop: 5, padding: 5, width: wsize(50) },
   accountEditTouchHeader: { fontSize: wsize(4), textAlign: 'center' },
   
-  receiveTypesBox: { alignItems: 'center', marginHorizontal: 10, marginTop: 20 },
-  receiveTypesHeader: { fontWeight: 'bold' },
+  receiveTypesBox: { alignItems: 'center', marginHorizontal: 10 },
+  receiveTypesHeader: { fontWeight: 'bold', textAlign: 'center' },
   receiveTypes: { flexDirection: 'row', justifyContent: 'space-between' },
-  receiveType: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: 150 },
+  receiveType: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: '45%' },
   receiveTypeHeader: { textAlign: 'center' },
 
   updateButton: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 10 },

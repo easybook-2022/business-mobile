@@ -36,7 +36,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.geottuse.serviceapp.business",
-      "buildNumber": "5",
+      "buildNumber": "6",
       "infoPlist": {
         "NSCameraUsageDescription": "EasyGO (Business) uses camera to allow you to capture a photo for your profile/location/menu/product/service",
         "NSPhotoLibraryUsageDescription": "EasyGO (Business) allows users to select photo for your profile/location/menu/product/service",
