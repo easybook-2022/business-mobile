@@ -21,7 +21,8 @@ import { loginInfo, ownerGetinInfo, socket, logo_url, useSpeech, timeControl } f
 import { getId, displayTime, resizePhoto, displayPhonenumber } from 'geottuse-tools'
 import { 
   updateNotificationToken, verifyUser, addOwner, updateOwner, deleteOwner, getWorkerInfo, 
-  getOtherWorkers, getAccounts, getOwnerInfo, logoutUser, getWorkersTime, getAllWorkersTime
+  getOtherWorkers, getAccounts, getOwnerInfo, logoutUser, getWorkersTime, getAllWorkersTime, 
+  getWorkersHour
 } from '../apis/owners'
 import { getLocationProfile, setLocationHours, updateLocation, setReceiveType, getDayHours } from '../apis/locations'
 import { getMenus, removeMenu, addNewMenu } from '../apis/menus'
@@ -48,7 +49,7 @@ export default function Main(props) {
 	const [locationType, setLocationtype] = useState('')
 
 	const [appointments, setAppointments] = useState([])
-  const [chartInfo, setChartinfo] = useState({ chart: [], workers: [], workersTime: {}, scheduledWorkers: [], scheduledIds: {}, dayDir: 0, loading: false })
+  const [chartInfo, setChartinfo] = useState({ chart: [], workers: [], workersHour: {}, dayDir: 0, date: {}, loading: false })
   const [bookWalkinconfirm, setBookwalkinconfirm] = useState({ show: false, worker: {}, client: { name: "", cellnumber: "" }, date: {}, confirm: false, note: "", errorMsg: "" })
   const [removeBookingconfirm, setRemovebookingconfirm] = useState({ show: false, scheduleid: -1, client: { name: "", cellnumber: "" }, workerid: -1, date: {}, confirm: false })
 
@@ -68,7 +69,7 @@ export default function Main(props) {
   const [editInfo, setEditinfo] = useState({ show: false, type: '', loading: false })
   const [accountForm, setAccountform] = useState({
     show: false,
-    type: '', editType: '', addStep: 0, id: -1,
+    type: '', editType: '', addStep: 0, id: -1, self: false,
     username: '', editUsername: false,
     cellnumber: '', verified: false, verifyCode: '', editCellnumber: false,
     currentPassword: '', newPassword: '', confirmPassword: '', editPassword: false,
@@ -110,7 +111,7 @@ export default function Main(props) {
   const [camComp, setCamcomp] = useState(null)
   const [camType, setCamtype] = useState('back')
   const [choosing, setChoosing] = useState(false)
-  const [hoursRange, setHoursrange] = useState([
+  const [timeRange, setTimerange] = useState([
     { key: "0", header: "Sunday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, working: true, takeShift: "" },
     { key: "1", header: "Monday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, working: true, takeShift: "" },
     { key: "2", header: "Tuesday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, working: true, takeShift: "" },
@@ -159,7 +160,8 @@ export default function Main(props) {
     }
 	}
 
-	const getTheLocationProfile = async() => {
+	
+  const getTheLocationProfile = async() => {
 		const ownerid = await AsyncStorage.getItem("ownerid")
 		const locationid = await AsyncStorage.getItem("locationid")
 		const data = { locationid }
@@ -222,7 +224,7 @@ export default function Main(props) {
             setLocationtype(type)
             setLocationreceivetype(receiveType)
             setDays(hours)
-            setHoursrange(hours)
+            setTimerange(hours)
 
 						if (type == 'store' || type == 'restaurant') {
               getAllCartOrderers()
@@ -316,7 +318,9 @@ export default function Main(props) {
 
     jsonDate = {"day":days[date.getDay()].substr(0, 3),"month":months[date.getMonth()],"date":date.getDate(),"year":date.getFullYear()}
 
-    getAllWorkersTime(locationid)
+    let data = { locationid, ownerid: null }
+
+    getWorkersHour(data)
       .then((res) => {
         if (res.status == 200) {
           return res.data
@@ -324,26 +328,40 @@ export default function Main(props) {
       })
       .then((res) => {
         if (res) {
-          const { workers } = res
-          const hours = workers[jsonDate["day"].substr(0, 3)]
+          let { workersHour } = res
 
-          hours.forEach(function ({ start, end, workerId }) {
-            const startTime = start.split(":")
-            const endTime = end.split(":")
+          for (let worker in workersHour) {
+            for (let day in workersHour[worker]) {
+              if (day != "scheduled") {
+                let { open, close } = workersHour[worker][day]
 
-            jsonDate["hour"] = startTime[0]
-            jsonDate["minute"] = startTime[1]
+                jsonDate["hour"] = open["hour"]
+                jsonDate["minute"] = open["minute"]
 
-            newWorkersTime[workerId] = { "start": 0, "end": 0 }
-            newWorkersTime[workerId]["start"] = jsonDateToUnix(jsonDate)
+                workersHour[worker][day]["open"] = jsonDateToUnix(jsonDate)
 
-            jsonDate["hour"] = endTime[0]
-            jsonDate["minute"] = endTime[1]
+                jsonDate["hour"] = close["hour"]
+                jsonDate["minute"] = close["minute"]
 
-            newWorkersTime[workerId]["end"] = jsonDateToUnix(jsonDate)
-          })
+                workersHour[worker][day]["close"] = jsonDateToUnix(jsonDate)
+              } else {
+                let scheduled = workersHour[worker][day]
 
-          const data = { locationid, jsonDate }
+                for (let info in scheduled) {
+                  scheduled[jsonDateToUnix(JSON.parse(info))] = scheduled[info]
+
+                  delete scheduled[info]
+                }
+
+                workersHour[worker][day] = scheduled
+              }
+            }
+          }
+
+          delete jsonDate["hour"]
+          delete jsonDate["minute"]
+
+          data = { locationid, jsonDate }
 
           getDayHours(data)
             .then((res) => {
@@ -353,33 +371,13 @@ export default function Main(props) {
             })
             .then((res) => {
               if (res) {
-                const { opentime, closetime, workers, scheduledWorkers, scheduledIds } = res
-                const newScheduledWorkers = {}, newScheduledIds = {}
-                let times = [], chart = {}
-                let openhour = parseInt(opentime["hour"]), openminute = parseInt(opentime["minute"])
+                const { opentime, closetime, workers } = res
+                let times = [], chart = {}, openhour = parseInt(opentime["hour"]), openminute = parseInt(opentime["minute"])
                 let closehour = parseInt(closetime["hour"]), closeminute = parseInt(closetime["minute"])
                 let openStr = jsonDate["month"] + " " + jsonDate["date"] + ", " + jsonDate["year"] + " " + openhour + ":" + openminute
                 let closeStr = jsonDate["month"] + " " + jsonDate["date"] + ", " + jsonDate["year"] + " " + closehour + ":" + closeminute
                 let openTimeStr = Date.parse(openStr), closeTimeStr = Date.parse(closeStr), calcTimeStr = openTimeStr
                 let currenttime = Date.now(), key = 0
-
-                for (let k in scheduledWorkers) {
-                  scheduledWorkers[k].forEach(function (time) {
-                    if (k in newScheduledWorkers) {
-                      newScheduledWorkers[k].push(jsonDateToUnix(JSON.parse(time)).toString())
-                    } else {
-                      newScheduledWorkers[k] = [jsonDateToUnix(JSON.parse(time)).toString()]
-                    }
-                  })
-                }
-
-                for (let k in scheduledIds) {
-                  let info = k.split("-")
-                  let date = jsonDateToUnix(JSON.parse(info[0]))
-                  let worker = info[1]
-
-                  newScheduledIds[date + "-" + worker] = scheduledIds[k]
-                }
 
                 while (calcTimeStr < closeTimeStr - pushtime) {
                   calcTimeStr += pushtime
@@ -406,7 +404,8 @@ export default function Main(props) {
                   if (!timepassed) {
                     times.push({
                       key: "time-" + key + "-" + dayDir,
-                      timeDisplay, time: calcTimeStr, jsonDate
+                      timeDisplay, time: calcTimeStr, jsonDate,
+                      timepassed
                     })
 
                     key += 1
@@ -421,11 +420,9 @@ export default function Main(props) {
 
                 setChartinfo({ 
                   ...chartInfo, chart, 
-                  workersTime: newWorkersTime, 
-                  workers, 
-                  scheduledWorkers: newScheduledWorkers, 
-                  scheduledIds: newScheduledIds,
-                  dayDir, loading: false 
+                  workersHour, workers, 
+                  dayDir, date: jsonDate, 
+                  loading: false 
                 })
               }
             })
@@ -434,6 +431,11 @@ export default function Main(props) {
                 const { errormsg, status } = err.response.data
               }
             })
+        }
+      })
+      .catch((err) => {
+        if (err.response && err.response.status == 400) {
+          const { errormsg, status } = err.response.data
         }
       })
   }
@@ -1211,8 +1213,8 @@ export default function Main(props) {
       })
   }
   const updateWorkingHour = (index, timetype, dir, open) => {
-    const newWorkerhours = [...accountForm.workerHours], hoursRangeInfo = [...hoursRange]
-    let value, { openunix, closeunix, calcDate } = hoursRangeInfo[index]
+    const newWorkerhours = [...accountForm.workerHours], timeRangeInfo = [...timeRange]
+    let value, { openunix, closeunix, calcDate } = timeRangeInfo[index]
     let { opentime, closetime } = newWorkerhours[index], valid = false
 
     value = open ? opentime : closetime
@@ -1701,6 +1703,9 @@ export default function Main(props) {
   const header = (locationType == "hair" || locationType == "nail") && " Salon " || 
                   locationType == "restaurant" && " Restaurant " || 
                   locationType == "store" && " Store "
+  const currenttime = Date.now()
+  const { date, workersHour } = chartInfo
+  const { day } = date
 
 	return (
 		<SafeAreaView style={styles.main}>
@@ -1798,6 +1803,7 @@ export default function Main(props) {
                         </View>
                       ))}
                     </View>
+
                     <ScrollView>
                       {chartInfo.chart.times.map(item => (
                         <View key={item.key} style={styles.chartRow}>
@@ -1805,20 +1811,21 @@ export default function Main(props) {
                             {chartInfo.workers.map(worker => (
                               <TouchableOpacity 
                                 key={worker.key}
-                                style={[
-                                  styles.chartWorker, 
-                                  { 
-                                    backgroundColor: worker.id in chartInfo.scheduledWorkers && chartInfo.scheduledWorkers[worker.id].includes(item.time) ? 'black' : '#EAEAEA', 
-                                  }
-                                ]} 
-                                onPress={() => {
-                                  if (worker.id in chartInfo.scheduledWorkers && chartInfo.scheduledWorkers[worker.id].includes(item.time)) {
-                                    removeTheBooking(chartInfo.scheduledIds[item.time + "-" + worker.id])
-                                  } else {
-                                    bookTheWalkIn(worker, item.jsonDate)
-                                  }
-                                }
-                              }>
+                                // style={[
+                                //   styles.chartWorker, 
+                                //   { 
+                                //     //backgroundColor: currenttime < chartInfo.workersHour[worker.id][day]["open"] || currenttime < chartInfo.workersHour[worker.id][day]["close"] ? 'black' : '#EAEAEA', 
+                                //     //opacity: currenttime < chartInfo.workersHour[worker.id][day]["open"] || currenttime < chartInfo.workersHour[worker.id][day]["close"] ? 0.1 : 1
+                                //   }
+                                // ]} 
+                                // onPress={() => {
+                                //   if (worker.id in chartInfo.scheduledWorkers && chartInfo.scheduledWorkers[worker.id].includes(item.time)) {
+                                //     removeTheBooking(chartInfo.scheduledIds[item.time + "-" + worker.id])
+                                //   } else {
+                                //     bookTheWalkIn(worker, item.jsonDate)
+                                //   }
+                                // }
+                              >
                                 <Text style={[styles.chartTimeHeader, { color: worker.id in chartInfo.scheduledWorkers && chartInfo.scheduledWorkers[worker.id].includes(item.time) ? 'white' : 'black' }]}>{item.timeDisplay}</Text>
                               </TouchableOpacity>
                             ))}
@@ -2425,7 +2432,7 @@ export default function Main(props) {
                                     currentPassword: ownerGetinInfo.password, 
                                     newPassword: ownerGetinInfo.password, 
                                     confirmPassword: ownerGetinInfo.password,
-                                    workerHours: [...hoursRange]
+                                    workerHours: [...timeRange]
                                   })
                                   setEditinfo({ ...editInfo, show: false })
                                 }}>
@@ -2471,7 +2478,7 @@ export default function Main(props) {
                                           setAccountform({
                                             ...accountForm,
                                             show: true, type: 'edit', 
-                                            id: info.id,
+                                            id: info.id, self: true,
                                             username: info.username,
                                             cellnumber: info.cellnumber,
                                             password: '',
@@ -2487,8 +2494,9 @@ export default function Main(props) {
                                         } else { // others can only edit other's hours
                                           setAccountform({ 
                                             ...accountForm, 
-                                            show: true, type: 'edit', editType: 'hours', 
-                                            id: info.id, workerHours: info.hours, editHours: true
+                                            show: true, type: '', editType: 'hours', 
+                                            id: info.id, self: false,
+                                            workerHours: info.hours, editHours: true
                                           })
                                         }
 
@@ -2525,7 +2533,7 @@ export default function Main(props) {
                     <>
                       <ScrollView style={{ height: '100%', width: '100%' }}>
                         <KeyboardAvoidingView behavior={Platform.OS == "ios" ? "padding" : "position"}>
-                          {(!accountForm.editCellnumber && !accountForm.editUsername && !accountForm.editProfile && !accountForm.editPassword && !accountForm.editHours && !accountForm.type) ? 
+                          {(!accountForm.editCellnumber && !accountForm.editUsername && !accountForm.editProfile && !accountForm.editPassword && !accountForm.editHours && accountForm.type == 'edit') ? 
                             <>
                               <View style={{ alignItems: 'center', marginVertical: 10 }}>
                                 <TouchableOpacity onPress={() => {
@@ -3310,24 +3318,31 @@ export default function Main(props) {
                                       <TouchableOpacity style={[styles.accountformSubmit, { opacity: accountForm.loading ? 0.3 : 1 }]} disabled={accountForm.loading} onPress={() => {
                                         accountHolders.forEach(function (info) {
                                           if (info.id == accountForm.id) {
-                                            setAccountform({ 
-                                              ...accountForm, 
-                                              show: false,
-                                              editType: '',
-                                              username: info.username, editUsername: false,
-                                              cellnumber: info.cellnumber, verified: false, verifyCode: '', editCellnumber: false,
-                                              currentPassword: '', newPassword: '', confirmPassword: '', editPassword: false,
-                                              profile: { 
-                                                uri: info.profile.name ? logo_url + info.profile.name : "", 
-                                                name: info.profile.name ? info.profile.name : "", 
-                                                size: { width: info.profile.width, height: info.profile.height }
-                                              }, editProfile: false,
-                                              workerHours: info.hours, editHours: false,
-                                              errorMsg: ""
-                                            })
+                                            if (accountForm.self == true) {
+                                              setAccountform({ 
+                                                ...accountForm, 
+                                                editType: '',
+                                                username: info.username, editUsername: false,
+                                                cellnumber: info.cellnumber, verified: false, verifyCode: '', editCellnumber: false,
+                                                currentPassword: '', newPassword: '', confirmPassword: '', editPassword: false,
+                                                profile: { 
+                                                  uri: info.profile.name ? logo_url + info.profile.name : "", 
+                                                  name: info.profile.name ? info.profile.name : "", 
+                                                  size: { width: info.profile.width, height: info.profile.height }
+                                                }, editProfile: false,
+                                                workerHours: info.hours, editHours: false,
+                                                errorMsg: ""
+                                              })
+                                            } else {
+                                              setAccountform({
+                                                ...accountForm,
+                                                show: false,
+                                                workerHours: info.hours, editHours: false,
+                                              })
+                                              setEditinfo({ ...editInfo, show: true })
+                                            }
                                           }
                                         })
-                                        setEditinfo({ ...editInfo, show: true })
                                       }}>
                                         <Text style={styles.accountformSubmitHeader}>Cancel</Text>
                                       </TouchableOpacity>

@@ -124,6 +124,13 @@ export const getAllWorkersTime = id => {
   return axios.get(`${url}/owners/get_all_workers_time/${id}`)
 }
 
+export const getWorkersHour = data => {
+  return axios.post(
+    `${url}/owners/get_workers_hour`,
+    data
+  )
+}
+
 export const getOtherWorkers = data => {
   return axios.post(
     `${url}/owners/get_other_workers`,
