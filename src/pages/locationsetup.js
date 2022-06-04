@@ -78,9 +78,6 @@ export default function Locationsetup({ navigation }) {
         let openhour = parseInt(newOpentime.hour), closehour = parseInt(newClosetime.hour)
         let openperiod = newOpentime.period, closeperiod = newClosetime.period
 
-        delete newOpentime.period
-        delete newClosetime.period
-
         if (close == false || close == true) {
           if (openperiod == "PM") {
             if (openhour < 12) {
@@ -122,6 +119,9 @@ export default function Locationsetup({ navigation }) {
 
           newOpentime.hour = openhour
           newClosetime.hour = closehour
+
+          delete newOpentime.period
+          delete newClosetime.period
 
           hours[day.header.substr(0, 3)] = { opentime: newOpentime, closetime: newClosetime, close }
         } else {
@@ -369,11 +369,10 @@ export default function Locationsetup({ navigation }) {
     setChoosing(true)
 
 		let char = getId(), photo = await ImagePicker.launchImageLibraryAsync({
-			mediaTypes: ImagePicker.MediaTypeOptions.Images,
-			aspect: [1, 1],
-			quality: 0.1,
-			base64: true
-		});
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      aspect: [4, 3],
+      quality: 0
+    });
 
 		if (!photo.cancelled) {
 			FileSystem.moveAsync({

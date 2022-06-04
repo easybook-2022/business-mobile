@@ -191,11 +191,10 @@ export default function Addmenu(props) {
     setChoosing(true)
 
 		let char = getId(), photo = await ImagePicker.launchImageLibraryAsync({
-			mediaTypes: ImagePicker.MediaTypeOptions.Images,
-			aspect: [1, 1],
-			quality: 0.1,
-			base64: true
-		});
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      aspect: [4, 3],
+      quality: 0
+    });
 
 		if (!photo.cancelled) {
 			FileSystem.moveAsync({

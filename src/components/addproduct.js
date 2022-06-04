@@ -367,11 +367,10 @@ export default function Addproduct(props) {
 
 		let char = getId(), captured, self = this
 		let photo = await ImagePicker.launchImageLibraryAsync({
-			mediaTypes: ImagePicker.MediaTypeOptions.Images,
-			aspect: [4, 3],
-			quality: 0.1,
-			base64: true
-		});
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      aspect: [4, 3],
+      quality: 0
+    });
 
 		if (!photo.cancelled) {
 			FileSystem.moveAsync({

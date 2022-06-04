@@ -160,7 +160,6 @@ export default function Main(props) {
     }
 	}
 
-	
   const getTheLocationProfile = async() => {
 		const ownerid = await AsyncStorage.getItem("ownerid")
 		const locationid = await AsyncStorage.getItem("locationid")
@@ -210,6 +209,7 @@ export default function Main(props) {
               hours[k]["calcDate"] = calcDate
               hours[k]["openunix"] = Date.parse(calcDate + openTime)
               hours[k]["closeunix"] = Date.parse(calcDate + closeTime)
+              hours[k]["working"] = true
             }
 
 						setOwnerid(ownerid)
@@ -306,7 +306,6 @@ export default function Main(props) {
 			})
 	}
   const getAppointmentsChart = async(dayDir) => {
-    setViewtype("appointments_chart") 
     setChartinfo({ ...chartInfo, loading: true })
 
     const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
@@ -381,7 +380,7 @@ export default function Main(props) {
                   let period = hour < 12 ? "AM" : "PM"
                   let timeDisplay = (
                     hour <= 12 ? 
-                      (hour == 0 ? 12 : hour)
+                      hour
                       :
                       hour - 12
                     )
@@ -392,6 +391,7 @@ export default function Main(props) {
                   jsonDate = { ...jsonDate, day: days[date.getDay()], hour, minute }
 
                   if (!timepassed) {
+                    if (key == 0) alert(openStr)
                     times.push({
                       key: "time-" + key + "-" + dayDir,
                       timeDisplay, time: calcTimeStr, jsonDate,
@@ -414,6 +414,7 @@ export default function Main(props) {
                   dayDir, date: jsonDate, 
                   loading: false 
                 })
+                setViewtype("appointments_chart") 
                 setLoaded(true)
               }
             })
@@ -535,6 +536,7 @@ export default function Main(props) {
 
     if (data.type == "makeAppointment" || data.type == "remakeAppointment" || data.type == "cancelRequest") {
       const { name, time, worker } = data.speak
+      const { id, username } = worker
 
       switch (data.type) {
         case "makeAppointment":
@@ -552,7 +554,7 @@ export default function Main(props) {
         default:
       }
 
-      message += " for " + name + " " + displayTime(time) + " with stylist: " + worker
+      message += " for " + name + " " + displayTime(time) + " with stylist: " + username
 
       if (Constants.isDevice && useSpeech == true) Speech.speak(message, { rate: 0.7 })
     } else {
@@ -734,7 +736,28 @@ export default function Main(props) {
         data.type == "cancelRequest" || 
         data.type == "remakeAppointment"
       ) {
-        getListAppointments()
+        alert(viewType)
+        if (viewType == "appointments_list") {
+          getListAppointments()
+        } else if (viewType == "appointments_chart") {
+          const newWorkershour = {...chartInfo.workersHour}
+          const { scheduleid, time, worker } = data.speak
+          const workerId = worker.id.toString()
+
+          alert(workerId + " : " + JSON.stringify(newWorkershour) + " : " + (workerId in newWorkershour))
+
+          // if (workerId in newWorkershour) {
+          //   if (jsonDateToUnix(time) in newWorkershour[workerId]["scheduled"]) {
+          //     delete newWorkershour[workerId]["scheduled"][jsonDateToUnix(time)]
+          //   } else {
+          //     newWorkershour[workerId]["scheduled"][jsonDateToUnix(time)] = scheduleid
+          //   }
+
+          //   setChartinfo({ ...chartInfo, workersHour: newWorkershour })
+          // } else {
+
+          // }
+        } 
 
         speakToWorker(data)
       }
@@ -960,8 +983,7 @@ export default function Main(props) {
     let char = "", photo = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       aspect: [4, 3],
-      quality: 0.1,
-      base64: true
+      quality: 0
     });
 
     for (let k = 0; k < photo_name_length; k++) {
@@ -1036,9 +1058,8 @@ export default function Main(props) {
     let char = getId()
     let photo = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      aspect: [1, 1],
-      quality: 0.1,
-      base64: true
+      aspect: [4, 3],
+      quality: 0
     });
 
     if (!photo.cancelled) {
@@ -1686,7 +1707,7 @@ export default function Main(props) {
                   locationType == "restaurant" && " Restaurant " || 
                   locationType == "store" && " Store "
   const currenttime = Date.now()
-  const { date, workersHour } = chartInfo
+  const { date, workersHour, workers } = chartInfo
   let currDay = date.day ? date.day.substr(0, 3) : ""
 
 	return (
@@ -1709,7 +1730,7 @@ export default function Main(props) {
               </View>
             </View>
 
-            {viewType == "appointments_list" ? 
+            {viewType == "appointments_list" && ( 
               appointments.length > 0 ? 
                 <FlatList
                   data={appointments}
@@ -1753,7 +1774,9 @@ export default function Main(props) {
                 <View style={styles.bodyResult}>
                   <Text style={styles.bodyResultHeader}>You will see your appointment(s) here in order</Text>
                 </View>
-              :
+            )}
+
+            {viewType == "appointments_chart" && (
               !chartInfo.loading ? 
                 <ScrollView horizontal>
                   <View style={{ borderColor: 'black', borderStyle: 'solid', borderWidth: 2 }}>
@@ -1774,7 +1797,7 @@ export default function Main(props) {
                     </View>
                     <View style={styles.chartRow}>
                       {chartInfo.workers.map(worker => (
-                        <View key={worker.key} style={styles.chartWorker}>
+                        <View key={worker.key} style={[styles.chartWorker, { width: width / workers.length } ]}>
                           <Text style={styles.chartWorkerHeader}>{worker.username}</Text>
                           <View style={styles.chartWorkerProfile}>
                             <Image
@@ -1794,7 +1817,9 @@ export default function Main(props) {
                               <TouchableOpacity
                                 disabled={
                                   !(
-                                    item.time >= workersHour[worker.id][currDay]["open"] && item.time < workersHour[worker.id][currDay]["close"]
+                                    item.time >= workersHour[worker.id][currDay]["open"] && item.time < workersHour[worker.id][currDay]["close"] // working times
+                                    &&
+                                    workersHour[worker.id][currDay]["working"]
                                   )
                                 }
                                 key={worker.key}
@@ -1802,7 +1827,12 @@ export default function Main(props) {
                                   styles.chartWorker,
                                   {
                                     backgroundColor: item.time in workersHour[worker.id]["scheduled"] ? 'black' : 'transparent',
-                                    opacity: item.time >= workersHour[worker.id][currDay]["open"] && item.time < workersHour[worker.id][currDay]["close"] ? 1 : 0.3
+                                    opacity: (
+                                      item.time >= workersHour[worker.id][currDay]["open"] && item.time < workersHour[worker.id][currDay]["close"]
+                                      &&
+                                      workersHour[worker.id][currDay]["working"]
+                                    ) ? 1 : 0.3,
+                                    width: width / workers.length
                                   }
                                 ]}
                                 onPress={() => {
@@ -1813,15 +1843,11 @@ export default function Main(props) {
                                   }
                                 }}
                               >
-                                <Text style={[
-                                  styles.chartTimeHeader, 
+                                <Text style={[styles.chartTimeHeader, 
                                   { 
                                     color: (
                                       item.time >= workersHour[worker.id][currDay]["open"] && item.time < workersHour[worker.id][currDay]["close"] ?
-                                        item.time in workersHour[worker.id]["scheduled"] ? 
-                                          'white'
-                                          :
-                                          'black'
+                                        item.time in workersHour[worker.id]["scheduled"] ? 'white' : 'black'
                                         :
                                         'black'
                                     )
@@ -1840,7 +1866,8 @@ export default function Main(props) {
                 <View style={styles.loading}>
                   <ActivityIndicator color="black" size="small"/>
                 </View>
-            }
+            )}
+
             {viewType == "cartorderers" && (
               cartOrderers.length > 0 ? 
                 <FlatList
@@ -1891,14 +1918,14 @@ export default function Main(props) {
               </View>
 
               <View style={styles.column}>
-    						<TouchableOpacity style={styles.bottomNavButton} onPress={() => logout()}>
-    							<Text style={styles.bottomNavButtonHeader}>Go home</Text>
-    						</TouchableOpacity>
+                <TouchableOpacity style={styles.bottomNavButton} onPress={() => getTheWorkersTime()}>
+                  <Text style={styles.bottomNavButtonHeader}>Hour(s)</Text>
+                </TouchableOpacity>
               </View>
 
               <View style={styles.column}>
-                <TouchableOpacity style={styles.bottomNavButton} onPress={() => getTheWorkersTime()}>
-                  <Text style={styles.bottomNavButtonHeader}>Hour(s)</Text>
+                <TouchableOpacity style={styles.bottomNavButton} onPress={() => logout()}>
+                  <Text style={styles.bottomNavButtonHeader}>Log out</Text>
                 </TouchableOpacity>
               </View>
   					</View>
@@ -3599,7 +3626,7 @@ const styles = StyleSheet.create({
   chartRow: { flexDirection: 'row', width: '100%' },
   chartTime: { height: 70, width: 100 },
   chartTimeHeader: { fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
-  chartWorker: { alignItems: 'center', borderColor: 'grey', borderStyle: 'solid', borderWidth: 1, paddingVertical: 10, width: 100 },
+  chartWorker: { alignItems: 'center', borderColor: 'grey', borderStyle: 'solid', borderWidth: 1, paddingVertical: 10 },
   chartWorkerHeader: { fontSize: wsize(5), textAlign: 'center' },
   chartWorkerProfile: { borderRadius: 20, height: 40, overflow: 'hidden', width: 40 },
 

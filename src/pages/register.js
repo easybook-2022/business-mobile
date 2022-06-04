@@ -306,11 +306,10 @@ export default function Register(props) {
     setChoosing(true)
 
 		let char = getId(), photo = await ImagePicker.launchImageLibraryAsync({
-			mediaTypes: ImagePicker.MediaTypeOptions.Images,
-			aspect: [1, 1],
-			quality: 0.1,
-			base64: true
-		});
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      aspect: [4, 3],
+      quality: 0
+    });
 
 		if (!photo.cancelled) {
 			FileSystem.moveAsync({
@@ -460,8 +459,8 @@ export default function Register(props) {
                           />
                         )}
 
-                        <View style={{ alignItems: 'center' }}>
-                          <Ionicons color="white" name="camera-reverse-outline" size={wsize(7)} onPress={() => setCamtype(camType == 'back' ? 'front' : 'back')}/>
+                        <View style={{ alignItems: 'center', marginTop: -wsize(7) }}>
+                          <Ionicons color="black" name="camera-reverse-outline" size={wsize(7)} onPress={() => setCamtype(camType == 'back' ? 'front' : 'back')}/>
                         </View>
 
     										<View style={styles.cameraActions}>

@@ -146,7 +146,7 @@ export default function Auth({ navigation }) {
                 <Text style={styles.errorMsg}>{errorMsg}</Text>
 
                 <TouchableOpacity style={styles.submit} onPress={() => login()}>
-                  <Text style={styles.submitHeader}>Get in work</Text>
+                  <Text style={styles.submitHeader}>Sign in</Text>
                 </TouchableOpacity>
               </>
               :
