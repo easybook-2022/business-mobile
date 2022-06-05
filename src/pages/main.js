@@ -49,7 +49,7 @@ export default function Main(props) {
 	const [locationType, setLocationtype] = useState('')
 
 	const [appointments, setAppointments] = useState([])
-  const [chartInfo, setChartinfo] = useState({ chart: [], workers: [], workersHour: {}, dayDir: 0, date: {}, loading: false })
+  const [chartInfo, setChartinfo] = useState({ chart: {}, workers: [], workersHour: {}, dayDir: 0, date: {}, loading: false })
   const [bookWalkinconfirm, setBookwalkinconfirm] = useState({ show: false, worker: {}, client: { name: "", cellnumber: "" }, date: {}, confirm: false, note: "", errorMsg: "" })
   const [removeBookingconfirm, setRemovebookingconfirm] = useState({ show: false, scheduleid: -1, client: { name: "", cellnumber: "" }, workerid: -1, date: {}, confirm: false })
 
@@ -229,9 +229,7 @@ export default function Main(props) {
 						if (type == 'store' || type == 'restaurant') {
               getAllCartOrderers()
 						} else {
-							//getListAppointments()
-              getAppointmentsChart(1)
-              setViewtype("appointments_chart")
+              getAppointmentsChart(0)
 						}
 					})
 				}
@@ -297,6 +295,7 @@ export default function Main(props) {
 			.then(async(res) => {
 				if (res) {
 					setAppointments(res.appointments)
+          setViewtype("appointments_list")
           setLoaded(true)
 				}
 			})
@@ -416,6 +415,7 @@ export default function Main(props) {
                   dayDir, date: jsonDate, 
                   loading: false 
                 })
+                setViewtype("appointments_chart")
                 setLoaded(true)
               }
             })
@@ -431,25 +431,6 @@ export default function Main(props) {
           const { errormsg, status } = err.response.data
         }
       })
-  }
-  const updateAppointments = data => {
-    const newChartinfo = {...chartInfo}
-    const { workersHour } = newChartinfo
-    const { scheduleid, time, worker } = data.speak
-    const workerId = worker.id.toString(), unix = jsonDateToUnix(time)
-
-    if (workerId in workersHour) {
-      if (unix in workersHour[workerId]["scheduled"]) {
-        delete workersHour[workerId]["scheduled"][unix]
-      } else {
-        workersHour[workerId]["scheduled"][unix] = parseInt(scheduleid)
-      }
-    }
-
-    setChartinfo({ ...newChartinfo, workersHour })
-    getListAppointments()
-
-    speakToWorker(data)
   }
   const removeTheBooking = id => {
     if (!removeBookingconfirm.show) {
@@ -756,7 +737,27 @@ export default function Main(props) {
         data.type == "cancelRequest" || 
         data.type == "remakeAppointment"
       ) {
-        updateAppointments(data)
+        if (viewType == "appointments_list") {
+          getListAppointments()
+        } else if (viewType == "appointments_chart") {
+          const newChartinfo = {...chartInfo}
+          const { workersHour } = newChartinfo
+          const { scheduleid, time, worker } = data.speak
+          const workerId = worker.id.toString(), unix = jsonDateToUnix(time)
+          const scheduled = workersHour[workerId]["scheduled"]
+
+          for (let time in scheduled) {
+            if (scheduled[time] == scheduleid) {
+              delete workersHour[workerId]["scheduled"][time]
+            }
+          }
+
+          workersHour[workerId]["scheduled"][unix] = parseInt(scheduleid)
+
+          setChartinfo({ ...chartInfo, workersHour })
+        }
+          
+        speakToWorker(data)
       }
 		})
 		socket.on("updateOrders", data => {
@@ -1664,7 +1665,7 @@ export default function Main(props) {
 			socket.off("updateSchedules")
 			socket.off("updateOrders")
 		}
-	}, [appointments.length, cartOrderers.length])
+	}, [viewType, chartInfo.workers.length, appointments.length, cartOrderers.length])
 
   useEffect(() => {
     if (Constants.isDevice) {
@@ -1719,16 +1720,10 @@ export default function Main(props) {
             {(locationType == "hair" || locationType == "nail") && (
               <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginVertical: 10 }}>
                 <View style={styles.viewTypes}>
-                  <TouchableOpacity style={styles.viewType} onPress={() => {
-                    getListAppointments()
-                    setViewtype("appointments_list")
-                  }}>
+                  <TouchableOpacity style={styles.viewType} onPress={() => getListAppointments()}>
                     <Text style={styles.viewTypeHeader}>See{'\n'}<Text style={{ fontWeight: 'bold' }}>Your(s)</Text></Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={styles.viewType} onPress={() => {
-                    getAppointmentsChart(0)
-                    setViewtype("appointments_chart")
-                  }}>
+                  <TouchableOpacity style={styles.viewType} onPress={() => getAppointmentsChart(0)}>
                     <Text style={styles.viewTypeHeader}>See{'\n'}<Text style={{ fontWeight: 'bold' }}>All Stylist(s)</Text></Text>
                   </TouchableOpacity>
                 </View>
@@ -1781,7 +1776,7 @@ export default function Main(props) {
                 </View>
             )}
 
-            {(viewType == "appointments_chart" && chartInfo.workersHour != {}) && (
+            {viewType == "appointments_chart" && (
               !chartInfo.loading ? 
                 <ScrollView horizontal>
                   <View style={{ borderColor: 'black', borderStyle: 'solid', borderWidth: 2 }}>
@@ -1814,11 +1809,8 @@ export default function Main(props) {
                       ))}
                     </View>
 
-                    <Text>{JSON.stringify(chartInfo.chart)}</Text>
-                    <Text>{JSON.stringify(chartInfo.workersHour)}</Text>
-
                     <ScrollView>
-                      {/*chartInfo.chart.times.map(item => (
+                      {chartInfo.chart.times && chartInfo.chart.times.map(item => (
                         <View key={item.key} style={styles.chartRow}>
                           <View style={styles.chartRow}>
                             {chartInfo.workers.map(worker => (
@@ -1870,7 +1862,7 @@ export default function Main(props) {
                             ))}
                           </View>
                         </View>
-                      ))*/}
+                      ))}
                     </ScrollView>
                   </View>
                 </ScrollView>
