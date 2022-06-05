@@ -183,16 +183,10 @@ export default function Auth({ navigation }) {
                   </View>
                 </>
                 :
-                <>
-                  <View style={styles.inputContainer}>
-                    <Text style={styles.inputHeader}>Enter a password:</Text>
-                    <TextInput style={styles.input} secureTextEntry onChangeText={(password) => setPassword(password)} value={password} autoCorrect={false}/>
-                  </View>
-                  <View style={styles.inputContainer}>
-                    <Text style={styles.inputHeader}>Confirm your password:</Text>
-                    <TextInput style={styles.input} secureTextEntry onChangeText={(confirmPassword) => setConfirmpassword(confirmPassword)} value={confirmPassword} autoCorrect={false}/>
-                  </View>
-                </>
+                <View style={styles.inputContainer}>
+                  <Text style={styles.inputHeader}>Confirm your password:</Text>
+                  <TextInput style={styles.input} secureTextEntry onChangeText={(confirmPassword) => setConfirmpassword(confirmPassword)} value={confirmPassword} autoCorrect={false}/>
+                </View>
             }
           </View>
 
@@ -207,11 +201,11 @@ const styles = StyleSheet.create({
 	auth: { backgroundColor: 'white', height: '100%', paddingTop: Platform.OS == "ios" ? 0 : Constants.statusBarHeight, width: '100%' },
 	box: { alignItems: 'center', height: '100%', paddingHorizontal: 10, width: '100%' },
   icon: { height: width * 0.2, width: width * 0.2 },
-	boxHeader: { fontSize: wsize(7), fontWeight: 'bold', marginVertical: '10%', textAlign: 'center' },
+	boxHeader: { fontSize: wsize(5), fontWeight: 'bold', marginVertical: '10%', textAlign: 'center' },
 
   inputsBox: { alignItems: 'center', width: '80%' },
-  inputContainer: { marginBottom: 30, width: '100%' },
-  inputHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(7) },
+  inputContainer: { marginBottom: 5, width: '100%' },
+  inputHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(6) },
   input: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(7), padding: 5, width: '100%' },
 
   submit: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontFamily: 'Chilanka_400Regular', padding: 10, width: wsize(50) },

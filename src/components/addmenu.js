@@ -10,7 +10,7 @@ import * as FileSystem from 'expo-file-system'
 import { Camera } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator'
 import * as ImagePicker from 'expo-image-picker';
-import { getId } from 'geottuse-tools';
+import { getId, resizePhoto } from 'geottuse-tools';
 import { logo_url } from '../../assets/info'
 import { addNewMenu, getMenuInfo, saveMenu } from '../apis/menus'
 
@@ -155,11 +155,9 @@ export default function Addmenu(props) {
 	const snapPhoto = async() => {
     setImage({ ...image, loading: true })
 
-		let char = getId()
-
 		if (camComp) {
 			let options = { quality: 0, skipProcessing: true };
-			let photo = await camComp.takePictureAsync(options)
+			let char = getId(), photo = await camComp.takePictureAsync(options)
 			let photo_option = [{ resize: { width, height: width }}]
 			let photo_save_option = { format: ImageManipulator.SaveFormat.JPEG, base64: true }
 
@@ -195,6 +193,12 @@ export default function Addmenu(props) {
       aspect: [4, 3],
       quality: 0
     });
+
+    photo = await ImageManipulator.manipulateAsync(
+      photo.localUri || photo.uri,
+      [{ resize: resizePhoto(photo, width) }],
+      { compress: 0.1 }
+    )
 
 		if (!photo.cancelled) {
 			FileSystem.moveAsync({

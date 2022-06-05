@@ -24,7 +24,7 @@ import {
   getOtherWorkers, getAccounts, getOwnerInfo, logoutUser, getWorkersTime, getAllWorkersTime, 
   getWorkersHour
 } from '../apis/owners'
-import { getLocationProfile, setLocationHours, updateLocation, setReceiveType, getDayHours } from '../apis/locations'
+import { getLocationProfile, getLocationHours, setLocationHours, updateLocation, setReceiveType, getDayHours } from '../apis/locations'
 import { getMenus, removeMenu, addNewMenu } from '../apis/menus'
 import { cancelSchedule, doneService, getAppointments, getCartOrderers, bookWalkIn, removeBooking, getAppointmentInfo } from '../apis/schedules'
 import { removeProduct } from '../apis/products'
@@ -51,7 +51,7 @@ export default function Main(props) {
 	const [appointments, setAppointments] = useState([])
   const [chartInfo, setChartinfo] = useState({ chart: {}, workers: [], workersHour: {}, dayDir: 0, date: {}, loading: false })
   const [bookWalkinconfirm, setBookwalkinconfirm] = useState({ show: false, worker: {}, client: { name: "", cellnumber: "" }, date: {}, confirm: false, note: "", errorMsg: "" })
-  const [removeBookingconfirm, setRemovebookingconfirm] = useState({ show: false, scheduleid: -1, client: { name: "", cellnumber: "" }, workerid: -1, date: {}, confirm: false })
+  const [removeBookingconfirm, setRemovebookingconfirm] = useState({ show: false, scheduleid: -1, client: { name: "", cellnumber: "" }, workerid: -1, date: {}, reason: "", confirm: false })
 
 	const [cartOrderers, setCartorderers] = useState([])
   const [speakInfo, setSpeakinfo] = useState({ orderNumber: "" })
@@ -120,6 +120,7 @@ export default function Main(props) {
     { key: "5", header: "Friday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, working: true, takeShift: "" },
     { key: "6", header: "Saturday", opentime: { hour: "12", minute: "00", period: "AM" }, closetime: { hour: "11", minute: "59", period: "PM" }, working: true, takeShift: "" }
   ])
+  const [hoursInfo, setHoursinfo] = useState({})
   const [getWorkersbox, setGetworkersbox] = useState({ show: false, day: '', workers: [] })
 
 	const getNotificationPermission = async() => {
@@ -229,7 +230,7 @@ export default function Main(props) {
 						if (type == 'store' || type == 'restaurant') {
               getAllCartOrderers()
 						} else {
-              getAppointmentsChart(0)
+              getListAppointments()
 						}
 					})
 				}
@@ -240,6 +241,30 @@ export default function Main(props) {
 				}
 			})
 	}
+  const getTheLocationHours = async() => {
+    const locationid = await AsyncStorage.getItem("locationid")
+
+    getLocationHours(locationid)
+      .then((res) => {
+        if (res.status == 200) {
+          return res.data
+        } 
+      })
+      .then((res) => {
+        if (res) {
+          const { hours } = res
+
+          setHoursinfo(hours)
+        }
+      })
+      .catch((err) => {
+        if (err.response && err.response.status == 400) {
+          const { errormsg, status } = err.response.data
+
+
+        }
+      })
+  }
   const getTheOwnerInfo = async() => {
     const ownerid = await AsyncStorage.getItem("ownerid")
 
@@ -305,132 +330,144 @@ export default function Main(props) {
 				}
 			})
 	}
-  const getAppointmentsChart = async(dayDir) => {
+  const getAppointmentsChart = async(dayDir, dir) => {
     setChartinfo({ ...chartInfo, loading: true })
 
     const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
     const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
     const locationid = await AsyncStorage.getItem("locationid"), today = new Date(), pushtime = 1000 * (60 * 15)
-    let chart, date = new Date(today.getTime()), jsonDate, newWorkersTime = {}, deleteList = []
+    let chart, date = new Date(today.getTime())
 
-    if (dayDir != 0) date.setDate(today.getDate() + dayDir)
+    date.setDate(today.getDate() + dayDir)
 
-    jsonDate = {"day":days[date.getDay()].substr(0, 3),"month":months[date.getMonth()],"date":date.getDate(),"year":date.getFullYear()}
+    let jsonDate, newWorkersTime = {}, deleteList = [], hourInfo = hoursInfo[days[date.getDay()].substr(0, 3)]
+    let current = Date.parse(days[today.getDay()] + " " + months[today.getMonth()] + ", " + today.getDate() + " " + today.getFullYear() + " " + hourInfo["closeHour"] + ":" + hourInfo["closeMinute"])
+    let now = Date.parse(days[today.getDay()] + " " + months[today.getMonth()] + ", " + today.getDate() + " " + today.getFullYear() + " " + today.getHours() + ":" + today.getMinutes())
 
-    let data = { locationid, ownerid: null }
+    if (now > current && dir == null) {
+      getAppointmentsChart(dayDir + 1)
+    } else {
+      if (dayDir != 0) date.setDate(today.getDate() + dayDir)
 
-    getWorkersHour(data)
-      .then((res) => {
-        if (res.status == 200) {
-          return res.data
-        }
-      })
-      .then((res) => {
-        if (res) {
-          let { workersHour } = res
+      jsonDate = {"day":days[date.getDay()].substr(0, 3),"month":months[date.getMonth()],"date":date.getDate(),"year":date.getFullYear()}
 
-          for (let worker in workersHour) {
-            for (let day in workersHour[worker]) {
-              if (day != "scheduled") {
-                let { open, close } = workersHour[worker][day]
+      let data = { locationid, ownerid: null }
 
-                workersHour[worker][day]["open"] = jsonDateToUnix({ ...jsonDate, "hour": open["hour"], "minute": open["minute"] })
-                workersHour[worker][day]["close"] = jsonDateToUnix({ ...jsonDate, "hour": close["hour"], "minute": close["minute"] })
-              } else {
-                let scheduled = workersHour[worker][day]
-
-                for (let info in scheduled) {
-                  scheduled[jsonDateToUnix(JSON.parse(info))] = scheduled[info]
-
-                  deleteList.push(info)
-                }
-
-                deleteList.forEach(function (deleteInfo) {
-                  delete scheduled[deleteInfo]
-                })
-
-                workersHour[worker][day] = scheduled
-              }
-            }
+      getWorkersHour(data)
+        .then((res) => {
+          if (res.status == 200) {
+            return res.data
           }
+        })
+        .then((res) => {
+          if (res) {
+            let { workersHour } = res
 
-          delete jsonDate["hour"]
-          delete jsonDate["minute"]
+            for (let worker in workersHour) {
+              for (let day in workersHour[worker]) {
+                if (day != "scheduled") {
+                  let { open, close } = workersHour[worker][day]
 
-          data = { locationid, jsonDate }
+                  if (open && close) {
+                    workersHour[worker][day]["open"] = jsonDateToUnix({ ...jsonDate, "hour": open["hour"], "minute": open["minute"] })
+                    workersHour[worker][day]["close"] = jsonDateToUnix({ ...jsonDate, "hour": close["hour"], "minute": close["minute"] })
+                  }
+                } else {
+                  let scheduled = workersHour[worker][day]
 
-          getDayHours(data)
-            .then((res) => {
-              if (res.status == 200) {
-                return res.data
-              }
-            })
-            .then((res) => {
-              if (res) {
-                const { opentime, closetime, workers } = res
-                let times = [], chart = {}, openhour = parseInt(opentime["hour"]), openminute = parseInt(opentime["minute"])
-                let closehour = parseInt(closetime["hour"]), closeminute = parseInt(closetime["minute"])
-                let openStr = jsonDate["month"] + " " + jsonDate["date"] + ", " + jsonDate["year"] + " " + openhour + ":" + openminute
-                let closeStr = jsonDate["month"] + " " + jsonDate["date"] + ", " + jsonDate["year"] + " " + closehour + ":" + closeminute
-                let openTimeStr = Date.parse(openStr), closeTimeStr = Date.parse(closeStr), calcTimeStr = openTimeStr
-                let currenttime = Date.now(), key = 0
+                  for (let info in scheduled) {
+                    scheduled[jsonDateToUnix(JSON.parse(info))] = scheduled[info]
 
-                while (calcTimeStr < closeTimeStr - pushtime) {
-                  calcTimeStr += pushtime
+                    deleteList.push(info)
+                  }
 
-                  let timestr = new Date(calcTimeStr)
-                  let hour = timestr.getHours()
-                  let minute = timestr.getMinutes()
-                  let period = hour < 12 ? "AM" : "PM"
-                  let timeDisplay = (
-                    hour <= 12 ? 
-                      hour
-                      :
-                      hour - 12
-                    )
-                    + ":" + 
-                    (minute < 10 ? '0' + minute : minute) + " " + period
-                  let timepassed = currenttime > calcTimeStr
-
-                  jsonDate = { ...jsonDate, day: days[date.getDay()], hour, minute }
-
-                  times.push({
-                    key: "time-" + key + "-" + dayDir,
-                    timeDisplay, time: calcTimeStr, jsonDate,
-                    timepassed
+                  deleteList.forEach(function (deleteInfo) {
+                    delete scheduled[deleteInfo]
                   })
 
-                  key += 1
+                  workersHour[worker][day] = scheduled
                 }
+              }
+            }
 
-                chart = { 
-                  "key": dayDir.toString(), 
-                  "times": times, 
-                  "dateHeader": days[date.getDay()] + ", " + jsonDate["month"] + " " + jsonDate["date"] + ", " + jsonDate["year"]
+            delete jsonDate["hour"]
+            delete jsonDate["minute"]
+
+            data = { locationid, jsonDate }
+
+            getDayHours(data)
+              .then((res) => {
+                if (res.status == 200) {
+                  return res.data
                 }
+              })
+              .then((res) => {
+                if (res) {
+                  const { opentime, closetime, workers } = res
+                  let times = [], chart = {}, openhour = parseInt(opentime["hour"]), openminute = parseInt(opentime["minute"])
+                  let closehour = parseInt(closetime["hour"]), closeminute = parseInt(closetime["minute"])
+                  let openStr = jsonDate["month"] + " " + jsonDate["date"] + ", " + jsonDate["year"] + " " + openhour + ":" + openminute
+                  let closeStr = jsonDate["month"] + " " + jsonDate["date"] + ", " + jsonDate["year"] + " " + closehour + ":" + closeminute
+                  let openTimeStr = Date.parse(openStr), closeTimeStr = Date.parse(closeStr), calcTimeStr = openTimeStr
+                  let currenttime = Date.now(), key = 0
 
-                setChartinfo({ 
-                  ...chartInfo, chart, 
-                  workersHour, workers, 
-                  dayDir, date: jsonDate, 
-                  loading: false 
-                })
-                setViewtype("appointments_chart")
-                setLoaded(true)
-              }
-            })
-            .catch((err) => {
-              if (err.response && err.response.status == 400) {
-                const { errormsg, status } = err.response.data
-              }
-            })
-        }
-      })
-      .catch((err) => {
-        if (err.response && err.response.status == 400) {
-          const { errormsg, status } = err.response.data
-        }
-      })
+                  while (calcTimeStr < closeTimeStr - pushtime) {
+                    calcTimeStr += pushtime
+
+                    let timestr = new Date(calcTimeStr)
+                    let hour = timestr.getHours()
+                    let minute = timestr.getMinutes()
+                    let period = hour < 12 ? "AM" : "PM"
+                    let timeDisplay = (
+                      hour <= 12 ? 
+                        hour == 0 ? 12 : hour
+                        :
+                        hour - 12
+                      )
+                      + ":" + 
+                      (minute < 10 ? '0' + minute : minute) + " " + period
+                    let timepassed = currenttime > calcTimeStr
+
+                    jsonDate = { ...jsonDate, day: days[date.getDay()], hour, minute }
+
+                    times.push({
+                      key: "time-" + key + "-" + dayDir,
+                      timeDisplay, time: calcTimeStr, jsonDate,
+                      timepassed
+                    })
+
+                    key += 1
+                  }
+
+                  chart = { 
+                    "key": dayDir.toString(), 
+                    "times": times, 
+                    "dateHeader": days[date.getDay()] + ", " + jsonDate["month"] + " " + jsonDate["date"] + ", " + jsonDate["year"]
+                  }
+
+                  setChartinfo({ 
+                    ...chartInfo, chart, 
+                    workersHour, workers, 
+                    dayDir, date: jsonDate, 
+                    loading: false 
+                  })
+                  setViewtype("appointments_chart")
+                  setLoaded(true)
+                }
+              })
+              .catch((err) => {
+                if (err.response && err.response.status == 400) {
+                  const { errormsg, status } = err.response.data
+                }
+              })
+          }
+        })
+        .catch((err) => {
+          if (err.response && err.response.status == 400) {
+            const { errormsg, status } = err.response.data
+          }
+        })
+    }
   }
   const removeTheBooking = id => {
     if (!removeBookingconfirm.show) {
@@ -453,14 +490,15 @@ export default function Main(props) {
           }
         })
     } else {
-      const { scheduleid, workerid, date } = removeBookingconfirm
+      const { scheduleid, workerid, date, reason } = removeBookingconfirm
       const newWorkershour = {...chartInfo.workersHour}
+      let data = { scheduleid, reason, type: "cancelSchedule" }
 
       if (date in newWorkershour[workerid]["scheduled"]) {
         delete newWorkershour[workerid]["scheduled"][date]
       }
 
-      removeBooking(scheduleid)
+      removeBooking(data)
         .then((res) => {
           if (res.status == 200) {
             return res.data
@@ -468,12 +506,16 @@ export default function Main(props) {
         })
         .then((res) => {
           if (res) {
-            setRemovebookingconfirm({ ...removeBookingconfirm, confirm: true })
-            setChartinfo({ ...chartInfo, workersHour: newWorkershour })
+            data = { ...data, receiver: res.receiver }
 
-            setTimeout(function () {
-              setRemovebookingconfirm({ ...removeBookingconfirm, show: false, confirm: false })
-            }, 2000)
+            socket.emit("socket/business/cancelSchedule", data, () => {
+              setRemovebookingconfirm({ ...removeBookingconfirm, confirm: true })
+              setChartinfo({ ...chartInfo, workersHour: newWorkershour })
+
+              setTimeout(function () {
+                setRemovebookingconfirm({ ...removeBookingconfirm, show: false, confirm: false })
+              }, 2000)
+            })
           }
         })
         .catch((err) => {
@@ -752,7 +794,9 @@ export default function Main(props) {
             }
           }
 
-          workersHour[workerId]["scheduled"][unix] = parseInt(scheduleid)
+          if (data.type == "makeAppointment" || data.type == "remakeAppointment") {
+            workersHour[workerId]["scheduled"][unix] = parseInt(scheduleid)
+          }
 
           setChartinfo({ ...chartInfo, workersHour })
         }
@@ -771,10 +815,16 @@ export default function Main(props) {
 			}
 		})
 		socket.io.on("close", () => ownerId != null ? setShowdisabledscreen(true) : {})
+
+    return () => {
+      socket.off("updateSchedules")
+      socket.off("updateOrders")
+    }
 	}
   
 	const initialize = () => {
 		getTheLocationProfile()
+    getTheLocationHours()
     getTheOwnerInfo()
 
 		if (Constants.isDevice) getNotificationPermission()
@@ -921,17 +971,10 @@ export default function Main(props) {
   const snapProfile = async() => {
     setAccountform({ ...accountForm, loading: true })
 
-    let letters = [
-      "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", 
-      "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"
-    ]
-    let photo_name_length = Math.floor(Math.random() * (15 - 10)) + 10
-    let char = ""
-
     if (camComp) {
       let options = { quality: 0 };
-      let photo = await camComp.takePictureAsync(options)
-      let photo_option = [{ resize: { width: width, height: width }}]
+      let char = getId(), photo = await camComp.takePictureAsync(options)
+      let photo_option = [{ resize: { width, height: width }}]
       let photo_save_option = { format: ImageManipulator.SaveFormat.JPEG, base64: true }
 
       if (accountForm.camType == "front") {
@@ -943,15 +986,6 @@ export default function Main(props) {
         photo_option,
         photo_save_option
       )
-
-      for (let k = 0; k < photo_name_length; k++) {
-        char += "" + (
-          k % 2 == 0 ? 
-            letters[Math.floor(Math.random() * letters.length)].toUpperCase()
-            :
-            Math.floor(Math.random() * 9) + 0
-        )
-      }
 
       FileSystem.moveAsync({
         from: photo.uri,
@@ -973,25 +1007,17 @@ export default function Main(props) {
     setAccountform({ ...accountForm, loading: true })
     setChoosing(true)
 
-    let letters = [
-      "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", 
-      "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"
-    ]
-    let photo_name_length = Math.floor(Math.random() * (15 - 10)) + 10
-    let char = "", photo = await ImagePicker.launchImageLibraryAsync({
+    let char = getId(), photo = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       aspect: [4, 3],
       quality: 0
     });
 
-    for (let k = 0; k < photo_name_length; k++) {
-      char += "" + (
-        k % 2 == 0 ? 
-          letters[Math.floor(Math.random() * letters.length)].toUpperCase()
-          :
-          Math.floor(Math.random() * 9) + 0
-      )
-    }
+    photo = await ImageManipulator.manipulateAsync(
+      photo.localUri || photo.uri,
+      [{ resize: resizePhoto(photo, width) }],
+      { compress: 0.1 }
+    )
 
     if (!photo.cancelled) {
       FileSystem.moveAsync({
@@ -1059,6 +1085,12 @@ export default function Main(props) {
       aspect: [4, 3],
       quality: 0
     });
+
+    photo = await ImageManipulator.manipulateAsync(
+      photo.localUri || photo.uri,
+      [{ resize: resizePhoto(photo, width) }],
+      { compress: 0.1 }
+    )
 
     if (!photo.cancelled) {
       FileSystem.moveAsync({
@@ -1249,6 +1281,26 @@ export default function Main(props) {
 
       setAccountform({ ...accountForm, workerHours: newWorkerhours })
     }
+  }
+  const updateTime = (index, timetype, dir, open) => {
+    const newDays = [...days]
+    let value, { opentime, closetime } = newDays[index]
+
+    value = open ? opentime : closetime
+    
+    let { hour, minute, period } = timeControl(timetype, value, dir, open)
+
+    value.hour = hour < 10 ? "0" + hour : hour.toString()
+    value.minute = minute < 10 ? "0" + minute : minute.toString()
+    value.period = period
+
+    if (open) {
+      newDays[index].opentime = value
+    } else {
+      newDays[index].closetime = value
+    }
+
+    setDays(newDays)
   }
   const working = index => {
     const newWorkerhours = [...accountForm.workerHours]
@@ -1652,8 +1704,28 @@ export default function Main(props) {
           data.type == "cancelRequest" || 
           data.type == "remakeAppointment"
         ) {
-          getListAppointments()
+          if (viewType == "appointments_list") {
+            getListAppointments()
+          } else if (viewType == "appointments_chart") {
+            const newChartinfo = {...chartInfo}
+            const { workersHour } = newChartinfo
+            const { scheduleid, time, worker } = data.speak
+            const workerId = worker.id.toString(), unix = jsonDateToUnix(time)
+            const scheduled = workersHour[workerId]["scheduled"]
 
+            for (let time in scheduled) {
+              if (scheduled[time] == scheduleid) {
+                delete workersHour[workerId]["scheduled"][time]
+              }
+            }
+
+            if (data.type == "makeAppointment" || data.type == "remakeAppointment") {
+              workersHour[workerId]["scheduled"][unix] = parseInt(scheduleid)
+            }
+
+            setChartinfo({ ...chartInfo, workersHour })
+          }
+            
           speakToWorker(data)
         } else if (data.type == "checkout") {
           getCartOrderers()
@@ -1693,11 +1765,11 @@ export default function Main(props) {
               }
             })
         }
-      };
 
-      return () => {
-        Voice.destroy().then(Voice.removeAllListeners);
-      }
+        return () => {
+          Voice.destroy().then(Voice.removeAllListeners);
+        }
+      };
     }
   }, [speakInfo.orderNumber])
 
@@ -1782,7 +1854,7 @@ export default function Main(props) {
                   <View style={{ borderColor: 'black', borderStyle: 'solid', borderWidth: 2 }}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
                       <View style={styles.column}>
-                        <TouchableOpacity onPress={() => getAppointmentsChart(chartInfo.dayDir - 1)}>
+                        <TouchableOpacity onPress={() => getAppointmentsChart(chartInfo.dayDir - 1, "left")}>
                           <AntDesign name="left" size={wsize(7)}/>
                         </TouchableOpacity>
                       </View>
@@ -1790,7 +1862,7 @@ export default function Main(props) {
                         <Text style={{ fontSize: wsize(8), fontWeight: 'bold', textAlign: 'center' }}>{chartInfo.chart.dateHeader}</Text>
                       </View>
                       <View style={styles.column}>
-                        <TouchableOpacity onPress={() => getAppointmentsChart(chartInfo.dayDir + 1)}>
+                        <TouchableOpacity onPress={() => getAppointmentsChart(chartInfo.dayDir + 1, "right")}>
                           <AntDesign name="right" size={wsize(7)}/>
                         </TouchableOpacity>
                       </View>
@@ -2109,16 +2181,14 @@ export default function Main(props) {
                           setShowmoreoptions({ ...showMoreoptions, infoType: 'information' })
                           setEditinfo({ ...editInfo, show: true, type: 'information' })
                         }}>
-                          <Text style={styles.moreOptionTouchHeader}>Change {header} Info</Text>
+                          <Text style={styles.moreOptionTouchHeader}>Change{header}Info</Text>
                         </TouchableOpacity>
 
                         <TouchableOpacity style={styles.moreOptionTouch} onPress={() => {
                           setShowmoreoptions({ ...showMoreoptions, infoType: 'hours' })
                           setEditinfo({ ...editInfo, show: true, type: 'hours' })
                         }}>
-                          <Text style={styles.moreOptionTouchHeader}>
-                            Change {header} Hour(s)
-                          </Text>
+                          <Text style={styles.moreOptionTouchHeader}>Change{header}Hour(s)</Text>
                         </TouchableOpacity>
 
                         <TouchableOpacity style={styles.moreOptionTouch} onPress={() => {
@@ -2127,18 +2197,27 @@ export default function Main(props) {
                           AsyncStorage.setItem("phase", "list")
 
                           setShowmoreoptions({ ...showMoreoptions, show: false })
-                          props.navigation.dispatch(StackActions.replace("list"));
+
+                          setTimeout(function () {
+                            props.navigation.dispatch(StackActions.replace("list"));
+                          }, 2000)
                         }}>
                           <Text style={styles.moreOptionTouchHeader}>Switch Business</Text>
                         </TouchableOpacity>
 
                         {(locationType == "hair" || locationType == "nail") && (
-                          <TouchableOpacity style={styles.moreOptionTouch} onPress={() => {
-                            setShowmoreoptions({ ...showMoreoptions, infoType: 'receivetype' })
-                            setEditinfo({ ...editInfo, show: true, type: 'receivetype' })
-                          }}>
-                            <Text style={styles.moreOptionTouchHeader}>Edit Appointment Alert Type</Text>
-                          </TouchableOpacity>
+                          <View style={styles.receiveTypesBox}>
+                            <Text style={styles.receiveTypesHeader}>Get appointments</Text>
+
+                            <View style={styles.receiveTypes}>
+                              <TouchableOpacity style={[styles.receiveType, { backgroundColor: locationReceivetype == 'stylist' ? 'black' : 'white' }]} onPress={() => setTheReceiveType('stylist')}>
+                                <Text style={[styles.receiveTypeHeader, { color: locationReceivetype == 'stylist' ? 'white' : 'black' }]}>By stylist(s)</Text>
+                              </TouchableOpacity>
+                              <TouchableOpacity style={[styles.receiveType, { backgroundColor: locationReceivetype == 'owner' ? 'black' : 'white' }]} onPress={() => setTheReceiveType('owner')}>
+                                <Text style={[styles.receiveTypeHeader, { color: locationReceivetype == 'owner' ? 'white' : 'black' }]}>By owner</Text>
+                              </TouchableOpacity>
+                            </View>
+                          </View>
                         )}
                       </>
                     )}
@@ -2180,7 +2259,7 @@ export default function Main(props) {
 
                               {locationInfo == 'destination' && (
                                 <View style={{ alignItems: 'center', width: '100%' }}>
-                                  <Text style={styles.locationHeader}>Your {header} is located at</Text>
+                                  <Text style={styles.locationHeader}>Your{header}is located at</Text>
 
                                   {(locationCoords.longitude && locationCoords.latitude) ? 
                                     <>
@@ -2260,7 +2339,7 @@ export default function Main(props) {
                               )}
 
                               <View style={[styles.cameraContainer, { marginVertical: 20 }]}>
-                                <Text style={styles.header}>Store Logo</Text>
+                                <Text style={styles.header}>{header.substr(1, header.length - 2)}'s Photo</Text>
 
                                 {logo.uri ? (
                                   <>
@@ -2313,7 +2392,7 @@ export default function Main(props) {
 
                           {editInfo.type == 'hours' && (
                             <>
-                              <Text style={[styles.header, { fontSize: wsize(6) }]}>Edit {header} Hour(s)</Text>
+                              <Text style={[styles.header, { fontSize: wsize(6) }]}>Edit{header}Hour(s)</Text>
 
                               {days.map((info, index) => (
                                 <View key={index} style={styles.workerHour}>
@@ -2540,21 +2619,6 @@ export default function Main(props) {
                                   )}
                                 </View>
                               ))}
-                            </View>
-                          )}
-
-                          {editInfo.type == 'receivetype' && (
-                            <View style={styles.receiveTypesBox}>
-                              <Text style={styles.receiveTypesHeader}>How do you want to receive appointments</Text>
-
-                              <View style={styles.receiveTypes}>
-                                <TouchableOpacity style={[styles.receiveType, { backgroundColor: locationReceivetype == 'stylist' ? 'black' : 'white' }]} onPress={() => setTheReceiveType('stylist')}>
-                                  <Text style={[styles.receiveTypeHeader, { color: locationReceivetype == 'stylist' ? 'white' : 'black' }]}>By each stylist</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity style={[styles.receiveType, { backgroundColor: locationReceivetype == 'owner' ? 'black' : 'white' }]} onPress={() => setTheReceiveType('owner')}>
-                                  <Text style={[styles.receiveTypeHeader, { color: locationReceivetype == 'owner' ? 'white' : 'black' }]}>By each owner</Text>
-                                </TouchableOpacity>
-                              </View>
                             </View>
                           )}
                         </View>
@@ -3500,10 +3564,9 @@ export default function Main(props) {
                 {!bookWalkinconfirm.confirm ? 
                   <>
                     <Text style={styles.bookWalkInHeader}>
-                      Make appointment for
-                      {'\n\n' + bookWalkinconfirm.worker.username + '\n\n'}
-                      (walk-in) or (call)
-                      {'\n\n' + displayTime(bookWalkinconfirm.jsonDate)}
+                      (walk-in) or (call) appointment for
+                      {'\n' + bookWalkinconfirm.worker.username}
+                      {'\n' + displayTime(bookWalkinconfirm.jsonDate)}
                     </Text>
 
                     <View style={{ alignItems: 'center' }}>
@@ -3541,35 +3604,38 @@ export default function Main(props) {
       )}
       {removeBookingconfirm.show && (
         <Modal transparent={true}>
-          <View style={styles.removeBookingContainer}>
-            <View style={styles.removeBookingBox}>
-              {!removeBookingconfirm.confirm ? 
-                <>
-                  <Text style={styles.removeBookingHeader}>
-                    Delete appointment for
-                    {'\n\n'}
-                    (walk-in) or (call)
-                    {'\n\n' + displayTime(removeBookingconfirm.date)}
-                    {'\nwith ' + removeBookingconfirm.client.name}
-                  </Text>
+          <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+            <View style={styles.removeBookingContainer}>
+              <View style={styles.removeBookingBox}>
+                {!removeBookingconfirm.confirm ? 
+                  <>
+                    <Text style={styles.removeBookingHeader}>Why cancel? (optional)</Text>
 
-                  <View style={styles.removeBookingActions}>
-                    <TouchableOpacity style={styles.removeBookingAction} onPress={() => setRemovebookingconfirm({ ...removeBookingconfirm, show: false })}>
-                      <Text style={styles.removeBookingActionHeader}>Cancel</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.removeBookingAction} onPress={() => removeTheBooking()}>
-                      <Text style={styles.removeBookingActionHeader}>Ok</Text>
-                    </TouchableOpacity>
-                  </View>
-                </>
-                :
-                <Text style={styles.removeBookingHeader}>
-                  Appointment removed for client: {removeBookingconfirm.client.name}
-                  {'\n' + displayTime(removeBookingconfirm.date)}
-                </Text>
-              }
+                    <TextInput 
+                      placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Write your reason" 
+                      multiline={true} textAlignVertical="top" style={styles.removeBookingInput} 
+                      onChangeText={(reason) => setRemovebookingconfirm({ ...removeBookingconfirm, reason })} autoCorrect={false} 
+                      autoCapitalize="none"
+                    />
+
+                    <View style={styles.removeBookingActions}>
+                      <TouchableOpacity style={styles.removeBookingAction} onPress={() => setRemovebookingconfirm({ ...removeBookingconfirm, show: false })}>
+                        <Text style={styles.removeBookingActionHeader}>Cancel</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity style={styles.removeBookingAction} onPress={() => removeTheBooking()}>
+                        <Text style={styles.removeBookingActionHeader}>Ok</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </>
+                  :
+                  <Text style={styles.removeBookingHeader}>
+                    Appointment removed for client: {removeBookingconfirm.client.name}
+                    {'\n' + displayTime(removeBookingconfirm.date)}
+                  </Text>
+                }
+              </View>
             </View>
-          </View>
+          </TouchableWithoutFeedback>
         </Modal>
       )}
 			{showDisabledscreen && (
@@ -3630,7 +3696,7 @@ const styles = StyleSheet.create({
   chartRow: { flexDirection: 'row', width: '100%' },
   chartTime: { height: 70, width: 100 },
   chartTimeHeader: { fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
-  chartWorker: { alignItems: 'center', borderColor: 'grey', borderStyle: 'solid', borderWidth: 1, paddingVertical: 10 },
+  chartWorker: { alignItems: 'center', borderColor: 'grey', borderStyle: 'solid', borderWidth: 1, paddingVertical: 2 },
   chartWorkerHeader: { fontSize: wsize(5), textAlign: 'center' },
   chartWorkerProfile: { borderRadius: 20, height: 40, overflow: 'hidden', width: 40 },
 
@@ -3766,8 +3832,8 @@ const styles = StyleSheet.create({
   accountEditTouch: { borderRadius: 2, borderStyle: 'solid', borderWidth: 2, marginTop: 5, padding: 5, width: wsize(50) },
   accountEditTouchHeader: { fontSize: wsize(4), textAlign: 'center' },
   
-  receiveTypesBox: { alignItems: 'center', marginHorizontal: 10 },
-  receiveTypesHeader: { fontWeight: 'bold', textAlign: 'center' },
+  receiveTypesBox: { alignItems: 'center', marginHorizontal: 10, marginTop: 30 },
+  receiveTypesHeader: { fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
   receiveTypes: { flexDirection: 'row', justifyContent: 'space-between' },
   receiveType: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: '45%' },
   receiveTypeHeader: { textAlign: 'center' },
@@ -3776,9 +3842,9 @@ const styles = StyleSheet.create({
   updateButtonHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(4) },
 
   bookWalkInContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
-  bookWalkInBox: { backgroundColor: 'white', flexDirection: 'column', height: '70%', justifyContent: 'space-around', width: '70%' },
+  bookWalkInBox: { backgroundColor: 'white', height: '70%', paddingTop: 20, width: '70%' },
   bookWalkInHeader: { fontSize: wsize(6), fontWeight: 'bold', textAlign: 'center' },
-  bookWalkInInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), marginVertical: 10, padding: 2, width: '90%' },
+  bookWalkInInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(6), marginVertical: 10, padding: 2, width: '90%' },
   bookWalkInActions: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
   bookWalkInAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: '40%' },
   bookWalkInActionHeader: { textAlign: 'center' },
@@ -3786,7 +3852,7 @@ const styles = StyleSheet.create({
   removeBookingContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
   removeBookingBox: { backgroundColor: 'white', flexDirection: 'column', height: '70%', justifyContent: 'space-around', width: '70%' },
   removeBookingHeader: { fontSize: wsize(6), fontWeight: 'bold', textAlign: 'center' },
-  removeBookingInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), marginVertical: 10, padding: 2, width: '90%' },
+  removeBookingInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), height: 200, margin: '5%', padding: 10, width: '90%' },
   removeBookingActions: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
   removeBookingAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: '40%' },
   removeBookingActionHeader: { textAlign: 'center' },

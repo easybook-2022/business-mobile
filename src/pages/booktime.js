@@ -9,7 +9,7 @@ import { socket, logo_url } from '../../assets/info'
 import { displayTime, resizePhoto } from 'geottuse-tools'
 
 import { getLocationHours } from '../apis/locations'
-import { getWorkers, getWorkerInfo, getAllWorkersTime, logoutUser } from '../apis/owners'
+import { getWorkers, getStylistInfo, getAllWorkersTime, logoutUser } from '../apis/owners'
 import { getAppointmentInfo, salonChangeAppointment } from '../apis/schedules'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
@@ -26,7 +26,7 @@ export default function Booktime(props) {
 
   const [clientInfo, setClientinfo] = useState({ id: -1, name: "" })
   const [name, setName] = useState()
-  const [allWorkers, setAllworkers] = useState({})
+  const [allStylists, setAllstylists] = useState({})
   const [hoursInfo, setHoursinfo] = useState({})
   const [oldTime, setOldtime] = useState(0)
   const [openTime, setOpentime] = useState({ hour: 0, minute: 0 })
@@ -65,7 +65,7 @@ export default function Booktime(props) {
       ]}
   ], loading: false, errorMsg: "" })
   const [times, setTimes] = useState([])
-  const [selectedWorkerinfo, setSelectedworkerinfo] = useState({ worker: null, workers: [], numWorkers: 0, loading: false })
+  const [selectedStylistinfo, setSelectedstylistinfo] = useState({ worker: null, workers: [], numWorkers: 0, loading: false })
   const [scheduledInfo, setScheduledinfo] = useState({ scheduledIds: {}, scheduledWorkers: {} })
   const [loaded, setLoaded] = useState(false)
   const [step, setStep] = useState(0)
@@ -89,7 +89,7 @@ export default function Booktime(props) {
           setClientinfo({ ...clientInfo, ...client })
           setName(name)
           setOldtime(unixtime)
-          setSelectedworkerinfo(prev => ({ ...prev, worker }))
+          setSelectedstylistinfo(prev => ({ ...prev, worker }))
           getTheLocationHours(unixtime)
         }
       })
@@ -113,15 +113,29 @@ export default function Booktime(props) {
         day.num = 0
         day.noservice = false
 
-        if ((rowindex == 0 && dayindex >= firstDay) || daynum <= numDays) {
+        if (rowindex == 0) {
+          if (dayindex >= firstDay) {
+            datetime = Date.parse(days[dayindex] + " " + months[month] + " " + daynum + " " + year)
+
+            day.passed = datenow > datetime
+
+            day.noservice = selectedStylistinfo.worker != null ? 
+              !(days[dayindex].substr(0, 3) in selectedStylistinfo.worker.days)
+              :
+              !(days[dayindex].substr(0, 3) in allStylists)
+            
+            day.num = daynum
+            daynum++
+          }
+        } else if (daynum <= numDays) {
           datetime = Date.parse(days[dayindex] + " " + months[month] + " " + daynum + " " + year)
 
           day.passed = datenow > datetime
 
-          day.noservice = selectedWorkerinfo.worker != null ? 
-            !(days[dayindex].substr(0, 3) in selectedWorkerinfo.worker.days)
+          day.noservice = selectedStylistinfo.worker != null ? 
+            !(days[dayindex].substr(0, 3) in selectedStylistinfo.worker.days)
             :
-            !(days[dayindex].substr(0, 3) in allWorkers)
+            !(days[dayindex].substr(0, 3) in allStylists)
           
           day.num = daynum
           daynum++
@@ -154,8 +168,8 @@ export default function Booktime(props) {
   }
   const getTimes = () => {
     const { month, day, date, year } = selectedDateinfo
-    let start = day in allWorkers ? allWorkers[day][0]["start"] : openTime.hour + ":" + openTime.minute
-    let end = day in allWorkers ? allWorkers[day][0]["end"] : closeTime.hour + ":" + closeTime.minute
+    let start = day in allStylists ? allStylists[day][0]["start"] : openTime.hour + ":" + openTime.minute
+    let end = day in allStylists ? allStylists[day][0]["end"] : closeTime.hour + ":" + closeTime.minute
     let openStr = month + " " + date + ", " + year + " " + start
     let closeStr = month + " " + date + ", " + year + " " + end
     let openDateStr = Date.parse(openStr), closeDateStr = Date.parse(closeStr), calcDateStr = openDateStr
@@ -182,9 +196,9 @@ export default function Booktime(props) {
       let timetaken = JSON.stringify(scheduledInfo.scheduledIds).includes(calcDateStr.toString())
       let availableService = false, workerIds = []
 
-      if (selectedWorkerinfo.worker != null && day.substr(0, 3) in selectedWorkerinfo.worker.days) {
-        let startTime = selectedWorkerinfo.worker.days[day.substr(0, 3)]["start"]
-        let endTime = selectedWorkerinfo.worker.days[day.substr(0, 3)]["end"]
+      if (selectedStylistinfo.worker != null && day.substr(0, 3) in selectedStylistinfo.worker.days) {
+        let startTime = selectedStylistinfo.worker.days[day.substr(0, 3)]["start"]
+        let endTime = selectedStylistinfo.worker.days[day.substr(0, 3)]["end"]
 
         if (
           calcDateStr >= Date.parse(openStr.substring(0, openStr.length - 5) + startTime) 
@@ -192,11 +206,11 @@ export default function Booktime(props) {
           calcDateStr <= Date.parse(closeStr.substring(0, closeStr.length - 5) + endTime)
         ) {
           availableService = true
-          workerIds = [selectedWorkerinfo.worker.days[day.substr(0, 3)]["workerId"]]
+          workerIds = [selectedStylistinfo.worker.days[day.substr(0, 3)]["workerId"]]
         }
       } else {
-        if (day.substr(0, 3) in allWorkers) {
-          let times = allWorkers[day.substr(0, 3)]
+        if (day.substr(0, 3) in allStylists) {
+          let times = allStylists[day.substr(0, 3)]
           let startTime = "", endTime = ""
 
           times.forEach(function (info) {
@@ -289,7 +303,7 @@ export default function Booktime(props) {
       })
       .then((res) => {
         if (res) {
-          setSelectedworkerinfo(prev => ({ ...prev, workers: res.owners, numWorkers: res.numWorkers, loading: false }))
+          setSelectedstylistinfo(prev => ({ ...prev, workers: res.owners, numWorkers: res.numWorkers, loading: false }))
         }
       })
       .catch((err) => {
@@ -309,7 +323,7 @@ export default function Booktime(props) {
       })
       .then((res) => {
         if (res) {
-          setAllworkers(res.workers)
+          setAllstylists(res.workers)
         }
       })
       .catch((err) => {
@@ -341,10 +355,10 @@ export default function Booktime(props) {
         }
       })
   }
-  const selectWorker = id => {
-    setSelectedworkerinfo({ ...selectedWorkerinfo, loading: true })
+  const selectStylist = id => {
+    setSelectedstylistinfo({ ...selectedStylistinfo, loading: true })
 
-    getWorkerInfo(id)
+    getStylistInfo(id)
       .then((res) => {
         if (res.status == 200) {
           return res.data
@@ -352,12 +366,12 @@ export default function Booktime(props) {
       })
       .then((res) => {
         if (res) {
-          selectedWorkerinfo.workers.forEach(function (item) {
+          selectedStylistinfo.workers.forEach(function (item) {
             item.row.forEach(function (worker) {
               if (worker.id == id) {
                 let workerinfo = {...worker, days: res.days }
 
-                setSelectedworkerinfo({ ...selectedWorkerinfo, show: false, worker: workerinfo, loading: false })
+                setSelectedstylistinfo({ ...selectedStylistinfo, show: false, worker: workerinfo, loading: false })
               }
             })
           })
@@ -410,7 +424,7 @@ export default function Booktime(props) {
     setConfirm({ ...confirm, loading: true })
 
     const { time } = selectedDateinfo
-    const { worker } = selectedWorkerinfo
+    const { worker } = selectedStylistinfo
     const { note, workerIds } = confirm
     const selectedinfo = new Date(time)
     const day = days[selectedinfo.getDay()], month = months[selectedinfo.getMonth()], date = selectedinfo.getDate(), year = selectedinfo.getFullYear()
@@ -508,12 +522,12 @@ export default function Booktime(props) {
 
                 <View style={styles.workersList}>
                   <FlatList
-                    data={selectedWorkerinfo.workers}
+                    data={selectedStylistinfo.workers}
                     renderItem={({ item, index }) => 
                       <View key={item.key} style={styles.workersRow}>
                         {item.row.map(info => (
                           info.id ? 
-                            <TouchableOpacity key={info.key} style={[styles.worker, { backgroundColor: (selectedWorkerinfo.worker && selectedWorkerinfo.worker.id == info.id) ? 'rgba(0, 0, 0, 0.3)' : null }]} disabled={selectedWorkerinfo.loading} onPress={() => selectWorker(info.id)}>
+                            <TouchableOpacity key={info.key} style={[styles.worker, { backgroundColor: (selectedStylistinfo.worker && selectedStylistinfo.worker.id == info.id) ? 'rgba(0, 0, 0, 0.3)' : null }]} disabled={selectedStylistinfo.loading} onPress={() => selectStylist(info.id)}>
                               <View style={styles.workerProfile}>
                                 <Image 
                                   source={info.profile.name ? { uri: logo_url + info.profile.name } : require("../../assets/profilepicture.jpeg")} 
@@ -530,10 +544,10 @@ export default function Booktime(props) {
                     }
                   />
                 </View>
-                {selectedWorkerinfo.worker != null && (
+                {selectedStylistinfo.worker != null && (
                   <View style={styles.chooseWorkerActions}>
                     <TouchableOpacity style={styles.chooseWorkerAction} onPress={() => {
-                      setSelectedworkerinfo({ ...selectedWorkerinfo, worker: null })
+                      setSelectedstylistinfo({ ...selectedStylistinfo, worker: null })
                       getAllTheWorkersTime()
                     }}>
                        <Text style={styles.chooseWorkerActionHeader}>Cancel</Text>
@@ -580,8 +594,8 @@ export default function Booktime(props) {
                                 :
                                 selectedDateinfo.date == day.num ?
                                   <TouchableOpacity key={day.key} style={[styles.dayTouch, { backgroundColor: 'black' }]} onPress={() => {
-                                    if (selectedWorkerinfo.worker != null) {
-                                      selectWorker(selectedWorkerinfo.worker.id)
+                                    if (selectedStylistinfo.worker != null) {
+                                      selectStylist(selectedStylistinfo.worker.id)
                                     } else {
                                       getAllTheWorkersTime()
                                     }
@@ -592,8 +606,8 @@ export default function Booktime(props) {
                                   </TouchableOpacity>
                                   :
                                   <TouchableOpacity key={day.key} style={styles.dayTouch} onPress={() => {
-                                    if (selectedWorkerinfo.worker != null) {
-                                      selectWorker(selectedWorkerinfo.worker.id)
+                                    if (selectedStylistinfo.worker != null) {
+                                      selectStylist(selectedStylistinfo.worker.id)
                                     } else {
                                       getAllTheWorkersTime()
                                     }
@@ -642,8 +656,8 @@ export default function Booktime(props) {
             <View style={styles.actions}>
               {step > 0 && (
                 <TouchableOpacity style={styles.action} onPress={() => {
-                  if (selectedWorkerinfo.worker != null) {
-                    selectWorker(selectedWorkerinfo.worker.id)
+                  if (selectedStylistinfo.worker != null) {
+                    selectStylist(selectedStylistinfo.worker.id)
                   } else {
                     getAllTheWorkersTime()
                   }
@@ -658,8 +672,8 @@ export default function Booktime(props) {
                 <TouchableOpacity style={styles.action} onPress={() => {
                   switch (step) {
                     case 0:
-                      if (selectedWorkerinfo.worker != null) {
-                        selectWorker(selectedWorkerinfo.worker.id)
+                      if (selectedStylistinfo.worker != null) {
+                        selectStylist(selectedStylistinfo.worker.id)
                       }
 
                       getTheLocationHours(oldTime)
@@ -670,8 +684,7 @@ export default function Booktime(props) {
                     case 1:
                       if (selectedDateinfo.date > 0) {
                         setStep(2)
-                        getScheduledAppointments()
-                        //getTimes()
+                        getTimes()
                       } else {
                         setCalendar({ ...calendar, errorMsg: "Please tap on a day" })
                       }

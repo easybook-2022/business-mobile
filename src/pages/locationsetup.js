@@ -374,6 +374,12 @@ export default function Locationsetup({ navigation }) {
       quality: 0
     });
 
+    photo = await ImageManipulator.manipulateAsync(
+      photo.localUri || photo.uri,
+      [{ resize: resizePhoto(photo, width) }],
+      { compress: 0.1 }
+    )
+
 		if (!photo.cancelled) {
 			FileSystem.moveAsync({
 				from: photo.uri,
@@ -525,7 +531,7 @@ export default function Locationsetup({ navigation }) {
           <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
             {setupType == "location" || setupType == "hours" ? 
               <ScrollView style={{ height: '100%', width: '100%' }}>
-                <KeyboardAvoidingView behavior={Platform.OS == "ios" ? "padding" : "position"}>
+                <KeyboardAvoidingView style={{ height: '100%' }} behavior={Platform.OS == "ios" ? "padding" : "position"}>
                   {setupType == "location" && (
                     <View style={styles.locationContainer}>
                       {locationInfo === '' && (

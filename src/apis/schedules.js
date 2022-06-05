@@ -41,8 +41,11 @@ export const bookWalkIn = data => {
   )
 }
 
-export const removeBooking = id => {
-  return axios.get(`${url}/schedules/remove_booking/${id}`)
+export const removeBooking = data => {
+  return axios.post(
+    `${url}/schedules/remove_booking`,
+    data
+  )
 }
 
 export const getOrders = data => {

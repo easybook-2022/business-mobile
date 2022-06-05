@@ -11,7 +11,7 @@ import { Camera } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator'
 import * as ImagePicker from 'expo-image-picker';
 import { StackActions } from '@react-navigation/native';
-import { getId } from 'geottuse-tools';
+import { getId, resizePhoto } from 'geottuse-tools';
 import { saveUserInfo } from '../apis/owners'
 import { getLocationProfile } from '../apis/locations'
 import { ownerGetinInfo, registerInfo, timeControl } from '../../assets/info'
@@ -270,12 +270,10 @@ export default function Register(props) {
 	const snapPhoto = async() => {
     setLoading(true)
 
-		let char = getId()
-
 		if (camComp) {
 			let options = { quality: 0, skipProcessing: true };
-      let photo = await camComp.takePictureAsync(options)
-      let photo_option = [{ resize: { width: width, height: width }}]
+      let char = getId(), photo = await camComp.takePictureAsync(options)
+      let photo_option = [{ resize: { width, height: width }}]
       let photo_save_option = { format: ImageManipulator.SaveFormat.JPEG, base64: true }
 
       if (camType == "front") {
@@ -302,14 +300,19 @@ export default function Register(props) {
 		}
 	}
 	const choosePhoto = async() => {
-    setLoading(true)
     setChoosing(true)
 
 		let char = getId(), photo = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      aspect: [4, 3],
+      aspect: [1, 1],
       quality: 0
     });
+
+    photo = await ImageManipulator.manipulateAsync(
+      photo.localUri || photo.uri,
+      [{ resize: resizePhoto(photo, width) }],
+      { compress: 0.1 }
+    )
 
 		if (!photo.cancelled) {
 			FileSystem.moveAsync({
@@ -321,11 +324,8 @@ export default function Register(props) {
 					uri: `${FileSystem.documentDirectory}/${char}.jpg`,
 					name: `${char}.jpg`, size: { width, height: width }
 				})
-        setLoading(false)
 			})
-		} else {
-      setLoading(false)
-    }
+		}
 
     setChoosing(false)
 	}

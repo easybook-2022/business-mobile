@@ -9,7 +9,7 @@ import * as FileSystem from 'expo-file-system'
 import { Camera } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator'
 import * as ImagePicker from 'expo-image-picker';
-import { getId } from 'geottuse-tools';
+import { getId, resizePhoto } from 'geottuse-tools';
 import { logo_url } from '../../assets/info'
 import { getProductInfo, addNewProduct, updateProduct } from '../apis/products'
 
@@ -330,12 +330,10 @@ export default function Addproduct(props) {
 	const snapPhoto = async() => {
     setImage({ ...image, loading: true })
 
-		let char = getId()
-
 		if (camComp) {
 			let options = { quality: 0, skipProcessing: true };
-			let photo = await camComp.takePictureAsync(options)
-			let photo_option = [{ resize: { width: width, height: width }}]
+			let char = getId(), photo = await camComp.takePictureAsync(options)
+			let photo_option = [{ resize: { width, height: width }}]
 			let photo_save_option = { format: ImageManipulator.SaveFormat.JPEG, base64: true }
 
       if (camType == "front") {
@@ -365,12 +363,17 @@ export default function Addproduct(props) {
 	const choosePhoto = async() => {
     setChoosing(true)
 
-		let char = getId(), captured, self = this
-		let photo = await ImagePicker.launchImageLibraryAsync({
+		let char = getId(), photo = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       aspect: [4, 3],
       quality: 0
     });
+
+    photo = await ImageManipulator.manipulateAsync(
+      photo.localUri || photo.uri,
+      [{ resize: resizePhoto(photo, width) }],
+      { compress: 0.1 }
+    )
 
 		if (!photo.cancelled) {
 			FileSystem.moveAsync({
@@ -380,7 +383,7 @@ export default function Addproduct(props) {
 			.then(() => {
 				setImage({ 
           ...image, uri: `${FileSystem.documentDirectory}/${char}.jpg`, name: `${char}.jpg`, loading: false, 
-          size: { width, height: width }
+          size: { width: photo.width, height: photo.height }
         })
 				setErrormsg('')
 			})

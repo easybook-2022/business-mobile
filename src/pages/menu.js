@@ -450,11 +450,9 @@ export default function Menu(props) {
 	const snapPhoto = async() => {
     setUploadmenubox({ ...uploadMenubox, loading: true })
 
-		let char = getId()
-
 		if (camComp) {
       let options = { quality: 0, skipProcessing: true };
-      let photo = await camComp.takePictureAsync(options)
+      let char = getId(), photo = await camComp.takePictureAsync(options)
       let photo_option = [{ resize: { height, width }}]
       let photo_save_option = { format: ImageManipulator.SaveFormat.JPEG, base64: true }
 
@@ -492,6 +490,12 @@ export default function Menu(props) {
       quality: 0
     });
 
+    photo = await ImageManipulator.manipulateAsync(
+      photo.localUri || photo.uri,
+      [{ resize: resizePhoto(photo, width) }],
+      { compress: 0.1 }
+    )
+
 		if (!photo.cancelled) {
 			FileSystem.moveAsync({
 				from: photo.uri,
@@ -505,7 +509,9 @@ export default function Menu(props) {
           action: 'choose'
         })
 			})
-		}
+		} else {
+      setUploadmenubox({ ...uploadMenubox, loading: false })
+    }
 	}
 	const uploadMenuphoto = async() => {
     setUploadmenubox({ ...uploadMenubox, loading: true })
