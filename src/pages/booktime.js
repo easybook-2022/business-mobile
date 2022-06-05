@@ -27,6 +27,7 @@ export default function Booktime(props) {
   const [clientInfo, setClientinfo] = useState({ id: -1, name: "" })
   const [name, setName] = useState()
   const [allWorkers, setAllworkers] = useState({})
+  const [hoursInfo, setHoursinfo] = useState({})
   const [oldTime, setOldtime] = useState(0)
   const [openTime, setOpentime] = useState({ hour: 0, minute: 0 })
   const [closeTime, setClosetime] = useState({ hour: 0, minute: 0 })
@@ -104,28 +105,15 @@ export default function Booktime(props) {
     let currTime = new Date(), currDate = 0, currDay = ''
     let datenow = Date.parse(days[currTime.getDay()] + " " + months[currTime.getMonth()] + " " + currTime.getDate() + " " + year)
     let firstDay = (new Date(year, month)).getDay(), numDays = 32 - new Date(year, month, 32).getDate(), daynum = 1
-    let data = calendar.data, datetime = 0
+    let data = calendar.data, datetime = 0, hourInfo, timeNow, hourNow = currTime.getHours(), minuteNow = currTime.getMinutes()
+    let current, now
 
     data.forEach(function (info, rowindex) {
       info.row.forEach(function (day, dayindex) {
         day.num = 0
         day.noservice = false
 
-        if (rowindex == 0) {
-          if (dayindex >= firstDay) {
-            datetime = Date.parse(days[dayindex] + " " + months[month] + " " + daynum + " " + year)
-
-            day.passed = datenow > datetime
-
-            day.noservice = selectedWorkerinfo.worker != null ? 
-              !(days[dayindex].substr(0, 3) in selectedWorkerinfo.worker.days)
-              :
-              !(days[dayindex].substr(0, 3) in allWorkers)
-            
-            day.num = daynum
-            daynum++
-          }
-        } else if (daynum <= numDays) {
+        if ((rowindex == 0 && dayindex >= firstDay) || daynum <= numDays) {
           datetime = Date.parse(days[dayindex] + " " + months[month] + " " + daynum + " " + year)
 
           day.passed = datenow > datetime
@@ -140,8 +128,22 @@ export default function Booktime(props) {
         }
 
         if (day.num > 0 && (!day.passed && !day.noservice) && currDate == 0) {
-          currDate = day.num
-          currDay = days[dayindex]
+          currDay = days[dayindex].substr(0, 3)
+
+          if (currDay in hoursInfo) {
+            hourInfo = hoursInfo[currDay]
+
+            current = Date.parse(days[dayindex] + " " + months[month] + ", " + day.num + " " + year + " " + hourInfo["closeHour"] + ":" + hourInfo["closeMinute"])
+            now = Date.parse(days[currTime.getDay()] + " " + months[currTime.getMonth()] + ", " + currTime.getDate() + " " + currTime.getFullYear() + " " + currTime.getHours() + ":" + currTime.getMinutes())
+
+            if (now < current) {
+              currDate = day.num
+            } else {
+              day.passed = true
+            }
+          } else {
+            day.noservice = true
+          }
         }
       })
     })
@@ -240,9 +242,8 @@ export default function Booktime(props) {
   const getTheLocationHours = async(time) => {
     const locationid = await AsyncStorage.getItem("locationid")
     const day = selectedDateinfo.day ? selectedDateinfo.day : new Date(Date.now()).toString().split(" ")[0]
-    const data = { locationid, day: day.substr(0, 3) }
 
-    getLocationHours(data)
+    getLocationHours(locationid)
       .then((res) => {
         if (res.status == 200) {
           return res.data
@@ -250,10 +251,11 @@ export default function Booktime(props) {
       })
       .then((res) => {
         if (res) {
-          const { openTime, closeTime } = res
+          const { hours } = res
+          const timeInfo = hours[day.substr(0, 3)]
 
-          let openHour = openTime.hour, openMinute = openTime.minute, openPeriod = openTime.period
-          let closeHour = closeTime.hour, closeMinute = closeTime.minute, closePeriod = closeTime.period
+          let openHour = timeInfo["openHour"], openMinute = timeInfo["openMinute"], openPeriod = timeInfo["openPeriod"]
+          let closeHour = timeInfo["closeHour"], closeMinute = timeInfo["closeMinute"], closePeriod = timeInfo["closePeriod"]
 
           let selectedTime = new Date(time)
           let selectedDay = null, selectedDate = null, selectedMonth = null
@@ -264,6 +266,7 @@ export default function Booktime(props) {
 
           getCalendar(selectedTime.getMonth(), selectedTime.getFullYear())
           setSelecteddateinfo({ ...selectedDateinfo, month: selectedMonth, year: selectedTime.getFullYear(), day: selectedDay.substr(0, 3), date: selectedDate, time })
+          setHoursinfo(hours)
           setOpentime({ ...openTime, hour: openHour, minute: openMinute })
           setClosetime({ ...closeTime, hour: closeHour, minute: closeMinute })
           setLoaded(true)

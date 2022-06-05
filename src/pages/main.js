@@ -229,7 +229,9 @@ export default function Main(props) {
 						if (type == 'store' || type == 'restaurant') {
               getAllCartOrderers()
 						} else {
-							getListAppointments()
+							//getListAppointments()
+              getAppointmentsChart(1)
+              setViewtype("appointments_chart")
 						}
 					})
 				}
@@ -295,7 +297,6 @@ export default function Main(props) {
 			.then(async(res) => {
 				if (res) {
 					setAppointments(res.appointments)
-					setViewtype('appointments_list')
           setLoaded(true)
 				}
 			})
@@ -311,7 +312,7 @@ export default function Main(props) {
     const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
     const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
     const locationid = await AsyncStorage.getItem("locationid"), today = new Date(), pushtime = 1000 * (60 * 15)
-    let chart, date = new Date(today.getTime()), jsonDate, newWorkersTime = {}
+    let chart, date = new Date(today.getTime()), jsonDate, newWorkersTime = {}, deleteList = []
 
     if (dayDir != 0) date.setDate(today.getDate() + dayDir)
 
@@ -342,8 +343,12 @@ export default function Main(props) {
                 for (let info in scheduled) {
                   scheduled[jsonDateToUnix(JSON.parse(info))] = scheduled[info]
 
-                  delete scheduled[info]
+                  deleteList.push(info)
                 }
+
+                deleteList.forEach(function (deleteInfo) {
+                  delete scheduled[deleteInfo]
+                })
 
                 workersHour[worker][day] = scheduled
               }
@@ -390,16 +395,13 @@ export default function Main(props) {
 
                   jsonDate = { ...jsonDate, day: days[date.getDay()], hour, minute }
 
-                  if (!timepassed) {
-                    if (key == 0) alert(openStr)
-                    times.push({
-                      key: "time-" + key + "-" + dayDir,
-                      timeDisplay, time: calcTimeStr, jsonDate,
-                      timepassed
-                    })
+                  times.push({
+                    key: "time-" + key + "-" + dayDir,
+                    timeDisplay, time: calcTimeStr, jsonDate,
+                    timepassed
+                  })
 
-                    key += 1
-                  }
+                  key += 1
                 }
 
                 chart = { 
@@ -414,7 +416,6 @@ export default function Main(props) {
                   dayDir, date: jsonDate, 
                   loading: false 
                 })
-                setViewtype("appointments_chart") 
                 setLoaded(true)
               }
             })
@@ -430,6 +431,25 @@ export default function Main(props) {
           const { errormsg, status } = err.response.data
         }
       })
+  }
+  const updateAppointments = data => {
+    const newChartinfo = {...chartInfo}
+    const { workersHour } = newChartinfo
+    const { scheduleid, time, worker } = data.speak
+    const workerId = worker.id.toString(), unix = jsonDateToUnix(time)
+
+    if (workerId in workersHour) {
+      if (unix in workersHour[workerId]["scheduled"]) {
+        delete workersHour[workerId]["scheduled"][unix]
+      } else {
+        workersHour[workerId]["scheduled"][unix] = parseInt(scheduleid)
+      }
+    }
+
+    setChartinfo({ ...newChartinfo, workersHour })
+    getListAppointments()
+
+    speakToWorker(data)
   }
   const removeTheBooking = id => {
     if (!removeBookingconfirm.show) {
@@ -736,30 +756,7 @@ export default function Main(props) {
         data.type == "cancelRequest" || 
         data.type == "remakeAppointment"
       ) {
-        alert(viewType)
-        if (viewType == "appointments_list") {
-          getListAppointments()
-        } else if (viewType == "appointments_chart") {
-          const newWorkershour = {...chartInfo.workersHour}
-          const { scheduleid, time, worker } = data.speak
-          const workerId = worker.id.toString()
-
-          alert(workerId + " : " + JSON.stringify(newWorkershour) + " : " + (workerId in newWorkershour))
-
-          // if (workerId in newWorkershour) {
-          //   if (jsonDateToUnix(time) in newWorkershour[workerId]["scheduled"]) {
-          //     delete newWorkershour[workerId]["scheduled"][jsonDateToUnix(time)]
-          //   } else {
-          //     newWorkershour[workerId]["scheduled"][jsonDateToUnix(time)] = scheduleid
-          //   }
-
-          //   setChartinfo({ ...chartInfo, workersHour: newWorkershour })
-          // } else {
-
-          // }
-        } 
-
-        speakToWorker(data)
+        updateAppointments(data)
       }
 		})
 		socket.on("updateOrders", data => {
@@ -1719,16 +1716,24 @@ export default function Main(props) {
               <Text style={styles.header}>{(locationType == 'hair' || locationType == 'nail') ? 'Appointment(s)' : 'Orderer(s)'}</Text>
   					</View>
 
-            <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginVertical: 10 }}>
-              <View style={styles.viewTypes}>
-                <TouchableOpacity style={styles.viewType} onPress={() => getListAppointments()}>
-                  <Text style={styles.viewTypeHeader}>See{'\n'}<Text style={{ fontWeight: 'bold' }}>Your(s)</Text></Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.viewType} onPress={() => getAppointmentsChart(0)}>
-                  <Text style={styles.viewTypeHeader}>See{'\n'}<Text style={{ fontWeight: 'bold' }}>All Stylist(s)</Text></Text>
-                </TouchableOpacity>
+            {(locationType == "hair" || locationType == "nail") && (
+              <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginVertical: 10 }}>
+                <View style={styles.viewTypes}>
+                  <TouchableOpacity style={styles.viewType} onPress={() => {
+                    getListAppointments()
+                    setViewtype("appointments_list")
+                  }}>
+                    <Text style={styles.viewTypeHeader}>See{'\n'}<Text style={{ fontWeight: 'bold' }}>Your(s)</Text></Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.viewType} onPress={() => {
+                    getAppointmentsChart(0)
+                    setViewtype("appointments_chart")
+                  }}>
+                    <Text style={styles.viewTypeHeader}>See{'\n'}<Text style={{ fontWeight: 'bold' }}>All Stylist(s)</Text></Text>
+                  </TouchableOpacity>
+                </View>
               </View>
-            </View>
+            )}
 
             {viewType == "appointments_list" && ( 
               appointments.length > 0 ? 
@@ -1776,7 +1781,7 @@ export default function Main(props) {
                 </View>
             )}
 
-            {viewType == "appointments_chart" && (
+            {(viewType == "appointments_chart" && chartInfo.workersHour != {}) && (
               !chartInfo.loading ? 
                 <ScrollView horizontal>
                   <View style={{ borderColor: 'black', borderStyle: 'solid', borderWidth: 2 }}>
@@ -1797,7 +1802,7 @@ export default function Main(props) {
                     </View>
                     <View style={styles.chartRow}>
                       {chartInfo.workers.map(worker => (
-                        <View key={worker.key} style={[styles.chartWorker, { width: width / workers.length } ]}>
+                        <View key={worker.key} style={[styles.chartWorker, { width: workers.length < 5 ? (width / workers.length) : 200 } ]}>
                           <Text style={styles.chartWorkerHeader}>{worker.username}</Text>
                           <View style={styles.chartWorkerProfile}>
                             <Image
@@ -1809,8 +1814,11 @@ export default function Main(props) {
                       ))}
                     </View>
 
+                    <Text>{JSON.stringify(chartInfo.chart)}</Text>
+                    <Text>{JSON.stringify(chartInfo.workersHour)}</Text>
+
                     <ScrollView>
-                      {chartInfo.chart.times.map(item => (
+                      {/*chartInfo.chart.times.map(item => (
                         <View key={item.key} style={styles.chartRow}>
                           <View style={styles.chartRow}>
                             {chartInfo.workers.map(worker => (
@@ -1820,6 +1828,8 @@ export default function Main(props) {
                                     item.time >= workersHour[worker.id][currDay]["open"] && item.time < workersHour[worker.id][currDay]["close"] // working times
                                     &&
                                     workersHour[worker.id][currDay]["working"]
+                                    &&
+                                    !item.timepassed
                                   )
                                 }
                                 key={worker.key}
@@ -1831,8 +1841,10 @@ export default function Main(props) {
                                       item.time >= workersHour[worker.id][currDay]["open"] && item.time < workersHour[worker.id][currDay]["close"]
                                       &&
                                       workersHour[worker.id][currDay]["working"]
+                                      &&
+                                      !item.timepassed
                                     ) ? 1 : 0.3,
-                                    width: width / workers.length
+                                    width: workers.length < 5 ? (width / workers.length) : 200
                                   }
                                 ]}
                                 onPress={() => {
@@ -1858,7 +1870,7 @@ export default function Main(props) {
                             ))}
                           </View>
                         </View>
-                      ))}
+                      ))*/}
                     </ScrollView>
                   </View>
                 </ScrollView>
@@ -2787,7 +2799,7 @@ export default function Main(props) {
                                         </>
                                         :
                                         <>
-                                          <Text style={styles.accountformInputHeader}>Enter verify code from your message:</Text>
+                                          <Text style={styles.accountformInputHeader}>Enter verify code from new stylist's message:</Text>
                                           <TextInput style={styles.accountformInputInput} onChangeText={(usercode) => {
                                             if (usercode.length == 6) {
                                               Keyboard.dismiss()
@@ -2808,7 +2820,7 @@ export default function Main(props) {
 
                                   {accountForm.addStep == 1 && (
                                     <View style={styles.accountformInputField}>
-                                      <Text style={styles.accountformInputHeader}>Your name:</Text>
+                                      <Text style={styles.accountformInputHeader}>New stylist's name:</Text>
                                       <TextInput style={styles.accountformInputInput} onChangeText={(username) => setAccountform({ ...accountForm, username })} value={accountForm.username} autoCorrect={false}/>
                                     </View>
                                   )}
