@@ -995,7 +995,7 @@ export default function Menu(props) {
 
 const styles = StyleSheet.create({
 	menuBox: { backgroundColor: 'white', height: '100%', width: '100%' },
-	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
+	box: { flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 
   menusHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(10), fontWeight: 'bold', textAlign: 'center' },
 	menuRow: { flexDirection: 'row', justifyContent: 'space-between', padding: 5 },

@@ -20,7 +20,7 @@ import Voice from '@react-native-voice/voice';
 import { loginInfo, ownerGetinInfo, socket, logo_url, useSpeech, timeControl } from '../../assets/info'
 import { getId, displayTime, resizePhoto, displayPhonenumber } from 'geottuse-tools'
 import { 
-  updateNotificationToken, verifyUser, addOwner, updateOwner, deleteOwner, getWorkerInfo, 
+  updateNotificationToken, verifyUser, addOwner, updateOwner, deleteOwner, getStylistInfo, 
   getOtherWorkers, getAccounts, getOwnerInfo, logoutUser, getWorkersTime, getAllWorkersTime, 
   getWorkersHour
 } from '../apis/owners'
@@ -1430,7 +1430,7 @@ export default function Main(props) {
   }
   const deleteTheOwner = id => {
     if (!deleteOwnerbox.show) {
-      getWorkerInfo(id)
+      getStylistInfo(id)
         .then((res) => {
           if (res.status == 200) {
             return res.data
@@ -3521,20 +3521,22 @@ export default function Main(props) {
                   {deleteOwnerbox.show && (
                     <View style={styles.deleteOwnerBox}>
                       <View style={styles.deleteOwnerContainer}>
-                        <View style={styles.deleteOwnerProfile}>
-                          <Image 
-                            style={resizePhoto(deleteOwnerbox.profile, wsize(40))} 
-                            source={deleteOwnerbox.profile.name ? { uri: logo_url + deleteOwnerbox.profile.name } : require("../../assets/profilepicture.jpeg")}
-                          />
+                        <View style={{ alignItems: 'center' }}>
+                          <View style={styles.deleteOwnerProfile}>
+                            <Image 
+                              style={resizePhoto(deleteOwnerbox.profile, wsize(40))} 
+                              source={deleteOwnerbox.profile.name ? { uri: logo_url + deleteOwnerbox.profile.name } : require("../../assets/profilepicture.jpeg")}
+                            />
+                          </View>
+
+                          <Text style={styles.deleteOwnerHeader}>
+                            {deleteOwnerbox.username}
+                            {'\nWorking ' + deleteOwnerbox.numWorkingdays + ' day(s)'}
+                          </Text>
                         </View>
 
-                        <Text style={styles.deleteOwnerHeader}>
-                          {deleteOwnerbox.username}
-                          {'\n\nWorking ' + deleteOwnerbox.numWorkingdays + ' day(s)'}
-                        </Text>
-
                         <View>
-                          <Text style={styles.deleteOwnerActionsHeader}>Are you sure you want to remove this stylist</Text>
+                          <Text style={styles.deleteOwnerActionsHeader}>Delete stylist</Text>
                           <View style={styles.deleteOwnerActions}>
                             <TouchableOpacity style={styles.deleteOwnerAction} onPress={() => {
                               setEditinfo({ ...editInfo, show: true })
@@ -3810,10 +3812,10 @@ const styles = StyleSheet.create({
   deleteOwnerBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
   deleteOwnerContainer: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '100%', justifyContent: 'space-between', paddingVertical: 20, width: '100%' },
   deleteOwnerProfile: { borderRadius: wsize(40) / 2, height: wsize(40), overflow: 'hidden', width: wsize(40) },
-  deleteOwnerHeader: { fontSize: wsize(5), fontWeight: 'bold', marginVertical: 30, textAlign: 'center' },
+  deleteOwnerHeader: { fontSize: wsize(6), fontWeight: 'bold', marginVertical: 10, textAlign: 'center' },
   deleteOwnerActionsHeader: { fontSize: wsize(6), fontWeight: 'bold', textAlign: 'center' },
   deleteOwnerActions: { flexDirection: 'row', justifyContent: 'space-around' },
-  deleteOwnerAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 10, width: wsize(30) },
+  deleteOwnerAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 10, width: wsize(30) },
   deleteOwnerActionHeader: { fontSize: wsize(4), textAlign: 'center' },
 
   editInfoBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
