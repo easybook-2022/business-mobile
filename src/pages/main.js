@@ -2081,7 +2081,7 @@ export default function Main(props) {
                     <AntDesign name="close" size={wsize(7)}/>
                   </TouchableOpacity>
 
-                  <Text style={styles.showInfoHeader}>Salon's hour(s)</Text>
+                  <Text style={styles.showInfoHeader}>{header.substr(1, header.length - 2)}'s hour(s)</Text>
 
                   {showInfo.locationHours.map(info => (
                     !info.close && (
@@ -2200,7 +2200,7 @@ export default function Main(props) {
 
                           setTimeout(function () {
                             props.navigation.dispatch(StackActions.replace("list"));
-                          }, 2000)
+                          }, 1000)
                         }}>
                           <Text style={styles.moreOptionTouchHeader}>Switch Business</Text>
                         </TouchableOpacity>

@@ -15,7 +15,7 @@ import MapView, { Marker } from 'react-native-maps';
 import { StackActions } from '@react-navigation/native';
 import { setupLocation } from '../apis/locations'
 import { registerInfo, timeControl } from '../../assets/info'
-import { getId, displayPhonenumber } from 'geottuse-tools'
+import { getId, displayPhonenumber, resizePhoto } from 'geottuse-tools'
 
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5'
 import AntDesign from 'react-native-vector-icons/AntDesign'
@@ -642,7 +642,7 @@ export default function Locationsetup({ navigation }) {
 
                           <View style={{ alignItems: 'center', width: '100%' }}>
                             {daysArr.map((day, index) => (
-                              <TouchableOpacity key={index} style={daysInfo.working.indexOf(day) > -1 ? styles.openingDayTouchSelected : styles.openingDayTouch} onPress={() => {
+                              <TouchableOpacity key={index} style={[styles.openingDayTouch, { backgroundColor: daysInfo.working.indexOf(day) > -1 ? 'rgba(0, 0, 0, 0.6)' : 'transparent' }]} onPress={() => {
                                 const newWorking = [...daysInfo.working]
 
                                 if (newWorking[index] == '') {
@@ -653,7 +653,7 @@ export default function Locationsetup({ navigation }) {
 
                                 setDaysinfo({ ...daysInfo, working: newWorking })
                               }}>
-                                <Text style={styles.openingDayTouchHeader}>{day}</Text>
+                                <Text style={[styles.openingDayTouchHeader, { color: daysInfo.working.indexOf(day) > -1 ? 'white' : 'black' }]}>{day}</Text>
                               </TouchableOpacity>
                             ))}
                           </View>
@@ -1011,7 +1011,6 @@ const styles = StyleSheet.create({
 
   // select opening days
   openingDayTouch: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: '90%' },
-  openingDayTouchSelected: { backgroundColor: 'rgba(0, 0, 0, 0.6)', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: '90%' },
   openingDayTouchHeader: { fontSize: wsize(5), textAlign: 'center' },
 
   daysBack: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, marginTop: 20, padding: 10 },

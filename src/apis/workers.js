@@ -2,28 +2,28 @@ import axios from 'axios'
 import { url } from '../../assets/info'
 
 export const verifyUser = cellnumber => {
-	return axios.get(`${url}/owners/owner_verify/${cellnumber}`)
+	return axios.get(`${url}/workers/worker_verify/${cellnumber}`)
 }
 
 export const loginUser = data => {
 	return axios.post(
-		`${url}/owners/owner_login`,
+		`${url}/workers/worker_login`,
 		data
 	)
 }
 
 export const logoutUser = id => {
-  return axios.get(`${url}/owners/owner_logout/${id}`)
+  return axios.get(`${url}/workers/worker_logout/${id}`)
 }
 
 export const registerUser = data => {
   return axios.post(
-    `${url}/owners/owner_register`,
+    `${url}/workers/worker_register`,
     data
   )
 }
 
-export const saveUserInfo = data => {
+export const saveWorkerInfo = data => {
   const form = new FormData()
   const { uri, name, type = "image/jpeg", size } = data.profile
   
@@ -38,12 +38,12 @@ export const saveUserInfo = data => {
   form.append("hours", JSON.stringify(data.hours))
 
   return axios.post(
-    `${url}/owners/save_user_info`,
+    `${url}/workers/save_worker_info`,
     form
   )
 }
 
-export const addOwner = data => {
+export const addWorker = data => {
 	const form = new FormData()
 	const { uri, name, type = "image/jpeg", size } = data.profile
 
@@ -60,15 +60,15 @@ export const addOwner = data => {
 	}
 
 	return axios.post(
-		`${url}/owners/add_owner`,
+		`${url}/workers/add_worker`,
 		form
 	)
 }
 
-export const updateOwner = data => {
+export const updateWorker = data => {
 	const form = new FormData()
 
-  form.append("ownerid", data.ownerid)
+  form.append("workerid", data.workerid)
   form.append("type", data.type)
 
   switch (data.type) {
@@ -103,78 +103,74 @@ export const updateOwner = data => {
   }
 
 	return axios.post(
-		`${url}/owners/update_owner`,
+		`${url}/workers/update_worker`,
 		form
 	)
 }
 
-export const deleteOwner = id => {
-  return axios.get(`${url}/owners/delete_owner/${id}`)
+export const deleteWorker = id => {
+  return axios.get(`${url}/workers/delete_worker/${id}`)
 }
 
 export const getWorkers = id => {
-  return axios.get(`${url}/owners/get_workers/${id}`)
+  return axios.get(`${url}/workers/get_workers/${id}`)
 }
 
-export const getAllStylists = id => {
-  return axios.get(`${url}/owners/get_all_stylists/${id}`)
-}
-
-export const getStylistInfo = id => {
-  return axios.get(`${url}/owners/get_stylist_info/${id}`)
+export const getWorkerInfo = id => {
+  return axios.get(`${url}/workers/get_worker_info/${id}`)
 }
 
 export const getAllWorkersTime = id => {
-  return axios.get(`${url}/owners/get_all_workers_time/${id}`)
+  return axios.get(`${url}/workers/get_all_workers_time/${id}`)
 }
 
 export const getWorkersHour = data => {
   return axios.post(
-    `${url}/owners/get_workers_hour`,
+    `${url}/workers/get_workers_hour`,
     data
   )
 }
 
 export const getOtherWorkers = data => {
   return axios.post(
-    `${url}/owners/get_other_workers`,
+    `${url}/workers/get_other_workers`,
     data
   )
 }
 
 export const getWorkersTime = id => {
-  return axios.get(`${url}/owners/get_workers_time/${id}`)
+  return axios.get(`${url}/workers/get_workers_time/${id}`)
 }
 
 export const getOwnerInfo = id => {
-  return axios.get(`${url}/owners/get_owner_info/${id}`)
+  return axios.get(`${url}/workers/get_owner_info/${id}`)
 }
 
-export const setOwnerHours = data => {
+export const setWorkerHours = data => {
   return axios.post(
-    `${url}/owners/set_owner_hours`,
+    `${url}/workers/set_worker_hours`,
     data
   )
 }
 
 export const updateNotificationToken = data => {
 	return axios.post(
-		`${url}/owners/update_owner_notification_token`,
+		`${url}/workers/update_worker_notification_token`,
 		data
 	)
 }
 
 export const getAccounts = id => {
-	return axios.get(`${url}/owners/get_accounts/${id}`)
+	return axios.get(`${url}/workers/get_accounts/${id}`)
 }
 
 export const getCode = cellnumber => {
-	return axios.get(`${url}/owners/get_reset_code/${cellnumber}`)
+	return axios.get(`${url}/workers/get_reset_code/${cellnumber}`)
 }
 
 export const resetPassword = data => {
 	return axios.post(
-		`${url}/owners/reset_password`,
+		`${url}/workers/reset_password`,
 		data
 	)
 }

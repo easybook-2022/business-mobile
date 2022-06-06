@@ -525,7 +525,7 @@ export default function Register(props) {
 
                         setDaysinfo({ ...daysInfo, working: newWorking })
                       }}>
-                        <Text style={styles.workerDayTouchHeader}>{day}</Text>
+                        <Text style={[styles.workerDayTouchHeader, { color: daysInfo.working.indexOf(day) > -1 ? 'white' : 'black' }]}>{day}</Text>
                       </TouchableOpacity>
                     ))}
 
