@@ -48,7 +48,7 @@ export default function Main(props) {
 	const [storeIcon, setStoreicon] = useState('')
 	const [locationType, setLocationtype] = useState('')
 
-	const [appointments, setAppointments] = useState([])
+	const [appointments, setAppointments] = useState({ list: [], loading: false })
   const [chartInfo, setChartinfo] = useState({ chart: {}, workers: [], workersHour: {}, dayDir: 0, date: {}, loading: false })
   const [bookWalkinconfirm, setBookwalkinconfirm] = useState({ show: false, worker: {}, client: { name: "", cellnumber: "" }, date: {}, confirm: false, note: "", errorMsg: "" })
   const [removeBookingconfirm, setRemovebookingconfirm] = useState({ show: false, scheduleid: -1, client: { name: "", cellnumber: "" }, workerid: -1, date: {}, reason: "", confirm: false })
@@ -307,6 +307,9 @@ export default function Main(props) {
   }
 
 	const getListAppointments = async() => {
+    setViewtype("appointments_list")
+    setAppointments({ ...appointments, loading: true })
+
 		const ownerid = await AsyncStorage.getItem("ownerid")
 		const locationid = await AsyncStorage.getItem("locationid")
 		const data = { ownerid, locationid }
@@ -319,8 +322,7 @@ export default function Main(props) {
 			})
 			.then(async(res) => {
 				if (res) {
-					setAppointments(res.appointments)
-          setViewtype("appointments_list")
+					setAppointments({ ...appointments, list: res.appointments, loading: false })
           setLoaded(true)
 				}
 			})
@@ -331,6 +333,7 @@ export default function Main(props) {
 			})
 	}
   const getAppointmentsChart = async(dayDir, dir) => {
+    setViewtype("appointments_chart")
     setChartinfo({ ...chartInfo, loading: true })
 
     const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
@@ -340,7 +343,7 @@ export default function Main(props) {
 
     date.setDate(today.getDate() + dayDir)
 
-    let jsonDate, newWorkersTime = {}, deleteList = [], hourInfo = hoursInfo[days[date.getDay()].substr(0, 3)]
+    let jsonDate, newWorkersTime = {}, hourInfo = hoursInfo[days[date.getDay()].substr(0, 3)]
     let current = Date.parse(days[today.getDay()] + " " + months[today.getMonth()] + ", " + today.getDate() + " " + today.getFullYear() + " " + hourInfo["closeHour"] + ":" + hourInfo["closeMinute"])
     let now = Date.parse(days[today.getDay()] + " " + months[today.getMonth()] + ", " + today.getDate() + " " + today.getFullYear() + " " + today.getHours() + ":" + today.getMinutes())
 
@@ -365,27 +368,20 @@ export default function Main(props) {
 
             for (let worker in workersHour) {
               for (let day in workersHour[worker]) {
-                if (day != "scheduled") {
+                if (day != "scheduled" && day != "profileInfo") {
                   let { open, close } = workersHour[worker][day]
 
-                  if (open && close) {
-                    workersHour[worker][day]["open"] = jsonDateToUnix({ ...jsonDate, "hour": open["hour"], "minute": open["minute"] })
-                    workersHour[worker][day]["close"] = jsonDateToUnix({ ...jsonDate, "hour": close["hour"], "minute": close["minute"] })
-                  }
-                } else {
+                  workersHour[worker][day]["open"] = jsonDateToUnix({ ...jsonDate, "hour": open["hour"], "minute": open["minute"] })
+                  workersHour[worker][day]["close"] = jsonDateToUnix({ ...jsonDate, "hour": close["hour"], "minute": close["minute"] })
+                } else if (day == "scheduled") {
                   let scheduled = workersHour[worker][day]
+                  let newScheduled = {}
 
                   for (let info in scheduled) {
-                    scheduled[jsonDateToUnix(JSON.parse(info))] = scheduled[info]
-
-                    deleteList.push(info)
+                    newScheduled[jsonDateToUnix(JSON.parse(info))] = scheduled[info]
                   }
 
-                  deleteList.forEach(function (deleteInfo) {
-                    delete scheduled[deleteInfo]
-                  })
-
-                  workersHour[worker][day] = scheduled
+                  workersHour[worker][day] = newScheduled
                 }
               }
             }
@@ -451,7 +447,6 @@ export default function Main(props) {
                     dayDir, date: jsonDate, 
                     loading: false 
                   })
-                  setViewtype("appointments_chart")
                   setLoaded(true)
                 }
               })
@@ -650,7 +645,8 @@ export default function Main(props) {
 			})
 	}
 	const cancelTheSchedule = (index, requestType) => {
-		let id, type, item = index != null ? appointments[index] : appointments[cancelInfo.index]
+    const { list } = {...appointments}
+		let id, type, item = index != null ? list[index] : list[cancelInfo.index]
 
     id = item.id
     type = item.type
@@ -673,11 +669,11 @@ export default function Main(props) {
 						socket.emit("socket/business/cancelSchedule", data, () => {
               switch (requestType) {
                 case "appointment":
-                  const newAppointments = [...appointments]
+                  const { list } = {...appointments}
 
-                  newAppointments.splice(index, 1)
+                  list.splice(index, 1)
 
-                  setAppointments(newAppointments)
+                  setAppointments({ ...appointments, list })
 
                   break
                 default:
@@ -704,13 +700,13 @@ export default function Main(props) {
       })
       .then((res) => {
         if (res) {
-          const newAppointments = [...appointments]
+          const { list } = {...appointments}
           let data = { id, type: "doneService", receiver: res.receiver }
 
-          newAppointments.splice(index, 1)
+          list.splice(index, 1)
 
           socket.emit("socket/doneService", data, () => {
-            setAppointments(newAppointments)
+            setAppointments({ ...appointments, list })
           })
         }
       })
@@ -725,25 +721,31 @@ export default function Main(props) {
 
 		switch (type) {
 			case "appointments":
-				newItems = [...appointments]
+				newItems = {...appointments}
+
+        newItems.list.forEach(function (item, index) {
+          if (item.id == id) {
+            newItems.list.splice(index, 1)
+          }
+        })
 
 				break
 			case "cartOrderers":
 				newItems = [...cartOrderers]
 
+        newItems.forEach(function (item, index) {
+          if (item.id == id) {
+            newItems.splice(index, 1)
+          }
+        })
+
 				break
 			default:
 		}
 
-    newItems.forEach(function (item, index) {
-      if (item.id == id) {
-        newItems.splice(index, 1)
-      }
-    })
-
 		switch (type) {
 			case "appointments":
-				setAppointments(newItems)
+				setAppointments({ ...appointments, list: newItems })
 
 				break
 			case "cartOrderers":
@@ -798,7 +800,9 @@ export default function Main(props) {
             workersHour[workerId]["scheduled"][unix] = parseInt(scheduleid)
           }
 
-          setChartinfo({ ...chartInfo, workersHour })
+          newChartinfo.workersHour = workersHour
+
+          setChartinfo(newChartinfo)
         }
           
         speakToWorker(data)
@@ -1737,7 +1741,7 @@ export default function Main(props) {
 			socket.off("updateSchedules")
 			socket.off("updateOrders")
 		}
-	}, [viewType, chartInfo.workers.length, appointments.length, cartOrderers.length])
+	}, [viewType, chartInfo.workersHour, appointments.list.length, cartOrderers.length])
 
   useEffect(() => {
     if (Constants.isDevice) {
@@ -1803,48 +1807,52 @@ export default function Main(props) {
             )}
 
             {viewType == "appointments_list" && ( 
-              appointments.length > 0 ? 
-                <FlatList
-                  data={appointments}
-                  renderItem={({ item, index }) => 
-                    <View key={item.key} style={styles.schedule}>
-                      <View style={styles.scheduleImageHolder}>
-                        <Image 
-                          style={resizePhoto(item.image, wsize(20))} 
-                          source={item.image.name ? { uri: logo_url + item.image.name } : require("../../assets/noimage.jpeg")}
-                        />
-                      </View>
-                        
-                      <Text style={styles.scheduleHeader}>
-                        Client: {item.client.username}
-                        {'\nAppointment for: ' + item.name}
-                        {'\n' + displayTime(item.time)}
-                        {'\nwith stylist: ' + item.worker.username}
-                      </Text>
+              !appointments.loading ?
+                appointments.list.length > 0 ? 
+                  <FlatList
+                    data={appointments.list}
+                    renderItem={({ item, index }) => 
+                      <View key={item.key} style={styles.schedule}>
+                        <View style={styles.scheduleImageHolder}>
+                          <Image 
+                            style={resizePhoto(item.image, wsize(20))} 
+                            source={item.image.name ? { uri: logo_url + item.image.name } : require("../../assets/noimage.jpeg")}
+                          />
+                        </View>
+                          
+                        <Text style={styles.scheduleHeader}>
+                          Client: {item.client.username} for {item.name}
+                          {'\n' + displayTime(item.time)}
+                          {'\nStylist: ' + item.worker.username}
+                        </Text>
 
-                      <View style={styles.scheduleActions}>
-                        <View style={styles.column}>
-                          <TouchableOpacity style={styles.scheduleAction} onPress={() => cancelTheSchedule(index, "appointment")}>
-                            <Text style={styles.scheduleActionHeader}>Cancel</Text>
-                          </TouchableOpacity>
-                        </View>
-                        <View style={styles.column}>
-                          <TouchableOpacity style={styles.scheduleAction} onPress={() => props.navigation.navigate("booktime", { scheduleid: item.id, serviceid: item.serviceid, serviceinfo: item.name })}>
-                            <Text style={styles.scheduleActionHeader}>Pick another time for client</Text>
-                          </TouchableOpacity>
-                        </View>
-                        <View style={styles.column}>
-                          <TouchableOpacity style={styles.scheduleAction} onPress={() => doneTheService(index, item.id)}>
-                            <Text style={styles.scheduleActionHeader}>Done</Text>
-                          </TouchableOpacity>
+                        <View style={styles.scheduleActions}>
+                          <View style={styles.column}>
+                            <TouchableOpacity style={styles.scheduleAction} onPress={() => cancelTheSchedule(index, "appointment")}>
+                              <Text style={styles.scheduleActionHeader}>Cancel</Text>
+                            </TouchableOpacity>
+                          </View>
+                          <View style={styles.column}>
+                            <TouchableOpacity style={styles.scheduleAction} onPress={() => props.navigation.navigate("booktime", { scheduleid: item.id, serviceid: item.serviceid, serviceinfo: item.name })}>
+                              <Text style={styles.scheduleActionHeader}>Pick another time for client</Text>
+                            </TouchableOpacity>
+                          </View>
+                          <View style={styles.column}>
+                            <TouchableOpacity style={styles.scheduleAction} onPress={() => doneTheService(index, item.id)}>
+                              <Text style={styles.scheduleActionHeader}>Done</Text>
+                            </TouchableOpacity>
+                          </View>
                         </View>
                       </View>
-                    </View>
-                  }
-                />
+                    }
+                  />
+                  :
+                  <View style={styles.bodyResult}>
+                    <Text style={styles.bodyResultHeader}>You will see your appointment(s) here in order</Text>
+                  </View>
                 :
-                <View style={styles.bodyResult}>
-                  <Text style={styles.bodyResultHeader}>You will see your appointment(s) here in order</Text>
+                <View style={styles.loading}>
+                  <ActivityIndicator color="black" size="small"/>
                 </View>
             )}
 
@@ -3688,7 +3696,7 @@ const styles = StyleSheet.create({
 	scheduleRow: { flexDirection: 'row', justifyContent: 'space-between' },
 	scheduleImageHolder: { borderRadius: wsize(20) / 2, margin: 5, overflow: 'hidden', width: wsize(20) },
 	scheduleImage: { height: wsize(20), width: wsize(20) },
-	scheduleHeader: { fontSize: wsize(4), fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
+	scheduleHeader: { fontSize: wsize(6), fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
 	scheduleActionsHeader: { fontSize: wsize(4), marginTop: 10, textAlign: 'center' },
 	scheduleActions: { flexDirection: 'row', justifyContent: 'space-around' },
   column: { flexDirection: 'column', justifyContent: 'space-around' },

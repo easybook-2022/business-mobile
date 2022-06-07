@@ -40,8 +40,8 @@ const register = test_input ? testStores[6] : useInput ? realStores[0] : emptySt
 
 const wifi_api_url = "http://192.168.0.172:5001/flask"
 const wifi_socket_url = "http://192.168.0.172:5002"
-const server_api_url = "https://www.easygo-dev.tk/flask"
-const server_socket_url = "wss://www.easygo-dev.tk"
+const server_api_url = "https://www.easygo.tk/flask"
+const server_socket_url = "wss://www.easygo.tk"
 const socket_url = local_url ? wifi_socket_url : server_socket_url
 
 export const loginInfo = { 
