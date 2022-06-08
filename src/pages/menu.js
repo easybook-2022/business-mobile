@@ -663,30 +663,30 @@ export default function Menu(props) {
 									</ScrollView>
 								)
 							)}
-
+              {isOwner == true && (
+                <View style={{ alignItems: 'center' }}>
+                  <TouchableOpacity style={styles.menuStart} onPress={() => {
+                    allowCamera()
+                    setUploadmenubox({ ...uploadMenubox, show: true, uri: '', name: '' })
+                  }}>
+                    <Text style={styles.menuStartHeader}>Upload photo</Text>
+                  </TouchableOpacity>
+                  <Text>(Easier for you)</Text>
+                </View>
+              )}
               <View style={{ marginTop: 100 }}>
                 <Text style={styles.menusHeader}>List(s)</Text>
                 {displayList({ id: "", name: "", image: "", list: menuInfo.list })}
+                {isOwner == true && (
+                  <View style={{ alignItems: 'center' }}>
+                    <TouchableOpacity style={styles.menuStart} onPress={() => setCreateoptionbox({ ...createOptionbox, show: true, id: "", allow: "both" })}>
+                      <Text style={styles.menuStartHeader}>Create manually</Text>
+                    </TouchableOpacity>
+                    <Text>(Easier for {locationType == "nail" || locationType == "hair" ? "clients to book" : "customers to order"})</Text>
+                  </View>
+                )}
               </View>
 						</View>
-
-            {isOwner == true && (
-              <View style={{ alignItems: 'center', marginVertical: 100 }}>
-                <Text style={styles.menusHeader}>Menu Option(s)</Text>
-                <TouchableOpacity style={styles.menuStart} onPress={() => setCreateoptionbox({ ...createOptionbox, show: true, id: "", allow: "both" })}>
-                  <Text style={styles.menuStartHeader}>Create manually</Text>
-                </TouchableOpacity>
-                <Text>(Easier for {locationType == "nail" || locationType == "hair" ? "clients to book" : "customers to order"})</Text>
-                <Text style={styles.menuStartDiv}>Or</Text>
-                <TouchableOpacity style={styles.menuStart} onPress={() => {
-                  allowCamera()
-                  setUploadmenubox({ ...uploadMenubox, show: true, uri: '', name: '' })
-                }}>
-                  <Text style={styles.menuStartHeader}>Upload photo</Text>
-                </TouchableOpacity>
-                <Text>(Easier for you)</Text>
-              </View>
-            )}
 					</ScrollView>
 
 					<View style={styles.bottomNavs}>

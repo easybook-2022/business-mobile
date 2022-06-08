@@ -13,6 +13,7 @@ import { getAllStylists, getStylistInfo, getAllWorkersTime, logoutUser } from '.
 import { getAppointmentInfo, salonChangeAppointment } from '../apis/schedules'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
+import Entypo from 'react-native-vector-icons/Entypo'
 
 const { height, width } = Dimensions.get('window')
 const wsize = p => {return width * (p / 100)}
@@ -66,7 +67,6 @@ export default function Booktime(props) {
   ], loading: false, errorMsg: "" })
   const [times, setTimes] = useState([])
   const [selectedWorkerinfo, setSelectedworkerinfo] = useState({ worker: null, workers: [], numWorkers: 0, loading: false })
-  const [scheduledInfo, setScheduledinfo] = useState({ scheduledIds: {}, scheduledWorkers: {} })
   const [loaded, setLoaded] = useState(false)
   const [step, setStep] = useState(0)
 
@@ -83,14 +83,11 @@ export default function Booktime(props) {
         if (res) {
           const { client, locationId, name, time, worker } = res
 
-          const { day, month, date, year, hour, minute } = time
-          const unixtime = Date.parse(day + " " + month + " " + date + " " + year + " " + hour + ":" + minute)
-
           setClientinfo({ ...clientInfo, ...client })
           setName(name)
-          setOldtime(unixtime)
+          setOldtime(jsonDateToUnix(time))
           setSelectedworkerinfo(prev => ({ ...prev, worker }))
-          getTheLocationHours(unixtime)
+          getTheLocationHours(jsonDateToUnix(time))
         }
       })
       .catch((err) => {
@@ -102,11 +99,9 @@ export default function Booktime(props) {
   const getCalendar = (month, year) => {
     setCalendar({ ...calendar, loading: true })
 
-    let currTime = new Date(), currDate = 0, currDay = ''
-    let datenow = Date.parse(days[currTime.getDay()] + " " + months[currTime.getMonth()] + " " + currTime.getDate() + " " + year)
+    let currDate = 0, currDay = ''
     let firstDay = (new Date(year, month)).getDay(), numDays = 32 - new Date(year, month, 32).getDate(), daynum = 1
-    let data = calendar.data, datetime = 0, hourInfo, timeNow, hourNow = currTime.getHours(), minuteNow = currTime.getMinutes()
-    let current, now
+    let data = calendar.data, datetime = 0, hourInfo, current, now, datenow, newMonth, newYear
 
     data.forEach(function (info, rowindex) {
       info.row.forEach(function (day, dayindex) {
@@ -148,7 +143,7 @@ export default function Booktime(props) {
             hourInfo = hoursInfo[currDay]
 
             current = Date.parse(days[dayindex] + " " + months[month] + ", " + day.num + " " + year + " " + hourInfo["closeHour"] + ":" + hourInfo["closeMinute"])
-            now = Date.parse(days[currTime.getDay()] + " " + months[currTime.getMonth()] + ", " + currTime.getDate() + " " + currTime.getFullYear() + " " + currTime.getHours() + ":" + currTime.getMinutes())
+            now = Date.now()
 
             if (now < current) {
               currDate = day.num
@@ -161,15 +156,6 @@ export default function Booktime(props) {
         }
       })
     })
-
-    if (step == 1) {
-      if (currDate == 0) {
-        newMonth = month == 11 ? month = 0 : month + 1
-        newYear = month == 11 ? year + 1 : year
-
-        let { currDate, currDay } = getCalendar(newMonth, newYear)
-      }
-    }
 
     setCalendar({ ...calendar, firstDay, numDays, data, loading: false })
 
@@ -202,7 +188,7 @@ export default function Booktime(props) {
         (minute < 10 ? '0' + minute : minute) + " " + period
 
       let timepassed = currenttime > calcDateStr
-      let timetaken = JSON.stringify(scheduledInfo.scheduledIds).includes(calcDateStr.toString())
+      let timetaken = false
       let availableService = false, workerIds = []
 
       if (selectedWorkerinfo.worker != null && day.substr(0, 3) in selectedWorkerinfo.worker.days) {
@@ -277,18 +263,38 @@ export default function Booktime(props) {
           const { hours } = res
           const timeInfo = hours[day.substr(0, 3)]
 
-          let openHour = timeInfo["openHour"], openMinute = timeInfo["openMinute"], openPeriod = timeInfo["openPeriod"]
-          let closeHour = timeInfo["closeHour"], closeMinute = timeInfo["closeMinute"], closePeriod = timeInfo["closePeriod"]
+          let openHour = timeInfo["openHour"], openMinute = timeInfo["openMinute"]
+          let closeHour = timeInfo["closeHour"], closeMinute = timeInfo["closeMinute"]
+
+          const now = Date.now()
+          const currTime = new Date(now)
+          const currMonth = months[currTime.getMonth()]
+          const currDay = days[currTime.getDay()]
+          let currDate = currTime.getDate()
 
           let selectedTime = new Date(time)
-          let selectedDay = null, selectedDate = null, selectedMonth = null
+          let selectedDay = null, selectedDate = null, selectedMonth = null, selectedYear = null
+          let closedtime
 
           selectedDay = days[selectedTime.getDay()]
           selectedDate = selectedTime.getDate()
           selectedMonth = months[selectedTime.getMonth()]
+          selectedYear = selectedTime.getFullYear()
+          closedtime = Date.parse(selectedDay + " " + selectedMonth + ", " + selectedDate + " " + selectedYear + " " + closeHour + ":" + closeMinute)
 
-          getCalendar(selectedTime.getMonth(), selectedTime.getFullYear())
-          setSelecteddateinfo({ ...selectedDateinfo, month: selectedMonth, year: selectedTime.getFullYear(), day: selectedDay.substr(0, 3), date: selectedDate, time })
+          if (now > closedtime) { // current selected date passed close time
+            getCalendar(selectedTime.getMonth(), selectedTime.getFullYear())
+            setSelecteddateinfo({ ...selectedDateinfo, month: currMonth, year: currTime.getFullYear(), day: currDay.substr(0, 3), date: currDate, time: 0 })
+          } else {
+            let { currDate, currDay } = getCalendar(selectedTime.getMonth(), selectedYear)
+
+            setSelecteddateinfo({
+              month: selectedMonth, year: selectedYear, day: selectedDay.substr(0, 3),
+              date: selectedDate,
+              time: 0
+            })
+          }
+
           setHoursinfo(hours)
           setOpentime({ ...openTime, hour: openHour, minute: openMinute })
           setClosetime({ ...closeTime, hour: closeHour, minute: closeMinute })
@@ -341,29 +347,6 @@ export default function Booktime(props) {
         }
       })
   }
-  const getScheduledAppointments = async() => {
-    const locationid = await AsyncStorage.getItem("locationid")
-    const { day, month, date, year } = selectedDateinfo
-    let jsonDate = { day, month, date, year }
-    const data = { locationid, jsonDate }
-
-    getDayHours(data)
-      .then((res) => {
-        if (res.status == 200) {
-          return res.data
-        }
-      })
-      .thne((res) => {
-        if (res) {
-
-        }
-      })
-      .catch((err) => {
-        if (err.response && err.response.status == 400) {
-          const { errormsg, status } = err.response.data
-        }
-      })
-  }
   const selectWorker = id => {
     setSelectedworkerinfo({ ...selectedWorkerinfo, loading: true })
 
@@ -385,8 +368,8 @@ export default function Booktime(props) {
             })
           })
 
-          getTheLocationHours(oldTime)
           setStep(1)
+          getTheLocationHours(oldTime)
         }
       })
   }
@@ -429,10 +412,9 @@ export default function Booktime(props) {
     setConfirm({ ...confirm, show: true, service: name ? name : serviceinfo, time, workerIds })
   }
   const salonChangeTheAppointment = async() => {
-    const locationid = await AsyncStorage.getItem("locationid")
-
     setConfirm({ ...confirm, loading: true })
 
+    const locationid = await AsyncStorage.getItem("locationid")
     const { time } = selectedDateinfo
     const { worker } = selectedWorkerinfo
     const { note, workerIds } = confirm
@@ -460,7 +442,7 @@ export default function Booktime(props) {
       })
       .then((res) => {
         if (res) {
-          data = { ...data, receiver: res.receiver, time }
+          data = { ...data, receiver: res.receiver, time, worker: res.worker }
           socket.emit("socket/salonChangeAppointment", data, () => {
             setConfirm({ ...confirm, requested: true, loading: false })
 
@@ -481,6 +463,9 @@ export default function Booktime(props) {
           setConfirm({ ...confirm, errorMsg: errormsg })
         }
     })
+  }
+  const jsonDateToUnix = date => {
+    return Date.parse(date["day"] + " " + date["month"] + " " + date["date"] + " " + date["year"] + " " + date["hour"] + ":" + date["minute"])
   }
 
   const logout = async() => {
@@ -674,31 +659,19 @@ export default function Booktime(props) {
 
         <View style={styles.bottomNavs}>
           <View style={styles.bottomNavsRow}>
-            <View style={styles.column}>
-              <TouchableOpacity style={styles.bottomNav} onPress={() => props.navigation.navigate("settings", { refetch: () => getTheLocationProfile()})}>
-                <AntDesign name="setting" size={wsize(7)}/>
+            <TouchableOpacity style={styles.bottomNav} onPress={() => props.navigation.dispatch(StackActions.replace('main'))}>
+                <Entypo name="home" size={wsize(7)}/>
               </TouchableOpacity>
-            </View>
 
-            <TouchableOpacity style={styles.bottomNavButton} onPress={() => {
-              AsyncStorage.clearItem("locationid")
-              AsyncStorage.clearItem("locationtype")
-              AsyncStorage.setItem("phase", "list")
+              <View style={styles.column}>
+                <TouchableOpacity style={styles.bottomNavButton} onPress={() => {
+                  AsyncStorage.clear()
 
-              props.navigation.dispatch(StackActions.replace('list'));
-            }}>
-              <Text style={styles.bottomNavButtonHeader}>Switch Business</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.bottomNavButton} onPress={() => props.navigation.navigate("menu", { refetch: () => getTheLocationProfile()})}>
-              <Text style={styles.bottomNavButtonHeader}>Edit Menu</Text>
-            </TouchableOpacity>
-
-            <View style={styles.column}>
-              <TouchableOpacity style={styles.bottomNav} onPress={() => logout()}>
-                <Text style={styles.bottomNavHeader}>Log-Out</Text>
-              </TouchableOpacity>
-            </View>
+                  props.navigation.dispatch(StackActions.replace('auth'));
+                }}>
+                  <Text style={styles.bottomNavButtonHeader}>Log-Out</Text>
+                </TouchableOpacity>
+              </View>
           </View>
         </View>
       </View>
@@ -713,8 +686,8 @@ export default function Booktime(props) {
                     <Text style={styles.confirmHeader}>
                       Change Appointment
                       {'\n' + clientInfo.name + '\n' + confirm.service + '\n'}
-                      {'to'}
-                      {'\n' + displayTime(confirm.time) + '\n'}
+                      to
+                      {'\n\n' + displayTime(confirm.time)}
                     </Text>
 
                     <View style={styles.note}>

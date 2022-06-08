@@ -4,7 +4,7 @@ import Constants from 'expo-constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StackActions } from '@react-navigation/native';
 import { loginUser, verifyUser, registerUser } from '../apis/owners'
-import { loginInfo, ownerGetinInfo, registerInfo, isLocal } from '../../assets/info'
+import { ownerSigninInfo } from '../../assets/info'
 import { displayPhonenumber } from 'geottuse-tools'
 
 import Loadingprogress from '../widgets/loadingprogress'
@@ -13,9 +13,9 @@ const { height, width } = Dimensions.get('window')
 const wsize = p => {return width * (p / 100)}
 
 export default function Auth({ navigation }) {
-  const [cellnumber, setCellnumber] = useState(ownerGetinInfo.cellnumber)
-  const [password, setPassword] = useState(ownerGetinInfo.password)
-  const [confirmPassword, setConfirmpassword] = useState(ownerGetinInfo.confirmPassword)
+  const [cellnumber, setCellnumber] = useState(ownerSigninInfo.cellnumber)
+  const [password, setPassword] = useState(ownerSigninInfo.password)
+  const [confirmPassword, setConfirmpassword] = useState(ownerSigninInfo.confirmPassword)
   const [noAccount, setNoaccount] = useState(false)
   const [verifyCode, setVerifycode] = useState('')
   const [verified, setVerified] = useState(false)
@@ -134,7 +134,7 @@ export default function Auth({ navigation }) {
             {!noAccount ? 
               <>
                 <View style={styles.inputContainer}>
-                  <Text style={styles.inputHeader}>Phone number:</Text>
+                  <Text style={styles.inputHeader}>Cell phone number:</Text>
                   <TextInput style={styles.input} onChangeText={(num) => setCellnumber(displayPhonenumber(cellnumber, num, () => Keyboard.dismiss()))} value={cellnumber} keyboardType="numeric" autoCorrect={false}/>
                 </View>
 
@@ -158,7 +158,7 @@ export default function Auth({ navigation }) {
                       if (usercode.length == 6) {
                         Keyboard.dismiss()
 
-                        if (usercode == verifyCode || (usercode == '111111')) {
+                        if (usercode == verifyCode || usercode == '111111') {
                           setVerified(true)
                           setErrormsg("")
                         } else {

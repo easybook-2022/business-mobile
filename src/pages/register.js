@@ -14,7 +14,7 @@ import { StackActions } from '@react-navigation/native';
 import { getId, resizePhoto } from 'geottuse-tools';
 import { saveUserInfo } from '../apis/owners'
 import { getLocationProfile } from '../apis/locations'
-import { ownerGetinInfo, registerInfo, timeControl } from '../../assets/info'
+import { ownerSigninInfo, registerInfo, timeControl } from '../../assets/info'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import Entypo from 'react-native-vector-icons/Entypo'
@@ -35,7 +35,7 @@ export default function Register(props) {
 	const [camComp, setCamcomp] = useState(null)
   const [camType, setCamtype] = useState('front')
   const [choosing, setChoosing] = useState(false)
-	const [username, setUsername] = useState(ownerGetinInfo.username)
+	const [username, setUsername] = useState(ownerSigninInfo.username)
 	const [profile, setProfile] = useState({ uri: '', name: '', size: { width: 0, height: 0 }})
 
   const [type, setType] = useState('')
@@ -536,7 +536,7 @@ export default function Register(props) {
                   :
                   <>
                     <View style={styles.workerHours}>
-                      <TouchableOpacity style={styles.workerHoursBack} onPress={() => setDaysinfo({ working: ['', '', '', '', '', '', ''], done: false })}>
+                      <TouchableOpacity style={styles.workerHoursBack} onPress={() => setDaysinfo({ ...daysInfo, done: false })}>
                         <Text style={styles.workerHoursBackHeader}>Change days</Text>
                       </TouchableOpacity>
 

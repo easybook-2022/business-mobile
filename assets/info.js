@@ -1,7 +1,7 @@
 import io from 'socket.io-client'
 
-const local_url = true
-const test_input = true
+const local_url = false
+const test_input = false
 
 const testStores = [
   { id: 0, storeName: "Hair salon", storeType: "hair", phonenumber: "(900) 000-0000", addressOne: "642 Gerrard St E", addressTwo: "", city: "Toronto", province: "ON", postalcode: "M4M1Y3", longitude: -79.3505832, latitude: 43.6660751 },
@@ -32,11 +32,11 @@ const testOwners = [
 const realOwner = { id: 0, username: 'kevin', cellnumber: "(647) 926-3868", password: "password" }
 const emptyOwner = { username: "", cellnumber: "", password: "" }
 
-const useInput = true
+const useInput = false
 
-const login = test_input ? testStores[0] : useInput ? realStores[0] : emptyStore
-const ownerGetin = test_input ? testOwners[0] : useInput ? realOwner : emptyOwner
-const register = test_input ? testStores[6] : useInput ? realStores[0] : emptyStore
+const loginLocation = test_input ? testStores[0] : useInput ? realStores[0] : emptyStore
+const ownerSignin = test_input ? testOwners[0] : useInput ? realOwner : emptyOwner
+const registerLocation = test_input ? testStores[0] : useInput ? realStores[0] : emptyStore
 
 const wifi_api_url = "http://192.168.0.172:5001/flask"
 const wifi_socket_url = "http://192.168.0.172:5002"
@@ -45,26 +45,26 @@ const server_socket_url = "wss://www.easygo.tk"
 const socket_url = local_url ? wifi_socket_url : server_socket_url
 
 export const loginInfo = { 
-	cellnumber: ownerGetin.cellnumber, password: ownerGetin.password, storeName: login.storeName, 
-	storeType: login.storeType, phonenumber: login.phonenumber, addressOne: login.addressOne, 
-	addressTwo: login.addressTwo, city: login.city, province: login.province, 
-	postalcode: login.postalcode
+	cellnumber: ownerSignin.cellnumber, password: ownerSignin.password, storeName: loginLocation.storeName, 
+	storeType: loginLocation.storeType, phonenumber: loginLocation.phonenumber, addressOne: loginLocation.addressOne, 
+	addressTwo: loginLocation.addressTwo, city: loginLocation.city, province: loginLocation.province, 
+	postalcode: loginLocation.postalcode
 }
-export const ownerGetinInfo = {
-	username: ownerGetin.username,
-	cellnumber: ownerGetin.cellnumber,
-	password: ownerGetin.password,
+export const ownerSigninInfo = {
+	username: ownerSignin.username,
+	cellnumber: ownerSignin.cellnumber,
+	password: ownerSignin.password,
   confirmPassword: ""
 }
 export const socket = io.connect(socket_url)
-export const registerInfo = {
-	phonenumber: register.phonenumber, password: "password", storeName: register.storeName, 
-	storeType: register.storeType, phonenumber: register.phonenumber, addressOne: register.addressOne,
-	addressTwo: register.addressTwo, city: register.city, province: register.province, 
-	postalcode: register.postalcode, longitude: register.longitude, latitude: register.latitude
+export const registerLocationInfo = {
+	phonenumber: registerLocation.phonenumber, password: "password", storeName: registerLocation.storeName, 
+	storeType: registerLocation.storeType, phonenumber: registerLocation.phonenumber, addressOne: registerLocation.addressOne,
+	addressTwo: registerLocation.addressTwo, city: registerLocation.city, province: registerLocation.province, 
+	postalcode: registerLocation.postalcode, longitude: registerLocation.longitude, latitude: registerLocation.latitude
 }
 export const url = local_url ? wifi_api_url : server_api_url
-export const useSpeech = false
+export const useSpeech = local_url == false
 export const logo_url = url + "/static/"
 export const timeControl = (timetype, value, dir, open) => {
   let hour, minute, period

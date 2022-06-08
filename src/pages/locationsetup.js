@@ -14,7 +14,7 @@ import * as Location from 'expo-location';
 import MapView, { Marker } from 'react-native-maps';
 import { StackActions } from '@react-navigation/native';
 import { setupLocation } from '../apis/locations'
-import { registerInfo, timeControl } from '../../assets/info'
+import { registerLocationInfo, timeControl } from '../../assets/info'
 import { getId, displayPhonenumber, resizePhoto } from 'geottuse-tools'
 
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5'
@@ -45,16 +45,16 @@ export default function Locationsetup({ navigation }) {
   const [choosing, setChoosing] = useState(false)
 	const [locationCoords, setLocationcoords] = useState({ longitude: null, latitude: null, address: '' })
 
-	const [storeName, setStorename] = useState(registerInfo.storeName)
-	const [addressOne, setAddressone] = useState(registerInfo.addressOne)
-	const [addressTwo, setAddresstwo] = useState(registerInfo.addressTwo)
-	const [city, setCity] = useState(registerInfo.city)
-	const [province, setProvince] = useState(registerInfo.province)
-	const [postalcode, setPostalcode] = useState(registerInfo.postalcode)
+	const [storeName, setStorename] = useState(registerLocationInfo.storeName)
+	const [addressOne, setAddressone] = useState(registerLocationInfo.addressOne)
+	const [addressTwo, setAddresstwo] = useState(registerLocationInfo.addressTwo)
+	const [city, setCity] = useState(registerLocationInfo.city)
+	const [province, setProvince] = useState(registerLocationInfo.province)
+	const [postalcode, setPostalcode] = useState(registerLocationInfo.postalcode)
   
-	const [phonenumber, setPhonenumber] = useState(registerInfo.phonenumber)
+	const [phonenumber, setPhonenumber] = useState(registerLocationInfo.phonenumber)
 
-	const [type, setType] = useState(registerInfo.storeType)
+	const [type, setType] = useState(registerLocationInfo.storeType)
 
 	const [logo, setLogo] = useState({ uri: '', name: '', size: { width: 0, height: 0 }})
 
@@ -134,15 +134,14 @@ export default function Locationsetup({ navigation }) {
 				latitude = locationCoords.latitude
 			} else {
 				if (!locationPermission) {
-					longitude = registerInfo.longitude
-					latitude = registerInfo.latitude
+					longitude = registerLocationInfo.longitude
+					latitude = registerLocationInfo.latitude
 				} else {
           longitude = locationCoords.longitude
           latitude = locationCoords.latitude
         }
 			}
 
-			const time = (Date.now() / 1000).toString().split(".")[0]
 			const data = {
 				storeName, phonenumber, addressOne, addressTwo, city, province, postalcode, logo, hours, type, 
 				longitude, latitude, ownerid, permission: cameraPermission
@@ -190,6 +189,7 @@ export default function Locationsetup({ navigation }) {
             }
           })
 			} else {
+        setLoading(false)
 				setErrormsg("Please choose an option for all the days")
 			}
 		} else {
@@ -660,7 +660,7 @@ export default function Locationsetup({ navigation }) {
                         </>
                         :
                         <View style={styles.daysContainer}>
-                          <TouchableOpacity style={styles.daysBack} disabled={loading} onPress={() => setDaysinfo({ ...daysInfo, working: ['', '', '', '', '', '', ''], done: false, step: 0 })}>
+                          <TouchableOpacity style={styles.daysBack} disabled={loading} onPress={() => setDaysinfo({ ...daysInfo, done: false, step: 0 })}>
                             <Text style={styles.daysBackHeader}>Change days</Text>
                           </TouchableOpacity>
 
@@ -868,7 +868,7 @@ export default function Locationsetup({ navigation }) {
                     <Text style={styles.inputHeader}>Enter {header} name:</Text>
                     <TextInput style={styles.input} onChangeText={(storeName) => setStorename(storeName)} value={storeName} autoCorrect={false} autoCapitalize="none"/>
                   </View>
-                )}   
+                )}
 
                 {setupType == "phonenumber" && (
                   <View style={styles.inputContainer}>
