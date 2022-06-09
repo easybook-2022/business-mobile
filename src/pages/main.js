@@ -8,7 +8,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useKeepAwake } from 'expo-keep-awake'
 import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
-import { StackActions } from '@react-navigation/native';
+import { CommonActions } from '@react-navigation/native';
 import * as FileSystem from 'expo-file-system'
 import * as ImageManipulator from 'expo-image-manipulator'
 import * as Speech from 'expo-speech'
@@ -770,7 +770,7 @@ export default function Main(props) {
           socket.emit("socket/business/logout", ownerid, () => {
             AsyncStorage.clear()
 
-            props.navigation.dispatch(StackActions.replace("auth"));
+            props.navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "auth" }]}));
           })
         }
       })
@@ -2208,7 +2208,7 @@ export default function Main(props) {
                               setShowmoreoptions({ ...showMoreoptions, show: false })
 
                               setTimeout(function () {
-                                props.navigation.dispatch(StackActions.replace("list"));
+                                props.navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "list" }]}));
                               }, 1000)
                             }}>
                               <Text style={styles.moreOptionTouchHeader}>Switch Business</Text>

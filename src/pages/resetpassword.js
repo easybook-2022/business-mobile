@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { SafeAreaView, Platform, Dimensions, View, ImageBackground, Text, TextInput, Image, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
-import { StackActions } from '@react-navigation/native';
+import { CommonActions } from '@react-navigation/native';
 import { resetPassword } from '../apis/owners'
 import { userInfo } from '../../assets/info'
 
@@ -35,8 +35,8 @@ export default function Resetpassword(props) {
 					AsyncStorage.setItem("locationid", locationid ? locationid.toString() : "")
 					AsyncStorage.setItem("locationtype", locationtype ? locationtype : "")
 					AsyncStorage.setItem("phase", msg)
-					
-					props.navigation.dispatch(StackActions.replace(msg))
+
+          props.navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: msg }]}));
 				}
 			})
 			.catch((err) => {

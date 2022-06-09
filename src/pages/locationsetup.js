@@ -12,7 +12,7 @@ import * as ImageManipulator from 'expo-image-manipulator'
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import MapView, { Marker } from 'react-native-maps';
-import { StackActions } from '@react-navigation/native';
+import { CommonActions } from '@react-navigation/native';
 import { setupLocation } from '../apis/locations'
 import { registerLocationInfo, timeControl } from '../../assets/info'
 import { getId, displayPhonenumber, resizePhoto } from 'geottuse-tools'
@@ -166,16 +166,16 @@ export default function Locationsetup({ navigation }) {
               if (type == "restaurant" || type == "store") {
                 AsyncStorage.setItem("phase", "main")
 
-                navigation.dispatch(StackActions.replace('main', { firstTime: !newBusiness ? true : false }))
+                navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "main", params: { firstTime: !newBusiness ? true : false }}]}));
               } else {
                 if (ownerProfile["name"] != undefined) {
                   AsyncStorage.setItem("phase", "main")
 
-                  navigation.dispatch(StackActions.replace('main'))
+                  navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "main" }]}));
                 } else {
                   AsyncStorage.setItem("phase", "register")
 
-                  navigation.dispatch(StackActions.replace('register'))
+                  navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "register" }]}));
                 }
               }
             }
@@ -940,22 +940,19 @@ export default function Locationsetup({ navigation }) {
           
           </TouchableWithoutFeedback>
         </View>
-          
 
         <View style={styles.bottomNavs}>
           <View style={styles.bottomNavsRow}>
             {newBusiness && <TouchableOpacity style={styles.bottomNav} onPress={() => {
               AsyncStorage.removeItem("newBusiness")
 
-              navigation.dispatch(
-                StackActions.replace('list')
-              );
+              navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "list" }]}));
             }}><Text style={styles.bottomNavHeader}>Cancel</Text></TouchableOpacity>}
 
             <TouchableOpacity style={styles.bottomNav} onPress={() => {
               AsyncStorage.clear()
 
-              navigation.dispatch(StackActions.replace('auth'));
+              navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "auth" }]}));
             }}>
               <Text style={styles.bottomNavHeader}>Log-Out</Text>
             </TouchableOpacity>

@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { SafeAreaView, Platform, View, Text, TextInput, Image, TouchableOpacity, TouchableWithoutFeedback, Dimensions, StyleSheet, Keyboard, Modal } from 'react-native';
 import Constants from 'expo-constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { StackActions } from '@react-navigation/native';
+import { CommonActions } from '@react-navigation/native';
 import { loginUser, verifyUser, registerUser } from '../apis/owners'
 import { ownerSigninInfo } from '../../assets/info'
 import { displayPhonenumber } from 'geottuse-tools'
@@ -41,7 +41,7 @@ export default function Auth({ navigation }) {
           AsyncStorage.setItem("locationtype", locationtype ? locationtype : "")
           AsyncStorage.setItem("phase", msg)
 
-          navigation.dispatch(StackActions.replace(msg))
+          navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: msg }]}));
         }
       })
       .catch((err) => {
@@ -104,7 +104,7 @@ export default function Auth({ navigation }) {
           AsyncStorage.setItem("ownerid", id.toString())
           AsyncStorage.setItem("phase", "locationsetup")
 
-          navigation.dispatch(StackActions.replace("locationsetup"))
+          navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "locationsetup" }]}));
         }
       })
       .catch((err) => {

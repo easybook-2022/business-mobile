@@ -6,7 +6,7 @@ import {
 } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
-import { StackActions } from '@react-navigation/native';
+import { CommonActions } from '@react-navigation/native';
 import * as FileSystem from 'expo-file-system'
 import { Camera } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator'
@@ -691,7 +691,9 @@ export default function Menu(props) {
 
 					<View style={styles.bottomNavs}>
 						<View style={styles.bottomNavsRow}>
-							<TouchableOpacity style={styles.bottomNav} onPress={() => props.navigation.dispatch(StackActions.replace('main'))}>
+							<TouchableOpacity style={styles.bottomNav} onPress={() => {
+                props.navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "main" }]}));
+              }}>
 								<Entypo name="home" size={wsize(7)}/>
 							</TouchableOpacity>
 
@@ -699,7 +701,7 @@ export default function Menu(props) {
                 <TouchableOpacity style={styles.bottomNavButton} onPress={() => {
                   AsyncStorage.clear()
 
-                  props.navigation.dispatch(StackActions.replace('auth'));
+                  props.navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "auth" }]}));
                 }}>
                   <Text style={styles.bottomNavButtonHeader}>Log-Out</Text>
                 </TouchableOpacity>

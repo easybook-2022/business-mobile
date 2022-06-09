@@ -4,12 +4,12 @@ import {
   TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet, Modal 
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { StackActions } from '@react-navigation/native';
+import { CommonActions } from '@react-navigation/native';
 import { socket, logo_url } from '../../assets/info'
 import { displayTime, resizePhoto } from 'geottuse-tools'
 
 import { getLocationHours } from '../apis/locations'
-import { getAllStylists, getStylistInfo, getAllWorkersTime, logoutUser } from '../apis/owners'
+import { getAllStylists, getStylistInfo, getAllWorkersTime, getWorkersHour, logoutUser } from '../apis/owners'
 import { getAppointmentInfo, salonChangeAppointment } from '../apis/schedules'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
@@ -29,6 +29,7 @@ export default function Booktime(props) {
   const [name, setName] = useState()
   const [allWorkers, setAllworkers] = useState({})
   const [hoursInfo, setHoursinfo] = useState({})
+  const [scheduled, setScheduled] = useState({})
   const [oldTime, setOldtime] = useState(0)
   const [openTime, setOpentime] = useState({ hour: 0, minute: 0 })
   const [closeTime, setClosetime] = useState({ hour: 0, minute: 0 })
@@ -168,7 +169,7 @@ export default function Booktime(props) {
     let openStr = month + " " + date + ", " + year + " " + start
     let closeStr = month + " " + date + ", " + year + " " + end
     let openDateStr = Date.parse(openStr), closeDateStr = Date.parse(closeStr), calcDateStr = openDateStr
-    let currenttime = Date.now(), newTimes = [], timesRow = [], timesNum = 0, firstTime = true
+    let currenttime = Date.now(), newTimes = [], timesRow = [], timesNum = 0
 
     while (calcDateStr < (closeDateStr - pushtime)) {
       calcDateStr += pushtime
@@ -189,6 +190,18 @@ export default function Booktime(props) {
 
       let timepassed = currenttime > calcDateStr
       let timetaken = false
+
+      if (selectedWorkerinfo.worker != null) { // worker is selected
+        const workerid = selectedWorkerinfo.worker.id
+
+        timetaken = JSON.stringify(scheduled).includes("\"" + calcDateStr + "\":" + workerid)
+      } else {
+        let numWorkers = Object.keys(scheduled).length
+        let occur = JSON.stringify(scheduled).split("\"" + calcDateStr + "\":").length - 1
+
+        timetaken = occur == numWorkers
+      }
+
       let availableService = false, workerIds = []
 
       if (selectedWorkerinfo.worker != null && day.substr(0, 3) in selectedWorkerinfo.worker.days) {
@@ -347,6 +360,38 @@ export default function Booktime(props) {
         }
       })
   }
+  const getTheWorkersHour = async() => {
+    const locationid = await AsyncStorage.getItem("locationid")
+    const data = { locationid, ownerid: null }
+
+    getWorkersHour(data)
+      .then((res) => {
+        if (res.status == 200) {
+          return res.data
+        }
+      })
+      .then((res) => {
+        if (res) {
+          const { workersHour } = res
+
+          for (let worker in workersHour) {
+            for (let info in workersHour[worker]) {
+              if (info == "scheduled") {
+                const newScheduled = {}
+
+                for (let time in workersHour[worker]["scheduled"]) {
+                  newScheduled[jsonDateToUnix(JSON.parse(time))] = workersHour[worker]["scheduled"][time]
+                }
+
+                workersHour[worker]["scheduled"] = newScheduled
+              }
+            }
+          }
+
+          setScheduled(workersHour)
+        }
+      })
+  }
   const selectWorker = id => {
     setSelectedworkerinfo({ ...selectedWorkerinfo, loading: true })
 
@@ -450,7 +495,7 @@ export default function Booktime(props) {
               setConfirm({ ...confirm, show: false, requested: false })
 
               setTimeout(function () {
-                props.navigation.dispatch(StackActions.replace("main"))
+                props.navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "main" }]}));
               }, 1000)
             }, 2000)
           })
@@ -482,7 +527,7 @@ export default function Booktime(props) {
           socket.emit("socket/business/logout", ownerid, () => {
             AsyncStorage.clear()
 
-            props.navigation.dispatch(StackActions.replace('auth'))
+            props.navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "auth" }]}));
           })
         }
       })
@@ -496,6 +541,7 @@ export default function Booktime(props) {
   useEffect(() => {
     getAllTheStylists()
     getAllTheWorkersTime()
+    getTheWorkersHour()
     getTheAppointmentInfo()
   }, [])
 
@@ -629,10 +675,6 @@ export default function Booktime(props) {
                     props.navigation.goBack()
 
                     break;
-                  case 1:
-                    setSelectedworkerinfo({ ...selectedWorkerinfo, worker: null })
-
-                    break;
                   default:
                 }
 
@@ -659,19 +701,19 @@ export default function Booktime(props) {
 
         <View style={styles.bottomNavs}>
           <View style={styles.bottomNavsRow}>
-            <TouchableOpacity style={styles.bottomNav} onPress={() => props.navigation.dispatch(StackActions.replace('main'))}>
-                <Entypo name="home" size={wsize(7)}/>
+            <TouchableOpacity style={styles.bottomNav} onPress={() => props.navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "main" }]}))}>
+              <Entypo name="home" size={wsize(7)}/>
+            </TouchableOpacity>
+
+            <View style={styles.column}>
+              <TouchableOpacity style={styles.bottomNavButton} onPress={() => {
+                AsyncStorage.clear()
+
+                props.navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "auth" }]}));
+              }}>
+                <Text style={styles.bottomNavButtonHeader}>Log-Out</Text>
               </TouchableOpacity>
-
-              <View style={styles.column}>
-                <TouchableOpacity style={styles.bottomNavButton} onPress={() => {
-                  AsyncStorage.clear()
-
-                  props.navigation.dispatch(StackActions.replace('auth'));
-                }}>
-                  <Text style={styles.bottomNavButtonHeader}>Log-Out</Text>
-                </TouchableOpacity>
-              </View>
+            </View>
           </View>
         </View>
       </View>

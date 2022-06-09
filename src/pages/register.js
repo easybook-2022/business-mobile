@@ -10,7 +10,7 @@ import * as FileSystem from 'expo-file-system'
 import { Camera } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator'
 import * as ImagePicker from 'expo-image-picker';
-import { StackActions } from '@react-navigation/native';
+import { CommonActions } from '@react-navigation/native';
 import { getId, resizePhoto } from 'geottuse-tools';
 import { saveUserInfo } from '../apis/owners'
 import { getLocationProfile } from '../apis/locations'
@@ -217,7 +217,7 @@ export default function Register(props) {
               setLoading(false)
               AsyncStorage.setItem("phase", "main")
 
-              props.navigation.dispatch(StackActions.replace('main', { firstTime: true }))
+              props.navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "main", params: { firstTime: true }}]}));
             }
           })
           .catch((err) => {
@@ -671,7 +671,7 @@ export default function Register(props) {
 							<TouchableOpacity style={styles.bottomNav} onPress={() => {
 								AsyncStorage.clear()
 
-								props.navigation.dispatch(StackActions.replace('auth'));
+                navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "auth" }]}));
 							}}>
 								<Text style={styles.bottomNavHeader}>Log-Out</Text>
 							</TouchableOpacity>
