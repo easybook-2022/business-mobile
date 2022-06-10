@@ -453,7 +453,7 @@ export default function Menu(props) {
 		if (camComp) {
       let options = { quality: 0, skipProcessing: true };
       let char = getId(), photo = await camComp.takePictureAsync(options)
-      let photo_option = [{ resize: { height, width }}]
+      let photo_option = [{ resize: { height: height * 0.7, width }}]
       let photo_save_option = { format: ImageManipulator.SaveFormat.JPEG, base64: true }
 
       if (camType == "front") {
@@ -474,7 +474,7 @@ export default function Menu(props) {
         setUploadmenubox({ 
           ...uploadMenubox, 
           uri: `${FileSystem.documentDirectory}/${char}.jpg`, name: `${char}.jpg`, 
-          size: { width, height }, 
+          size: { width, height: height * 0.7 }, 
           loading: false
         })
       })
@@ -778,23 +778,21 @@ export default function Menu(props) {
                     </TouchableOpacity>
 
                     {!uploadMenubox.uri ? 
-                      <>
-                        {!uploadMenubox.choosing && (
-                          <>
-                            <Camera 
-                              style={styles.uploadMenuCamera} 
-                              ref={r => {setCamcomp(r)}}
-                              type={camType}
-                            />
+                      !uploadMenubox.choosing && (
+                        <>
+                          <Camera 
+                            style={styles.uploadMenuCamera} 
+                            ref={r => {setCamcomp(r)}}
+                            type={camType}
+                          />
 
-                            <View style={{ alignItems: 'center', marginVertical: 10 }}>
-                              <Ionicons name="camera-reverse-outline" size={wsize(7)} onPress={() => setCamtype(camType == 'back' ? 'front' : 'back')}/>
-                            </View>
-                          </>
-                        )}
-                      </>
+                          <View style={{ alignItems: 'center', marginVertical: 10 }}>
+                            <Ionicons name="camera-reverse-outline" size={wsize(7)} onPress={() => setCamtype(camType == 'back' ? 'front' : 'back')}/>
+                          </View>
+                        </>
+                      )
                       :
-                      <View style={resizePhoto(uploadMenubox.size, width * 0.7)}>
+                      <View style={resizePhoto(uploadMenubox.size, width)}>
                         <Image style={{ height: '100%', width: '100%' }} source={{ uri: uploadMenubox.uri }}/>
                       </View>
                     }
@@ -838,7 +836,7 @@ export default function Menu(props) {
 						<Modal transparent={true}>
 							<SafeAreaView style={styles.menuPhotoOptionContainer}>
   							{menuPhotooption.info.name && (
-                  <View style={resizePhoto(menuPhotooption.info, width * 0.8)}>
+                  <View style={resizePhoto(menuPhotooption.info, width)}>
                     <Image style={{ height: '100%', width: '100%' }} source={{ uri: logo_url + menuPhotooption.info.name }}/>
                   </View>
                 )}
@@ -1032,7 +1030,6 @@ const styles = StyleSheet.create({
   bottomNavButtonHeader: { color: 'white', fontSize: wsize(4), fontWeight: 'bold', textAlign: 'center' },
 
 	// hidden boxes
-
 	// create options
 	createOptionContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	createOptionBox: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', padding: 10, width: '80%' },
@@ -1057,7 +1054,7 @@ const styles = StyleSheet.create({
 	uploadMenuAction: { borderRadius: 3, borderStyle: 'solid', borderWidth: 1, padding: 5 },
 	uploadMenuActionHeader: { fontSize: wsize(4), textAlign: 'center' },
 	uploadMenuCameraContainer: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
-	uploadMenuCamera: { height: '70%', width: '70%' },
+	uploadMenuCamera: { height: '70%', width: '100%' },
 	uploadMenuCameraActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	uploadMenuCameraAction: { borderColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: wsize(30) },
 	uploadMenuCameraActionHeader: { color: 'black', fontSize: wsize(4), textAlign: 'center' },

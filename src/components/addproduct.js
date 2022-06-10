@@ -807,9 +807,9 @@ export default function Addproduct(props) {
 								}}>
 									<Text style={styles.addActionHeader}>{
 										!productid ? 
-											setupType == "sizes" ? "Done" : setupType == "photo" ? "Skip" : "Next" 
+										  setupType == "photo" ? image.uri ? "Save" : "Skip" : "Next" 
 											: 
-											setupType == "sizes" ? "Save" : setupType == "photo" ? "Skip" : "Next"
+										  setupType == "photo" ? image.uri ? "Next" : "Skip" : "Next"
 									}</Text>
 								</TouchableOpacity>
 							</View>

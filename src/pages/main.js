@@ -306,6 +306,55 @@ export default function Main(props) {
         }
       })
   }
+  const getTheWorkersHour = async() => {
+    const locationid = await AsyncStorage.getItem("locationid")
+    const data = { locationid, ownerid: null }
+
+    getWorkersHour(data)
+      .then((res) => {
+        if (res.status == 200) {
+          return res.data
+        }
+      })
+      .then((res) => {
+        if (res) {
+          const { workersHour } = res
+
+          const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+          const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+
+          let date = new Date(Date.now())
+          let jsonDate = {"day":days[date.getDay()].substr(0, 3),"month":months[date.getMonth()],"date":date.getDate(),"year":date.getFullYear()}
+
+          for (let worker in workersHour) {
+            for (let day in workersHour[worker]) {
+              if (day != "scheduled" && day != "profileInfo") {
+                let { open, close } = workersHour[worker][day]
+
+                workersHour[worker][day]["open"] = jsonDateToUnix({ ...jsonDate, "hour": open["hour"], "minute": open["minute"] })
+                workersHour[worker][day]["close"] = jsonDateToUnix({ ...jsonDate, "hour": close["hour"], "minute": close["minute"] })
+              } else if (day == "scheduled") {
+                let scheduled = workersHour[worker][day]
+                let newScheduled = {}
+
+                for (let info in scheduled) {
+                  newScheduled[jsonDateToUnix(JSON.parse(info))] = scheduled[info]
+                }
+
+                workersHour[worker][day] = newScheduled
+              }
+            }
+          }
+
+          setChartinfo({ ...chartInfo, workersHour })
+        }
+      })
+      .catch((err) => {
+        if (err.response && err.response.status == 400) {
+          const { errormsg, status } = err.response.data
+        }
+      })
+  }
 
 	const getListAppointments = async() => {
     setViewtype("appointments_list")
@@ -339,25 +388,40 @@ export default function Main(props) {
 
     const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
     const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
-    const locationid = await AsyncStorage.getItem("locationid"), today = new Date(), pushtime = 1000 * (60 * 15)
+    const locationid = await AsyncStorage.getItem("locationid"), today = new Date(), pushtime = 1000 * (60 * 15), newWorkershour = {...chartInfo.workersHour}
     let chart, date = new Date(today.getTime())
 
     date.setDate(today.getDate() + dayDir)
 
     let jsonDate, newWorkersTime = {}, hourInfo = hoursInfo[days[date.getDay()].substr(0, 3)]
-    let current = Date.parse(days[today.getDay()] + " " + months[today.getMonth()] + ", " + today.getDate() + " " + today.getFullYear() + " " + hourInfo["closeHour"] + ":" + hourInfo["closeMinute"])
+    let closedtime = Date.parse(days[date.getDay()] + " " + months[date.getMonth()] + ", " + date.getDate() + " " + date.getFullYear() + " " + hourInfo["closeHour"] + ":" + hourInfo["closeMinute"])
     let now = Date.parse(days[today.getDay()] + " " + months[today.getMonth()] + ", " + today.getDate() + " " + today.getFullYear() + " " + today.getHours() + ":" + today.getMinutes())
+    let day = days[date.getDay()].substr(0, 3), working = false
 
-    if (now > current && dir == null) {
+    for (let k = 1; k < 10; k++) {
+      console.log(" ")
+    }
+
+    for (let worker in newWorkershour) {
+      for (let info in newWorkershour[worker]) {
+        if (info == day && newWorkershour[worker][day]["working"] == true && working == false) {
+          working = true
+        }
+      }
+    }
+
+    console.log(working)
+
+    if ((now > closedtime && dir == null) && working == false) {
       getAppointmentsChart(dayDir + 1)
     } else {
       if (dayDir != 0) date.setDate(today.getDate() + dayDir)
 
       jsonDate = {"day":days[date.getDay()].substr(0, 3),"month":months[date.getMonth()],"date":date.getDate(),"year":date.getFullYear()}
 
-      let data = { locationid, ownerid: null }
+      data = { locationid, jsonDate }
 
-      getWorkersHour(data)
+      getDayHours(data)
         .then((res) => {
           if (res.status == 200) {
             return res.data
@@ -365,97 +429,54 @@ export default function Main(props) {
         })
         .then((res) => {
           if (res) {
-            let { workersHour } = res
+            const { opentime, closetime, workers } = res
+            let times = [], chart = {}, openhour = parseInt(opentime["hour"]), openminute = parseInt(opentime["minute"])
+            let closehour = parseInt(closetime["hour"]), closeminute = parseInt(closetime["minute"])
+            let openStr = jsonDate["month"] + " " + jsonDate["date"] + ", " + jsonDate["year"] + " " + openhour + ":" + openminute
+            let closeStr = jsonDate["month"] + " " + jsonDate["date"] + ", " + jsonDate["year"] + " " + closehour + ":" + closeminute
+            let openTimeStr = Date.parse(openStr), closeTimeStr = Date.parse(closeStr), calcTimeStr = openTimeStr
+            let currenttime = Date.now(), key = 0
 
-            for (let worker in workersHour) {
-              for (let day in workersHour[worker]) {
-                if (day != "scheduled" && day != "profileInfo") {
-                  let { open, close } = workersHour[worker][day]
+            while (calcTimeStr < closeTimeStr - pushtime) {
+              calcTimeStr += pushtime
 
-                  workersHour[worker][day]["open"] = jsonDateToUnix({ ...jsonDate, "hour": open["hour"], "minute": open["minute"] })
-                  workersHour[worker][day]["close"] = jsonDateToUnix({ ...jsonDate, "hour": close["hour"], "minute": close["minute"] })
-                } else if (day == "scheduled") {
-                  let scheduled = workersHour[worker][day]
-                  let newScheduled = {}
+              let timestr = new Date(calcTimeStr)
+              let hour = timestr.getHours()
+              let minute = timestr.getMinutes()
+              let period = hour < 12 ? "AM" : "PM"
+              let timeDisplay = (
+                hour <= 12 ? 
+                  hour == 0 ? 12 : hour
+                  :
+                  hour - 12
+                )
+                + ":" + 
+                (minute < 10 ? '0' + minute : minute) + " " + period
+              let timepassed = currenttime > calcTimeStr
 
-                  for (let info in scheduled) {
-                    newScheduled[jsonDateToUnix(JSON.parse(info))] = scheduled[info]
-                  }
+              jsonDate = { ...jsonDate, day: days[date.getDay()], hour, minute }
 
-                  workersHour[worker][day] = newScheduled
-                }
-              }
+              times.push({
+                key: "time-" + key + "-" + dayDir,
+                timeDisplay, time: calcTimeStr, jsonDate,
+                timepassed
+              })
+
+              key += 1
             }
 
-            delete jsonDate["hour"]
-            delete jsonDate["minute"]
+            chart = { 
+              "key": dayDir.toString(), 
+              "times": times, 
+              "dateHeader": days[date.getDay()] + ", " + jsonDate["month"] + " " + jsonDate["date"] + ", " + jsonDate["year"]
+            }
 
-            data = { locationid, jsonDate }
-
-            getDayHours(data)
-              .then((res) => {
-                if (res.status == 200) {
-                  return res.data
-                }
-              })
-              .then((res) => {
-                if (res) {
-                  const { opentime, closetime, workers } = res
-                  let times = [], chart = {}, openhour = parseInt(opentime["hour"]), openminute = parseInt(opentime["minute"])
-                  let closehour = parseInt(closetime["hour"]), closeminute = parseInt(closetime["minute"])
-                  let openStr = jsonDate["month"] + " " + jsonDate["date"] + ", " + jsonDate["year"] + " " + openhour + ":" + openminute
-                  let closeStr = jsonDate["month"] + " " + jsonDate["date"] + ", " + jsonDate["year"] + " " + closehour + ":" + closeminute
-                  let openTimeStr = Date.parse(openStr), closeTimeStr = Date.parse(closeStr), calcTimeStr = openTimeStr
-                  let currenttime = Date.now(), key = 0
-
-                  while (calcTimeStr < closeTimeStr - pushtime) {
-                    calcTimeStr += pushtime
-
-                    let timestr = new Date(calcTimeStr)
-                    let hour = timestr.getHours()
-                    let minute = timestr.getMinutes()
-                    let period = hour < 12 ? "AM" : "PM"
-                    let timeDisplay = (
-                      hour <= 12 ? 
-                        hour == 0 ? 12 : hour
-                        :
-                        hour - 12
-                      )
-                      + ":" + 
-                      (minute < 10 ? '0' + minute : minute) + " " + period
-                    let timepassed = currenttime > calcTimeStr
-
-                    jsonDate = { ...jsonDate, day: days[date.getDay()], hour, minute }
-
-                    times.push({
-                      key: "time-" + key + "-" + dayDir,
-                      timeDisplay, time: calcTimeStr, jsonDate,
-                      timepassed
-                    })
-
-                    key += 1
-                  }
-
-                  chart = { 
-                    "key": dayDir.toString(), 
-                    "times": times, 
-                    "dateHeader": days[date.getDay()] + ", " + jsonDate["month"] + " " + jsonDate["date"] + ", " + jsonDate["year"]
-                  }
-
-                  setChartinfo({ 
-                    ...chartInfo, chart, 
-                    workersHour, workers, 
-                    dayDir, date: jsonDate, 
-                    loading: false 
-                  })
-                  setLoaded(true)
-                }
-              })
-              .catch((err) => {
-                if (err.response && err.response.status == 400) {
-                  const { errormsg, status } = err.response.data
-                }
-              })
+            setChartinfo({ 
+              ...chartInfo, chart, workers, 
+              dayDir, date: jsonDate, 
+              loading: false 
+            })
+            setLoaded(true)
           }
         })
         .catch((err) => {
@@ -831,6 +852,7 @@ export default function Main(props) {
 		getTheLocationProfile()
     getTheLocationHours()
     getTheOwnerInfo()
+    getTheWorkersHour()
 
 		if (Constants.isDevice) getNotificationPermission()
 	}
@@ -1794,18 +1816,18 @@ export default function Main(props) {
               <Text style={styles.header}>{(locationType == 'hair' || locationType == 'nail') ? 'Appointment(s)' : 'Orderer(s)'}</Text>
   					</View>
 
-            {(locationType == "hair" || locationType == "nail") && (
-              <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginVertical: 10 }}>
+            <View style={{ flexDirection: 'column', height: '10%', justifyContent: 'space-around' }}>
+              {(locationType == "hair" || locationType == "nail") && (
                 <View style={styles.viewTypes}>
                   <TouchableOpacity style={styles.viewType} onPress={() => getListAppointments()}>
                     <Text style={styles.viewTypeHeader}>See{'\n'}<Text style={{ fontWeight: 'bold' }}>Your(s)</Text></Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={styles.viewType} onPress={() => getAppointmentsChart(0)}>
+                  <TouchableOpacity style={styles.viewType} onPress={() => getAppointmentsChart(0, null)}>
                     <Text style={styles.viewTypeHeader}>See{'\n'}<Text style={{ fontWeight: 'bold' }}>All Stylist(s)</Text></Text>
                   </TouchableOpacity>
                 </View>
-              </View>
-            )}
+              )}
+            </View>
 
             {viewType == "appointments_list" && ( 
               !appointments.loading ?
@@ -1849,7 +1871,7 @@ export default function Main(props) {
                   />
                   :
                   <View style={styles.bodyResult}>
-                    <Text style={styles.bodyResultHeader}>You will see your appointment(s) here in order</Text>
+                    <Text style={styles.bodyResultHeader}>You will see your appointment(s) here</Text>
                   </View>
                 :
                 <View style={styles.loading}>
@@ -1901,7 +1923,7 @@ export default function Main(props) {
                                   &&
                                   workersHour[worker.id][currDay]["working"]
                                   &&
-                                  !item.timepassed
+                                  item.timepassed == false
                                 )}
                                 key={worker.key}
                                 style={[
@@ -1911,9 +1933,9 @@ export default function Main(props) {
                                     opacity: (
                                       item.time >= workersHour[worker.id][currDay]["open"] && item.time < workersHour[worker.id][currDay]["close"]
                                       &&
-                                      workersHour[worker.id][currDay]["working"]
+                                      workersHour[worker.id][currDay]["working"] == true
                                       &&
-                                      !item.timepassed
+                                      item.timepassed == false
                                     ) ? 1 : 0.3,
                                     width: workers.length < 5 ? (width / workers.length) : 200
                                   }
@@ -2869,7 +2891,7 @@ export default function Main(props) {
                                             currentPassword: '', newPassword: '', confirmPassword: '', editPassword: false,
                                             profile: { uri: '', name: '', size: { width: 0, height: 0 }}, editProfile: false,
                                             workerHours: [], editHours: false,
-                                            errorMsg: ""
+                                            errorMsg: "", loading: false
                                           })
                                           setEditinfo({ ...editInfo, show: true })
                                         }}>
@@ -3155,7 +3177,7 @@ export default function Main(props) {
                                             <TouchableOpacity style={[styles.accountformSubmit, { opacity: accountForm.loading ? 0.3 : 1 }]} disabled={accountForm.loading} onPress={() => {
                                               if (accountForm.addStep == 4) {
                                                 addNewOwner()
-                                              } else if (accountForm.addStep == 0 && !accountForm.verified) {
+                                              } else if (accountForm.addStep == 0 && accountForm.verified == false) {
                                                 verify()
                                               } else {
                                                 setAccountform({ ...accountForm, addStep: accountForm.addStep + 1 })
@@ -3700,8 +3722,8 @@ const styles = StyleSheet.create({
 	main: { backgroundColor: 'white', height: '100%', width: '100%' },
 	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 
-	navs: { alignItems: 'center', width: '100%' },
-  header: { fontSize: wsize(10), fontWeight: 'bold' },
+	navs: { alignItems: 'center', height: '5%', width: '100%' },
+  header: { fontSize: wsize(8), fontWeight: 'bold' },
 
   viewTypes: { flexDirection: 'row', justifyContent: 'space-around' },
   viewType: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: '40%' },
@@ -3742,7 +3764,7 @@ const styles = StyleSheet.create({
 	cartordererAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: wsize(30) },
 	cartordererActionHeader: { fontSize: wsize(4), textAlign: 'center' },
 
-	bodyResult: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around' },
+	bodyResult: { alignItems: 'center', flexDirection: 'column', height: '85%', justifyContent: 'space-around' },
 	bodyResultHeader: { fontSize: wsize(5), fontWeight: 'bold', paddingHorizontal: '10%', textAlign: 'center' },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'column', height: '10%', justifyContent: 'space-around', width: '100%' },
@@ -3896,7 +3918,7 @@ const styles = StyleSheet.create({
   disabledHeader: { color: 'white', fontWeight: 'bold', textAlign: 'center' },
   disabledClose: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 50, padding: 10 },
 
-  loading: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
+  loading: { alignItems: 'center', flexDirection: 'column', height: '85%', justifyContent: 'space-around', width: '100%' },
   row: { flexDirection: 'row', justifyContent: 'space-around' },
   column: { flexDirection: 'column', justifyContent: 'space-around' },
   errorMsg: { color: 'darkred', textAlign: 'center' }
