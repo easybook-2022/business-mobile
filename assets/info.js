@@ -35,8 +35,8 @@ const emptyOwner = { username: "", cellnumber: "", password: "" }
 const useInput = true
 
 const loginLocation = test_input ? testStores[0] : useInput ? realStores[0] : emptyStore
-const ownerSignin = test_input ? testOwners[4] : useInput ? realOwner : emptyOwner
-const registerLocation = test_input ? testStores[1] : useInput ? realStores[0] : emptyStore
+const ownerSignin = test_input ? testOwners[0] : useInput ? realOwner : emptyOwner
+const registerLocation = test_input ? testStores[0] : useInput ? realStores[0] : emptyStore
 
 const wifi_api_url = "http://192.168.0.172:5001/flask"
 const wifi_socket_url = "http://192.168.0.172:5002"

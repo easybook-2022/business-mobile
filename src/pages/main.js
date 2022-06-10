@@ -398,21 +398,28 @@ export default function Main(props) {
     let now = Date.parse(days[today.getDay()] + " " + months[today.getMonth()] + ", " + today.getDate() + " " + today.getFullYear() + " " + today.getHours() + ":" + today.getMinutes())
     let day = days[date.getDay()].substr(0, 3), working = false
 
-    for (let k = 1; k < 10; k++) {
-      console.log(" ")
-    }
-
     for (let worker in newWorkershour) {
       for (let info in newWorkershour[worker]) {
-        if (info == day && newWorkershour[worker][day]["working"] == true && working == false) {
+        if (info == day && newWorkershour[worker][info]["working"] == true && working == false) {
           working = true
+        } else if (info != "scheduled" && info != "profileInfo") {
+          let dayHourInfo = hoursInfo[day]
+
+          newWorkershour[worker][day]["open"] = jsonDateToUnix({
+            "day":days[date.getDay()].substr(0, 3),"month":months[date.getMonth()],
+            "date":date.getDate(),"year":date.getFullYear(), 
+            "hour": dayHourInfo["openHour"], "minute": dayHourInfo["openMinute"]
+          })
+          newWorkershour[worker][day]["close"] = jsonDateToUnix({
+            "day":days[date.getDay()].substr(0, 3),"month":months[date.getMonth()],
+            "date":date.getDate(),"year":date.getFullYear(), 
+            "hour": dayHourInfo["closeHour"], "minute": dayHourInfo["closeMinute"]
+          })
         }
       }
     }
 
-    console.log(working)
-
-    if ((now > closedtime && dir == null) && working == false) {
+    if (dir == null && (now > closedtime || working == false)) {
       getAppointmentsChart(dayDir + 1)
     } else {
       if (dayDir != 0) date.setDate(today.getDate() + dayDir)
@@ -473,6 +480,7 @@ export default function Main(props) {
 
             setChartinfo({ 
               ...chartInfo, chart, workers, 
+              workersHour: newWorkershour, 
               dayDir, date: jsonDate, 
               loading: false 
             })
@@ -1923,7 +1931,7 @@ export default function Main(props) {
                                   &&
                                   workersHour[worker.id][currDay]["working"]
                                   &&
-                                  item.timepassed == false
+                                  !item.timepassed
                                 )}
                                 key={worker.key}
                                 style={[
@@ -1935,7 +1943,7 @@ export default function Main(props) {
                                       &&
                                       workersHour[worker.id][currDay]["working"] == true
                                       &&
-                                      item.timepassed == false
+                                      !item.timepassed
                                     ) ? 1 : 0.3,
                                     width: workers.length < 5 ? (width / workers.length) : 200
                                   }
@@ -2233,19 +2241,19 @@ export default function Main(props) {
                                 props.navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "list" }]}));
                               }, 1000)
                             }}>
-                              <Text style={styles.moreOptionTouchHeader}>Switch Business</Text>
+                              <Text style={styles.moreOptionTouchHeader}>More Business(es)</Text>
                             </TouchableOpacity>
 
                             {(locationType == "hair" || locationType == "nail") && (
                               <View style={styles.receiveTypesBox}>
-                                <Text style={styles.receiveTypesHeader}>Get appointments</Text>
+                                <Text style={styles.receiveTypesHeader}>Get appointments by</Text>
 
                                 <View style={styles.receiveTypes}>
                                   <TouchableOpacity style={[styles.receiveType, { backgroundColor: locationReceivetype == 'stylist' ? 'black' : 'white' }]} onPress={() => setTheReceiveType('stylist')}>
-                                    <Text style={[styles.receiveTypeHeader, { color: locationReceivetype == 'stylist' ? 'white' : 'black' }]}>By stylist(s)</Text>
+                                    <Text style={[styles.receiveTypeHeader, { color: locationReceivetype == 'stylist' ? 'white' : 'black' }]}>stylist</Text>
                                   </TouchableOpacity>
                                   <TouchableOpacity style={[styles.receiveType, { backgroundColor: locationReceivetype == 'owner' ? 'black' : 'white' }]} onPress={() => setTheReceiveType('owner')}>
-                                    <Text style={[styles.receiveTypeHeader, { color: locationReceivetype == 'owner' ? 'white' : 'black' }]}>By owner</Text>
+                                    <Text style={[styles.receiveTypeHeader, { color: locationReceivetype == 'owner' ? 'white' : 'black' }]}>owner</Text>
                                   </TouchableOpacity>
                                 </View>
                               </View>
