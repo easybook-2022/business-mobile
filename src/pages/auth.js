@@ -52,6 +52,8 @@ export default function Auth({ navigation }) {
             case "nonexist":
               setNoaccount(true)
               verify()
+            default:
+              setErrormsg(errormsg)
           }
         }
       })
@@ -117,7 +119,14 @@ export default function Auth({ navigation }) {
   }
 
   useEffect(() => {
-    if (password == confirmPassword) register()
+    if (password.length == confirmPassword.length) {
+      if (password == confirmPassword) {
+        register()
+      } else {
+        setErrormsg("Password is incorrect")
+        setConfirmpassword("")
+      }
+    }
   }, [confirmPassword.length])
 
 	return (
@@ -169,6 +178,7 @@ export default function Auth({ navigation }) {
                       }
                     }} keyboardType="numeric" autoCorrect={false}/>
                   </View>
+                  <Text style={styles.errorMsg}>{errorMsg}</Text>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-around', width: '100%' }}>
                     <View style={{ flexDirection: 'row' }}>
                       <TouchableOpacity style={[styles.submit, { opacity: loading ? 0.3 : 1 }]} disabled={loading} onPress={() => {
@@ -183,10 +193,25 @@ export default function Auth({ navigation }) {
                   </View>
                 </>
                 :
-                <View style={styles.inputContainer}>
-                  <Text style={styles.inputHeader}>Confirm your password:</Text>
-                  <TextInput style={styles.input} secureTextEntry onChangeText={(confirmPassword) => setConfirmpassword(confirmPassword)} value={confirmPassword} autoCorrect={false}/>
-                </View>
+                <>
+                  <View style={styles.inputContainer}>
+                    <Text style={styles.inputHeader}>Confirm your password:</Text>
+                    <TextInput style={styles.input} secureTextEntry onChangeText={(confirmPassword) => setConfirmpassword(confirmPassword)} value={confirmPassword} autoCorrect={false}/>
+                  </View>
+                  <Text style={styles.errorMsg}>{errorMsg}</Text>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-around', width: '100%' }}>
+                    <View style={{ flexDirection: 'row' }}>
+                      <TouchableOpacity style={[styles.submit, { opacity: loading ? 0.3 : 1 }]} disabled={loading} onPress={() => {
+                        setVerifycode('')
+                        setVerified(false)
+                        setNoaccount(false)
+                        setErrormsg('')
+                      }}>
+                        <Text style={styles.submitHeader}>Back</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </>
             }
           </View>
 
@@ -207,6 +232,8 @@ const styles = StyleSheet.create({
   inputContainer: { marginBottom: 5, width: '100%' },
   inputHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(6) },
   input: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(7), padding: 5, width: '100%' },
+
+  errorMsg: { color: 'red', fontSize: wsize(5), textAlign: 'center' },
 
   submit: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontFamily: 'Chilanka_400Regular', padding: 10, width: wsize(50) },
   submitHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },

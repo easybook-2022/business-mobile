@@ -667,7 +667,7 @@ export default function Locationsetup({ navigation }) {
                           {days.map((info, index) => (
                             !info.close &&
                               <View key={index} style={styles.day}>
-                                <Text style={styles.dayHeader}>Set hours for {info.header}</Text>
+                                <Text style={styles.dayHeader}>Set open and close hours for {info.header}</Text>
 
                                 <View style={styles.timeSelectionContainer}>
                                   <View style={styles.timeSelection}>

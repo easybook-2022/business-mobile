@@ -426,7 +426,7 @@ export default function Main(props) {
 
       jsonDate = {"day":days[date.getDay()].substr(0, 3),"month":months[date.getMonth()],"date":date.getDate(),"year":date.getFullYear()}
 
-      data = { locationid, jsonDate }
+      const data = { locationid, jsonDate }
 
       getDayHours(data)
         .then((res) => {
@@ -1927,9 +1927,9 @@ export default function Main(props) {
                             {chartInfo.workers.map(worker => (
                               <TouchableOpacity
                                 disabled={!(
-                                  item.time >= workersHour[worker.id][currDay]["open"] && item.time < workersHour[worker.id][currDay]["close"] // working times
+                                  item.time >= chartInfo.workersHour[worker.id][currDay]["open"] && item.time < chartInfo.workersHour[worker.id][currDay]["close"] // working times
                                   &&
-                                  workersHour[worker.id][currDay]["working"]
+                                  chartInfo.workersHour[worker.id][currDay]["working"] == true
                                   &&
                                   !item.timepassed
                                 )}
@@ -1937,11 +1937,11 @@ export default function Main(props) {
                                 style={[
                                   styles.chartWorker,
                                   {
-                                    backgroundColor: item.time in workersHour[worker.id]["scheduled"] ? 'black' : 'transparent',
+                                    backgroundColor: item.time in chartInfo.workersHour[worker.id]["scheduled"] ? 'black' : 'transparent',
                                     opacity: (
-                                      item.time >= workersHour[worker.id][currDay]["open"] && item.time < workersHour[worker.id][currDay]["close"]
+                                      item.time >= chartInfo.workersHour[worker.id][currDay]["open"] && item.time < chartInfo.workersHour[worker.id][currDay]["close"]
                                       &&
-                                      workersHour[worker.id][currDay]["working"] == true
+                                      chartInfo.workersHour[worker.id][currDay]["working"] == true
                                       &&
                                       !item.timepassed
                                     ) ? 1 : 0.3,
@@ -1949,18 +1949,18 @@ export default function Main(props) {
                                   }
                                 ]}
                                 onPress={() => {
-                                  if (item.time in workersHour[worker.id]["scheduled"]) {
-                                    removeTheBooking(workersHour[worker.id]["scheduled"][item.time])
+                                  if (item.time in chartInfo.workersHour[worker.id]["scheduled"]) {
+                                    removeTheBooking(chartInfo.workersHour[worker.id]["scheduled"][item.time])
                                   } else {
-                                    if (item.time >= workersHour[worker.id][currDay]["open"] && item.time < workersHour[worker.id][currDay]["close"]) bookTheWalkIn(worker, item.jsonDate)
+                                    if (item.time >= chartInfo.workersHour[worker.id][currDay]["open"] && item.time < chartInfo.workersHour[worker.id][currDay]["close"]) bookTheWalkIn(worker, item.jsonDate)
                                   }
                                 }}
                               >
                                 <Text style={[styles.chartTimeHeader, 
                                   { 
                                     color: (
-                                      item.time >= workersHour[worker.id][currDay]["open"] && item.time < workersHour[worker.id][currDay]["close"] ?
-                                        item.time in workersHour[worker.id]["scheduled"] ? 'white' : 'black'
+                                      item.time >= chartInfo.workersHour[worker.id][currDay]["open"] && item.time < chartInfo.workersHour[worker.id][currDay]["close"] ?
+                                        item.time in chartInfo.workersHour[worker.id]["scheduled"] ? 'white' : 'black'
                                         :
                                         'black'
                                     )
@@ -2250,10 +2250,10 @@ export default function Main(props) {
 
                                 <View style={styles.receiveTypes}>
                                   <TouchableOpacity style={[styles.receiveType, { backgroundColor: locationReceivetype == 'stylist' ? 'black' : 'white' }]} onPress={() => setTheReceiveType('stylist')}>
-                                    <Text style={[styles.receiveTypeHeader, { color: locationReceivetype == 'stylist' ? 'white' : 'black' }]}>stylist</Text>
+                                    <Text style={[styles.receiveTypeHeader, { color: locationReceivetype == 'stylist' ? 'white' : 'black' }]}>Stylist(s)</Text>
                                   </TouchableOpacity>
                                   <TouchableOpacity style={[styles.receiveType, { backgroundColor: locationReceivetype == 'owner' ? 'black' : 'white' }]} onPress={() => setTheReceiveType('owner')}>
-                                    <Text style={[styles.receiveTypeHeader, { color: locationReceivetype == 'owner' ? 'white' : 'black' }]}>owner</Text>
+                                    <Text style={[styles.receiveTypeHeader, { color: locationReceivetype == 'owner' ? 'white' : 'black' }]}>Owner</Text>
                                   </TouchableOpacity>
                                 </View>
                               </View>
@@ -3711,7 +3711,7 @@ export default function Main(props) {
                     or tap 'Close'
                   </Text>
 
-                  <TouchableOpacity style={styles.disabledClose} onPress={() => socket.emit("socket/business/login", userId, () => setShowdisabledscreen(false))}>
+                  <TouchableOpacity style={styles.disabledClose} onPress={() => socket.emit("socket/business/login", ownerId, () => setShowdisabledscreen(false))}>
                     <Text style={styles.disabledCloseHeader}>Close</Text>
                   </TouchableOpacity>
 
@@ -3731,7 +3731,7 @@ const styles = StyleSheet.create({
 	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 
 	navs: { alignItems: 'center', height: '5%', width: '100%' },
-  header: { fontSize: wsize(8), fontWeight: 'bold' },
+  header: { fontSize: wsize(5), fontWeight: 'bold' },
 
   viewTypes: { flexDirection: 'row', justifyContent: 'space-around' },
   viewType: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: '40%' },
