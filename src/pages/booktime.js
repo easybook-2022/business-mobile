@@ -33,7 +33,7 @@ export default function Booktime(props) {
   const [oldTime, setOldtime] = useState(0)
   const [openTime, setOpentime] = useState({ hour: 0, minute: 0 })
   const [closeTime, setClosetime] = useState({ hour: 0, minute: 0 })
-  const [selectedDateinfo, setSelecteddateinfo] = useState({ month: '', year: 0, day: '', date: 0, time: 0 })
+  const [selectedDateinfo, setSelecteddateinfo] = useState({ month: '', year: 0, day: '', date: 0 })
   const [calendar, setCalendar] = useState({ firstDay: 0, numDays: 30, data: [
     { key: "day-row-0", row: [
         { key: "day-0-0", num: 0, passed: false }, { key: "day-0-1", num: 0, passed: false }, { key: "day-0-2", num: 0, passed: false }, 
@@ -70,7 +70,6 @@ export default function Booktime(props) {
   const [selectedWorkerinfo, setSelectedworkerinfo] = useState({ worker: null, workers: [], numWorkers: 0, loading: false })
   const [loaded, setLoaded] = useState(false)
   const [step, setStep] = useState(0)
-
   const [confirm, setConfirm] = useState({ show: false, service: "", time: 0, workerIds: [], note: "", requested: false, errormsg: "" })
 
   const getTheAppointmentInfo = () => {
@@ -453,16 +452,14 @@ export default function Booktime(props) {
     getTimes(date, day.substr(0, 3))
   }
   const selectTime = (name, timeheader, time, workerIds) => {
-    setSelecteddateinfo({ ...selectedDateinfo, name, time })
     setConfirm({ ...confirm, show: true, service: name ? name : serviceinfo, time, workerIds })
   }
   const salonChangeTheAppointment = async() => {
     setConfirm({ ...confirm, loading: true })
 
     const locationid = await AsyncStorage.getItem("locationid")
-    const { time } = selectedDateinfo
     const { worker } = selectedWorkerinfo
-    const { note, workerIds } = confirm
+    const { note, workerIds, time } = confirm
     const selectedinfo = new Date(time)
     const day = days[selectedinfo.getDay()], month = months[selectedinfo.getMonth()], date = selectedinfo.getDate(), year = selectedinfo.getFullYear()
     const hour = selectedinfo.getHours(), minute = selectedinfo.getMinutes()

@@ -117,6 +117,12 @@ export default function Auth({ navigation }) {
         }
       })
   }
+  const back = () => {
+    setVerifycode('')
+    setVerified(false)
+    setNoaccount(false)
+    setErrormsg('')
+  }
 
   useEffect(() => {
     if (password.length == confirmPassword.length) {
@@ -144,12 +150,12 @@ export default function Auth({ navigation }) {
               <>
                 <View style={styles.inputContainer}>
                   <Text style={styles.inputHeader}>Cell phone number:</Text>
-                  <TextInput style={styles.input} onChangeText={(num) => setCellnumber(displayPhonenumber(cellnumber, num, () => Keyboard.dismiss()))} value={cellnumber} keyboardType="numeric" autoCorrect={false}/>
+                  <TextInput style={styles.input} secureTextEntry={false} onChangeText={(num) => setCellnumber(displayPhonenumber(cellnumber, num, () => Keyboard.dismiss()))} value={cellnumber} keyboardType="numeric" autoCorrect={false}/>
                 </View>
 
                 <View style={styles.inputContainer}>
                   <Text style={styles.inputHeader}>Password:</Text>
-                  <TextInput style={styles.input} secureEntry={true} onChangeText={(password) => setPassword(password)} secureTextEntry={true} value={password} autoCorrect={false}/>
+                  <TextInput style={styles.input} secureTextEntry={true} onChangeText={(password) => setPassword(password)} secureTextEntry={true} value={password} autoCorrect={false}/>
                 </View>
 
                 <Text style={styles.errorMsg}>{errorMsg}</Text>
@@ -163,7 +169,7 @@ export default function Auth({ navigation }) {
                 <>
                   <View style={styles.inputContainer}>
                     <Text style={styles.inputHeader}>Enter verify code from your message:</Text>
-                    <TextInput style={styles.input} onChangeText={(usercode) => {
+                    <TextInput style={styles.input} secureTextEntry={false} onChangeText={(usercode) => {
                       if (usercode.length == 6) {
                         Keyboard.dismiss()
 
@@ -181,12 +187,7 @@ export default function Auth({ navigation }) {
                   <Text style={styles.errorMsg}>{errorMsg}</Text>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-around', width: '100%' }}>
                     <View style={{ flexDirection: 'row' }}>
-                      <TouchableOpacity style={[styles.submit, { opacity: loading ? 0.3 : 1 }]} disabled={loading} onPress={() => {
-                        setVerifycode('')
-                        setVerified(false)
-                        setNoaccount(false)
-                        setErrormsg('')
-                      }}>
+                      <TouchableOpacity style={[styles.submit, { opacity: loading ? 0.3 : 1 }]} disabled={loading} onPress={() => back()}>
                         <Text style={styles.submitHeader}>Back</Text>
                       </TouchableOpacity>
                     </View>
@@ -196,17 +197,12 @@ export default function Auth({ navigation }) {
                 <>
                   <View style={styles.inputContainer}>
                     <Text style={styles.inputHeader}>Confirm your password:</Text>
-                    <TextInput style={styles.input} secureTextEntry onChangeText={(confirmPassword) => setConfirmpassword(confirmPassword)} value={confirmPassword} autoCorrect={false}/>
+                    <TextInput style={styles.input} secureTextEntry={true} onChangeText={(confirmPassword) => setConfirmpassword(confirmPassword)} value={confirmPassword} autoCorrect={false}/>
                   </View>
                   <Text style={styles.errorMsg}>{errorMsg}</Text>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-around', width: '100%' }}>
                     <View style={{ flexDirection: 'row' }}>
-                      <TouchableOpacity style={[styles.submit, { opacity: loading ? 0.3 : 1 }]} disabled={loading} onPress={() => {
-                        setVerifycode('')
-                        setVerified(false)
-                        setNoaccount(false)
-                        setErrormsg('')
-                      }}>
+                      <TouchableOpacity style={[styles.submit, { opacity: loading ? 0.3 : 1 }]} disabled={loading} onPress={() => back()}>
                         <Text style={styles.submitHeader}>Back</Text>
                       </TouchableOpacity>
                     </View>
