@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
 import { SafeAreaView, Platform, View, Text, TextInput, Image, TouchableOpacity, TouchableWithoutFeedback, Dimensions, StyleSheet, Keyboard, Modal } from 'react-native';
 import Constants from 'expo-constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -15,7 +15,6 @@ const wsize = p => {return width * (p / 100)}
 export default function Auth({ navigation }) {
   const [cellnumber, setCellnumber] = useState(ownerSigninInfo.cellnumber)
   const [password, setPassword] = useState(ownerSigninInfo.password)
-  const [confirmPassword, setConfirmpassword] = useState(ownerSigninInfo.confirmPassword)
   const [noAccount, setNoaccount] = useState(false)
   const [verifyCode, setVerifycode] = useState('')
   const [verified, setVerified] = useState(false)
@@ -89,7 +88,7 @@ export default function Auth({ navigation }) {
   const register = () => {
     setLoading(true)
 
-    const data = { cellnumber, password, confirmPassword }
+    const data = { cellnumber, password, confirmPassword: password }
 
     registerUser(data)
       .then((res) => {
@@ -124,17 +123,6 @@ export default function Auth({ navigation }) {
     setErrormsg('')
   }
 
-  useEffect(() => {
-    if (password.length == confirmPassword.length) {
-      if (password == confirmPassword) {
-        register()
-      } else {
-        setErrormsg("Password is incorrect")
-        setConfirmpassword("")
-      }
-    }
-  }, [confirmPassword.length])
-
 	return (
 		<SafeAreaView style={styles.auth}>
       <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
@@ -142,7 +130,7 @@ export default function Auth({ navigation }) {
           <View style={{ alignItems: 'center' }}>
             <Image style={styles.icon} source={require("../../assets/icon.png")}/>
 
-            <Text style={styles.boxHeader}>Welcome to EasyGO (Business)</Text>
+            <Text style={styles.boxHeader}>Welcome to EasyGO Business</Text>
           </View>
 
           <View style={styles.inputsBox}>
@@ -168,7 +156,7 @@ export default function Auth({ navigation }) {
               !verified ? 
                 <>
                   <View style={styles.inputContainer}>
-                    <Text style={styles.inputHeader}>Enter verify code from your message:</Text>
+                    <Text style={styles.inputHeader}>Please enter verify code from your message:</Text>
                     <TextInput style={styles.input} secureTextEntry={false} onChangeText={(usercode) => {
                       if (usercode.length == 6) {
                         Keyboard.dismiss()
@@ -177,7 +165,7 @@ export default function Auth({ navigation }) {
                           setVerified(true)
                           setErrormsg("")
                         } else {
-                          setErrormsg("The verify code is wrong")
+                          setErrormsg("The code is wrong")
                         }
                       } else {
                         setErrormsg("")
@@ -194,10 +182,18 @@ export default function Auth({ navigation }) {
                   </View>
                 </>
                 :
-                <>
+                <View style={{ width: '100%' }}>
                   <View style={styles.inputContainer}>
                     <Text style={styles.inputHeader}>Confirm your password:</Text>
-                    <TextInput style={styles.input} secureTextEntry={true} onChangeText={(confirmPassword) => setConfirmpassword(confirmPassword)} value={confirmPassword} autoCorrect={false}/>
+                    <TextInput style={styles.input} secureTextEntry={true} onChangeText={(confirmPassword) => {
+                      if (password.length == confirmPassword.length) {
+                        if (password == confirmPassword) {
+                          register()
+                        } else {
+                          setErrormsg("Password is incorrect")
+                        }
+                      }
+                    }} autoCorrect={false}/>
                   </View>
                   <Text style={styles.errorMsg}>{errorMsg}</Text>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-around', width: '100%' }}>
@@ -207,7 +203,7 @@ export default function Auth({ navigation }) {
                       </TouchableOpacity>
                     </View>
                   </View>
-                </>
+                </View>
             }
           </View>
 

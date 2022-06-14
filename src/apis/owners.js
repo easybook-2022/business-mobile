@@ -29,8 +29,12 @@ export const saveUserInfo = data => {
   
   form.append("id", data.id)
   form.append("username", data.username)
-  form.append("profile", { uri, name, type })
-  form.append("size", JSON.stringify(size))
+
+  if (data.profile.uri.includes("file")) {
+    form.append("profile", { uri, name, type })
+    form.append("size", JSON.stringify(size))
+  }
+
   form.append("hours", JSON.stringify(data.hours))
 
   return axios.post(

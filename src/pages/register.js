@@ -543,7 +543,7 @@ export default function Register(props) {
                       {workerHours.map((info, index) => (
                         info.working ?
                           <View key={index} style={styles.workerHour}>
-                            <Text style={styles.workerHourHeader}>Your hours on {info.header}</Text>
+                            <Text style={styles.workerHourHeader}>Set your working hours on {info.header}</Text>
 
                             <View style={styles.timeSelectionContainer}>
                               <View style={styles.timeSelection}>
@@ -671,7 +671,7 @@ export default function Register(props) {
 							<TouchableOpacity style={styles.bottomNav} onPress={() => {
 								AsyncStorage.clear()
 
-                navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "auth" }]}));
+                props.navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "auth" }]}));
 							}}>
 								<Text style={styles.bottomNavHeader}>Log-Out</Text>
 							</TouchableOpacity>
@@ -705,14 +705,14 @@ const styles = StyleSheet.create({
   workerHours: { alignItems: 'center', width: '100%' },
 
   // select working days
-  workerDayHeader: { fontSize: wsize(10), textAlign: 'center' },
+  workerDayHeader: { fontSize: wsize(6), fontWeight: 'bold', paddingVertical: 10, textAlign: 'center' },
   workerDayTouch: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: '90%' },
   workerDayTouchSelected: { backgroundColor: 'rgba(0, 0, 0, 0.6)', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: '90%' },
   workerDayTouchOff: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, margin: 5, opacity: 0.2, padding: 5, width: '90%' },
   workerDayTouchHeader: { fontSize: wsize(6), textAlign: 'center' },
 
   workerHoursBack: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, padding: 10 },
-  workerHoursBackHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(6), textAlign: 'center' },
+  workerHoursBackHeader: { fontSize: wsize(6), textAlign: 'center' },
 
   // adjust working time for each day
   workerHour: { alignItems: 'center', backgroundColor: 'white', borderRadius: 10, marginTop: 30, padding: 5, width: '95%' },

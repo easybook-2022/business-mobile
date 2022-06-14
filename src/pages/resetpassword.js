@@ -72,10 +72,10 @@ export default function Resetpassword(props) {
 
 					<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
 						<View style={style.options}>
-							<TouchableOpacity style={style.option} onPress={() => navigation.replace('verifyowner')}>
+							<TouchableOpacity style={style.option} onPress={() => props.navigation.replace('verifyowner')}>
 								<Text style={style.optionHeader}>Don't have an account ? Sign up</Text>
 							</TouchableOpacity>
-							<TouchableOpacity style={style.option} onPress={() => navigation.replace('login')}>
+							<TouchableOpacity style={style.option} onPress={() => props.navigation.replace('login')}>
                 <Text style={style.optionHeader}>Already a member ? Log in</Text>
               </TouchableOpacity>
 						</View>

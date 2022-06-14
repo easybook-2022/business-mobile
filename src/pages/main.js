@@ -811,25 +811,7 @@ export default function Main(props) {
         data.type == "cancelRequest" || 
         data.type == "remakeAppointment"
       ) {
-        const newChartinfo = {...chartInfo}
-        const { workersHour } = newChartinfo
-        const { scheduleid, time, worker } = data.speak
-        const workerId = worker.id.toString(), unix = jsonDateToUnix(time)
-        const scheduled = workersHour[workerId]["scheduled"]
-
-        for (let time in scheduled) {
-          if (scheduled[time] == scheduleid) {
-            delete workersHour[workerId]["scheduled"][time]
-          }
-        }
-
-        if (data.type == "makeAppointment" || data.type == "remakeAppointment") {
-          workersHour[workerId]["scheduled"][unix] = parseInt(scheduleid)
-        }
-
-        newChartinfo.workersHour = workersHour
-
-        setChartinfo(newChartinfo)
+        getTheWorkersHour()
 
         if (viewType == "appointments_list") {
           getListAppointments()
@@ -1247,15 +1229,13 @@ export default function Main(props) {
 
     const id = await AsyncStorage.getItem("locationid")
     const { cellnumber, username, newPassword, confirmPassword, profile } = accountForm
-    const data = { id, cellnumber, username, password: newPassword, confirmPassword, hours, profile }
+    const data = { id, cellnumber, username, password: newPassword, confirmPassword: newPassword, hours, profile }
 
     addOwner(data)
       .then((res) => {
         if (res.status == 200) {
           return res.data
         }
-
-        return
       })
       .then((res) => {
         if (res) {
@@ -1270,13 +1250,24 @@ export default function Main(props) {
           })
           setEditinfo({ ...editInfo, show: true })
           getAllAccounts()
+          getTheWorkersHour()
         }
       })
       .catch((err) => {
         if (err.response && err.response.status == 400) {
           const { errormsg, status } = err.response.data
 
-          setAccountform({ ...accountForm, errormsg })
+          switch (status) {
+            case "cellnumber":
+              setAccountform({ ...accountForm, addStep: 0, errorMsg: errormsg })
+
+              break;
+            case "password":
+              setAccountform({ ...accountForm, addStep: 3, errorMsg: errormsg })
+
+              break;
+            default:
+          }
         }
       })
   }
@@ -1364,7 +1355,7 @@ export default function Main(props) {
 
         break;
       case "password":
-        data = { ...data, currentPassword, newPassword, confirmPassword }
+        data = { ...data, currentPassword, newPassword, confirmPassword: newPassword }
 
         break;
       case "hours":
@@ -1460,7 +1451,18 @@ export default function Main(props) {
         if (err.response && err.response.status == 400) {
           const { errormsg, status } = err.response.data
 
-          setAccountform({ ...accountForm, errorMsg: errormsg })
+          switch (status) {
+            case "cellnumber":
+              setAccountform({ ...accountForm, editCellnumber: true, editHours: false, errorMsg: errormsg })
+
+              break;
+            case "password":
+              setAccountform({ ...accountForm, editPassword: true, editHours: false, errorMsg: errormsg })
+
+              break;
+            default:
+
+          }
         }
       })
   }
@@ -3009,10 +3011,17 @@ export default function Main(props) {
 
                                           <View style={styles.accountformInputField}>
                                             <Text style={styles.accountformInputHeader}>Confirm password:</Text>
-                                            <TextInput style={styles.accountformInputInput} secureTextEntry={true} onChangeText={(confirmPassword) => setAccountform({
-                                              ...accountForm,
-                                              confirmPassword
-                                            })} value={accountForm.confirmPassword} autoCorrect={false}/>
+                                            <TextInput style={styles.accountformInputInput} secureTextEntry={true} onChangeText={(confirmPassword) => {
+                                              const { newPassword } = accountForm
+
+                                              if (newPassword.length == confirmPassword.length) {
+                                                if (newPassword == confirmPassword) {
+                                                  setAccountform({ ...accountForm, addStep: accountForm.addStep + 1 })
+                                                } else {
+                                                  setAccountform({ ...accountForm, errorMsg: "Password is incorrect" })
+                                                }
+                                              }
+                                            }} autoCorrect={false}/>
                                           </View>
                                         </View>
                                       )}
@@ -3023,7 +3032,7 @@ export default function Main(props) {
                                             {info.working == true ? 
                                               <>
                                                 <View style={{ opacity: info.working ? 1 : 0.1 }}>
-                                                  <Text style={styles.workerHourHeader}>Your hours on {info.header}</Text>
+                                                  <Text style={styles.workerHourHeader}>Set new stylist's working hours on {info.header}</Text>
                                                   <View style={styles.timeSelectionContainer}>
                                                     <View style={styles.timeSelection}>
                                                       <View style={styles.selection}>
@@ -3166,7 +3175,7 @@ export default function Main(props) {
                                       {accountForm.errorMsg ? <Text style={styles.errorMsg}>{accountForm.errorMsg}</Text> : null}
                                       {accountForm.loading ? <ActivityIndicator marginBottom={10} size="small"/> : null}
 
-                                      {!accountForm.verifyCode && (
+                                      {(!accountForm.verifyCode && accountForm.addStep != 3) && (
                                         <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
                                           <View style={{ flexDirection: 'row' }}>
                                             <TouchableOpacity style={[styles.accountformSubmit, { opacity: accountForm.loading ? 0.3 : 1 }]} disabled={accountForm.loading} onPress={() => {
@@ -3191,7 +3200,7 @@ export default function Main(props) {
                                               } else if (accountForm.addStep == 0 && accountForm.verified == false) {
                                                 verify()
                                               } else {
-                                                setAccountform({ ...accountForm, addStep: accountForm.addStep + 1 })
+                                                setAccountform({ ...accountForm, addStep: accountForm.addStep + 1, errorMsg: "" })
                                               }
                                             }}>
                                               <Text style={styles.accountformSubmitHeader}>
@@ -3328,10 +3337,17 @@ export default function Main(props) {
 
                                           <View style={styles.accountformInputField}>
                                             <Text style={styles.accountformInputHeader}>Confirm password:</Text>
-                                            <TextInput style={styles.accountformInputInput} secureTextEntry={true} onChangeText={(confirmPassword) => setAccountform({
-                                              ...accountForm,
-                                              confirmPassword
-                                            })} value={accountForm.confirmPassword} autoCorrect={false}/>
+                                            <TextInput style={styles.accountformInputInput} secureTextEntry={true} onChangeText={(confirmPassword) => {
+                                              const { newPassword } = accountForm
+
+                                              if (newPassword.length == confirmPassword.length) {
+                                                if (newPassword == confirmPassword) {
+
+                                                } else {
+                                                  setAccountform({ ...accountForm, errorMsg: "Password is incorrect" })
+                                                }
+                                              }
+                                            }} autoCorrect={false}/>
                                           </View>
                                         </View>
                                       )}
