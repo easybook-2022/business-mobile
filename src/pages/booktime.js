@@ -110,9 +110,14 @@ export default function Booktime(props) {
       })
   }
   const getCalendar = (month, year) => {
-    let currDate = 0, currDay = '', datenow = Date.now()
+    let currTime = new Date(), currDate = 0, currDay = ''
     let firstDay = (new Date(year, month)).getDay(), numDays = 32 - new Date(year, month, 32).getDate(), daynum = 1
-    let data = calendar.data, datetime = 0, hourInfo, current, now
+    let data = calendar.data, datetime = 0, hourInfo, current, now = Date.parse(
+      days[currTime.getDay()] + " " + 
+      months[currTime.getMonth()] + " " + 
+      currTime.getDate() + " " + 
+      currTime.getFullYear()
+    )
 
     data.forEach(function (info, rowindex) {
       info.row.forEach(function (day, dayindex) {
@@ -123,7 +128,7 @@ export default function Booktime(props) {
           if (dayindex >= firstDay) {
             datetime = Date.parse(days[dayindex] + " " + months[month] + " " + daynum + " " + year)
 
-            day.passed = datenow > datetime
+            day.passed = now > datetime
             day.noservice = selectedWorkerinfo.id > -1 ? 
               !(days[dayindex].substr(0, 3) in selectedWorkerinfo.hours)
               :
@@ -135,7 +140,7 @@ export default function Booktime(props) {
         } else if (daynum <= numDays) {
           datetime = Date.parse(days[dayindex] + " " + months[month] + " " + daynum + " " + year)
 
-          day.passed = datenow > datetime
+          day.passed = now > datetime
           day.noservice = selectedWorkerinfo.id > -1 ? 
             !(days[dayindex].substr(0, 3) in selectedWorkerinfo.hours)
             :
@@ -692,10 +697,10 @@ export default function Booktime(props) {
                 {!confirm.requested ? 
                   <>
                     <Text style={styles.confirmHeader}>
-                      Change Appointment
-                      {'\n' + clientInfo.name + '\n' + confirm.service + '\n'}
-                      to
-                      {'\n\n' + displayTime(confirm.time)}
+                      {'Name: ' + clientInfo.name}
+                      {'\nService: ' + confirm.service + '\n\n'}
+                      Change time to
+                      {'\n' + displayTime(confirm.time)}
                     </Text>
 
                     <View style={styles.note}>
@@ -800,7 +805,7 @@ const styles = StyleSheet.create({
   confirmContainer: { backgroundColor: 'white', flexDirection: 'column', justifyContent: 'space-around', padding: 10, width: '80%' },
   confirmHeader: { fontSize: wsize(6), fontWeight: 'bold', textAlign: 'center' },
   note: { alignItems: 'center', marginBottom: 20 },
-  noteInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(6), height: 100, padding: 5, width: '80%' },
+  noteInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(4), height: 100, padding: 5, width: '80%' },
   confirmOptions: { flexDirection: 'row' },
   confirmOption: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: wsize(20) },
   confirmOptionHeader: { fontSize: wsize(4) },

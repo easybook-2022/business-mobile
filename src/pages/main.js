@@ -1849,6 +1849,7 @@ export default function Main(props) {
                     data={appointments.list}
                     renderItem={({ item, index }) => 
                       <View key={item.key} style={styles.schedule}>
+                        <Text style={styles.scheduleHeader}>{item.name}</Text>
                         <View style={styles.scheduleImageHolder}>
                           <Image 
                             style={resizePhoto(item.image, wsize(20))} 
@@ -1857,9 +1858,9 @@ export default function Main(props) {
                         </View>
                           
                         <Text style={styles.scheduleHeader}>
-                          Client: {item.client.username} for {item.name}
-                          {'\n' + displayTime(item.time)}
+                          Name: {item.client.username}
                           {'\nStylist: ' + item.worker.username}
+                          {'\n' + displayTime(item.time)}
                         </Text>
 
                         <View style={styles.scheduleActions}>
@@ -2155,7 +2156,7 @@ export default function Main(props) {
                               <View style={styles.workerInfoProfile}>
                                 <Image 
                                   source={worker.profile.name ? { uri: logo_url + worker.profile.name } : require("../../assets/noimage.jpeg")}
-                                  style={resizePhoto(worker.profile, 50)}
+                                  style={resizePhoto(worker.profile, wsize(10))}
                                 />
                               </View>
                               <Text style={styles.workerInfoName}>{worker.name}</Text>
@@ -3748,7 +3749,7 @@ const styles = StyleSheet.create({
 
   viewTypes: { flexDirection: 'row', justifyContent: 'space-around' },
   viewType: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: '40%' },
-  viewTypeHeader: { textAlign: 'center' },
+  viewTypeHeader: { fontSize: wsize(3), textAlign: 'center' },
 
 	// body
 	body: { height: '90%', width: '100%' },
@@ -3764,7 +3765,7 @@ const styles = StyleSheet.create({
 	scheduleRow: { flexDirection: 'row', justifyContent: 'space-between' },
 	scheduleImageHolder: { borderRadius: wsize(20) / 2, margin: 5, overflow: 'hidden', width: wsize(20) },
 	scheduleImage: { height: wsize(20), width: wsize(20) },
-	scheduleHeader: { fontSize: wsize(6), fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
+	scheduleHeader: { fontSize: wsize(5), fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
 	scheduleActionsHeader: { fontSize: wsize(4), marginTop: 10, textAlign: 'center' },
 	scheduleActions: { flexDirection: 'row', justifyContent: 'space-around' },
   column: { flexDirection: 'column', justifyContent: 'space-around' },
@@ -3811,17 +3812,17 @@ const styles = StyleSheet.create({
 	requiredActionHeader: { fontSize: wsize(4), textAlign: 'center' },
 
   showInfoContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
-  showInfoBox: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '80%', justifyContent: 'space-around', width: '80%' },
+  showInfoBox: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '90%', justifyContent: 'space-around', width: '90%' },
   showInfoClose: { alignItems: 'center', borderRadius: 20, borderStyle: 'solid', borderWidth: 2, marginVertical: 30 },
   showInfoHeader: { fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
   workerInfoList: { width: '100%' },
   workerRow: { flexDirection: 'row', justifyContent: 'space-around', marginVertical: 30, width: '100%' },
   workerInfo: {  },
-  workerInfoProfile: { borderRadius: 25, height: 50, overflow: 'hidden', width: 50 },
+  workerInfoProfile: { borderRadius: wsize(10) / 2, height: wsize(10), overflow: 'hidden', width: wsize(10) },
   workerInfoName: { color: 'black', textAlign: 'center' },
   workerTime: {  },
-  workerTimeContainer: { flexDirection: 'row', marginBottom: 10 },
-  dayHeader: {  },
+  workerTimeContainer: { flexDirection: 'row', marginBottom: 30 },
+  dayHeader: { fontSize: wsize(4) },
   timeHeaders: { flexDirection: 'row' },
   timeHeader: { fontSize: wsize(4), fontWeight: 'bold' },
 
