@@ -651,6 +651,7 @@ export default function Booktime(props) {
               {step == 0 && (
                 <TouchableOpacity style={styles.action} onPress={() => {
                   getTheLocationHours()
+                  setSelectedworkerinfo({ ...selectedWorkerinfo, id: -1, hours: {} })
                   setStep(1)
                 }}>
                   <Text style={styles.actionHeader}>Skip</Text>

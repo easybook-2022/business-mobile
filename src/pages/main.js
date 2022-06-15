@@ -231,6 +231,7 @@ export default function Main(props) {
 						if (type == 'store' || type == 'restaurant') {
               getAllCartOrderers()
 						} else {
+              getTheWorkersHour()
               getListAppointments()
 						}
 					})
@@ -370,7 +371,7 @@ export default function Main(props) {
 					return res.data
 				}
 			})
-			.then(async(res) => {
+			.then((res) => {
 				if (res) {
 					setAppointments({ ...appointments, list: res.appointments, loading: false })
           setLoaded(true)
@@ -842,7 +843,6 @@ export default function Main(props) {
 		getTheLocationProfile()
     getTheLocationHours()
     getTheOwnerInfo()
-    getTheWorkersHour()
 
 		if (Constants.isDevice) getNotificationPermission()
 	}
@@ -1259,11 +1259,11 @@ export default function Main(props) {
 
           switch (status) {
             case "cellnumber":
-              setAccountform({ ...accountForm, addStep: 0, errorMsg: errormsg })
+              setAccountform({ ...accountForm, addStep: 0, loading: false, errorMsg: errormsg })
 
               break;
             case "password":
-              setAccountform({ ...accountForm, addStep: 3, errorMsg: errormsg })
+              setAccountform({ ...accountForm, addStep: 3, loading: false, errorMsg: errormsg })
 
               break;
             default:
@@ -1355,7 +1355,7 @@ export default function Main(props) {
 
         break;
       case "password":
-        data = { ...data, currentPassword, newPassword, confirmPassword: newPassword }
+        data = { ...data, currentPassword, newPassword, confirmPassword }
 
         break;
       case "hours":
@@ -1453,11 +1453,11 @@ export default function Main(props) {
 
           switch (status) {
             case "cellnumber":
-              setAccountform({ ...accountForm, editCellnumber: true, editHours: false, errorMsg: errormsg })
+              setAccountform({ ...accountForm, editCellnumber: true, editHours: false, errorMsg: errormsg, loading: false })
 
               break;
             case "password":
-              setAccountform({ ...accountForm, editPassword: true, editHours: false, errorMsg: errormsg })
+              setAccountform({ ...accountForm, editPassword: true, editHours: false, errorMsg: errormsg, loading: false })
 
               break;
             default:
@@ -2680,7 +2680,7 @@ export default function Main(props) {
                       {accountForm.show && (
                         <>
                           <ScrollView style={{ height: '100%', width: '100%' }}>
-                            <KeyboardAvoidingView behavior={Platform.OS == "ios" ? "padding" : "position"}>
+                            <KeyboardAvoidingView behavior={Platform.OS == "ios" ? "padding" : "position"} key={accountForm.addStep}>
                               {(!accountForm.editCellnumber && !accountForm.editUsername && !accountForm.editProfile && !accountForm.editPassword && !accountForm.editHours && accountForm.type == 'edit') ? 
                                 <>
                                   <View style={{ alignItems: 'center', marginVertical: 10 }}>
@@ -3016,7 +3016,7 @@ export default function Main(props) {
 
                                               if (newPassword.length == confirmPassword.length) {
                                                 if (newPassword == confirmPassword) {
-                                                  setAccountform({ ...accountForm, addStep: accountForm.addStep + 1 })
+                                                  setAccountform({ ...accountForm, addStep: accountForm.addStep + 1, errorMsg: "" })
                                                 } else {
                                                   setAccountform({ ...accountForm, errorMsg: "Password is incorrect" })
                                                 }
@@ -3337,17 +3337,10 @@ export default function Main(props) {
 
                                           <View style={styles.accountformInputField}>
                                             <Text style={styles.accountformInputHeader}>Confirm password:</Text>
-                                            <TextInput style={styles.accountformInputInput} secureTextEntry={true} onChangeText={(confirmPassword) => {
-                                              const { newPassword } = accountForm
-
-                                              if (newPassword.length == confirmPassword.length) {
-                                                if (newPassword == confirmPassword) {
-
-                                                } else {
-                                                  setAccountform({ ...accountForm, errorMsg: "Password is incorrect" })
-                                                }
-                                              }
-                                            }} autoCorrect={false}/>
+                                            <TextInput style={styles.accountformInputInput} secureTextEntry={true} onChangeText={(confirmPassword) => setAccountform({
+                                              ...accountForm,
+                                              confirmPassword
+                                            })} autoCorrect={false}/>
                                           </View>
                                         </View>
                                       )}
@@ -3541,13 +3534,14 @@ export default function Main(props) {
                                                       size: { width: info.profile.width, height: info.profile.height }
                                                     }, editProfile: false,
                                                     workerHours: info.hours, editHours: false,
-                                                    errorMsg: ""
+                                                    errorMsg: "", loading: false
                                                   })
                                                 } else {
                                                   setAccountform({
                                                     ...accountForm,
                                                     show: false,
                                                     workerHours: info.hours, editHours: false,
+                                                    loading: false
                                                   })
                                                   setEditinfo({ ...editInfo, show: true })
                                                 }
@@ -3886,7 +3880,7 @@ const styles = StyleSheet.create({
   selection: { alignItems: 'center' },
   selectionHeader: { fontSize: wsize(6), textAlign: 'center' },
   selectionDiv: { fontSize: wsize(6) },
-  workerTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5 },
+  workerTouch: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5 },
   workerTouchHeader: { fontSize: wsize(7), textAlign: 'center' },
   
   deleteOwnerBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
@@ -3921,8 +3915,8 @@ const styles = StyleSheet.create({
   receiveTypeHeader: { textAlign: 'center' },
 
   updateButtons: { flexDirection: 'row', justifyContent: 'space-around' },
-  updateButton: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 10 },
-  updateButtonHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(4) },
+  updateButton: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 10 },
+  updateButtonHeader: { fontSize: wsize(5), fontWeight: 'bold' },
 
   bookWalkInContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
   bookWalkInBox: { backgroundColor: 'white', height: '70%', paddingTop: 20, width: '70%' },

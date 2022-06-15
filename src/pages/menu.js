@@ -21,7 +21,6 @@ import { getProductInfo, removeProduct } from '../apis/products'
 import { getServiceInfo, removeService } from '../apis/services'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
-import Entypo from 'react-native-vector-icons/Entypo'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 
 // widgets
@@ -691,10 +690,12 @@ export default function Menu(props) {
 
 					<View style={styles.bottomNavs}>
 						<View style={styles.bottomNavsRow}>
-							<TouchableOpacity style={styles.bottomNav} onPress={() => {
+							<TouchableOpacity style={styles.bottomNavButton} onPress={() => {
                 props.navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "main" }]}));
               }}>
-								<Entypo name="home" size={wsize(7)}/>
+                <Text style={styles.bottomNavButtonHeader}>
+                  {locationType == "hair" || locationType == "nail" ? "Back to\norder(s)" : "Back to\nappointment(s)"}
+                </Text>
 							</TouchableOpacity>
 
   						<View style={styles.column}>
