@@ -2251,6 +2251,20 @@ export default function Main(props) {
                             </TouchableOpacity>
 
                             {(locationType == "hair" || locationType == "nail") && (
+                              <TouchableOpacity style={styles.moreOptionTouch} onPress={() => {
+                                AsyncStorage.setItem("phase", "walkin")
+
+                                setShowmoreoptions({ ...showMoreoptions, show: false })
+
+                                setTimeout(function () {
+                                  props.navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "walkin" }]}));
+                                }, 1000)
+                              }}>
+                                <Text style={styles.moreOptionTouchHeader}>Walk-in(s)</Text>
+                              </TouchableOpacity>
+                            )}
+
+                            {(locationType == "hair" || locationType == "nail") && (
                               <View style={styles.receiveTypesBox}>
                                 <Text style={styles.receiveTypesHeader}>Get appointments by</Text>
 

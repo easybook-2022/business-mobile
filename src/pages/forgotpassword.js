@@ -51,10 +51,6 @@ export default function Forgotpassword({ navigation }) {
 		<SafeAreaView style={styles.forgotpassword}>
 			<TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
 				<View style={styles.box}>
-					<View style={styles.background}>
-						<Image source={require("../../assets/background.jpg")} style={{ height: width, width: width }}/>
-					</View>
-
 					<View style={styles.inputsBox}>
 						{!info.sent ? 
 							<View style={{ alignItems: 'center' }}>
@@ -105,7 +101,6 @@ export default function Forgotpassword({ navigation }) {
 const styles = StyleSheet.create({
 	forgotpassword: { backgroundColor: 'white', height: '100%', width: '100%' },
 	box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
-	background: { alignItems: 'center', flexDirection: 'column', height, justifyContent: 'space-around', position: 'absolute', top: 0, width: width },
   
 	inputsBox: { flexDirection: 'column', height: height / 2, justifyContent: 'space-around', width: '80%' },
 	inputContainer: { marginBottom: 30, width: '100%' },

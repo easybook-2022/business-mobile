@@ -71,9 +71,14 @@ export default function Locationslist(props) {
                   <TouchableOpacity key={item.key} style={styles.location} onPress={() => {
                     AsyncStorage.setItem("locationid", item.id.toString())
                     AsyncStorage.setItem("locationtype", item.type)
-                    AsyncStorage.setItem("phase", "main")
 
-                    props.navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "main" }]}));
+                    if (item.type == "hair" || item.type == "nail") {
+                      AsyncStorage.setItem("phase", "authoption")
+                      props.navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "authoption" }]}))
+                    } else {
+                      AsyncStorage.setItem("phase", "main")
+                      props.navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "main" }]}));
+                    }
                   }}>
                     <View style={styles.locationImageHolder}>
                       <Image style={resizePhoto(item.logo, wsize(20))} source={{ uri: logo_url + item.logo.name }}/>

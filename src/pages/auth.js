@@ -31,7 +31,7 @@ export default function Auth({ navigation }) {
           return res.data
         }
       })
-      .then((res) => {
+      .then(async(res) => {
         if (res) {
           const { ownerid, locationid, locationtype, msg } = res
 
@@ -39,8 +39,9 @@ export default function Auth({ navigation }) {
           AsyncStorage.setItem("locationid", locationid ? locationid.toString() : "")
           AsyncStorage.setItem("locationtype", locationtype ? locationtype : "")
           AsyncStorage.setItem("phase", msg)
+          AsyncStorage.setItem("isOwner", res.isOwner ? "true" : "")
 
-          navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: msg }]}));
+          navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: msg }]}))
         }
       })
       .catch((err) => {

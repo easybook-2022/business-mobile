@@ -13,6 +13,8 @@ import Register from './src/pages/register'
 import Forgotpassword from './src/pages/forgotpassword'
 import Resetpassword from './src/pages/resetpassword'
 import List from './src/pages/list'
+import Authoption from './src/pages/authoption'
+import Walkin from './src/pages/walkin'
 import Locationsetup from './src/pages/locationsetup'
 import Main from './src/pages/main'
 import Booktime from './src/pages/booktime'
@@ -79,6 +81,8 @@ export default function App() {
               )
             })}/>
             <Stack.Screen name="list" component={List} options={{ headerShown: false }}/>
+            <Stack.Screen name="authoption" component={Authoption} options={{ headerShown: false }}/>
+            <Stack.Screen name="walkin" component={Walkin} options={{ headerShown: false }}/>
             <Stack.Screen name="locationsetup" component={Locationsetup} options={{ headerShown: false }}/>
             <Stack.Screen name="main" component={Main} options={{ headerShown: false }}/>
             <Stack.Screen name="booktime" component={Booktime} options={({ navigation, route }) => ({

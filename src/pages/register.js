@@ -70,12 +70,16 @@ export default function Register(props) {
             closeInfo = hours[k].closetime
 
             openMinute = parseInt(openInfo.minute)
+            openMinute = openMinute < 10 ? "0" + openMinute : openMinute
+
             openHour = parseInt(openInfo.hour)
-            openHour = openInfo.period == "PM" ? openHour + 12 : openHour
+            openHour = openHour < 10 ? "0" + openHour : openHour
 
             closeMinute = parseInt(closeInfo.minute)
+            closeMinute = closeMinute < 10 ? "0" + closeMinute : closeMinute
+
             closeHour = parseInt(closeInfo.hour)
-            closeHour = closeInfo.period == "PM" ? closeHour + 12 : closeHour
+            closeHour = closeHour < 10 ? "0" + closeHour : closeHour
 
             currDate = new Date()
 
@@ -93,6 +97,11 @@ export default function Register(props) {
             closeTime = (closeHour < 10 ? "0" + closeHour : closeHour)
             closeTime += ":"
             closeTime += (closeMinute < 10 ? "0" + closeMinute : closeMinute)
+
+            hours[k].opentime.hour = openHour.toString()
+            hours[k].opentime.minute = openMinute.toString()
+            hours[k].closetime.hour = closeHour.toString()
+            hours[k].closetime.minute = closeMinute.toString()
 
             hours[k]["calcDate"] = calcDate
             hours[k]["openunix"] = Date.parse(calcDate + openTime)
@@ -495,7 +504,7 @@ export default function Register(props) {
     							)}
 
     							<TouchableOpacity style={[styles.action, { opacity: loading ? 0.3 : 1 }]} disabled={loading} onPress={() => saveInfo()}>
-    								<Text style={styles.actionHeader}>Next</Text>
+    								<Text style={styles.actionHeader}>{setupType == "profile" ? profile.uri ? "Next" : "Skip" : "Next"}</Text>
     							</TouchableOpacity>
     						</View>
     					</View>
