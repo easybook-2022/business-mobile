@@ -450,8 +450,21 @@ export default function Booktime(props) {
       })
       .then((res) => {
         if (res) {
-          data = { ...data, receiver: res.receiver, time, worker: res.worker }
-          socket.emit("socket/salonChangeAppointment", data, () => {
+          if (res.receiver) {
+            data = { ...data, receiver: res.receiver, time, worker: res.worker }
+
+            socket.emit("socket/salonChangeAppointment", data, () => {
+              setConfirm({ ...confirm, requested: true, loading: false })
+
+              setTimeout(function () {
+                setConfirm({ ...confirm, show: false, requested: false })
+
+                setTimeout(function () {
+                  props.navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "main" }]}));
+                }, 1000)
+              }, 2000)
+            })
+          } else {
             setConfirm({ ...confirm, requested: true, loading: false })
 
             setTimeout(function () {
@@ -461,7 +474,7 @@ export default function Booktime(props) {
                 props.navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "main" }]}));
               }, 1000)
             }, 2000)
-          })
+          }
         }
       })
       .catch((err) => {

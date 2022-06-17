@@ -26,7 +26,7 @@ import {
 } from '../apis/owners'
 import { getLocationProfile, getLocationHours, setLocationHours, updateLocation, setReceiveType, getDayHours } from '../apis/locations'
 import { getMenus, removeMenu, addNewMenu } from '../apis/menus'
-import { cancelSchedule, doneService, getAppointments, getCartOrderers, bookWalkIn, removeBooking, getAppointmentInfo } from '../apis/schedules'
+import { cancelSchedule, doneService, getAppointments, getCartOrderers, removeBooking, getAppointmentInfo } from '../apis/schedules'
 import { removeProduct } from '../apis/products'
 import { setWaitTime } from '../apis/carts'
 
@@ -49,7 +49,6 @@ export default function Main(props) {
 
 	const [appointments, setAppointments] = useState({ list: [], loading: false })
   const [chartInfo, setChartinfo] = useState({ chart: {}, workers: [], workersHour: {}, dayDir: 0, date: {}, loading: false })
-  const [bookWalkinconfirm, setBookwalkinconfirm] = useState({ show: false, worker: {}, client: { name: "", cellnumber: "" }, date: {}, confirm: false, note: "", errorMsg: "" })
   const [removeBookingconfirm, setRemovebookingconfirm] = useState({ show: false, scheduleid: -1, client: { name: "", cellnumber: "" }, workerid: -1, date: {}, reason: "", confirm: false })
 
 	const [cartOrderers, setCartorderers] = useState([])
@@ -175,24 +174,28 @@ export default function Main(props) {
 				if (res) {
 					const { name, fullAddress, logo, type, receiveType, hours } = res.info
           let openInfo, openMinute, openHour, closeInfo, closeMinute, closeHour
-          let currDate, calcDate, openTime, closeTime
+          let currDate, calcDate, header, openTime, closeTime, locationHours = []
 
 					socket.emit("socket/business/login", ownerid, () => {
-            setShowinfo({ ...showInfo, locationHours: hours })
-
             for (let k = 0; k < 7; k++) {
+              header = hours[k].header
               openInfo = hours[k].opentime
               closeInfo = hours[k].closetime
 
               openMinute = parseInt(openInfo.minute)
+              openMinute = openMinute < 10 ? "0" + openMinute : openMinute
+
               openHour = parseInt(openInfo.hour)
-              openHour = openInfo.period == "PM" ? openHour + 12 : openHour
+              openHour = openHour < 10 ? "0" + openHour : openHour
 
               closeMinute = parseInt(closeInfo.minute)
+              closeMinute = closeMinute < 10 ? "0" + closeMinute : closeMinute
+
               closeHour = parseInt(closeInfo.hour)
-              closeHour = closeInfo.period == "PM" ? closeHour + 12 : closeHour
+              closeHour = closeHour < 10 ? "0" + closeHour : closeHour
 
               currDate = new Date()
+
               calcDate = new Date(currDate.setDate(currDate.getDate() - currDate.getDay() + k)).toUTCString();
               calcDate = calcDate.split(" ")
               calcDate.pop()
@@ -207,6 +210,13 @@ export default function Main(props) {
               closeTime = (closeHour < 10 ? "0" + closeHour : closeHour)
               closeTime += ":"
               closeTime += (closeMinute < 10 ? "0" + closeMinute : closeMinute)
+
+              locationHours.push({ key: locationHours.length.toString(), header, opentime: {...hours[k].opentime}, closetime: {...hours[k].closetime} })
+
+              hours[k].opentime.hour = openHour.toString()
+              hours[k].opentime.minute = openMinute.toString()
+              hours[k].closetime.hour = closeHour.toString()
+              hours[k].closetime.minute = closeMinute.toString()
 
               hours[k]["calcDate"] = calcDate
               hours[k]["openunix"] = Date.parse(calcDate + openTime)
@@ -226,6 +236,7 @@ export default function Main(props) {
             setLocationtype(type)
             setLocationreceivetype(receiveType)
             setDays(hours)
+            setShowinfo({ ...showInfo, locationHours })
             setTimerange(hours)
 
 						if (type == 'store' || type == 'restaurant') {
@@ -549,55 +560,6 @@ export default function Main(props) {
             const { errormsg, status } = err.response.data
           }
         })
-    }
-  }
-  const bookTheWalkIn = async(worker, jsonDate) => {
-    if (!bookWalkinconfirm.show) {
-      setBookwalkinconfirm({ ...bookWalkinconfirm, show: true, worker, jsonDate })
-    } else {
-      const { worker, jsonDate, note, client } = bookWalkinconfirm
-
-      if (client.name && client.cellnumber) {
-        const locationid = await AsyncStorage.getItem("locationid")
-        const newWorkershour = {...chartInfo.workersHour}
-        const unix = jsonDateToUnix(jsonDate)
-
-        let data = { 
-          workerid: worker.id, locationid, time: jsonDate, note: note ? note : "", 
-          type: locationType, client
-        }
-
-        bookWalkIn(data)
-          .then((res) => {
-            if (res.status == 200) {
-              return res.data
-            }
-          })
-          .then((res) => {
-            if (res) {
-              newWorkershour[worker.id]["scheduled"][unix] = res.id
-
-              setBookwalkinconfirm({ ...bookWalkinconfirm, confirm: true })
-              setChartinfo({ ...chartInfo, workersHour: newWorkershour })
-
-              setTimeout(function () {
-                setBookwalkinconfirm({ ...bookWalkinconfirm, show: false, client: { name: "", cellnumber: "" }, jsonDate: {}, confirm: false })
-              }, 2000)
-            }
-          })
-          .catch((err) => {
-            if (err.response && err.response.status == 400) {
-              const { errormsg, status } = err.response.data
-
-            }
-          })
-      } else {
-        if (!client.name) {
-          setBookwalkinconfirm({ ...bookWalkinconfirm, errorMsg: "Please enter the client's name" })
-        } else {
-          setBookwalkinconfirm({ ...bookWalkinconfirm, errorMsg: "Please enter the client's cell number" })
-        }
-      }
     }
   }
   const speakToWorker = async(data) => {
@@ -1832,11 +1794,11 @@ export default function Main(props) {
             <View style={{ flexDirection: 'column', height: '10%', justifyContent: 'space-around' }}>
               {(locationType == "hair" || locationType == "nail") && (
                 <View style={styles.viewTypes}>
-                  <TouchableOpacity style={styles.viewType} onPress={() => getListAppointments()}>
-                    <Text style={styles.viewTypeHeader}>See{'\n'}<Text style={{ fontWeight: 'bold' }}>Your(s)</Text></Text>
+                  <TouchableOpacity style={[styles.viewType, { backgroundColor: viewType == "appointments_list" ? "black" : "transparent" }]} onPress={() => getListAppointments()}>
+                    <Text style={[styles.viewTypeHeader, { color: viewType == "appointments_list" ? "white": "black" }]}>See{'\n'}<Text style={{ fontWeight: 'bold' }}>Your(s)</Text></Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={styles.viewType} onPress={() => getAppointmentsChart(0, null)}>
-                    <Text style={styles.viewTypeHeader}>See{'\n'}<Text style={{ fontWeight: 'bold' }}>All Stylist(s)</Text></Text>
+                  <TouchableOpacity style={[styles.viewType, { backgroundColor: viewType == "appointments_chart" ? "black" : "transparent" }]} onPress={() => getAppointmentsChart(0, null)}>
+                    <Text style={[styles.viewTypeHeader, { color: viewType == "appointments_chart" ? "white" : "black" }]}>See{'\n'}<Text style={{ fontWeight: 'bold' }}>All Stylist(s)</Text></Text>
                   </TouchableOpacity>
                 </View>
               )}
@@ -1933,9 +1895,7 @@ export default function Main(props) {
                             {chartInfo.workers.map(worker => (
                               <TouchableOpacity
                                 disabled={!(
-                                  item.time >= chartInfo.workersHour[worker.id][currDay]["open"] && item.time < chartInfo.workersHour[worker.id][currDay]["close"] // working times
-                                  &&
-                                  chartInfo.workersHour[worker.id][currDay]["working"] == true
+                                  !item.time in chartInfo.workersHour[worker.id]["scheduled"]
                                   &&
                                   !item.timepassed
                                 )}
@@ -1944,21 +1904,13 @@ export default function Main(props) {
                                   styles.chartWorker,
                                   {
                                     backgroundColor: item.time in chartInfo.workersHour[worker.id]["scheduled"] ? 'black' : 'transparent',
-                                    opacity: (
-                                      item.time >= chartInfo.workersHour[worker.id][currDay]["open"] && item.time < chartInfo.workersHour[worker.id][currDay]["close"]
-                                      &&
-                                      chartInfo.workersHour[worker.id][currDay]["working"] == true
-                                      &&
-                                      !item.timepassed
-                                    ) ? 1 : 0.3,
+                                    paddingVertical: 10,
                                     width: workers.length < 5 ? (width / workers.length) : 200
                                   }
                                 ]}
                                 onPress={() => {
                                   if (item.time in chartInfo.workersHour[worker.id]["scheduled"]) {
                                     removeTheBooking(chartInfo.workersHour[worker.id]["scheduled"][item.time])
-                                  } else {
-                                    if (item.time >= chartInfo.workersHour[worker.id][currDay]["open"] && item.time < chartInfo.workersHour[worker.id][currDay]["close"]) bookTheWalkIn(worker, item.jsonDate)
                                   }
                                 }}
                               >
@@ -2037,7 +1989,13 @@ export default function Main(props) {
               </View>
 
               <View style={styles.column}>
-                <TouchableOpacity style={styles.bottomNavButton} onPress={() => getTheWorkersTime()}>
+                <TouchableOpacity style={styles.bottomNavButton} onPress={() => {
+                  if (locationType == "nail" || locationType == "hair") {
+                    getTheWorkersTime()
+                  } else {
+                    setShowinfo({ ...showInfo, show: true })
+                  }
+                }}>
                   <Text style={styles.bottomNavButtonHeader}>Hour(s)</Text>
                 </TouchableOpacity>
               </View>
@@ -2056,7 +2014,7 @@ export default function Main(props) {
         </View>
       }
 
-      {(cancelInfo.show || showMenurequired || showInfo.show || showMoreoptions.show || bookWalkinconfirm.show || removeBookingconfirm.show || showDisabledscreen) && (
+      {(cancelInfo.show || showMenurequired || showInfo.show || showMoreoptions.show || removeBookingconfirm.show || showDisabledscreen) && (
         <>
     			{cancelInfo.show && (
     				<Modal transparent={true}>
@@ -2216,7 +2174,7 @@ export default function Main(props) {
                             setShowmoreoptions({ ...showMoreoptions, infoType: 'users' })
                             getAllAccounts()
                           }}>
-                            <Text style={styles.moreOptionTouchHeader}>Change Worker(s) Info</Text>
+                            <Text style={styles.moreOptionTouchHeader}>Change Stylist(s) Info</Text>
                           </TouchableOpacity>
                         )}
 
@@ -3647,52 +3605,6 @@ export default function Main(props) {
               </View>
             </Modal>
           )}
-          {bookWalkinconfirm.show && (
-            <Modal transparent={true}>
-              <View style={styles.bookWalkInContainer}>
-                <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
-                  <View style={styles.bookWalkInBox}>
-                    {!bookWalkinconfirm.confirm ? 
-                      <>
-                        <Text style={styles.bookWalkInHeader}>
-                          (walk-in) or (call) appointment for
-                          {'\n' + bookWalkinconfirm.worker.username}
-                          {'\n' + displayTime(bookWalkinconfirm.jsonDate)}
-                        </Text>
-
-                        <View style={{ alignItems: 'center' }}>
-                          <TextInput style={styles.bookWalkInInput} placeholder="Enter client name" onChangeText={(name) => setBookwalkinconfirm({ ...bookWalkinconfirm, client: {...bookWalkinconfirm.client, name }, errorMsg: "" })} value={bookWalkinconfirm.client.name}/>
-                          <TextInput 
-                            style={styles.bookWalkInInput} placeholder="Enter client's number" keyboardType="numeric" 
-                            onChangeText={(cellnumber) => setBookwalkinconfirm({ 
-                              ...bookWalkinconfirm, 
-                              client: {...bookWalkinconfirm.client, cellnumber: displayPhonenumber(bookWalkinconfirm.client.cellnumber, cellnumber, () => Keyboard.dismiss()) }, 
-                              errorMsg: "" 
-                            })} value={bookWalkinconfirm.client.cellnumber}/>
-                        </View>
-
-                        <Text style={styles.errorMsg}>{bookWalkinconfirm.errorMsg}</Text>
-
-                        <View style={styles.bookWalkInActions}>
-                          <TouchableOpacity style={styles.bookWalkInAction} onPress={() => setBookwalkinconfirm({ ...bookWalkinconfirm, show: false })}>
-                            <Text style={styles.bookWalkInActionHeader}>Cancel</Text>
-                          </TouchableOpacity>
-                          <TouchableOpacity style={styles.bookWalkInAction} onPress={() => bookTheWalkIn()}>
-                            <Text style={styles.bookWalkInActionHeader}>Ok</Text>
-                          </TouchableOpacity>
-                        </View>
-                      </>
-                      :
-                      <Text style={styles.bookWalkInHeader}>
-                        Appointment set for client: {bookWalkinconfirm.client.name}
-                        {'\n' + displayTime(bookWalkinconfirm.jsonDate)}
-                      </Text>
-                    }
-                  </View>
-                </TouchableWithoutFeedback>
-              </View>
-            </Modal>
-          )}
           {removeBookingconfirm.show && (
             <Modal transparent={true}>
               <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
@@ -3763,7 +3675,7 @@ const styles = StyleSheet.create({
 
   viewTypes: { flexDirection: 'row', justifyContent: 'space-around' },
   viewType: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: '40%' },
-  viewTypeHeader: { fontSize: wsize(3), textAlign: 'center' },
+  viewTypeHeader: { fontSize: wsize(4), textAlign: 'center' },
 
 	// body
 	body: { height: '90%', width: '100%' },
@@ -3787,8 +3699,8 @@ const styles = StyleSheet.create({
 	scheduleActionHeader: { fontSize: wsize(4), textAlign: 'center' },
 
   chartRow: { flexDirection: 'row', width: '100%' },
-  chartTimeHeader: { fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
-  chartWorker: { alignItems: 'center', borderColor: 'grey', borderStyle: 'solid', borderWidth: 1, paddingVertical: 2 },
+  chartTimeHeader: { fontSize: wsize(7), fontWeight: 'bold', textAlign: 'center' },
+  chartWorker: { alignItems: 'center', borderColor: 'grey', borderStyle: 'solid', borderWidth: 1 },
   chartWorkerHeader: { fontSize: wsize(5), textAlign: 'center' },
   chartWorkerProfile: { borderRadius: 20, height: 40, overflow: 'hidden', width: 40 },
 
@@ -3835,10 +3747,10 @@ const styles = StyleSheet.create({
   workerInfoProfile: { borderRadius: wsize(10) / 2, height: wsize(10), overflow: 'hidden', width: wsize(10) },
   workerInfoName: { color: 'black', textAlign: 'center' },
   workerTime: {  },
-  workerTimeContainer: { flexDirection: 'row', marginBottom: 30 },
-  dayHeader: { fontSize: wsize(4) },
+  workerTimeContainer: { flexDirection: 'row', marginBottom: 20 },
+  dayHeader: { fontSize: wsize(5) },
   timeHeaders: { flexDirection: 'row' },
-  timeHeader: { fontSize: wsize(4), fontWeight: 'bold' },
+  timeHeader: { fontSize: wsize(5), fontWeight: 'bold' },
 
   moreOptionsContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
   moreOptionsBox: { alignItems: 'center', backgroundColor: 'white', height: '80%', width: '80%' },
@@ -3932,14 +3844,6 @@ const styles = StyleSheet.create({
   updateButtons: { flexDirection: 'row', justifyContent: 'space-around' },
   updateButton: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 10 },
   updateButtonHeader: { fontSize: wsize(5), fontWeight: 'bold' },
-
-  bookWalkInContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
-  bookWalkInBox: { backgroundColor: 'white', height: '70%', paddingTop: 20, width: '70%' },
-  bookWalkInHeader: { fontSize: wsize(6), fontWeight: 'bold', textAlign: 'center' },
-  bookWalkInInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(6), marginVertical: 10, padding: 2, width: '90%' },
-  bookWalkInActions: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
-  bookWalkInAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: '40%' },
-  bookWalkInActionHeader: { textAlign: 'center' },
 
   removeBookingContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
   removeBookingBox: { backgroundColor: 'white', flexDirection: 'column', height: '70%', justifyContent: 'space-around', width: '70%' },

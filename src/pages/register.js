@@ -26,7 +26,8 @@ import Loadingprogress from '../widgets/loadingprogress';
 const { height, width } = Dimensions.get('window')
 const wsize = p => {return width * (p / 100)}
 const steps = ['nickname', 'profile', 'hours']
-const daysArr = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
 export default function Register(props) {
 	const [setupType, setSetuptype] = useState('nickname')
@@ -62,7 +63,7 @@ export default function Register(props) {
       .then((res) => {
         if (res) {
           const hours = [...res.info.hours]
-          let openHour, openMinute, closeHour, closeMinute
+          let openHour, openMinute, openPeriod, closeHour, closeMinute, closePeriod
           let openInfo, closeInfo, currDate, calcDate, openTime, closeTime
 
           for (let k = 0; k < 7; k++) {
@@ -71,41 +72,36 @@ export default function Register(props) {
 
             openMinute = parseInt(openInfo.minute)
             openMinute = openMinute < 10 ? "0" + openMinute : openMinute
-
             openHour = parseInt(openInfo.hour)
             openHour = openHour < 10 ? "0" + openHour : openHour
+            openPeriod = openInfo.period
 
             closeMinute = parseInt(closeInfo.minute)
             closeMinute = closeMinute < 10 ? "0" + closeMinute : closeMinute
-
             closeHour = parseInt(closeInfo.hour)
             closeHour = closeHour < 10 ? "0" + closeHour : closeHour
+            closePeriod = closeInfo.period
 
             currDate = new Date()
+            calcDate = new Date(currDate.setDate(currDate.getDate() - currDate.getDay() + k));
 
-            calcDate = new Date(currDate.setDate(currDate.getDate() - currDate.getDay() + k)).toUTCString();
-            calcDate = calcDate.split(" ")
-            calcDate.pop()
-            calcDate.pop()
+            let day = days[calcDate.getDay()]
+            let month = months[calcDate.getMonth()]
+            let date = calcDate.getDate()
+            let year = calcDate.getFullYear()
+            let dateStr = day + " " + month + " " + date + " " + year
 
-            calcDate = calcDate.join(" ") + " "
-
-            openTime = (openHour < 10 ? "0" + openHour : openHour)
-            openTime += ":"
-            openTime += (openMinute < 10 ? "0" + openMinute : openMinute)
-
-            closeTime = (closeHour < 10 ? "0" + closeHour : closeHour)
-            closeTime += ":"
-            closeTime += (closeMinute < 10 ? "0" + closeMinute : closeMinute)
+            openTime = openHour + ":" + openMinute + " " + openPeriod
+            closeTime = closeHour + ":" + closeMinute + " " + closePeriod
 
             hours[k].opentime.hour = openHour.toString()
             hours[k].opentime.minute = openMinute.toString()
             hours[k].closetime.hour = closeHour.toString()
             hours[k].closetime.minute = closeMinute.toString()
 
-            hours[k]["calcDate"] = calcDate
-            hours[k]["openunix"] = Date.parse(calcDate + openTime)
-            hours[k]["closeunix"] = Date.parse(calcDate + closeTime)
+            hours[k]["date"] = dateStr
+            hours[k]["openTime"] = Date.parse(dateStr + " " + openTime)
+            hours[k]["closeTime"] = Date.parse(dateStr + " " + closeTime)
           }
 
           setType(locationtype)
@@ -123,7 +119,7 @@ export default function Register(props) {
     const newWorkerhours = []
     let emptyDays = true
 
-    daysArr.forEach(function (day, index) {
+    days.forEach(function (day, index) {
       newWorkerhours.push({ 
         key: newWorkerhours.length.toString(), 
         header: day, 
@@ -389,25 +385,18 @@ export default function Register(props) {
 
   const updateWorkingHour = (index, timetype, dir, open) => {
     const newWorkerhours = [...workerHours], hoursRangeInfo = [...hoursRange]
-    let value, { openunix, closeunix, calcDate } = hoursRangeInfo[index]
+    let value, { openTime, closeTime, date } = hoursRangeInfo[index]
     let { opentime, closetime } = newWorkerhours[index], valid = false
 
     value = open ? opentime : closetime
     
     let { hour, minute, period } = timeControl(timetype, value, dir, open)
+    let calcTime = Date.parse(date + " " + hour + ":" + minute + " " + period)
 
     if (open) {
-      valid = (
-        Date.parse(calcDate + " " + hour + ":" + minute + " " + period) >= openunix
-        &&
-        Date.parse(calcDate + " " + hour + ":" + minute + " " + period) <= Date.parse(calcDate + " " + closetime.hour + ":" + closetime.minute + " " + closetime.period)
-      )
+      valid = (calcTime >= openTime && calcTime <= Date.parse(date + " " + closetime.hour + ":" + closetime.minute + " " + closetime.period))
     } else {
-      valid = (
-        Date.parse(calcDate + " " + hour + ":" + minute + " " + period) <= closeunix
-        &&
-        Date.parse(calcDate + " " + hour + ":" + minute + " " + period) >= Date.parse(calcDate + " " + opentime.hour + ":" + opentime.minute + " " + opentime.period)
-      )
+      valid = (calcTime <= closeTime && calcTime >= Date.parse(date + " " + opentime.hour + ":" + opentime.minute + " " + opentime.period))
     }
       
     if (valid) {
@@ -516,7 +505,7 @@ export default function Register(props) {
                   <View style={{ alignItems: 'center', width: '100%' }}>
                     <Text style={styles.workerDayHeader}>What days do you work ?</Text>
 
-                    {daysArr.map((day, index) => (
+                    {days.map((day, index) => (
                       <TouchableOpacity key={index} disabled={hoursRange[index].close} style={
                         !hoursRange[index].close ? 
                           daysInfo.working.indexOf(day) > -1 ? 
