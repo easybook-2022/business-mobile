@@ -40,6 +40,9 @@ const { height, width } = Dimensions.get('window')
 const wsize = p => {return width * (p / 100)}
 
 export default function Main(props) {
+  const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+
   useKeepAwake()
 
 	const [notificationPermission, setNotificationpermission] = useState(null);
@@ -89,7 +92,7 @@ export default function Main(props) {
   const [logo, setLogo] = useState({ uri: '', name: '', size: { width: 0, height: 0 }, loading: false })
   const [locationReceivetype, setLocationreceivetype] = useState('')
 
-  const [days, setDays] = useState([
+  const [locationHours, setLocationhours] = useState([
     { key: "0", header: "Sunday", opentime: { hour: "06", minute: "00", period: "AM" }, closetime: { hour: "09", minute: "00", period: "PM" }, close: false },
     { key: "1", header: "Monday", opentime: { hour: "06", minute: "00", period: "AM" }, closetime: { hour: "09", minute: "00", period: "PM" }, close: false },
     { key: "2", header: "Tuesday", opentime: { hour: "06", minute: "00", period: "AM" }, closetime: { hour: "09", minute: "00", period: "PM" }, close: false },
@@ -173,7 +176,7 @@ export default function Main(props) {
 			.then((res) => {
 				if (res) {
 					const { name, fullAddress, logo, type, receiveType, hours } = res.info
-          let openInfo, openMinute, openHour, closeInfo, closeMinute, closeHour
+          let openInfo, openMinute, openHour, openPeriod, closeInfo, closeMinute, closeHour, closePeriod
           let currDate, calcDate, header, openTime, closeTime, locationHours = []
 
 					socket.emit("socket/business/login", ownerid, () => {
@@ -184,32 +187,27 @@ export default function Main(props) {
 
               openMinute = parseInt(openInfo.minute)
               openMinute = openMinute < 10 ? "0" + openMinute : openMinute
-
               openHour = parseInt(openInfo.hour)
               openHour = openHour < 10 ? "0" + openHour : openHour
+              openPeriod = openInfo.period
 
               closeMinute = parseInt(closeInfo.minute)
               closeMinute = closeMinute < 10 ? "0" + closeMinute : closeMinute
-
               closeHour = parseInt(closeInfo.hour)
               closeHour = closeHour < 10 ? "0" + closeHour : closeHour
+              closePeriod = closeInfo.period
 
               currDate = new Date()
+              calcDate = new Date(currDate.setDate(currDate.getDate() - currDate.getDay() + k));
+              
+              let day = days[calcDate.getDay()]
+              let month = months[calcDate.getMonth()]
+              let date = calcDate.getDate()
+              let year = calcDate.getFullYear()
+              let dateStr = day + " " + month + " " + date + " " + year
 
-              calcDate = new Date(currDate.setDate(currDate.getDate() - currDate.getDay() + k)).toUTCString();
-              calcDate = calcDate.split(" ")
-              calcDate.pop()
-              calcDate.pop()
-
-              calcDate = calcDate.join(" ") + " "
-
-              openTime = (openHour < 10 ? "0" + openHour : openHour)
-              openTime += ":"
-              openTime += (openMinute < 10 ? "0" + openMinute : openMinute)
-
-              closeTime = (closeHour < 10 ? "0" + closeHour : closeHour)
-              closeTime += ":"
-              closeTime += (closeMinute < 10 ? "0" + closeMinute : closeMinute)
+              openTime = openHour + ":" + openMinute + " " + openPeriod
+              closeTime = closeHour + ":" + closeMinute + " " + closePeriod
 
               locationHours.push({ key: locationHours.length.toString(), header, opentime: {...hours[k].opentime}, closetime: {...hours[k].closetime} })
 
@@ -218,9 +216,9 @@ export default function Main(props) {
               hours[k].closetime.hour = closeHour.toString()
               hours[k].closetime.minute = closeMinute.toString()
 
-              hours[k]["calcDate"] = calcDate
-              hours[k]["openunix"] = Date.parse(calcDate + openTime)
-              hours[k]["closeunix"] = Date.parse(calcDate + closeTime)
+              hours[k]["date"] = dateStr
+              hours[k]["openunix"] = Date.parse(dateStr + " " + openTime)
+              hours[k]["closeunix"] = Date.parse(dateStr + " " + closeTime)
               hours[k]["working"] = true
             }
 
@@ -235,7 +233,7 @@ export default function Main(props) {
             setLogo({ ...logo, uri: logo_url + logo.name, size: { width: logo.width, height: logo.height }})
             setLocationtype(type)
             setLocationreceivetype(receiveType)
-            setDays(hours)
+            setLocationhours(hours)
             setShowinfo({ ...showInfo, locationHours })
             setTimerange(hours)
 
@@ -1235,25 +1233,18 @@ export default function Main(props) {
   }
   const updateWorkingHour = (index, timetype, dir, open) => {
     const newWorkerhours = [...accountForm.workerHours], timeRangeInfo = [...timeRange]
-    let value, { openunix, closeunix, calcDate } = timeRangeInfo[index]
+    let value, { openunix, closeunix, date } = timeRangeInfo[index]
     let { opentime, closetime } = newWorkerhours[index], valid = false
 
     value = open ? opentime : closetime
 
     let { hour, minute, period } = timeControl(timetype, value, dir, open)
+    let calcTime = Date.parse(date + " " + hour + ":" + minute + " " + period)
 
     if (open) {
-      valid = (
-        Date.parse(calcDate + " " + hour + ":" + minute + " " + period) >= openunix
-        &&
-        Date.parse(calcDate + " " + hour + ":" + minute + " " + period) <= Date.parse(calcDate + " " + closetime.hour + ":" + closetime.minute + " " + closetime.period)
-      )
+      valid = (calcTime >= openunix && calcTime <= Date.parse(date + " " + closetime.hour + ":" + closetime.minute + " " + closetime.period))
     } else {
-      valid = (
-        Date.parse(calcDate + " " + hour + ":" + minute + " " + period) <= closeunix
-        &&
-        Date.parse(calcDate + " " + hour + ":" + minute + " " + period) >= Date.parse(calcDate + " " + opentime.hour + ":" + opentime.minute + " " + opentime.period)
-      )
+      valid = (calcTime <= closeunix && calcTime >= Date.parse(date + " " + opentime.hour + ":" + opentime.minute + " " + opentime.period))
     }
       
     if (valid) {
@@ -1271,8 +1262,8 @@ export default function Main(props) {
     }
   }
   const updateTime = (index, timetype, dir, open) => {
-    const newDays = [...days]
-    let value, { opentime, closetime } = newDays[index]
+    const newLocationhours = [...locationHours]
+    let value, { opentime, closetime } = newLocationhours[index]
 
     value = open ? opentime : closetime
     
@@ -1283,12 +1274,12 @@ export default function Main(props) {
     value.period = period
 
     if (open) {
-      newDays[index].opentime = value
+      newLocationhours[index].opentime = value
     } else {
-      newDays[index].closetime = value
+      newLocationhours[index].closetime = value
     }
 
-    setDays(newDays)
+    setLocationhours(newLocationhours)
   }
   const working = index => {
     const newWorkerhours = [...accountForm.workerHours]
@@ -2411,7 +2402,7 @@ export default function Main(props) {
                                 <>
                                   <Text style={[styles.header, { fontSize: wsize(6) }]}>Edit{header}Hour(s)</Text>
 
-                                  {days.map((info, index) => (
+                                  {locationHours.map((info, index) => (
                                     <View key={index} style={styles.workerHour}>
                                       {info.close == false ? 
                                         <>
@@ -2424,11 +2415,11 @@ export default function Main(props) {
                                                     <AntDesign name="up" size={wsize(7)}/>
                                                   </TouchableOpacity>
                                                   <TextInput style={styles.selectionHeader} onChangeText={(hour) => {
-                                                    const newDays = [...days]
+                                                    const newLocationhours = [...locationHours]
 
-                                                    newDays[index].opentime["hour"] = hour.toString()
+                                                    newLocationhours[index].opentime["hour"] = hour.toString()
 
-                                                    setDays(newDays)
+                                                    setLocationhours(newLocationhours)
                                                   }} keyboardType="numeric" maxLength={2} value={info.opentime.hour}/>
                                                   <TouchableOpacity onPress={() => updateTime(index, "hour", "down", true)}>
                                                     <AntDesign name="down" size={wsize(7)}/>
@@ -2442,11 +2433,11 @@ export default function Main(props) {
                                                     <AntDesign name="up" size={wsize(7)}/>
                                                   </TouchableOpacity>
                                                   <TextInput style={styles.selectionHeader} onChangeText={(minute) => {
-                                                    const newDays = [...days]
+                                                    const newLocationhours = [...locationHours]
 
-                                                    newDays[index].opentime["minute"] = minute.toString()
+                                                    newLocationhours[index].opentime["minute"] = minute.toString()
 
-                                                    setDays(newDays)
+                                                    setLocationhours(newLocationhours)
                                                   }} keyboardType="numeric" maxLength={2} value={info.opentime.minute}/>
                                                   <TouchableOpacity onPress={() => updateTime(index, "minute", "down", true)}>
                                                     <AntDesign name="down" size={wsize(7)}/>
@@ -2471,11 +2462,11 @@ export default function Main(props) {
                                                     <AntDesign name="up" size={wsize(7)}/>
                                                   </TouchableOpacity>
                                                   <TextInput style={styles.selectionHeader} onChangeText={(hour) => {
-                                                    const newDays = [...days]
+                                                    const newLocationhours = [...locationHours]
 
-                                                    newDays[index].closetime["hour"] = hour.toString()
+                                                    newLocationhours[index].closetime["hour"] = hour.toString()
 
-                                                    setDays(newDays)
+                                                    setLocationhours(newLocationhours)
                                                   }} keyboardType="numeric" maxLength={2} value={info.closetime.hour}/>
                                                   <TouchableOpacity onPress={() => updateTime(index, "hour", "down", false)}>
                                                     <AntDesign name="down" size={wsize(7)}/>
@@ -2489,11 +2480,11 @@ export default function Main(props) {
                                                     <AntDesign name="up" size={wsize(7)}/>
                                                   </TouchableOpacity>
                                                   <TextInput style={styles.selectionHeader} onChangeText={(minute) => {
-                                                    const newDays = [...days]
+                                                    const newLocationhours = [...locationHours]
 
-                                                    newDays[index].closetime["minute"] = minute.toString()
+                                                    newLocationhours[index].closetime["minute"] = minute.toString()
 
-                                                    setDays(newDays)
+                                                    setLocationhours(newLocationhours)
                                                   }} keyboardType="numeric" maxLength={2} value={info.closetime.minute}/>
                                                   <TouchableOpacity onPress={() => updateTime(index, "minute", "down", false)}>
                                                     <AntDesign name="down" size={wsize(7)}/>
@@ -2512,11 +2503,11 @@ export default function Main(props) {
                                             </View>
                                           </View>
                                           <TouchableOpacity style={styles.workerTouch} onPress={() => {
-                                            const newDays = [...days]
+                                            const newLocationhours = [...locationHours]
 
-                                            newDays[index].close = true
+                                            newLocationhours[index].close = true
 
-                                            setDays(newDays)
+                                            setLocationhours(newLocationhours)
                                           }}>
                                             <Text style={styles.workerTouchHeader}>Change to not open</Text>
                                           </TouchableOpacity>
@@ -2526,11 +2517,11 @@ export default function Main(props) {
                                           <Text style={styles.workerHourHeader}>Not open on {info.header}</Text>
 
                                           <TouchableOpacity style={styles.workerTouch} onPress={() => {
-                                            const newDays = [...days]
+                                            const newLocationhours = [...locationHours]
 
-                                            newDays[index].close = false
+                                            newLocationhours[index].close = false
 
-                                            setDays(newDays)
+                                            setLocationhours(newLocationhours)
                                           }}>
                                             <Text style={styles.workerTouchHeader}>Change to open</Text>
                                           </TouchableOpacity>
