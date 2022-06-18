@@ -20,9 +20,6 @@ export default function Authoption({ navigation }) {
     })
   }
 
-  useEffect(() => {
-  }, [])
-
   return (
     <SafeAreaView style={styles.list}>
       <View style={styles.box}>

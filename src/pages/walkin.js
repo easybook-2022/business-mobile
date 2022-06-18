@@ -114,8 +114,12 @@ export default function Walkin({ navigation }) {
               if (info == "scheduled") {
                 const newScheduled = {}
 
-                for (let time in workersHour[worker]["scheduled"]) {
-                  newScheduled[jsonDateToUnix(JSON.parse(time))] = workersHour[worker]["scheduled"][time]
+                for (let info in workersHour[worker]["scheduled"]) {
+                  let splitTime = info.split("-")
+                  let time = splitTime[0]
+                  let status = splitTime[1]
+                  
+                  newScheduled[jsonDateToUnix(JSON.parse(time))] = workersHour[worker]["scheduled"][info]
                 }
 
                 workersHour[worker]["scheduled"] = newScheduled

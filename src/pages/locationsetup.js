@@ -808,7 +808,10 @@ export default function Locationsetup({ navigation }) {
                   <View style={styles.typeSelections}>
                     <Text style={styles.introHeader}>What business are you ?</Text>
 
-                    <TouchableOpacity style={[styles.typeSelection, { backgroundColor: type == 'hair' ? 'rgba(0, 0, 0, 0.5)' : null }]} onPress={() => setType('hair')}>
+                    <TouchableOpacity style={[styles.typeSelection, { backgroundColor: type == 'hair' ? 'rgba(0, 0, 0, 0.5)' : null }]} onPress={() => {
+                      setType('hair')
+                      saveInfo()
+                    }}>
                       <View style={styles.typeSelectionRow}>
                         <View style={styles.column}>
                           <Text style={styles.typeSelectionHeader}>Hair{'\n'}Salon</Text>
@@ -821,7 +824,10 @@ export default function Locationsetup({ navigation }) {
                         </View>
                       </View>
                     </TouchableOpacity>
-                    <TouchableOpacity style={[styles.typeSelection, { backgroundColor: type == 'nail' ? 'rgba(0, 0, 0, 0.5)' : null }]} onPress={() => setType('nail')}>
+                    <TouchableOpacity style={[styles.typeSelection, { backgroundColor: type == 'nail' ? 'rgba(0, 0, 0, 0.5)' : null }]} onPress={() => {
+                      setType('nail')
+                      saveInfo()
+                    }}>
                       <View style={styles.typeSelectionRow}>
                         <View style={styles.column}>
                           <Text style={styles.typeSelectionHeader}>Nail{'\n'}Salon</Text>
@@ -834,7 +840,10 @@ export default function Locationsetup({ navigation }) {
                         </View>
                       </View>
                     </TouchableOpacity>
-                    <TouchableOpacity style={[styles.typeSelection, { backgroundColor: type == 'restaurant' ? 'rgba(0, 0, 0, 0.5)' : null }]} onPress={() => setType('restaurant')}>
+                    <TouchableOpacity style={[styles.typeSelection, { backgroundColor: type == 'restaurant' ? 'rgba(0, 0, 0, 0.5)' : null }]} onPress={() => {
+                      setType('restaurant')
+                      saveInfo()
+                    }}>
                       <View style={styles.typeSelectionRow}>
                         <View style={styles.column}>
                           <Text style={styles.typeSelectionHeader}>Restaurant</Text>
@@ -847,7 +856,10 @@ export default function Locationsetup({ navigation }) {
                         </View>
                       </View>
                     </TouchableOpacity>
-                    <TouchableOpacity style={[styles.typeSelection, { backgroundColor: type == 'store' ? 'rgba(0, 0, 0, 0.5)' : null }]} onPress={() => setType('store')}>
+                    <TouchableOpacity style={[styles.typeSelection, { backgroundColor: type == 'store' ? 'rgba(0, 0, 0, 0.5)' : null }]} onPress={() => {
+                      setType('store')
+                      saveInfo()
+                    }}>
                       <View style={styles.typeSelectionRow}>
                         <View style={styles.column}>
                           <Text style={styles.typeSelectionHeader}>Store</Text>
@@ -930,9 +942,11 @@ export default function Locationsetup({ navigation }) {
                       </TouchableOpacity>
                     )}
 
-                    <TouchableOpacity style={styles.action} disabled={loading} onPress={() => setupType == "hours" && daysInfo.step == 1 ? setupYourLocation() : saveInfo()}>
-                      <Text style={styles.actionHeader}>{setupType == "" ? "Let's go" : "Next"}</Text>
-                    </TouchableOpacity>
+                    {setupType != "type" && (
+                      <TouchableOpacity style={styles.action} disabled={loading} onPress={() => setupType == "hours" && daysInfo.step == 1 ? setupYourLocation() : saveInfo()}>
+                        <Text style={styles.actionHeader}>{setupType == "" ? "Let's go" : "Next"}</Text>
+                      </TouchableOpacity>
+                    )}
                   </View>
                 </View>
               </View>

@@ -48,6 +48,13 @@ export const removeBooking = data => {
   )
 }
 
+export const blockTime = data => {
+  return axios.post(
+    `${url}/schedules/block_time`,
+    data
+  )
+}
+
 export const getOrders = data => {
 	return axios.post(
 		`${url}/schedules/get_orders`,

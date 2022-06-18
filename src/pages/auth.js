@@ -219,11 +219,11 @@ const styles = StyleSheet.create({
 	auth: { backgroundColor: 'white', height: '100%', paddingTop: Platform.OS == "ios" ? 0 : Constants.statusBarHeight, width: '100%' },
 	box: { alignItems: 'center', height: '100%', paddingHorizontal: 10, width: '100%' },
   icon: { height: width * 0.2, width: width * 0.2 },
-	boxHeader: { fontSize: wsize(5), fontWeight: 'bold', marginVertical: '10%', textAlign: 'center' },
+	boxHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(5), fontWeight: 'bold', marginVertical: '10%', textAlign: 'center' },
 
   inputsBox: { alignItems: 'center', width: '80%' },
   inputContainer: { marginBottom: 5, width: '100%' },
-  inputHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(6) },
+  inputHeader: { fontSize: wsize(6) },
   input: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(7), padding: 5, width: '100%' },
 
   errorMsg: { color: 'red', fontSize: wsize(5), textAlign: 'center' },

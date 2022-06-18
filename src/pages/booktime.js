@@ -361,8 +361,12 @@ export default function Booktime(props) {
               if (info == "scheduled") {
                 const newScheduled = {}
 
-                for (let time in workersHour[worker]["scheduled"]) {
-                  newScheduled[jsonDateToUnix(JSON.parse(time))] = workersHour[worker]["scheduled"][time]
+                for (let info in workersHour[worker]["scheduled"]) {
+                  let splitTime = info.split("-")
+                  let time = splitTime[0]
+                  let status = splitTime[1]
+
+                  newScheduled[jsonDateToUnix(JSON.parse(time))] = workersHour[worker]["scheduled"][info]
                 }
 
                 workersHour[worker]["scheduled"] = newScheduled
@@ -483,7 +487,7 @@ export default function Booktime(props) {
 
           setConfirm({ ...confirm, errorMsg: errormsg })
         }
-    })
+      })
   }
   const jsonDateToUnix = date => {
     return Date.parse(date["day"] + " " + date["month"] + " " + date["date"] + " " + date["year"] + " " + date["hour"] + ":" + date["minute"])
@@ -542,7 +546,7 @@ export default function Booktime(props) {
           <>
             {step == 0 && (
               <View style={styles.workerSelection}>
-                <Text style={styles.workerSelectionHeader}>Pick a stylist (Optional)</Text>
+                <Text style={styles.workerSelectionHeader}>Pick a {!scheduleid ? '' : '\ndifferent'} stylist (Optional)</Text>
 
                 <View style={styles.workersList}>
                   <FlatList
@@ -573,7 +577,7 @@ export default function Booktime(props) {
 
             {step == 1 && (
               <View style={styles.dateSelection}>
-                <Text style={styles.dateSelectionHeader}>Tap a date below</Text>
+                <Text style={styles.dateSelectionHeader}>Tap a {!scheduleid ? '' : '\ndifferent'} date below</Text>
 
                 {!calendar.loading && (
                   <>
@@ -629,7 +633,8 @@ export default function Booktime(props) {
             {step == 2 && (
               <View style={styles.timesSelection}>
                 <ScrollView style={{ width: '100%' }}>
-                  <Text style={styles.timesHeader}>Tap a time below</Text>
+                  <Text style={[styles.timesHeader, { fontSize: 15 }]}>Current: {displayTime(oldTime)}</Text>
+                  <Text style={styles.timesHeader}>Tap a {'\n'}different time below</Text>
 
                   <View style={{ alignItems: 'center' }}>
                     <View style={styles.times}>
@@ -666,14 +671,28 @@ export default function Booktime(props) {
                 <Text style={styles.actionHeader}>Back</Text>
               </TouchableOpacity>
 
-              {step == 0 && (
-                <TouchableOpacity style={styles.action} onPress={() => {
-                  getTheLocationHours()
-                  setSelectedworkerinfo({ ...selectedWorkerinfo, id: -1, hours: {} })
-                  setStep(1)
-                }}>
-                  <Text style={styles.actionHeader}>Skip</Text>
-                </TouchableOpacity>
+              {(step == 0 || step == 1) && (
+                step == 0 ? 
+                  selectedWorkerinfo.id > -1 ? 
+                    <TouchableOpacity style={styles.action} onPress={() => selectWorker(selectedWorkerinfo.id)}>
+                      <Text style={styles.actionHeader}>Next</Text>
+                    </TouchableOpacity>
+                    :
+                    <TouchableOpacity style={styles.action} onPress={() => {
+                      getTheLocationHours()
+                      setSelectedworkerinfo({ ...selectedWorkerinfo, id: -1, hours: {} })
+                      setStep(1)
+                    }}>
+                      <Text style={styles.actionHeader}>Skip</Text>
+                    </TouchableOpacity>
+                  :
+                  <TouchableOpacity style={styles.action} onPress={() => {
+                    const { day, date } = selectedDateinfo
+
+                    selectDate(date, day)
+                  }}>
+                    <Text style={styles.actionHeader}>Pick today</Text>
+                  </TouchableOpacity>
               )}
             </View>
           </>

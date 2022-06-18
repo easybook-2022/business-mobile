@@ -26,7 +26,7 @@ import {
 } from '../apis/owners'
 import { getLocationProfile, getLocationHours, setLocationHours, updateLocation, setReceiveType, getDayHours } from '../apis/locations'
 import { getMenus, removeMenu, addNewMenu } from '../apis/menus'
-import { cancelSchedule, doneService, getAppointments, getCartOrderers, removeBooking, getAppointmentInfo } from '../apis/schedules'
+import { cancelSchedule, doneService, getAppointments, getCartOrderers, removeBooking, getAppointmentInfo, blockTime } from '../apis/schedules'
 import { removeProduct } from '../apis/products'
 import { setWaitTime } from '../apis/carts'
 
@@ -348,7 +348,11 @@ export default function Main(props) {
                 let newScheduled = {}
 
                 for (let info in scheduled) {
-                  newScheduled[jsonDateToUnix(JSON.parse(info))] = scheduled[info]
+                  let splitInfo = info.split("-")
+                  let time = splitInfo[0]
+                  let status = splitInfo[1]
+
+                  newScheduled[jsonDateToUnix(JSON.parse(time)) + "-" + status] = scheduled[info]
                 }
 
                 workersHour[worker][day] = newScheduled
@@ -503,6 +507,36 @@ export default function Main(props) {
           }
         })
     }
+  }
+  const blockTheTime = (workerid, jsonDate) => {
+    const newWorkershour = {...chartInfo.workersHour}
+    const data = { workerid, jsonDate: JSON.stringify(jsonDate) }
+    const unix = jsonDateToUnix(jsonDate)
+
+    blockTime(data)
+      .then((res) => {
+        if (res.status == 200) {
+          return res.data
+        }
+      })
+      .then((res) => {
+        if (res) {
+          if (res.action == "add") {
+            newWorkershour[workerid]["scheduled"][unix + "-b"] = res.id
+          } else {
+            if (unix + "-b" in newWorkershour[workerid]["scheduled"]) {
+              delete newWorkershour[workerid]["scheduled"][unix + "-b"]
+            }
+          }
+
+          setChartinfo({ ...chartInfo, workersHour: newWorkershour })
+        }
+      })
+      .catch((err) => {
+        if (err.response && err.response.status == 400) {
+          const { errormsg, status } = err.response.data
+        }
+      })
   }
   const removeTheBooking = id => {
     if (!removeBookingconfirm.show) {
@@ -1886,22 +1920,36 @@ export default function Main(props) {
                             {chartInfo.workers.map(worker => (
                               <TouchableOpacity
                                 disabled={!(
-                                  !item.time in chartInfo.workersHour[worker.id]["scheduled"]
-                                  &&
                                   !item.timepassed
                                 )}
                                 key={worker.key}
                                 style={[
                                   styles.chartWorker,
                                   {
-                                    backgroundColor: item.time in chartInfo.workersHour[worker.id]["scheduled"] ? 'black' : 'transparent',
+                                    backgroundColor: (
+                                        item.time + "-c" in chartInfo.workersHour[worker.id]["scheduled"] || 
+                                        item.time + "-b" in chartInfo.workersHour[worker.id]["scheduled"]
+                                      ) ? 
+                                      item.time + "-c" in chartInfo.workersHour[worker.id]["scheduled"] ? 
+                                        'black' 
+                                        :
+                                        'grey'
+                                      : 
+                                      'transparent',
+                                    opacity: (
+                                      !item.timepassed
+                                      ||
+                                      item.time + "-b" in chartInfo.workersHour[worker.id]["scheduled"]
+                                    ) ? 1 : 0.3,
                                     paddingVertical: 10,
                                     width: workers.length < 5 ? (width / workers.length) : 200
                                   }
                                 ]}
                                 onPress={() => {
-                                  if (item.time in chartInfo.workersHour[worker.id]["scheduled"]) {
+                                  if (item.time + "-c" in chartInfo.workersHour[worker.id]["scheduled"]) {
                                     removeTheBooking(chartInfo.workersHour[worker.id]["scheduled"][item.time])
+                                  } else {
+                                    blockTheTime(worker.id, item.jsonDate)
                                   }
                                 }}
                               >
@@ -1909,7 +1957,7 @@ export default function Main(props) {
                                   { 
                                     color: (
                                       item.time >= chartInfo.workersHour[worker.id][currDay]["open"] && item.time < chartInfo.workersHour[worker.id][currDay]["close"] ?
-                                        item.time in chartInfo.workersHour[worker.id]["scheduled"] ? 'white' : 'black'
+                                        item.time + "-c" in chartInfo.workersHour[worker.id]["scheduled"] ? 'white' : 'black'
                                         :
                                         'black'
                                     )
