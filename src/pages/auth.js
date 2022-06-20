@@ -52,6 +52,8 @@ export default function Auth({ navigation }) {
             case "nonexist":
               setNoaccount(true)
               verify()
+
+              break;
             default:
               setErrormsg(errormsg)
           }

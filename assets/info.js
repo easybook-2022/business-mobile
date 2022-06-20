@@ -1,6 +1,6 @@
 import io from 'socket.io-client'
 
-const local_url = true
+const local_url = false
 const test_input = false
 
 const testStores = [

@@ -67,7 +67,7 @@ export default function Booktime(props) {
   const [times, setTimes] = useState([])
   const [allStylists, setAllstylists] = useState({ stylists: [], numStylists: 0 })
   const [allWorkerstime, setAllworkerstime] = useState({})
-  const [scheduled, setScheduled] = useState({})  
+  const [scheduled, setScheduled] = useState({})
   const [loaded, setLoaded] = useState(false)
 
   const [step, setStep] = useState(0)
@@ -230,7 +230,7 @@ export default function Booktime(props) {
           calcDateStr <= Date.parse(closeStr.substring(0, closeStr.length - 5) + endTime)
         ) {
           availableService = true
-          workerIds = [selectedWorkerinfo.hours[day.substr(0, 3)]["workerId"]]
+          workerIds = [selectedWorkerinfo.hours[day]["workerId"]]
         }
       } else {
         if (day in allWorkerstime) {
@@ -522,7 +522,6 @@ export default function Booktime(props) {
     getAllTheStylists()
     getTheLocationHours()
     getAllTheWorkersTime()
-    getAllScheduledTimes()
     getTheAppointmentInfo()
   }, [])
 
@@ -577,7 +576,7 @@ export default function Booktime(props) {
 
             {step == 1 && (
               <View style={styles.dateSelection}>
-                <Text style={styles.dateSelectionHeader}>Tap a {!scheduleid ? '' : '\ndifferent'} date below</Text>
+                <Text style={styles.dateSelectionHeader}>Tap a {'\ndifferent'} date below</Text>
 
                 {!calendar.loading && (
                   <>
@@ -729,7 +728,7 @@ export default function Booktime(props) {
                 {!confirm.requested ? 
                   <>
                     <Text style={styles.confirmHeader}>
-                      {'Name: ' + clientInfo.name}
+                      Name: {clientInfo.name}
                       {'\nService: ' + confirm.service + '\n\n'}
                       Change time to
                       {'\n' + displayTime(confirm.time)}
@@ -742,8 +741,6 @@ export default function Booktime(props) {
                         maxLength={100} onChangeText={(note) => setConfirm({...confirm, note })} autoCorrect={false}
                       />
                     </View>
-
-                    {confirm.errormsg ? <Text style={styles.errorMsg}>{confirm.errormsg}</Text> : null}
 
                     <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
                       <View style={styles.confirmOptions}>

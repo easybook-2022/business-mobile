@@ -5,10 +5,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { socket, logo_url } from '../../assets/info'
 import { displayTime, resizePhoto } from 'geottuse-tools'
 
-import { getLocationHours } from '../apis/locations'
+import { getLocationHours, getLocationProfile } from '../apis/locations'
 import { getAllStylists, getAllWorkersTime, getWorkersHour } from '../apis/owners'
 import { getMenus } from '../apis/menus'
 import { bookWalkIn } from '../apis/schedules'
+
+import AntDesign from 'react-native-vector-icons/AntDesign'
 
 const { height, width } = Dimensions.get('window')
 const wsize = p => {return width * (p / 100)}
@@ -18,16 +20,17 @@ export default function Walkin({ navigation }) {
   const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
   const [locationId, setLocationid] = useState(0)
+  const [name, setName] = useState('')
   const [type, setType] = useState('')
   const [step, setStep] = useState('')
   const [selectedWorkerinfo, setSelectedworkerinfo] = useState({ id: -1, username: '', hours: {}, loading: false })
   const [hoursInfo, setHoursinfo] = useState({})
   const [allStylists, setAllstylists] = useState({ stylists: [], numStylists: 0 })
   const [allWorkerstime, setAllworkerstime] = useState({})
-  const [requestInfo, setRequestinfo] = useState({ service: '', error: false })
+  const [requestInfo, setRequestinfo] = useState({ show: false, search: '', error: false })
   const [menuInfo, setMenuinfo] = useState({ list: [], photos: [] })
   const [scheduled, setScheduled] = useState({})
-  const [confirm, setConfirm] = useState({ show: false, worker: -1, service: "", serviceInfo: null, showClientInput: false, clientName: "", cellnumber: "", confirm: false, timeDisplay: "" })
+  const [confirm, setConfirm] = useState({ show: false, worker: -1, search: "", serviceInfo: null, showClientInput: false, clientName: "", cellnumber: "", confirm: false, timeDisplay: "" })
   const [loaded, setLoaded] = useState(false)
 
   const getAllTheStylists = async() => {
@@ -50,6 +53,27 @@ export default function Walkin({ navigation }) {
       .catch((err) => {
         if (err.response && err.response.status == 400) {
           const { errormsg, status } = err.response.data
+        }
+      })
+  }
+  const getTheLocationProfile = async() => {
+    const locationid = await AsyncStorage.getItem("locationid")
+    const data = { locationid }
+
+    getLocationProfile(data)
+      .then((res) => {
+        if (res.status == 200) {
+          return res.data
+        }
+      })
+      .then((res) => {
+        if (res) {
+          setName(res.info.name)
+        }
+      })
+      .catch((err) => {
+        if (err.response && err.response.status == 400) {
+
         }
       })
   }
@@ -169,10 +193,10 @@ export default function Walkin({ navigation }) {
       })
   }
   const displayList = info => {
-    let { id, image, name, list, listType, left } = info
+    let { id, image, name, list, listType } = info
 
     return (
-      <View style={{ marginLeft: left }}>
+      <View>
         {name ?
           <View style={styles.menu}>
             <View style={{ flexDirection: 'row' }}>
@@ -187,7 +211,7 @@ export default function Walkin({ navigation }) {
             {list.length > 0 && list.map((info, index) => (
               <View key={"list-" + index}>
                 {info.listType == "list" ? 
-                  displayList({ id: info.id, name: info.name, image: info.image, list: info.list, listType: info.listType, left: left + 10 })
+                  displayList({ id: info.id, name: info.name, image: info.image, list: info.list, listType: info.listType })
                   :
                   <View style={styles.item}>
                     <View style={styles.itemImageHolder}>
@@ -196,11 +220,10 @@ export default function Walkin({ navigation }) {
                         source={info.image.name ? { uri: logo_url + info.image.name } : require("../../assets/noimage.jpeg")}
                       />
                     </View>
-                    <View style={styles.column}><Text style={styles.itemHeader}>{info.name}</Text></View>
                     <View style={styles.column}><Text style={styles.itemHeader}>{info.price ? '$' + info.price : info.sizes.length + ' size(s)'}</Text></View>
                     <View style={styles.column}>
                       <TouchableOpacity style={styles.itemAction} onPress={() => bookTheWalkIn(info)}>
-                        <Text style={styles.itemActionHeader}>Pick</Text>
+                        <Text style={styles.itemActionHeader}>Pick <Text style={{ fontWeight: 'bold' }}>{info.name}</Text></Text>
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -212,7 +235,7 @@ export default function Walkin({ navigation }) {
           list.map((info, index) => (
             <View key={"list-" + index}>
               {info.listType == "list" ? 
-                displayList({ id: info.id, name: info.name, image: info.image, list: info.list, listType: info.listType, left: left == 0 ? left : left + 10 })
+                displayList({ id: info.id, name: info.name, image: info.image, list: info.list, listType: info.listType })
                 :
                 <View style={styles.item}>
                   <View style={styles.itemImageHolder}>
@@ -221,11 +244,10 @@ export default function Walkin({ navigation }) {
                       source={info.image.name ? { uri: logo_url + info.image.name } : require("../../assets/noimage.jpeg")}
                     />
                   </View>
-                  <View style={styles.column}><Text style={styles.itemHeader}>{info.name}</Text></View>
                   <View style={styles.column}><Text style={styles.itemHeader}>{info.price ? '$' + info.price : info.sizes.length + ' size(s)'}</Text></View>
                   <View style={styles.column}>
                     <TouchableOpacity style={styles.itemAction} onPress={() => bookTheWalkIn(info)}>
-                      <Text style={styles.itemActionHeader}>Pick</Text>
+                      <Text style={styles.itemActionHeader}>Pick <Text style={{ fontWeight: 'bold' }}>{info.name}</Text></Text>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -239,7 +261,7 @@ export default function Walkin({ navigation }) {
   const bookTheWalkIn = serviceInfo => {
     if (!confirm.show) {
       let { id, username } = selectedWorkerinfo
-      const { service } = requestInfo
+      const { search } = requestInfo
       const time = new Date(Date.now())
       const day = days[time.getDay()], month = months[time.getMonth()], date = time.getDate(), year = time.getFullYear()
       const calcDay = day + " " + month + " " + date + " " + year, now = Date.now()
@@ -261,16 +283,16 @@ export default function Walkin({ navigation }) {
         username = info.username
       }
 
-      setConfirm({ ...confirm, show: true, worker: { id, username }, service, serviceInfo })
+      setConfirm({ ...confirm, show: true, worker: { id, username }, search, serviceInfo })
     } else {
-      const { worker, service, serviceInfo, clientName } = confirm
+      const { worker, search, serviceInfo, clientName } = confirm
       const time = new Date(Date.now()), hour = time.getHours(), minute = time.getMinutes()
       const jsonDate = {"day":days[time.getDay()].substr(0, 3),"month":months[time.getMonth()],"date":time.getDate(),"year":time.getFullYear(), hour, minute}
       const data = { 
         workerid: worker.id, locationid: locationId, 
         time: jsonDate, note: "", type, 
         client: {
-          name: !serviceInfo ? service : "",
+          name: !serviceInfo ? search : "",
           type: !serviceInfo ? "service" : ""
         }, serviceid: serviceInfo ? serviceInfo.id : null,
       }
@@ -315,6 +337,7 @@ export default function Walkin({ navigation }) {
 
   const initialize = () => {
     getAllTheStylists()
+    getTheLocationProfile()
     getTheLocationHours()
     getAllTheWorkersTime()
     getAllScheduledTimes()
@@ -330,9 +353,9 @@ export default function Walkin({ navigation }) {
             <View style={styles.headers}>
               <Text style={styles.header}>
                 Hi Client{':)\n'}
-                Welcome to Design
+                Welcome to {name}
               </Text>
-              <Text style={styles.header}>Easily pick a stylist and service{'\n'}(you want){'\n'}then have a seat</Text>
+              <Text style={styles.header}>Easily pick the stylist and service{'\n'}(you want){'\n'}and have a seat</Text>
 
               <TouchableOpacity style={styles.done} onPress={() => setStep(1)}>
                 <Text style={styles.doneHeader}>Begin</Text>
@@ -376,40 +399,11 @@ export default function Walkin({ navigation }) {
 
           {(step == 2 && (menuInfo.photos.length > 0 || menuInfo.list.length > 0)) && (
             <>
-              <View style={styles.menuInputBox}>
-                <TextInput 
-                  style={styles.menuInput} type="text" 
-                  placeholder={
-                    "Enter " + 
-                    (type == "restaurant" && "meal" || type == "store" && "product" || (type == "hair" || type == "nail") && "service") 
-                    + " # or name"
-                  } 
-                  onChangeText={(service) => setRequestinfo({ ...requestInfo, service, error: false })} maxLength={37} autoCorrect={false} autoCapitalize="none"
-                />
-                <View style={styles.menuInputActions}>
-                  <TouchableOpacity style={styles.menuInputTouch} onPress={() => bookTheWalkIn()}>
-                    <Text style={styles.menuInputTouchHeader}>Done</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-              {requestInfo.error && <Text style={styles.menuInputError}>Your request is empty</Text>}
-
+              <TouchableOpacity style={styles.openInput} onPress={() => setRequestinfo({ ...requestInfo, show: true })}>
+                <Text style={styles.openInputHeader}>Search</Text>
+              </TouchableOpacity>
               <ScrollView style={{ height: '90%', width: '100%' }}>
                 <View style={{ marginHorizontal: width * 0.025 }}>{displayList({ id: "", name: "", image: "", list: menuInfo.list, left: 0 })}</View>
-
-                {menuInfo.photos.length > 0 && ( 
-                  menuInfo.photos[0].row && (
-                    menuInfo.photos.map(info => (
-                      info.row.map(item => (
-                        item.photo && item.photo.name && (
-                          <View key={item.key} style={[styles.menuPhoto, resizePhoto(item.photo, wsize(95)), { borderRadius: wsize(95) / 2 }]}>
-                            <Image style={{ height: '100%', width: '100%' }} source={{ uri: logo_url + item.photo.name }}/>
-                          </View>
-                        )
-                      ))
-                    ))
-                  )
-                )}
               </ScrollView>
             </>
           )}
@@ -426,52 +420,116 @@ export default function Walkin({ navigation }) {
         </View>
       </TouchableWithoutFeedback>
 
-      {confirm.show && (
+      {(confirm.show || requestInfo.show) && (
         <Modal transparent={true}>
-          <View style={styles.bookWalkInContainer}>
-            <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
-              <View style={styles.bookWalkInBox}>
-                {!confirm.confirm ? 
-                  <>
-                    <View style={styles.bookWalkInHeaders}>
-                      <Text style={styles.bookWalkInHeader}>Confirming....</Text>
+          <SafeAreaView style={{ flex: 1 }}>
+            {confirm.show && (
+              <View style={styles.bookWalkInContainer}>
+                <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+                  <View style={styles.bookWalkInBox}>
+                    {!confirm.confirm ? 
+                      <>
+                        <View style={styles.bookWalkInHeaders}>
+                          <Text style={styles.bookWalkInHeader}>Confirming....</Text>
 
-                      <Text style={[styles.bookWalkInHeader, { marginTop: '10%' }]}>
-                        {confirm.serviceInfo ? confirm.serviceInfo.name : confirm.service}
-                      </Text>
+                          <Text style={[styles.bookWalkInHeader, { marginTop: '10%' }]}>
+                            {confirm.serviceInfo ? confirm.serviceInfo.name : confirm.search}
+                          </Text>
 
-                      <Text style={styles.bookWalkInHeader}>
-                        {'Stylist: ' + confirm.worker.username}
-                      </Text>
-                    </View>
+                          <Text style={styles.bookWalkInHeader}>Stylist: {confirm.worker.username}</Text>
+                        </View>
 
-                    <View style={styles.bookWalkInActions}>
-                      <TouchableOpacity style={styles.bookWalkInAction} onPress={() => setConfirm({ ...confirm, show: false })}>
-                        <Text style={styles.bookWalkInActionHeader}>Cancel</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity style={styles.bookWalkInAction} onPress={() => setConfirm({ ...confirm, confirm: true, showClientInput: true })}>
-                        <Text style={styles.bookWalkInActionHeader}>Ok</Text>
-                      </TouchableOpacity>
-                    </View>
-                  </>
-                  :
-                  confirm.showClientInput ? 
-                    <>
-                      <TextInput style={styles.bookWalkInInput} placeholder="Enter your name" onChangeText={clientName => setConfirm({ ...confirm, clientName })}/>
+                        <View style={styles.bookWalkInActions}>
+                          <TouchableOpacity style={styles.bookWalkInAction} onPress={() => setConfirm({ ...confirm, show: false })}>
+                            <Text style={styles.bookWalkInActionHeader}>Cancel</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity style={styles.bookWalkInAction} onPress={() => setConfirm({ ...confirm, confirm: true, showClientInput: true })}>
+                            <Text style={styles.bookWalkInActionHeader}>Ok</Text>
+                          </TouchableOpacity>
+                        </View>
+                      </>
+                      :
+                      confirm.showClientInput ? 
+                        <>
+                          <TextInput style={styles.bookWalkInInput} placeholder="Enter your name" onChangeText={clientName => setConfirm({ ...confirm, clientName })}/>
 
-                      <TouchableOpacity style={styles.done} onPress={() => bookTheWalkIn()}>
-                        <Text style={styles.doneHeader}>Done</Text>
-                      </TouchableOpacity>
-                    </>
-                    :
-                    <Text style={styles.bookWalkInHeader}>
-                      Ok, we will call you soon. Your estimated time:
-                      {'\n\n' + confirm.timeDisplay}
-                    </Text>
-                }
+                          <TouchableOpacity style={styles.done} onPress={() => bookTheWalkIn()}>
+                            <Text style={styles.doneHeader}>Done</Text>
+                          </TouchableOpacity>
+                        </>
+                        :
+                        <Text style={styles.bookWalkInHeader}>
+                          Ok, we will call you soon. Your estimated time:
+                          {'\n\n' + confirm.timeDisplay}
+                        </Text>
+                    }
+                  </View>
+                </TouchableWithoutFeedback>
               </View>
-            </TouchableWithoutFeedback>
-          </View>
+            )}
+
+            {requestInfo.show && (
+              <View style={styles.serviceInputBox}>
+                <View style={styles.serviceInputHeader}>
+                  <TouchableOpacity onPress={() => setRequestinfo({ ...requestInfo, show: false })}>
+                    <AntDesign color="white" name="closecircleo" size={30}/>
+                  </TouchableOpacity>
+
+                  {(menuInfo.photos.length > 0 || menuInfo.list.length > 0) && (
+                    <>
+                      <View style={styles.menuInputBox}>
+                        <TextInput 
+                          style={styles.menuInput} type="text" 
+                          placeholder={
+                            "Enter " + 
+                            (type == "restaurant" && "meal" || type == "store" && "product" || (type == "hair" || type == "nail") && "service") 
+                            + " # or name"
+                          } 
+                          placeholderTextColor="rgba(0, 0, 0, 0.5)"
+                          onChangeText={(info) => setRequestinfo({ ...requestInfo, search: info, error: false })} maxLength={37} autoCorrect={false} autoCapitalize="none"
+                        />
+                        <View style={styles.menuInputActions}>
+                          <TouchableOpacity style={styles.menuInputTouch} onPress={() => {
+                            if (requestInfo.search) {
+                              setRequestinfo({ ...requestInfo, show: false })
+
+                              bookTheWalkIn()
+                            } else {
+                              setRequestinfo({ ...requestInfo, error: true })
+                            }
+                          }}>
+                            <Text style={styles.menuInputTouchHeader}>Next</Text>
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                      {requestInfo.error && <Text style={styles.errorMsg}>Your request is empty</Text>}
+                    </>
+                  )}
+                </View>
+
+                <View style={styles.menuPhotos}>
+                  <ScrollView>
+                    {menuInfo.photos.length > 0 && ( 
+                      menuInfo.photos[0].row && (
+                        menuInfo.photos.map(info => (
+                          info.row.map(item => (
+                            item.photo && item.photo.name && (
+                              <View key={item.key} style={[styles.menuPhoto, resizePhoto(item.photo, wsize(95)), { borderRadius: wsize(95) / 2 }]}>
+                                <Image 
+                                  style={{ width: '100%', height: '100%' }}
+                                  source={{ uri: logo_url + item.photo.name }}
+                                />
+                              </View>
+                            )
+                          ))
+                        ))
+                      )
+                    )}
+                  </ScrollView>
+                </View>
+              </View>
+            )}
+          </SafeAreaView>
         </Modal>
       )}
     </SafeAreaView>
@@ -484,9 +542,6 @@ const styles = StyleSheet.create({
 
   headers: { alignItems: 'center', flexDirection: 'column', height: '90%', justifyContent: 'space-around', width: '100%' },
   header: { fontSize: wsize(6), textAlign: 'center' },
-
-  begin: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5 },
-  beginHeader: { fontSize: wsize(5), textAlign: 'center' },
 
   inputsBox: { alignItems: 'center', height: '70%', width: '90%' },
   input: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(6), marginBottom: 30, paddingVertical: 20, width: '100%' },
@@ -506,12 +561,17 @@ const styles = StyleSheet.create({
   selectedWorkerImage: { borderRadius: wsize(20) / 2, height: wsize(20), width: wsize(20) },
   selectedWorkerHeader: { fontSize: wsize(4), fontWeight: 'bold', textAlign: 'center' },
 
+  openInput: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), margin: 5, padding: 10, width: '40%' },
+  openInputHeader: { fontSize: wsize(4), textAlign: 'center' },
+
+  serviceInputBox: { backgroundColor: 'rgba(0, 0, 0, 0.9)', height: '100%', width: '100%' },
+  serviceInputHeader: { alignItems: 'center', height: '20%', width: '100%' },
   menuInputBox: { alignItems: 'center', marginBottom: 5, width: '100%' },
-  menuInput: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), padding: 10, width: '95%' },
+  menuInput: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), padding: 10, width: '95%' },
   menuInputActions: { flexDirection: 'row', justifyContent: 'space-around' },
-  menuInputTouch: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), margin: 5, padding: 10, width: '40%' },
+  menuInputTouch: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), margin: 5, padding: 10, width: '40%' },
   menuInputTouchHeader: { fontSize: wsize(4), textAlign: 'center' },
-  menuInputError: { color: 'darkred', marginLeft: 10 },
+  menuPhotos: { height: '80%', width: '100%' },
   menuPhoto: { marginBottom: 10, marginHorizontal: width * 0.025 },
 
   menu: { backgroundColor: 'white', borderTopLeftRadius: 3, borderTopRightRadius: 3, padding: 3 },
@@ -519,11 +579,11 @@ const styles = StyleSheet.create({
   menuName: { fontSize: wsize(6), fontWeight: 'bold', marginLeft: 5, marginTop: wsize(4) / 2, textDecorationLine: 'underline' },
   itemInfo: { fontSize: wsize(5), marginLeft: 10, marginVertical: 10 },
   item: { backgroundColor: 'white', flexDirection: 'row', justifyContent: 'space-between', marginVertical: 3, width: '100%' },
-  itemImageHolder: { borderRadius: wsize(10) / 2, flexDirection: 'column', height: wsize(10), justifyContent: 'space-around', margin: 5, overflow: 'hidden' },
-  itemHeader: { fontSize: wsize(6) },
+  itemImageHolder: { borderRadius: wsize(20) / 2, flexDirection: 'column', height: wsize(20), justifyContent: 'space-around', margin: 5, overflow: 'hidden', width: wsize(20) },
+  itemHeader: { fontSize: wsize(6), fontWeight: 'bold' },
   itemActions: { flexDirection: 'row', marginTop: 0 },
-  itemAction: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, marginLeft: 10, padding: 5 },
-  itemActionHeader: { fontSize: wsize(4), textAlign: 'center' },
+  itemAction: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, padding: 5 },
+  itemActionHeader: { fontSize: wsize(5), textAlign: 'center' },
 
   bottomNavs: { backgroundColor: 'white', flexDirection: 'column', height: '10%', justifyContent: 'space-around', width: '100%' },
   bottomNavsRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
@@ -537,4 +597,7 @@ const styles = StyleSheet.create({
   bookWalkInActions: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
   bookWalkInAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: '40%' },
   bookWalkInActionHeader: { fontSize: wsize(6), textAlign: 'center' },
+
+  column: { flexDirection: 'column', justifyContent: 'space-around' },
+  errorMsg: { color: 'red', fontWeight: 'bold' },
 })

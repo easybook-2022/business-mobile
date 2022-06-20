@@ -21,7 +21,7 @@ export default function Authoption({ navigation }) {
   }
 
   return (
-    <SafeAreaView style={styles.list}>
+    <SafeAreaView style={styles.authoption}>
       <View style={styles.box}>
         <View style={styles.body}>
           <View style={styles.authOptions}>
@@ -57,7 +57,7 @@ export default function Authoption({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  list: { backgroundColor: 'white', height: '100%', width: '100%' },
+  authoption: { backgroundColor: 'white', height: '100%', width: '100%' },
   box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
   header: { alignItems: 'center', flexDirection: 'column', height: '10%', justifyContent: 'space-around' },
 
