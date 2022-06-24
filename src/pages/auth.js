@@ -4,7 +4,7 @@ import Constants from 'expo-constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CommonActions } from '@react-navigation/native';
 import { loginUser, verifyUser, registerUser } from '../apis/owners'
-import { ownerSigninInfo } from '../../assets/info'
+import { ownerSigninInfo, translate } from '../../assets/info'
 import { displayPhonenumber } from 'geottuse-tools'
 
 import Loadingprogress from '../widgets/loadingprogress'
@@ -39,9 +39,10 @@ export default function Auth({ navigation }) {
           AsyncStorage.setItem("locationid", locationid ? locationid.toString() : "")
           AsyncStorage.setItem("locationtype", locationtype ? locationtype : "")
           AsyncStorage.setItem("phase", msg)
+          AsyncStorage.setItem("language", "")
           AsyncStorage.setItem("isOwner", res.isOwner ? "true" : "")
 
-          navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: msg }]}))
+          navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "picklanguage" }]}))
         }
       })
       .catch((err) => {
@@ -107,8 +108,9 @@ export default function Auth({ navigation }) {
 
           AsyncStorage.setItem("ownerid", id.toString())
           AsyncStorage.setItem("phase", "locationsetup")
+          AsyncStorage.setItem("language", "")
 
-          navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "locationsetup" }]}));
+          navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "picklanguage" }]}));
         }
       })
       .catch((err) => {

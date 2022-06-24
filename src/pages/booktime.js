@@ -5,15 +5,15 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CommonActions } from '@react-navigation/native';
-import { socket, logo_url } from '../../assets/info'
 import { displayTime, resizePhoto } from 'geottuse-tools'
+import { tr } from '../../assets/translate'
+import { socket, logo_url } from '../../assets/info'
 
 import { getLocationHours } from '../apis/locations'
 import { getAllStylists, getStylistInfo, getAllWorkersTime, getWorkersHour, logoutUser } from '../apis/owners'
 import { getAppointmentInfo, salonChangeAppointment } from '../apis/schedules'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
-import Entypo from 'react-native-vector-icons/Entypo'
 
 const { height, width } = Dimensions.get('window')
 const wsize = p => {return width * (p / 100)}
@@ -25,6 +25,7 @@ export default function Booktime(props) {
 
   const { scheduleid, serviceid, serviceinfo } = props.route.params
 
+  const [language, setLanguage] = useState(null)
   const [clientInfo, setClientinfo] = useState({ id: -1, name: "" })
   const [name, setName] = useState()
   const [hoursInfo, setHoursinfo] = useState({})
@@ -210,10 +211,10 @@ export default function Booktime(props) {
       if (selectedWorkerinfo.id > -1) { // worker is selected
         const workerid = selectedWorkerinfo.id
 
-        timetaken = JSON.stringify(scheduled).includes("\"" + calcDateStr + "\":" + workerid)
+        timetaken = calcDateStr + "-" + workerid in scheduled[workerid]["scheduled"]
       } else {
         let numWorkers = Object.keys(scheduled).length
-        let occur = JSON.stringify(scheduled).split("\"" + calcDateStr + "\":").length - 1
+        let occur = JSON.stringify(scheduled).split("\"" + calcDateStr + "-").length - 1
 
         timetaken = occur == numWorkers
       }
@@ -303,6 +304,10 @@ export default function Booktime(props) {
       })
   }
   const getAllTheStylists = async() => {
+    tr.locale = await AsyncStorage.getItem("language")
+
+    setLanguage(await AsyncStorage.getItem("language"))
+
     const locationid = await AsyncStorage.getItem("locationid")
 
     getAllStylists(locationid)
@@ -366,7 +371,7 @@ export default function Booktime(props) {
                   let time = splitTime[0]
                   let status = splitTime[1]
 
-                  newScheduled[jsonDateToUnix(JSON.parse(time))] = workersHour[worker]["scheduled"][info]
+                  newScheduled[jsonDateToUnix(JSON.parse(time)) + "-" + worker] = workersHour[worker]["scheduled"][info]
                 }
 
                 workersHour[worker]["scheduled"] = newScheduled
@@ -523,6 +528,7 @@ export default function Booktime(props) {
     getTheLocationHours()
     getAllTheWorkersTime()
     getTheAppointmentInfo()
+    getAllScheduledTimes()
   }, [])
 
   useEffect(() => {
@@ -545,7 +551,7 @@ export default function Booktime(props) {
           <>
             {step == 0 && (
               <View style={styles.workerSelection}>
-                <Text style={styles.workerSelectionHeader}>Pick a {!scheduleid ? '' : '\ndifferent'} stylist (Optional)</Text>
+                <Text style={styles.workerSelectionHeader}>{!scheduleid ? tr.t("booktime.pickStaff") : tr.t("booktime.pickAnotherStaff")}</Text>
 
                 <View style={styles.workersList}>
                   <FlatList
@@ -576,7 +582,7 @@ export default function Booktime(props) {
 
             {step == 1 && (
               <View style={styles.dateSelection}>
-                <Text style={styles.dateSelectionHeader}>Tap a {'\ndifferent'} date below</Text>
+                <Text style={styles.dateSelectionHeader}>{tr.t("booktime.tapDifferentDate")}</Text>
 
                 {!calendar.loading && (
                   <>
@@ -593,7 +599,7 @@ export default function Booktime(props) {
                     </View>
                     <View style={styles.days}>
                       <View style={styles.daysHeaderRow}>
-                        {days.map((day, index) => <Text key={"day-header-" + index} style={styles.daysHeader}>{day.substr(0, 3)}</Text>)}
+                        {days.map((day, index) => <Text key={"day-header-" + index} style={styles.daysHeader}>{tr.t("days." + day)}</Text>)}
                       </View>
                       {calendar.data.map((info, rowindex) => (
                         <View key={info.key} style={styles.daysDataRow}>
@@ -632,8 +638,8 @@ export default function Booktime(props) {
             {step == 2 && (
               <View style={styles.timesSelection}>
                 <ScrollView style={{ width: '100%' }}>
-                  <Text style={[styles.timesHeader, { fontSize: 15 }]}>Current: {displayTime(oldTime)}</Text>
-                  <Text style={styles.timesHeader}>Tap a {'\n'}different time below</Text>
+                  <Text style={[styles.timesHeader, { fontSize: 15 }]}>{tr.t("booktime.current")} {displayTime(oldTime)}</Text>
+                  <Text style={styles.timesHeader}>{tr.t("booktime.tapDifferentTime")}</Text>
 
                   <View style={{ alignItems: 'center' }}>
                     <View style={styles.times}>
@@ -667,30 +673,33 @@ export default function Booktime(props) {
 
                 setStep(step - 1)
               }}>
-                <Text style={styles.actionHeader}>Back</Text>
+                <Text style={styles.actionHeader}>{tr.t("buttons.back")}</Text>
               </TouchableOpacity>
 
               {(step == 0 || step == 1) && (
                 step == 0 ? 
-                  selectedWorkerinfo.id > -1 ? 
-                    <TouchableOpacity style={styles.action} onPress={() => selectWorker(selectedWorkerinfo.id)}>
-                      <Text style={styles.actionHeader}>Next</Text>
-                    </TouchableOpacity>
-                    :
+                  <>
                     <TouchableOpacity style={styles.action} onPress={() => {
                       getTheLocationHours()
                       setSelectedworkerinfo({ ...selectedWorkerinfo, id: -1, hours: {} })
                       setStep(1)
                     }}>
-                      <Text style={styles.actionHeader}>Skip</Text>
+                      <Text style={styles.actionHeader}>{tr.t("buttons.random")}</Text>
                     </TouchableOpacity>
+
+                    {selectedWorkerinfo.id > -1 && (
+                      <TouchableOpacity style={styles.action} onPress={() => selectWorker(selectedWorkerinfo.id)}>
+                        <Text style={styles.actionHeader}>{tr.t("buttons.next")}</Text>
+                      </TouchableOpacity>
+                    )}
+                  </>
                   :
                   <TouchableOpacity style={styles.action} onPress={() => {
                     const { day, date } = selectedDateinfo
 
                     selectDate(date, day)
                   }}>
-                    <Text style={styles.actionHeader}>Pick today</Text>
+                    <Text style={styles.actionHeader}>{tr.t("booktime.pickToday")}</Text>
                   </TouchableOpacity>
               )}
             </View>
@@ -703,9 +712,11 @@ export default function Booktime(props) {
 
         <View style={styles.bottomNavs}>
           <View style={styles.bottomNavsRow}>
-            <TouchableOpacity style={styles.bottomNav} onPress={() => props.navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "main" }]}))}>
-              <Entypo name="home" size={wsize(7)}/>
-            </TouchableOpacity>
+            <View style={styles.column}>
+              <TouchableOpacity style={styles.bottomNavButton} onPress={() => props.navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "main" }]}))}>
+                <Text style={styles.bottomNavButtonHeader}>{tr.t("buttons.back")}</Text>
+              </TouchableOpacity>
+            </View>
 
             <View style={styles.column}>
               <TouchableOpacity style={styles.bottomNavButton} onPress={() => {
@@ -729,15 +740,19 @@ export default function Booktime(props) {
                   <>
                     <Text style={styles.confirmHeader}>
                       Name: {clientInfo.name}
-                      {'\nService: ' + confirm.service + '\n\n'}
-                      Change time to
-                      {'\n' + displayTime(confirm.time)}
+                      {'\n' + tr.t("booktime.hidden.confirm.client") + ': ' + confirm.service + '\n\n'}
+                      {tr.t("booktime.hidden.confirm.change")}
+                      {'\n' + 
+                        displayTime(confirm.time)
+                          .replace("today at", tr.t("headers.todayAt"))
+                          .replace("tomorrow at", tr.t("headers.tomorrowAt"))
+                      }
                     </Text>
 
                     <View style={styles.note}>
                       <TextInput 
                         style={styles.noteInput} multiline textAlignVertical="top" 
-                        placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Leave a note if you want" 
+                        placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder={tr.t("booktime.hidden.confirm.leaveNote")} 
                         maxLength={100} onChangeText={(note) => setConfirm({...confirm, note })} autoCorrect={false}
                       />
                     </View>
@@ -745,10 +760,10 @@ export default function Booktime(props) {
                     <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
                       <View style={styles.confirmOptions}>
                         <TouchableOpacity style={[styles.confirmOption, { opacity: confirm.loading ? 0.3 : 1 }]} disabled={confirm.loading} onPress={() => setConfirm({ ...confirm, show: false, service: "", time: 0, note: "", requested: false, errormsg: "" })}>
-                          <Text style={styles.confirmOptionHeader}>No</Text>
+                          <Text style={styles.confirmOptionHeader}>{tr.t("buttons.no")}</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={[styles.confirmOption, { opacity: confirm.loading ? 0.3 : 1 }]} disabled={confirm.loading} onPress={() => salonChangeTheAppointment()}>
-                          <Text style={styles.confirmOptionHeader}>Yes</Text>
+                          <Text style={styles.confirmOptionHeader}>{tr.t("buttons.yes")}</Text>
                         </TouchableOpacity>
                       </View>
                     </View>
@@ -761,8 +776,14 @@ export default function Booktime(props) {
                   </>
                   :
                   <View style={styles.requestedHeaders}>
-                    <Text style={styles.requestedHeader}>Appointment changed for{'\n'}</Text>
-                    <Text style={styles.requestedHeaderInfo}>{confirm.service + '\n' + displayTime(confirm.time)}</Text>
+                    <Text style={styles.requestedHeader}>{tr.t("booktime.hidden.confirm.appointmentChanged")}{'\n'}</Text>
+                    <Text style={styles.requestedHeaderInfo}>{
+                      confirm.service + '\n' + 
+                        displayTime(confirm.time)
+                          .replace("today at", tr.t("headers.todayAt"))
+                          .replace("tomorrow at", tr.t("headers.tomorrowAt"))
+                      }
+                    </Text>
                   </View>
                 }
               </View>
@@ -819,7 +840,7 @@ const styles = StyleSheet.create({
   unselectHeader: { color: 'black', fontSize: wsize(5) },
 
   actions: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
-  action: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: wsize(30) },
+  action: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5 },
   actionHeader: { color: 'black', fontSize: wsize(5), textAlign: 'center' },
 
   bottomNavs: { backgroundColor: 'white', flexDirection: 'column', height: '10%', justifyContent: 'space-around', width: '100%' },

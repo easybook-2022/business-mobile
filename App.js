@@ -5,6 +5,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Platform, Text, View, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Font from 'expo-font';
+import { tr } from './assets/translate'
 import { useFonts, Chilanka_400Regular } from '@expo-google-fonts/chilanka';
 
 // pages
@@ -12,6 +13,7 @@ import Auth from './src/pages/auth'
 import Register from './src/pages/register'
 import Forgotpassword from './src/pages/forgotpassword'
 import Resetpassword from './src/pages/resetpassword'
+import Picklanguage from './src/pages/picklanguage'
 import List from './src/pages/list'
 import Authoption from './src/pages/authoption'
 import Walkin from './src/pages/walkin'
@@ -23,6 +25,7 @@ import Cartorders from './src/pages/cartorders'
 // salons' components
 import Addmenu from './src/components/addmenu'
 import Addproduct from './src/components/addproduct'
+import Addmeal from './src/components/addmeal'
 import Addservice from './src/components/addservice'
 
 import Menu from './src/pages/menu'
@@ -40,15 +43,20 @@ export default function App() {
     const retrieveId = async() => {
       const ownerid = await AsyncStorage.getItem("ownerid")
       const phase = await AsyncStorage.getItem("phase")
+      const language = await AsyncStorage.getItem("language")
 
       if (ownerid) {
         if (phase) {
-          setRoute(phase)
+          if (language) {
+            setRoute(phase)
+          } else {
+            setRoute("picklanguage")
+          }
         } else {
           setRoute("auth")
         }
       } else {
-          setRoute("auth")
+        setRoute("auth")
       }
     }
     
@@ -80,13 +88,16 @@ export default function App() {
                 )
               )
             })}/>
+            <Stack.Screen name="picklanguage" component={Picklanguage} options={({ navigation, route }) => ({
+              headerTitle: () => <Text style={styles.header}>Pick a language</Text>
+            })}/>
             <Stack.Screen name="list" component={List} options={{ headerShown: false }}/>
             <Stack.Screen name="authoption" component={Authoption} options={{ headerShown: false }}/>
             <Stack.Screen name="walkin" component={Walkin} options={{ headerShown: false }}/>
             <Stack.Screen name="locationsetup" component={Locationsetup} options={{ headerShown: false }}/>
             <Stack.Screen name="main" component={Main} options={{ headerShown: false }}/>
             <Stack.Screen name="booktime" component={Booktime} options={({ navigation, route }) => ({
-              headerTitle: () => <Text style={styles.header}>Request different time</Text>,
+              headerTitle: () => <Text style={styles.header}>{tr.t("booktime.header")}</Text>,
               headerLeft: () => (
                 Platform.OS == 'ios' && (
                   <TouchableOpacity style={styles.back} onPress={() => {
@@ -102,7 +113,7 @@ export default function App() {
               )
             })}/>
             <Stack.Screen name="cartorders" component={Cartorders} options={({ navigation, route }) => ({
-              headerTitle: () => <Text style={styles.header}>#{route.params.ordernumber} Order(s)</Text>,
+              headerTitle: () => <Text style={styles.header}>#{route.params.ordernumber} {tr.t("orders.header")}</Text>,
               headerLeft: () => (
                 Platform.OS == 'ios' && (
                   <TouchableOpacity style={styles.back} onPress={() => {
@@ -118,7 +129,7 @@ export default function App() {
               )
             })}/>
             <Stack.Screen name="addmenu" component={Addmenu} options={({ navigation, route }) => ({
-              headerTitle: () => <Text style={styles.header}>{route.params.menuid ? 'Edit' : 'Add'} Menu</Text>,
+              headerTitle: () => <Text style={styles.header}>{tr.t("addmenu.header." + (route.params.menuid ? 'edit' : 'add'))}</Text>,
               headerLeft: () => (
                 Platform.OS == 'ios' && (
                   <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>
@@ -128,7 +139,17 @@ export default function App() {
               )
             })}/>
             <Stack.Screen name="addproduct" component={Addproduct} options={({ navigation, route }) => ({
-              headerTitle: () => <Text style={styles.header}>{route.params.id ? 'Edit' : 'Add'} Product</Text>,
+              headerTitle: () => <Text style={styles.header}>{tr.t("addproduct.header." + (route.params.id ? 'edit' : 'add'))}</Text>,
+              headerLeft: () => (
+                Platform.OS == 'ios' && (
+                  <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>
+                    <Text style={styles.backHeader}>Go Back</Text>
+                  </TouchableOpacity>
+                )
+              )
+            })}/>
+            <Stack.Screen name="addmeal" component={Addmeal} options={({ navigation, route }) => ({
+              headerTitle: () => <Text style={styles.header}>{tr.t("addmeal.header." + (route.params.id ? 'edit' : 'add'))}</Text>,
               headerLeft: () => (
                 Platform.OS == 'ios' && (
                   <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>
@@ -138,7 +159,7 @@ export default function App() {
               )
             })}/>
             <Stack.Screen name="addservice" component={Addservice} options={({ navigation, route }) => ({
-              headerTitle: () => <Text style={styles.header}>Add Service</Text>,
+              headerTitle: () => <Text style={styles.header}>{tr.t("addservice.header." + (route.params.id ? 'edit' : 'add'))}</Text>,
               headerLeft: () => (
                 Platform.OS == 'ios' && (
                   <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>
@@ -148,11 +169,7 @@ export default function App() {
               )
             })}/>
             <Stack.Screen name="menu" component={Menu} disableMode={false} options={({ navigation, route }) => ({
-              headerTitle: () => (
-                <Text style={styles.header}>{route.params.isOwner == true ? "Edit" : "View"} Menu
-                    {route.params.name && <Text style={{ fontSize: 15 }}>: {route.params.name}</Text>}
-                </Text>
-              ),
+              headerTitle: () => <Text style={styles.header}>{tr.t("menu.header." + (route.params.isOwner ? "edit" : "view"))}</Text>,
               headerLeft: () => (
                 Platform.OS == 'ios' && (
                   <TouchableOpacity style={styles.back} onPress={() => {

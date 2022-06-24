@@ -10,6 +10,7 @@ import { Camera } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator'
 import * as ImagePicker from 'expo-image-picker';
 import { getId, resizePhoto } from 'geottuse-tools';
+import { tr } from '../../assets/translate'
 import { logo_url } from '../../assets/info'
 import { getServiceInfo, addNewService, updateService } from '../apis/services'
 
@@ -28,7 +29,8 @@ const steps = ['name', 'photo', 'price']
 export default function Addservice(props) {
 	const params = props.route.params
 	const { parentMenuid, serviceid, refetch } = params
-  
+
+  const [language, setLanguage] = useState('')
 	const [setupType, setSetuptype] = useState('name')
 	const [cameraPermission, setCamerapermission] = useState(null);
 	const [pickingPermission, setPickingpermission] = useState(null);
@@ -312,8 +314,15 @@ export default function Addservice(props) {
 				}
 			})
 	}
+  const initialize = async() => {
+    tr.locale = await AsyncStorage.getItem("language")
+
+    setLanguage(await AsyncStorage.getItem("language"))
+  }
 
 	useEffect(() => {
+    initialize()
+    
 		if (serviceid) getTheServiceInfo()
 	}, [])
   
@@ -324,7 +333,7 @@ export default function Addservice(props) {
 					<View style={styles.box}>
 						{setupType == "name" && (
 							<View style={styles.inputContainer}>
-								<Text style={styles.addHeader}>What is this service call ?</Text>
+								<Text style={styles.addHeader}>{tr.t("addservice.name")}</Text>
 
 								<TextInput 
 									style={styles.addInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" 
@@ -336,14 +345,14 @@ export default function Addservice(props) {
 
 						{setupType == "photo" && (
               <View style={styles.cameraContainer}>
-                <Text style={styles.cameraHeader}>Provide a photo for {name} (Optional)</Text>
+                <Text style={styles.cameraHeader}>{tr.t("addservice.photo")}</Text>
 
                 {image.uri ? (
                   <>
                     <Image style={styles.camera} source={{ uri: image.uri }}/>
 
                     <TouchableOpacity style={styles.cameraAction} onPress={() => setImage({ ...image, uri: '', name: '' })}>
-                      <Text style={styles.cameraActionHeader}>Cancel</Text>
+                      <Text style={styles.cameraActionHeader}>{tr.t("buttons.cancel")}</Text>
                     </TouchableOpacity>
                   </>
                 ) : (
@@ -365,13 +374,13 @@ export default function Addservice(props) {
 
                     <View style={styles.cameraActions}>
                       <TouchableOpacity style={[styles.cameraAction, { opacity: image.loading ? 0.5 : 1 }]} disabled={image.loading} onPress={snapPhoto.bind(this)}>
-                        <Text style={styles.cameraActionHeader}>Take{'\n'}this photo</Text>
+                        <Text style={styles.cameraActionHeader}>{tr.t("buttons.takePhoto")}</Text>
                       </TouchableOpacity>
                       <TouchableOpacity style={[styles.cameraAction, { opacity: image.loading ? 0.5 : 1 }]} disabled={image.loading} onPress={() => {
                         allowChoosing()
                         choosePhoto()
                       }}>
-                        <Text style={styles.cameraActionHeader}>Choose{'\n'}from phone</Text>
+                        <Text style={styles.cameraActionHeader}>{tr.t("buttons.choosePhoto")}</Text>
                       </TouchableOpacity>
                     </View>
                   </>
@@ -381,7 +390,7 @@ export default function Addservice(props) {
 
             {setupType == "price" && (
               <View style={styles.inputContainer}>
-                <Text style={styles.addHeader}>{serviceid ? "Update" : "Enter"} {name} price</Text>
+                <Text style={styles.addHeader}>{tr.t("addservice.price")}</Text>
                 <TextInput style={styles.addInput} placeholderTextColor="rgba(0, 0, 0, 0.5)" placeholder="example: 4.99" onChangeText={(price) => {
                   let newPrice = price.toString()
 
@@ -398,7 +407,7 @@ export default function Addservice(props) {
 
 						<View style={styles.addActions}>
 							<TouchableOpacity style={styles.addAction} disabled={loading} onPress={() => props.navigation.goBack()}>
-								<Text style={styles.addActionHeader}>Cancel</Text>
+								<Text style={styles.addActionHeader}>{tr.t("buttons.cancel")}</Text>
 							</TouchableOpacity>
 							<TouchableOpacity style={styles.addAction} disabled={loading} onPress={() => {
 								if (!serviceid) {
@@ -417,9 +426,9 @@ export default function Addservice(props) {
 							}}>
 								<Text style={styles.addActionHeader}>{
 									!serviceid ? 
-										setupType == steps[steps.length - 1] ? "Done" : setupType == "photo" ? image.uri ? "Next" : "Skip" : "Next"
+										setupType == steps[steps.length - 1] ? tr.t("buttons.done") : setupType == "photo" ? image.uri ? tr.t("buttons.next") : tr.t("buttons.skip") : tr.t("buttons.next")
 										: 
-										setupType == steps[steps.length - 1] ? "Save" : setupType == "photo" ? image.uri ? "Next" : "Skip" : "Next"
+										setupType == steps[steps.length - 1] ? tr.t("buttons.update") : setupType == "photo" ? image.uri ? tr.t("buttons.next") : tr.t("buttons.skip") : tr.t("buttons.next")
 								}</Text>
 							</TouchableOpacity>
 						</View>

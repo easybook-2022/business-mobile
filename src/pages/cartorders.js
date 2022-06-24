@@ -7,6 +7,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { resizePhoto } from 'geottuse-tools';
+import { tr } from '../../assets/translate'
 import { socket, logo_url } from '../../assets/info'
 import { getOrders } from '../apis/schedules'
 import { orderDone, setWaitTime } from '../apis/carts'
@@ -22,6 +23,7 @@ const wsize = p => {return width * (p / 100)}
 export default function Cartorders(props) {
 	const { userid, type, ordernumber, refetch } = props.route.params
 
+  const [language, setLanguage] = useState(null)
 	const [ownerId, setOwnerid] = useState(null)
 	const [orders, setOrders] = useState([])
   const [waitTime, setWaittime] = useState('')
@@ -32,6 +34,10 @@ export default function Cartorders(props) {
   const [showSetwaittime, setShowsetwaittime] = useState({ show: false, waitTime: '' })
 
 	const getTheOrders = async() => {
+    tr.locale = await AsyncStorage.getItem("language")
+
+    setLanguage(await AsyncStorage.getItem("language"))
+
 		const ownerid = await AsyncStorage.getItem("ownerid")
 		const locationid = await AsyncStorage.getItem("locationid")
 		const data = { userid, locationid, ordernumber }
@@ -184,7 +190,7 @@ export default function Cartorders(props) {
 							{item.note ? 
                 <View style={{ alignItems: 'center' }}>
   								<View style={styles.note}>
-  									<Text style={styles.noteHeader}><Text style={{ fontWeight: 'bold' }}>Customer's note:</Text> {'\n' + item.note}</Text>
+  									<Text style={styles.noteHeader}><Text style={{ fontWeight: 'bold' }}>{tr.t("orders.customerNote")}</Text> {'\n' + item.note}</Text>
   								</View>
                 </View>
 							: null }
@@ -197,12 +203,12 @@ export default function Cartorders(props) {
     				<View style={styles.actions}>
               {type == "restaurant" && (
                 <TouchableOpacity style={styles.action} disabled={loading} onPress={() => setShowsetwaittime({ ...showSetwaittime, show: true, waitTime: '' })}>
-                  <Text style={styles.actionHeader}>Set wait time</Text>
+                  <Text style={styles.actionHeader}>{tr.t("orders.setWaittime")}</Text>
                 </TouchableOpacity>
               )}
                 
               <TouchableOpacity style={styles.action} disabled={loading} onPress={() => orderIsDone()}>
-                <Text style={styles.actionHeader}>Done</Text>
+                <Text style={styles.actionHeader}>{tr.t("buttons.done")}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -214,7 +220,7 @@ export default function Cartorders(props) {
 					<SafeAreaView style={styles.requiredBoxContainer}>
 						<View style={styles.requiredBox}>
 							<View style={styles.requiredContainer}>
-								<Text style={styles.requiredHeader}>Order has already been delivered or doesn't exist</Text>
+								<Text style={styles.requiredHeader}>{tr.t("orders.hidden.noOrders.header")}</Text>
 
 								<View style={styles.requiredActions}>
 									<TouchableOpacity style={styles.requiredAction} onPress={() => {
@@ -223,7 +229,7 @@ export default function Cartorders(props) {
 										setShownoorders(false)
 										props.navigation.goBack()
 									}}>
-										<Text style={styles.requiredActionHeader}>Close</Text>
+										<Text style={styles.requiredActionHeader}>{tr.t("buttons.close")}</Text>
 									</TouchableOpacity>
 								</View>
 							</View>
@@ -236,11 +242,11 @@ export default function Cartorders(props) {
           <SafeAreaView style={styles.requiredBoxContainer}>
             <View style={styles.requiredBox}>
               <View style={styles.requiredContainer}>
-                <Text style={styles.requiredHeader}>Please tell the customer the wait time for this order</Text>
+                <Text style={styles.requiredHeader}>{tr.t("orders.hidden.noWaittime")}</Text>
 
                 <View style={styles.requiredActions}>
                   <TouchableOpacity style={styles.requiredAction} onPress={() => setShownowaittime(false)}>
-                    <Text style={styles.requiredActionHeader}>Close</Text>
+                    <Text style={styles.requiredActionHeader}>{tr.t("buttons.close")}</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -255,7 +261,7 @@ export default function Cartorders(props) {
               <View style={styles.waitTimeContainer}>
                 <AntDesign name="closecircleo" size={wsize(7)} onPress={() => setShowsetwaittime({ ...showSetwaittime, show: false })}/>
 
-                <Text style={styles.waitTimeHeader}>How long will be the wait ?</Text>
+                <Text style={styles.waitTimeHeader}>{tr.t("orders.hidden.waitTime.header")}</Text>
 
                 <View style={styles.row}>
                   <TextInput 
@@ -264,14 +270,14 @@ export default function Cartorders(props) {
                     keyboardType="numeric"
                     value={showSetwaittime.waitTime}
                   />
-                  <View style={styles.column}><Text style={{ fontSize: 15, fontWeight: 'bold', marginLeft: 10 }}>mins</Text></View>
+                  <View style={styles.column}><Text style={{ fontSize: 15, fontWeight: 'bold', marginLeft: 10 }}>{tr.t("orders.hidden.waitTime.min")}</Text></View>
                 </View>
 
                 <View style={styles.waitTimeOptions}>
                   <View style={styles.row}>
                     {[...Array(3)].map((_, index) => (
                       <TouchableOpacity key={index.toString()} style={styles.waitTimeOption} onPress={() => setShowsetwaittime({ ...showSetwaittime, waitTime: ((index + 1) * 5).toString() })}>
-                        <Text style={styles.waitTimeOptionHeader}>{(index + 1) * 5} mins</Text>
+                        <Text style={styles.waitTimeOptionHeader}>{(index + 1) * 5} {tr.t("orders.hidden.waitTime.min")}</Text>
                       </TouchableOpacity>
                     ))}
                   </View>
@@ -279,7 +285,7 @@ export default function Cartorders(props) {
                   <View style={styles.row}>
                     {[...Array(3)].map((_, index) => (
                       <TouchableOpacity key={index.toString()} style={styles.waitTimeOption} onPress={() => setShowsetwaittime({ ...showSetwaittime, waitTime: ((index + 4) * 5).toString() })}>
-                        <Text style={styles.waitTimeOptionHeader}>{(index + 4) * 5} mins</Text>
+                        <Text style={styles.waitTimeOptionHeader}>{(index + 4) * 5} {tr.t("orders.hidden.waitTime.min")}</Text>
                       </TouchableOpacity>
                     ))}
                   </View>
@@ -287,7 +293,7 @@ export default function Cartorders(props) {
 
                 <View style={styles.waitTimeActions}>
                   <TouchableOpacity style={styles.waitTimeAction} onPress={() => setTheWaitTime()}>
-                    <Text style={styles.waitTimeActionHeader}>Done</Text>
+                    <Text style={styles.waitTimeActionHeader}>{tr.t("buttons.done")}</Text>
                   </TouchableOpacity>
                 </View>
               </View>

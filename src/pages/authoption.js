@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { SafeAreaView, ActivityIndicator, Dimensions, View, Image, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import { CommonActions } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { tr } from '../../assets/translate'
 import { socket } from '../../assets/info'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
@@ -10,6 +11,8 @@ const { height, width } = Dimensions.get('window')
 const wsize = p => {return width * (p / 100)}
 
 export default function Authoption({ navigation }) {
+  const [language, setLanguage] = useState(null)
+
   const logout = async() => {
     const ownerid = await AsyncStorage.getItem("ownerid")
 
@@ -19,6 +22,15 @@ export default function Authoption({ navigation }) {
       navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "auth" }]}));
     })
   }
+  const initialize = async() => {
+    tr.locale = await AsyncStorage.getItem("language")
+
+    setLanguage(await AsyncStorage.getItem("language"))
+  }
+
+  useEffect(() => {
+    initialize()
+  }, [])
 
   return (
     <SafeAreaView style={styles.authoption}>
@@ -30,14 +42,14 @@ export default function Authoption({ navigation }) {
               
               navigation.navigate("walkin")
             }}>
-              <Text style={styles.authOptionTouchHeader}>Walk-in(s)</Text>
+              <Text style={styles.authOptionTouchHeader}>{tr.t("authoption.walkIn")}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.authOptionTouch} onPress={() => {
               AsyncStorage.setItem("phase", "main")
 
               navigation.navigate("main")
             }}>
-              <Text style={styles.authOptionTouchHeader}>Appointment(s)</Text>
+              <Text style={styles.authOptionTouchHeader}>{tr.t("authoption.appointments")}</Text>
             </TouchableOpacity>
           </View>
         </View>

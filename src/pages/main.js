@@ -17,6 +17,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import MapView, { Marker } from 'react-native-maps';
 import Voice from '@react-native-voice/voice';
+import { tr } from '../../assets/translate'
 import { loginInfo, ownerSigninInfo, socket, logo_url, useSpeech, timeControl } from '../../assets/info'
 import { getId, displayTime, resizePhoto, displayPhonenumber } from 'geottuse-tools'
 import { 
@@ -40,11 +41,13 @@ const { height, width } = Dimensions.get('window')
 const wsize = p => {return width * (p / 100)}
 
 export default function Main(props) {
+  let updateWorkersHour
   const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
   const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
   useKeepAwake()
 
+  const [language, setLanguage] = useState('')
 	const [notificationPermission, setNotificationpermission] = useState(null);
 	const [ownerId, setOwnerid] = useState(null)
   const [isOwner, setIsowner] = useState(false)
@@ -62,7 +65,6 @@ export default function Main(props) {
 	const [viewType, setViewtype] = useState('')
 	const [cancelInfo, setCancelinfo] = useState({ show: false, type: "", requestType: "", reason: "", id: 0, index: 0 })
 
-	const [showMenurequired, setShowmenurequired] = useState(false)
 	const [showDisabledscreen, setShowdisabledscreen] = useState(false)
   const [showInfo, setShowinfo] = useState({ show: false, workersHours: [], locationHours: [] })
 
@@ -485,7 +487,7 @@ export default function Main(props) {
             chart = { 
               "key": dayDir.toString(), 
               "times": times, 
-              "dateHeader": days[date.getDay()] + ", " + jsonDate["month"] + " " + jsonDate["date"] + ", " + jsonDate["year"]
+              "dateHeader": tr.t("days." + days[date.getDay()]) + ", " + jsonDate["month"] + " " + jsonDate["date"] + ", " + jsonDate["year"]
             }
 
             setChartinfo({ 
@@ -559,8 +561,8 @@ export default function Main(props) {
       const newWorkershour = {...chartInfo.workersHour}
       let data = { scheduleid, reason, type: "cancelSchedule" }
 
-      if (date in newWorkershour[workerid]["scheduled"]) {
-        delete newWorkershour[workerid]["scheduled"][date]
+      if (date + "-c" in newWorkershour[workerid]["scheduled"]) {
+        delete newWorkershour[workerid]["scheduled"][date + "-c"]
       }
 
       removeBooking(data)
@@ -728,6 +730,7 @@ export default function Main(props) {
 
           socket.emit("socket/doneService", data, () => {
             setAppointments({ ...appointments, list })
+            getTheWorkersHour()
           })
         }
       })
@@ -829,7 +832,11 @@ export default function Main(props) {
     }
 	}
   
-	const initialize = () => {
+	const initialize = async() => {
+    tr.locale = await AsyncStorage.getItem("language")
+
+    setLanguage(await AsyncStorage.getItem("language"))
+
 		getTheLocationProfile()
     getTheLocationHours()
     getTheOwnerInfo()
@@ -1713,7 +1720,9 @@ export default function Main(props) {
     return Date.parse(date["month"] + " " + date["date"] + ", " + date["year"] + " " + date["hour"] + ":" + date["minute"])
   }
   
-	useEffect(() => initialize(), [])
+	useEffect(() => {
+    initialize()
+  }, [])
 
 	useEffect(() => {
 		startWebsocket()
@@ -1727,6 +1736,8 @@ export default function Main(props) {
           data.type == "cancelRequest" || 
           data.type == "remakeAppointment"
         ) {
+          getTheWorkersHour()
+
           if (viewType == "appointments_list") {
             getListAppointments()
           } else if (viewType == "appointments_chart") {
@@ -1808,21 +1819,23 @@ export default function Main(props) {
       {loaded ?
   			<View style={styles.box}>
   				<View style={styles.body}>
-  					<View style={styles.navs}>
-              <Text style={styles.header}>{(locationType == 'hair' || locationType == 'nail') ? 'Appointment(s)' : 'Orderer(s)'}</Text>
-  					</View>
-
             <View style={{ flexDirection: 'column', height: '10%', justifyContent: 'space-around' }}>
-              {(locationType == "hair" || locationType == "nail") && (
+              {(locationType == "hair" || locationType == "nail") ? 
                 <View style={styles.viewTypes}>
                   <TouchableOpacity style={[styles.viewType, { backgroundColor: viewType == "appointments_list" ? "black" : "transparent" }]} onPress={() => getListAppointments()}>
-                    <Text style={[styles.viewTypeHeader, { color: viewType == "appointments_list" ? "white": "black" }]}>See{'\n'}<Text style={{ fontWeight: 'bold' }}>Your(s)</Text></Text>
+                    <Text style={[styles.viewTypeHeader, { color: viewType == "appointments_list" ? "white": "black" }]}>{tr.t("main.navs.myAppointments")}</Text>
                   </TouchableOpacity>
                   <TouchableOpacity style={[styles.viewType, { backgroundColor: viewType == "appointments_chart" ? "black" : "transparent" }]} onPress={() => getAppointmentsChart(0, null)}>
-                    <Text style={[styles.viewTypeHeader, { color: viewType == "appointments_chart" ? "white" : "black" }]}>See{'\n'}<Text style={{ fontWeight: 'bold' }}>All Stylist(s)</Text></Text>
+                    <Text style={[styles.viewTypeHeader, { color: viewType == "appointments_chart" ? "white" : "black" }]}>{tr.t("main.navs.allAppointments")}</Text>
                   </TouchableOpacity>
                 </View>
-              )}
+                :
+                <View style={styles.viewTypes}>
+                  <TouchableOpacity style={styles.viewType} onPress={() => getAllCartOrderers()}>
+                    <Text style={styles.viewTypeHeader}>{tr.t("main.navs.cartOrderers")}</Text>
+                  </TouchableOpacity>
+                </View>
+              }
             </View>
 
             {viewType == "appointments_list" && ( 
@@ -1841,25 +1854,29 @@ export default function Main(props) {
                         </View>
                           
                         <Text style={styles.scheduleHeader}>
-                          Name: {item.client.username}
-                          {'\nStylist: ' + item.worker.username}
-                          {'\n' + displayTime(item.time)}
+                          {tr.t("main.list.clientName")} {item.client.username}
+                          {'\n' + tr.t("main.list.staff") + ': ' + item.worker.username}
+                          {'\n' + 
+                            displayTime(item.time)
+                              .replace("today at", tr.t("headers.todayAt"))
+                              .replace("tomorrow at", tr.t("headers.tomorrowAt"))
+                          }
                         </Text>
 
                         <View style={styles.scheduleActions}>
                           <View style={styles.column}>
                             <TouchableOpacity style={styles.scheduleAction} onPress={() => cancelTheSchedule(index, "appointment")}>
-                              <Text style={styles.scheduleActionHeader}>Cancel</Text>
+                              <Text style={styles.scheduleActionHeader}>{tr.t("buttons.cancel")}</Text>
                             </TouchableOpacity>
                           </View>
                           <View style={styles.column}>
                             <TouchableOpacity style={styles.scheduleAction} onPress={() => props.navigation.navigate("booktime", { scheduleid: item.id, serviceid: item.serviceid, serviceinfo: item.name })}>
-                              <Text style={styles.scheduleActionHeader}>Change time for client</Text>
+                              <Text style={styles.scheduleActionHeader}>{tr.t("main.list.changeTime")}</Text>
                             </TouchableOpacity>
                           </View>
                           <View style={styles.column}>
                             <TouchableOpacity style={styles.scheduleAction} onPress={() => doneTheService(index, item.id)}>
-                              <Text style={styles.scheduleActionHeader}>Done</Text>
+                              <Text style={styles.scheduleActionHeader}>{tr.t("buttons.done")}</Text>
                             </TouchableOpacity>
                           </View>
                         </View>
@@ -1868,7 +1885,7 @@ export default function Main(props) {
                   />
                   :
                   <View style={styles.bodyResult}>
-                    <Text style={styles.bodyResultHeader}>You will see your appointment(s) here</Text>
+                    <Text style={styles.bodyResultHeader}>{tr.t("main.list.header")}</Text>
                   </View>
                 :
                 <View style={styles.loading}>
@@ -1941,7 +1958,7 @@ export default function Main(props) {
                                 ]}
                                 onPress={() => {
                                   if (item.time + "-c" in chartInfo.workersHour[worker.id]["scheduled"]) {
-                                    removeTheBooking(chartInfo.workersHour[worker.id]["scheduled"][item.time])
+                                    removeTheBooking(chartInfo.workersHour[worker.id]["scheduled"][item.time + "-c"])
                                   } else {
                                     blockTheTime(worker.id, item.jsonDate)
                                   }
@@ -1989,8 +2006,8 @@ export default function Main(props) {
                       :
                       <View key={item.key} style={styles.cartorderer}>
                         <View style={styles.cartordererInfo}>
-                          <Text style={styles.cartordererUsername}>Customer: {item.username}</Text>
-                          <Text style={styles.cartordererOrderNumber}>Order #{item.orderNumber}</Text>
+                          <Text style={styles.cartordererUsername}>{tr.t("main.cartOrderers.customerName")} {item.username}</Text>
+                          <Text style={styles.cartordererOrderNumber}>{tr.t("main.cartOrderers.orderNumber")}{item.orderNumber}</Text>
 
                           <View style={styles.cartorderActions}>
                             <TouchableOpacity style={styles.cartordererAction} onPress={() => {
@@ -1999,7 +2016,7 @@ export default function Main(props) {
                                 removeFromList(item.id, "cartOrderers")
                               }})
                             }}>
-                              <Text style={styles.cartordererActionHeader}>See Order(s) ({item.numOrders})</Text>
+                              <Text style={styles.cartordererActionHeader}>{tr.t("main.cartOrderers.seeOrders") + '\n'}({item.numOrders})</Text>
                             </TouchableOpacity>
                           </View>
                         </View>
@@ -2008,7 +2025,7 @@ export default function Main(props) {
                 />
                 :
                 <View style={styles.bodyResult}>
-                  <Text style={styles.bodyResultHeader}>You will see all order(s) here</Text>
+                  <Text style={styles.bodyResultHeader}>{tr.t("main.cartOrderers.header")}</Text>
                 </View>
             )}
   				</View>
@@ -2017,7 +2034,7 @@ export default function Main(props) {
   					<View style={styles.bottomNavsRow}>
               <View style={styles.column}>
                 <TouchableOpacity style={styles.bottomNavButton} onPress={() => setShowmoreoptions({ ...showMoreoptions, show: true })}>
-                  <Text style={styles.bottomNavButtonHeader}>Change Info</Text>
+                  <Text style={styles.bottomNavButtonHeader}>{tr.t("main.bottomNavs.changeInfo")}</Text>
                 </TouchableOpacity>
               </View>
 
@@ -2029,7 +2046,7 @@ export default function Main(props) {
                     setShowinfo({ ...showInfo, show: true })
                   }
                 }}>
-                  <Text style={styles.bottomNavButtonHeader}>Hour(s)</Text>
+                  <Text style={styles.bottomNavButtonHeader}>{tr.t("main.bottomNavs.hours")}</Text>
                 </TouchableOpacity>
               </View>
 
@@ -2047,15 +2064,15 @@ export default function Main(props) {
         </View>
       }
 
-      {(cancelInfo.show || showMenurequired || showInfo.show || showMoreoptions.show || removeBookingconfirm.show || showDisabledscreen) && (
+      {(cancelInfo.show || showInfo.show || showMoreoptions.show || removeBookingconfirm.show || showDisabledscreen) && (
         <Modal transparent={true}>
     			{cancelInfo.show && (
   					<TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
   						<SafeAreaView style={styles.cancelRequestBox}>
-  							<Text style={styles.cancelRequestHeader}>Why cancel? (optional)</Text>
+  							<Text style={styles.cancelRequestHeader}>{tr.t("main.hidden.cancelInfo.header")}</Text>
 
   							<TextInput 
-  								placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Write your reason" 
+  								placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder={tr.t("main.hidden.cancelInfo.reason")} 
   								multiline={true} textAlignVertical="top" style={styles.cancelRequestInput} 
   								onChangeText={(reason) => setCancelinfo({ ...cancelInfo, reason })} autoCorrect={false} 
   								autoCapitalize="none"
@@ -2064,44 +2081,15 @@ export default function Main(props) {
   							<View style={{ alignItems: 'center' }}>
   								<View style={styles.cancelRequestActions}>
   									<TouchableOpacity style={styles.cancelRequestTouch} onPress={() => setCancelinfo({ ...cancelInfo, show: false, type: "", requestType: "", id: 0, index: 0, reason: "" })}>
-  										<Text style={styles.cancelRequestTouchHeader}>Close</Text>
+  										<Text style={styles.cancelRequestTouchHeader}>{tr.t("buttons.close")}</Text>
   									</TouchableOpacity>
   									<TouchableOpacity style={styles.cancelRequestTouch} onPress={() => cancelTheSchedule(null, cancelInfo.requestType)}>
-  										<Text style={styles.cancelRequestTouchHeader}>Done</Text>
+  										<Text style={styles.cancelRequestTouchHeader}>{tr.t("buttons.done")}</Text>
   									</TouchableOpacity>
   								</View>
   							</View>
   						</SafeAreaView>
   					</TouchableWithoutFeedback>
-    			)}
-    			{showMenurequired && (
-  					<SafeAreaView style={styles.requiredBoxContainer}>
-  						<View style={styles.requiredBox}>
-  							<View style={styles.requiredContainer}>
-  								<Text style={styles.requiredHeader}>
-  									You need to add some 
-  									{locationType == "restaurant" ? 
-  										" food "
-  										:
-  										" products / services "
-  									}
-  									to your menu to list your location publicly
-  								</Text>
-
-  								<View style={styles.requiredActions}>
-  									<TouchableOpacity style={styles.requiredAction} onPress={() => setShowmenurequired(false)}>
-  										<Text style={styles.requiredActionHeader}>Close</Text>
-  									</TouchableOpacity>
-  									<TouchableOpacity style={styles.requiredAction} onPress={() => {
-  										setShowmenurequired(false)
-  										props.navigation.navigate("menu", { menuid: '', name: '', refetch: () => getTheLocationProfile()})
-  									}}>
-  										<Text style={styles.requiredActionHeader}>Ok</Text>
-  									</TouchableOpacity>
-  								</View>
-  							</View>
-  						</View>
-  					</SafeAreaView>
     			)}
           {showInfo.show && (
             <View style={styles.showInfoContainer}>
@@ -2112,12 +2100,12 @@ export default function Main(props) {
                       <AntDesign name="close" size={wsize(7)}/>
                     </TouchableOpacity>
 
-                    <Text style={styles.showInfoHeader}>{header.substr(1, header.length - 2)}'s hour(s)</Text>
+                    <Text style={styles.showInfoHeader}>{tr.t("main.hidden.showInfo.header")}</Text>
 
                     {showInfo.locationHours.map(info => (
                       !info.close && (
                         <View style={styles.workerTimeContainer} key={info.key}>
-                          <Text style={styles.dayHeader}>{info.header}: </Text>
+                          <Text style={styles.dayHeader}>{tr.t("days." + info.header)}: </Text>
                           <View style={styles.timeHeaders}>
                             <Text style={styles.timeHeader}>{info.opentime.hour}</Text>
                             <View style={styles.column}><Text>:</Text></View>
@@ -2137,21 +2125,21 @@ export default function Main(props) {
 
                     <View style={styles.workerInfoList}>
                       {showInfo.workersHours.map(worker => (
-                        <View key={worker.key} style={styles.workerRow}>
+                        <View key={worker.key} style={{ alignItems: 'center', backgroundColor: 'rgba(127, 127, 127, 0.2)', marginVertical: 50, paddingVertical: 10 }}>
                           <View style={styles.workerInfo}>
                             <View style={styles.workerInfoProfile}>
                               <Image 
                                 source={worker.profile.name ? { uri: logo_url + worker.profile.name } : require("../../assets/noimage.jpeg")}
-                                style={resizePhoto(worker.profile, wsize(10))}
+                                style={resizePhoto(worker.profile, wsize(30))}
                               />
                             </View>
-                            <Text style={styles.workerInfoName}>{worker.name}</Text>
+                            <Text style={styles.workerInfoName}>{tr.t("main.hidden.showInfo.staffName")} {worker.name}</Text>
                           </View>
                           <View style={styles.workerTime}>
                             {worker.hours.map(info => (
                               info.working && (
                                 <View style={styles.workerTimeContainer} key={info.key}>
-                                  <Text style={styles.dayHeader}>{info.header}: </Text>
+                                  <Text style={styles.dayHeader}>{tr.t("days." + info.header)}: </Text>
                                   <View style={styles.timeHeaders}>
                                     <Text style={styles.timeHeader}>{info.opentime.hour}</Text>
                                     <View style={styles.column}><Text>:</Text></View>
@@ -2191,7 +2179,7 @@ export default function Main(props) {
                         setShowmoreoptions({ ...showMoreoptions, show: false })
                         props.navigation.navigate("menu", { refetch: () => initialize(), isOwner })
                       }}>
-                        <Text style={styles.moreOptionTouchHeader}>{isOwner == true ? "Change" : "Read"} Menu</Text>
+                        <Text style={styles.moreOptionTouchHeader}>{tr.t("main.hidden.showMoreoptions.changeMenu")}</Text>
                       </TouchableOpacity>
 
                       {(locationType == "hair" || locationType == "nail") && (
@@ -2200,7 +2188,7 @@ export default function Main(props) {
                           setShowmoreoptions({ ...showMoreoptions, infoType: 'users' })
                           getAllAccounts()
                         }}>
-                          <Text style={styles.moreOptionTouchHeader}>Change Stylist(s) Info</Text>
+                          <Text style={styles.moreOptionTouchHeader}>{tr.t("main.hidden.showMoreoptions.changeStaffinfo")}</Text>
                         </TouchableOpacity>
                       )}
 
@@ -2210,14 +2198,14 @@ export default function Main(props) {
                             setShowmoreoptions({ ...showMoreoptions, infoType: 'information' })
                             setEditinfo({ ...editInfo, show: true, type: 'information' })
                           }}>
-                            <Text style={styles.moreOptionTouchHeader}>Change{header}Info</Text>
+                            <Text style={styles.moreOptionTouchHeader}>{tr.t("main.hidden.showMoreoptions.changeBusinessinfo")}</Text>
                           </TouchableOpacity>
 
                           <TouchableOpacity style={styles.moreOptionTouch} onPress={() => {
                             setShowmoreoptions({ ...showMoreoptions, infoType: 'hours' })
                             setEditinfo({ ...editInfo, show: true, type: 'hours' })
                           }}>
-                            <Text style={styles.moreOptionTouchHeader}>Change{header}Hour(s)</Text>
+                            <Text style={styles.moreOptionTouchHeader}>{tr.t("main.hidden.showMoreoptions.changeBusinesshours")}</Text>
                           </TouchableOpacity>
 
                           <TouchableOpacity style={styles.moreOptionTouch} onPress={() => {
@@ -2231,7 +2219,7 @@ export default function Main(props) {
                               props.navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "list" }]}));
                             }, 1000)
                           }}>
-                            <Text style={styles.moreOptionTouchHeader}>More Business(es)</Text>
+                            <Text style={styles.moreOptionTouchHeader}>{tr.t("main.hidden.showMoreoptions.moreBusinesses")}</Text>
                           </TouchableOpacity>
 
                           {(locationType == "hair" || locationType == "nail") && (
@@ -2244,20 +2232,20 @@ export default function Main(props) {
                                 props.navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "walkin" }]}));
                               }, 1000)
                             }}>
-                              <Text style={styles.moreOptionTouchHeader}>Walk-in(s)</Text>
+                              <Text style={styles.moreOptionTouchHeader}>{tr.t("main.hidden.showMoreoptions.walkIn")}</Text>
                             </TouchableOpacity>
                           )}
 
                           {(locationType == "hair" || locationType == "nail") && (
                             <View style={styles.receiveTypesBox}>
-                              <Text style={styles.receiveTypesHeader}>Get appointments by</Text>
+                              <Text style={styles.receiveTypesHeader}>{tr.t("main.hidden.showMoreoptions.getAppointmentsby.header")}</Text>
 
                               <View style={styles.receiveTypes}>
                                 <TouchableOpacity style={[styles.receiveType, { backgroundColor: locationReceivetype == 'stylist' ? 'black' : 'white' }]} onPress={() => setTheReceiveType('stylist')}>
-                                  <Text style={[styles.receiveTypeHeader, { color: locationReceivetype == 'stylist' ? 'white' : 'black' }]}>Stylist(s)</Text>
+                                  <Text style={[styles.receiveTypeHeader, { color: locationReceivetype == 'stylist' ? 'white' : 'black' }]}>{tr.t("main.hidden.showMoreoptions.getAppointmentsby.staff")}</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity style={[styles.receiveType, { backgroundColor: locationReceivetype == 'owner' ? 'black' : 'white' }]} onPress={() => setTheReceiveType('owner')}>
-                                  <Text style={[styles.receiveTypeHeader, { color: locationReceivetype == 'owner' ? 'white' : 'black' }]}>Owner</Text>
+                                  <Text style={[styles.receiveTypeHeader, { color: locationReceivetype == 'owner' ? 'white' : 'black' }]}>{tr.t("main.hidden.showMoreoptions.getAppointmentsby.owner")}</Text>
                                 </TouchableOpacity>
                               </View>
                             </View>
@@ -2286,7 +2274,7 @@ export default function Main(props) {
                                 {locationInfo == '' && (
                                   <>
                                     <TouchableOpacity style={[styles.locationActionOption, { width: width * 0.5 }]} disabled={editInfo.loading} onPress={() => markLocation()}>
-                                      <Text style={styles.locationActionOptionHeader}>Mark your location</Text>
+                                      <Text style={styles.locationActionOptionHeader}>{tr.t("buttons.markLocation")}</Text>
                                     </TouchableOpacity>
 
                                     <Text style={[styles.header, { fontSize: wsize(4) }]}>Or</Text>
@@ -2295,14 +2283,14 @@ export default function Main(props) {
                                       setLocationinfo('away')
                                       setEditinfo({ ...editInfo, errorMsg: '' })
                                     }}>
-                                      <Text style={styles.locationActionHeader}>Edit address instead</Text>
+                                      <Text style={styles.locationActionHeader}>{tr.t("buttons.editAddress")}</Text>
                                     </TouchableOpacity>
                                   </>
                                 )}
 
                                 {locationInfo == 'destination' && (
                                   <View style={{ alignItems: 'center', width: '100%' }}>
-                                    <Text style={styles.locationHeader}>Your{header}is located at</Text>
+                                    <Text style={styles.locationHeader}>{tr.t("headers.locatedHeader." + header)}</Text>
 
                                     {(locationCoords.longitude && locationCoords.latitude) ? 
                                       <>
@@ -2339,7 +2327,7 @@ export default function Main(props) {
                                 {locationInfo == 'away' && (
                                   <>
                                     <TouchableOpacity style={[styles.locationActionOption, { width: width * 0.5 }]} disabled={editInfo.loading} onPress={() => markLocation()}>
-                                      <Text style={styles.locationActionOptionHeader}>Mark your location</Text>
+                                      <Text style={styles.locationActionOptionHeader}>{tr.t("buttons.markLocation")}</Text>
                                     </TouchableOpacity>
 
                                     <Text style={[styles.header, { fontSize: wsize(4) }]}>Or</Text>
@@ -2348,31 +2336,31 @@ export default function Main(props) {
 
                                     <View style={styles.inputsBox}>
                                       <View style={styles.inputContainer}>
-                                        <Text style={styles.inputHeader}>{header}'s name:</Text>
+                                        <Text style={styles.inputHeader}>{tr.t("main.editingAddress.name")}:</Text>
                                         <TextInput style={styles.input} onChangeText={(storeName) => setStorename(storeName)} value={storeName} autoCorrect={false}/>
                                       </View>
                                       <View style={styles.inputContainer}>
-                                        <Text style={styles.inputHeader}>{header}'s Phone number:</Text>
+                                        <Text style={styles.inputHeader}>{tr.t("main.editingAddress.phoneNumber")}:</Text>
                                         <TextInput style={styles.input} onChangeText={(num) => setPhonenumber(displayPhonenumber(phonenumber, num, () => Keyboard.dismiss()))} value={phonenumber} keyboardType="numeric" autoCorrect={false}/>
                                       </View>
                                       <View style={styles.inputContainer}>
-                                        <Text style={styles.inputHeader}>{header}'s address #1:</Text>
+                                        <Text style={styles.inputHeader}>{tr.t("main.editingAddress.addressOne")}:</Text>
                                         <TextInput style={styles.input} onChangeText={(addressOne) => setAddressone(addressOne)} value={addressOne} autoCorrect={false}/>
                                       </View>
                                       <View style={styles.inputContainer}>
-                                        <Text style={styles.inputHeader}>{header}'s address #2:</Text>
+                                        <Text style={styles.inputHeader}>{tr.t("main.editingAddress.addressTwo")}:</Text>
                                         <TextInput style={styles.input} onChangeText={(addressTwo) => setAddresstwo(addressTwo)} value={addressTwo} autoCorrect={false}/>
                                       </View>
                                       <View style={styles.inputContainer}>
-                                        <Text style={styles.inputHeader}>City:</Text>
+                                        <Text style={styles.inputHeader}>{tr.t("main.editingAddress.city")}:</Text>
                                         <TextInput style={styles.input} onChangeText={(city) => setCity(city)} value={city} keyboardType="numeric" autoCorrect={false}/>
                                       </View>
                                       <View style={styles.inputContainer}>
-                                        <Text style={styles.inputHeader}>Province:</Text>
+                                        <Text style={styles.inputHeader}>{tr.t("main.editingAddress.province")}:</Text>
                                         <TextInput style={styles.input} onChangeText={(province) => setProvince(province)} value={province} keyboardType="numeric" autoCorrect={false}/>
                                       </View>
                                       <View style={styles.inputContainer}>
-                                        <Text style={styles.inputHeader}>Postal Code:</Text>
+                                        <Text style={styles.inputHeader}>{tr.t("main.editingAddress.postalCode")}:</Text>
                                         <TextInput style={styles.input} onChangeText={(postalcode) => setPostalcode(postalcode)} value={postalcode} keyboardType="numeric" autoCorrect={false}/>
                                       </View>
 
@@ -2392,7 +2380,7 @@ export default function Main(props) {
                                         allowCamera()
                                         setLogo({ ...logo, uri: '' })
                                       }}>
-                                        <Text style={styles.cameraActionHeader}>Cancel</Text>
+                                        <Text style={styles.cameraActionHeader}>{tr.t("buttons.cancel")}</Text>
                                       </TouchableOpacity>
                                     </>
                                   ) : (
@@ -2414,13 +2402,13 @@ export default function Main(props) {
 
                                       <View style={styles.cameraActions}>
                                         <TouchableOpacity style={[styles.cameraAction, { opacity: logo.loading ? 0.5 : 1 }]} disabled={logo.loading} onPress={snapPhoto.bind(this)}>
-                                          <Text style={styles.cameraActionHeader}>Take this photo</Text>
+                                          <Text style={styles.cameraActionHeader}>{tr.t("buttons.takePhoto")}</Text>
                                         </TouchableOpacity>
                                         <TouchableOpacity style={[styles.cameraAction, { opacity: logo.loading ? 0.5 : 1 }]} disabled={logo.loading} onPress={() => {
                                           allowChoosing()
                                           choosePhoto()
                                         }}>
-                                          <Text style={styles.cameraActionHeader}>Choose from phone</Text>
+                                          <Text style={styles.cameraActionHeader}>{tr.t("buttons.choosePhoto")}</Text>
                                         </TouchableOpacity>
                                       </View>
                                     </>
@@ -2428,21 +2416,26 @@ export default function Main(props) {
                                 </View>
 
                                 <TouchableOpacity style={styles.updateButton} disabled={editInfo.loading} onPress={() => updateYourLocation()}>
-                                  <Text style={styles.updateButtonHeader}>Save</Text>
+                                  <Text style={styles.updateButtonHeader}>{tr.t("buttons.update")}</Text>
                                 </TouchableOpacity>
                               </>
                             )}
 
                             {editInfo.type == 'hours' && (
                               <>
-                                <Text style={[styles.header, { fontSize: wsize(6) }]}>Edit{header}Hour(s)</Text>
+                                <Text style={[styles.header, { fontSize: wsize(6) }]}>{tr.t("main.editingHours.header")}</Text>
 
                                 {locationHours.map((info, index) => (
                                   <View key={index} style={styles.workerHour}>
                                     {info.close == false ? 
                                       <>
                                         <View style={{ opacity: info.close ? 0.1 : 1, width: '100%' }}>
-                                          <Text style={styles.workerHourHeader}>Open on {info.header}</Text>
+                                          <Text style={styles.workerHourHeader}>{
+                                            language == "chinese" ? 
+                                              tr.t("main.editingHours.openHeader." + info.header)
+                                              :
+                                              tr.t("main.editingHours.openHeader").replace("{day}", tr.t("days." + info.header))
+                                          }</Text>
                                           <View style={styles.timeSelectionContainer}>
                                             <View style={styles.timeSelection}>
                                               <View style={styles.selection}>
@@ -2544,12 +2537,12 @@ export default function Main(props) {
 
                                           setLocationhours(newLocationhours)
                                         }}>
-                                          <Text style={styles.workerTouchHeader}>Change to not open</Text>
+                                          <Text style={styles.workerTouchHeader}>{tr.t("main.editingHours.changeToNotOpen")}</Text>
                                         </TouchableOpacity>
                                       </>
                                       :
                                       <>
-                                        <Text style={styles.workerHourHeader}>Not open on {info.header}</Text>
+                                        <Text style={styles.workerHourHeader}>{tr.t("main.editingHours.notOpen").replace("{day}", tr.t("days." + info.header))}</Text>
 
                                         <TouchableOpacity style={styles.workerTouch} onPress={() => {
                                           const newLocationhours = [...locationHours]
@@ -2558,7 +2551,7 @@ export default function Main(props) {
 
                                           setLocationhours(newLocationhours)
                                         }}>
-                                          <Text style={styles.workerTouchHeader}>Change to open</Text>
+                                          <Text style={styles.workerTouchHeader}>{tr.t("main.editingHours.changeToOpen")}</Text>
                                         </TouchableOpacity>
                                       </>
                                     }
@@ -2570,10 +2563,10 @@ export default function Main(props) {
                                     setShowmoreoptions({ ...showMoreoptions, infoType: '' })
                                     setEditinfo({ ...editInfo, show: false, type: '' })
                                   }}>
-                                    <Text style={styles.updateButtonHeader}>Cancel</Text>
+                                    <Text style={styles.updateButtonHeader}>{tr.t("buttons.cancel")}</Text>
                                   </TouchableOpacity>
                                   <TouchableOpacity style={styles.updateButton} disabled={editInfo.loading} onPress={() => updateLocationHours()}>
-                                    <Text style={styles.updateButtonHeader}>Save</Text>
+                                    <Text style={styles.updateButtonHeader}>{tr.t("buttons.update")}</Text>
                                   </TouchableOpacity>
                                 </View>
                               </>
@@ -2581,7 +2574,7 @@ export default function Main(props) {
 
                             {editInfo.type == 'users' && (
                               <View style={styles.accountHolders}>
-                                <Text style={styles.header}>Edit Stylist(s)</Text>
+                                <Text style={styles.header}>{tr.t("main.editInfo.staff.header")}</Text>
 
                                 {isOwner == true && (
                                   <TouchableOpacity style={styles.accountHoldersAdd} onPress={() => {
@@ -2598,7 +2591,7 @@ export default function Main(props) {
                                     })
                                     setEditinfo({ ...editInfo, show: false })
                                   }}>
-                                    <Text style={styles.accountHoldersAddHeader}>Add a new stylist</Text>
+                                    <Text style={styles.accountHoldersAddHeader}>{tr.t("main.editInfo.staff.add")}</Text>
                                   </TouchableOpacity>
                                 )}
 
@@ -2664,7 +2657,9 @@ export default function Main(props) {
 
                                           setEditinfo({ ...editInfo, show: false })
                                         }}>
-                                          <Text style={styles.accountEditTouchHeader}>Change {ownerId === info.id ? "Info (your)" : "hours"}</Text>
+                                          <Text style={styles.accountEditTouchHeader}>
+                                            {tr.t("main.editInfo.staff.change." + (ownerId == info.id ? "self" : "other"))}
+                                          </Text>
                                         </TouchableOpacity>
                                       </View>
                                     )}
@@ -2698,29 +2693,29 @@ export default function Main(props) {
                                   </TouchableOpacity>
                                 </View>
 
-                                <Text style={styles.accountformHeader}>{accountForm.type == 'add' ? 'Add' : 'Editing'} stylist info</Text>
+                                <Text style={styles.accountformHeader}>{tr.t("main.editingInfo.header." + accountForm.type)}</Text>
 
                                 {accountForm.id == ownerId ? 
                                   <View style={{ alignItems: 'center' }}>
                                     <TouchableOpacity style={styles.accountInfoEdit} onPress={() => setAccountform({ ...accountForm, editCellnumber: true, editType: 'cellnumber' })}>
-                                      <Text style={styles.accountInfoEditHeader}>Change Cell number</Text>
+                                      <Text style={styles.accountInfoEditHeader}>{tr.t("main.editingInfo.changeCellnumber")}</Text>
                                     </TouchableOpacity>
 
                                     <TouchableOpacity style={styles.accountInfoEdit} onPress={() => setAccountform({ ...accountForm, editUsername: true, editType: 'username' })}>
-                                      <Text style={styles.accountInfoEditHeader}>Change your name</Text>
+                                      <Text style={styles.accountInfoEditHeader}>{tr.t("main.editingInfo.changeName")}</Text>
                                     </TouchableOpacity>
 
                                     <TouchableOpacity style={styles.accountInfoEdit} onPress={() => setAccountform({ ...accountForm, editProfile: true, editType: 'profile' })}>
-                                      <Text style={styles.accountInfoEditHeader}>Change your profile</Text>
+                                      <Text style={styles.accountInfoEditHeader}>{tr.t("main.editingInfo.changeProfile")}</Text>
                                     </TouchableOpacity>
 
                                     <TouchableOpacity style={styles.accountInfoEdit} onPress={() => setAccountform({ ...accountForm, editPassword: true, editType: 'password' })}>
-                                      <Text style={styles.accountInfoEditHeader}>Change your password</Text>
+                                      <Text style={styles.accountInfoEditHeader}>{tr.t("main.editingInfo.changePassword")}</Text>
                                     </TouchableOpacity>
 
                                     {(locationType == "hair" || locationType == "nail") && (
                                       <TouchableOpacity style={styles.accountInfoEdit} onPress={() => setAccountform({ ...accountForm, editHours: true, editType: 'hours' })}>
-                                        <Text style={styles.accountInfoEditHeader}>Change your days and hours</Text>
+                                        <Text style={styles.accountInfoEditHeader}>{tr.t("main.editingInfo.changeWorking")}</Text>
                                       </TouchableOpacity>
                                     )}
                                   </View>
@@ -2869,7 +2864,7 @@ export default function Main(props) {
                                     <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
                                       <View style={{ flexDirection: 'row' }}>
                                         <TouchableOpacity style={[styles.accountformSubmit, { opacity: accountForm.loading ? 0.3 : 1 }]} disabled={accountForm.loading} onPress={() => setAccountform({ ...accountForm, show: false, type: 'edit', editType: '', id: -1, editHours: false })}>
-                                          <Text style={styles.accountformSubmitHeader}>Cancel</Text>
+                                          <Text style={styles.accountformSubmitHeader}>{tr.t("buttons.cancel")}</Text>
                                         </TouchableOpacity>
                                         <TouchableOpacity style={[styles.accountformSubmit, { opacity: accountForm.loading ? 0.3 : 1 }]} disabled={accountForm.loading} onPress={() => {
                                           if (accountForm.type == 'add') {
@@ -2878,7 +2873,7 @@ export default function Main(props) {
                                             updateTheOwner()
                                           }
                                         }}>
-                                          <Text style={styles.accountformSubmitHeader}>{accountForm.type == 'add' ? 'Add' : 'Save'} Account</Text>
+                                          <Text style={styles.accountformSubmitHeader}>{accountForm.type == 'add' ? tr.t("buttons.add") : tr.t("buttons.update")} Account</Text>
                                         </TouchableOpacity>
                                       </View>
                                     </View>
@@ -2961,7 +2956,7 @@ export default function Main(props) {
                                             <Image style={styles.camera} source={{ uri: accountForm.profile.uri }}/>
 
                                             <TouchableOpacity style={styles.cameraAction} onPress={() => setAccountform({ ...accountForm, profile: { uri: '', name: '', size: { width: 0, height: 0 }}})}>
-                                              <Text style={styles.cameraActionHeader}>Cancel</Text>
+                                              <Text style={styles.cameraActionHeader}>{tr.t("buttons.cancel")}</Text>
                                             </TouchableOpacity>
                                           </>
                                           :
@@ -3191,7 +3186,7 @@ export default function Main(props) {
                                             })
                                             setEditinfo({ ...editInfo, show: true })
                                           }}>
-                                            <Text style={styles.accountformSubmitHeader}>Cancel</Text>
+                                            <Text style={styles.accountformSubmitHeader}>{tr.t("buttons.cancel")}</Text>
                                           </TouchableOpacity>
                                           <TouchableOpacity style={[styles.accountformSubmit, { opacity: accountForm.loading ? 0.3 : 1 }]} disabled={accountForm.loading} onPress={() => {
                                             if (accountForm.addStep == 4) {
@@ -3204,12 +3199,12 @@ export default function Main(props) {
                                           }}>
                                             <Text style={styles.accountformSubmitHeader}>
                                               {accountForm.addStep == 2 ? 
-                                                accountForm.profile.uri ? "Next" : "Skip"
+                                                accountForm.profile.uri ? tr.t("buttons.next") : tr.t("buttons.skip")
                                                 :
                                                 accountForm.addStep == 4 ? 
-                                                  (accountForm.type == 'add' ? 'Add' : 'Save') + ' Account'
+                                                  (accountForm.type == 'add' ? tr.t("buttons.add") : tr.t("buttons.update")) + ' Account'
                                                   :
-                                                  'Next'
+                                                  tr.t("buttons.next")
                                               }
                                             </Text>
                                           </TouchableOpacity>
@@ -3279,7 +3274,7 @@ export default function Main(props) {
                                             <Image style={styles.camera} source={{ uri: accountForm.profile.uri }}/>
 
                                             <TouchableOpacity style={styles.cameraAction} onPress={() => setAccountform({ ...accountForm, profile: { uri: '', name: '', size: { width: 0, height: 0 }}})}>
-                                              <Text style={styles.cameraActionHeader}>Cancel</Text>
+                                              <Text style={styles.cameraActionHeader}>{tr.t("buttons.cancel")}</Text>
                                             </TouchableOpacity>
                                           </>
                                           :
@@ -3547,7 +3542,7 @@ export default function Main(props) {
                                             }
                                           })
                                         }}>
-                                          <Text style={styles.accountformSubmitHeader}>Cancel</Text>
+                                          <Text style={styles.accountformSubmitHeader}>{tr.t("buttons.cancel")}</Text>
                                         </TouchableOpacity>
                                         <TouchableOpacity style={[styles.accountformSubmit, { opacity: accountForm.loading ? 0.3 : 1 }]} disabled={accountForm.loading} onPress={() => {
                                           if (accountForm.type == 'add') {
@@ -3556,7 +3551,7 @@ export default function Main(props) {
                                             updateTheOwner()
                                           }
                                         }}>
-                                          <Text style={styles.accountformSubmitHeader}>{accountForm.type == 'add' ? 'Add' : 'Save'}</Text>
+                                          <Text style={styles.accountformSubmitHeader}>{accountForm.type == 'add' ? tr.t("buttons.add") : tr.t("buttons.update")}</Text>
                                         </TouchableOpacity>
                                       </View>
                                     </View>
@@ -3603,22 +3598,22 @@ export default function Main(props) {
                             </View>
 
                             <Text style={styles.deleteOwnerHeader}>
-                              {deleteOwnerbox.username}
-                              {'\nWorking ' + deleteOwnerbox.numWorkingdays + ' day(s)'}
+                              {deleteOwnerbox.username + '\n'}
+                              {tr.t("main.deleteStaff.header").replace("{numDays}", deleteOwnerbox.numWorkingdays)}
                             </Text>
                           </View>
 
                           <View>
-                            <Text style={styles.deleteOwnerActionsHeader}>Delete stylist</Text>
+                            <Text style={styles.deleteOwnerActionsHeader}>{tr.t("main.deleteStaff.delete")}</Text>
                             <View style={styles.deleteOwnerActions}>
                               <TouchableOpacity style={styles.deleteOwnerAction} onPress={() => {
                                 setEditinfo({ ...editInfo, show: true })
                                 setDeleteownerbox({ ...deleteOwnerbox, show: false })
                               }}>
-                                <Text style={styles.deleteOwnerActionHeader}>No</Text>
+                                <Text style={styles.deleteOwnerActionHeader}>{tr.t("buttons.no")}</Text>
                               </TouchableOpacity>
                               <TouchableOpacity style={styles.deleteOwnerAction} onPress={() => deleteTheOwner()}>
-                                <Text style={styles.deleteOwnerActionHeader}>Yes</Text>
+                                <Text style={styles.deleteOwnerActionHeader}>{tr.t("buttons.yes")}</Text>
                               </TouchableOpacity>
                             </View>
                           </View>
@@ -3647,7 +3642,7 @@ export default function Main(props) {
 
                       <View style={styles.removeBookingActions}>
                         <TouchableOpacity style={styles.removeBookingAction} onPress={() => setRemovebookingconfirm({ ...removeBookingconfirm, show: false })}>
-                          <Text style={styles.removeBookingActionHeader}>Cancel</Text>
+                          <Text style={styles.removeBookingActionHeader}>{tr.t("buttons.cancel")}</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={styles.removeBookingAction} onPress={() => removeTheBooking()}>
                           <Text style={styles.removeBookingActionHeader}>Ok</Text>
@@ -3674,7 +3669,7 @@ export default function Main(props) {
                 </Text>
 
                 <TouchableOpacity style={styles.disabledClose} onPress={() => socket.emit("socket/business/login", ownerId, () => setShowdisabledscreen(false))}>
-                  <Text style={styles.disabledCloseHeader}>Close</Text>
+                  <Text style={styles.disabledCloseHeader}>{tr.t("buttons.close")}</Text>
                 </TouchableOpacity>
 
                 <ActivityIndicator size="large"/>
@@ -3691,7 +3686,6 @@ const styles = StyleSheet.create({
 	main: { backgroundColor: 'white', height: '100%', width: '100%' },
 	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 
-	navs: { alignItems: 'center', height: '5%', width: '100%' },
   header: { fontSize: wsize(5), fontWeight: 'bold' },
 
   viewTypes: { flexDirection: 'row', justifyContent: 'space-around' },
@@ -3733,7 +3727,7 @@ const styles = StyleSheet.create({
 	cartordererAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: wsize(30) },
 	cartordererActionHeader: { fontSize: wsize(4), textAlign: 'center' },
 
-	bodyResult: { alignItems: 'center', flexDirection: 'column', height: '85%', justifyContent: 'space-around' },
+	bodyResult: { alignItems: 'center', flexDirection: 'column', height: '90%', justifyContent: 'space-around' },
 	bodyResultHeader: { fontSize: wsize(5), fontWeight: 'bold', paddingHorizontal: '10%', textAlign: 'center' },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'column', height: '10%', justifyContent: 'space-around', width: '100%' },
@@ -3750,23 +3744,14 @@ const styles = StyleSheet.create({
 	cancelRequestTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 5, width: wsize(30) },
 	cancelRequestTouchHeader: { fontSize: wsize(5), textAlign: 'center' },
 
-	requiredBoxContainer: { backgroundColor: 'rgba(0, 0, 0, 0.7)' },
-	requiredBox: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
-	requiredContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },
-	requiredHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(6), fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
-	requiredActions: { alignItems: 'center', justifyContent: 'space-around' },
-	requiredAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: wsize(30) },
-	requiredActionHeader: { fontSize: wsize(4), textAlign: 'center' },
-
   showInfoContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
   showInfoBox: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '90%', justifyContent: 'space-around', width: '90%' },
   showInfoClose: { alignItems: 'center', borderRadius: 20, borderStyle: 'solid', borderWidth: 2, marginVertical: 30 },
   showInfoHeader: { fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
   workerInfoList: { width: '100%' },
-  workerRow: { flexDirection: 'row', justifyContent: 'space-around', marginVertical: 30, width: '100%' },
-  workerInfo: {  },
-  workerInfoProfile: { borderRadius: wsize(10) / 2, height: wsize(10), overflow: 'hidden', width: wsize(10) },
-  workerInfoName: { color: 'black', textAlign: 'center' },
+  workerInfo: { alignItems: 'center' },
+  workerInfoProfile: { borderRadius: wsize(30) / 2, height: wsize(30), overflow: 'hidden', width: wsize(30) },
+  workerInfoName: { color: 'black', fontSize: wsize(5), fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
   workerTime: {  },
   workerTimeContainer: { flexDirection: 'row', marginBottom: 20 },
   dayHeader: { fontSize: wsize(5) },
@@ -3775,7 +3760,7 @@ const styles = StyleSheet.create({
 
   moreOptionsContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
   moreOptionsBox: { alignItems: 'center', backgroundColor: 'white', height: '80%', width: '80%' },
-  moreOptionsClose: { alignItems: 'center', borderRadius: 20, borderStyle: 'solid', borderWidth: 2, marginVertical: 30 },
+  moreOptionsClose: { alignItems: 'center', borderRadius: 20, borderStyle: 'solid', borderWidth: 2, marginVertical: 10 },
   moreOptionTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 5, padding: 5, width: '100%' },
   moreOptionTouchHeader: { fontSize: 20, textAlign: 'center' },
 
@@ -3879,7 +3864,7 @@ const styles = StyleSheet.create({
   disabledHeader: { color: 'white', fontWeight: 'bold', textAlign: 'center' },
   disabledClose: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 50, padding: 10 },
 
-  loading: { alignItems: 'center', flexDirection: 'column', height: '85%', justifyContent: 'space-around', width: '100%' },
+  loading: { alignItems: 'center', flexDirection: 'column', height: '90%', justifyContent: 'space-around', width: '100%' },
   row: { flexDirection: 'row', justifyContent: 'space-around' },
   column: { flexDirection: 'column', justifyContent: 'space-around' },
   errorMsg: { color: 'darkred', textAlign: 'center' }

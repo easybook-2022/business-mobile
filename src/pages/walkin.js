@@ -287,16 +287,16 @@ export default function Walkin({ navigation }) {
     } else {
       const { worker, search, serviceInfo, clientName } = confirm
       const time = new Date(Date.now()), hour = time.getHours(), minute = time.getMinutes()
-      const jsonDate = {"day":days[time.getDay()].substr(0, 3),"month":months[time.getMonth()],"date":time.getDate(),"year":time.getFullYear(), hour, minute}
+      const jsonDate = {"day":days[time.getDay()],"month":months[time.getMonth()],"date":time.getDate(),"year":time.getFullYear(), hour, minute}
       const data = { 
         workerid: worker.id, locationid: locationId, 
         time: jsonDate, note: "", type, 
         client: {
-          name: !serviceInfo ? search : "",
-          type: !serviceInfo ? "service" : ""
-        }, serviceid: serviceInfo ? serviceInfo.id : null,
+          service: !serviceInfo ? search : "",
+          type: !serviceInfo ? "service" : "",
+          name: clientName
+        }, serviceid: serviceInfo ? serviceInfo.id : null
       }
-      const timeDisplay = (hour > 12 ? hour - 12 : hour) + ":" + (minute < 10 ? "0" + minute : minute) + " " + (hour < 12 ? "am" : "pm")
 
       bookWalkIn(data)
         .then((res) => {
@@ -306,7 +306,7 @@ export default function Walkin({ navigation }) {
         })
         .then((res) => {
           if (res) {
-            setConfirm({ ...confirm, showClientInput: false, timeDisplay })
+            setConfirm({ ...confirm, showClientInput: false, timeDisplay: res.timeDisplay })
 
             setTimeout(function () {
               setConfirm({ ...confirm, show: false, client: { name: "", cellnumber: "" }, confirm: false })
@@ -357,8 +357,8 @@ export default function Walkin({ navigation }) {
               </Text>
               <Text style={styles.header}>Easily pick the stylist and service{'\n'}(you want){'\n'}and have a seat</Text>
 
-              <TouchableOpacity style={styles.done} onPress={() => setStep(1)}>
-                <Text style={styles.doneHeader}>Begin</Text>
+              <TouchableOpacity style={styles.action} onPress={() => setStep(1)}>
+                <Text style={styles.actionHeader}>Begin</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -391,9 +391,11 @@ export default function Walkin({ navigation }) {
                 />
               </View>
 
-              <TouchableOpacity style={styles.done} onPress={() => getAllMenus()}>
-                <Text style={styles.doneHeader}>Skip</Text>
-              </TouchableOpacity>
+              <View style={styles.actions}>
+                <TouchableOpacity style={styles.action} onPress={() => getAllMenus()}>
+                  <Text style={styles.actionHeader}>Random</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           )}
 
@@ -405,6 +407,12 @@ export default function Walkin({ navigation }) {
               <ScrollView style={{ height: '90%', width: '100%' }}>
                 <View style={{ marginHorizontal: width * 0.025 }}>{displayList({ id: "", name: "", image: "", list: menuInfo.list, left: 0 })}</View>
               </ScrollView>
+
+              <View style={styles.actions}>
+                <TouchableOpacity style={styles.action} onPress={() => setStep(0)}>
+                  <Text style={styles.actionHeader}>Go back</Text>
+                </TouchableOpacity>
+              </View>
             </>
           )}
 
@@ -453,14 +461,18 @@ export default function Walkin({ navigation }) {
                         <>
                           <TextInput style={styles.bookWalkInInput} placeholder="Enter your name" onChangeText={clientName => setConfirm({ ...confirm, clientName })}/>
 
-                          <TouchableOpacity style={styles.done} onPress={() => bookTheWalkIn()}>
-                            <Text style={styles.doneHeader}>Done</Text>
+                          <TouchableOpacity style={styles.action} onPress={() => bookTheWalkIn()}>
+                            <Text style={styles.actionHeader}>Done</Text>
                           </TouchableOpacity>
                         </>
                         :
                         <Text style={styles.bookWalkInHeader}>
-                          Ok, we will call you soon. Your estimated time:
-                          {'\n\n' + confirm.timeDisplay}
+                          Ok,{' '}
+                          {confirm.timeDisplay == "right now" ? 
+                            "There's no wait. You can go straight in"
+                            :
+                            "we will call you soon. Your estimated time: " + '\n\n' + confirm.timeDisplay
+                          }
                         </Text>
                     }
                   </View>
@@ -546,8 +558,9 @@ const styles = StyleSheet.create({
   inputsBox: { alignItems: 'center', height: '70%', width: '90%' },
   input: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(6), marginBottom: 30, paddingVertical: 20, width: '100%' },
 
-  done: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 10 },
-  doneHeader: { fontSize: wsize(6) },
+  actions: { flexDirection: 'row', justifyContent: 'space-around' },
+  action: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 10 },
+  actionHeader: { fontSize: wsize(6) },
 
   // stylists list
   workerSelection: { alignItems: 'center', marginTop: 20 },

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { SafeAreaView, ActivityIndicator, Dimensions, FlatList, View, Image, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import { CommonActions } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { tr } from '../../assets/translate'
 import { getAllLocations } from '../apis/locations'
 import { resizePhoto } from 'geottuse-tools';
 import { socket, logo_url } from '../../assets/info'
@@ -14,11 +15,16 @@ const { height, width } = Dimensions.get('window')
 const wsize = p => {return width * (p / 100)}
 
 export default function Locationslist(props) {
+  const [language, setLanguage] = useState('')
   const [locations, setLocations] = useState([])
   const [loaded, setLoaded] = useState(false)
 
   const getTheAllLocations = async() => {
     const ownerid = await AsyncStorage.getItem("ownerid")
+
+    tr.locale = await AsyncStorage.getItem("language")
+
+    setLanguage(await AsyncStorage.getItem("language"))
 
     getAllLocations(ownerid)
       .then((res) => {
@@ -59,7 +65,7 @@ export default function Locationslist(props) {
 
                 props.navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "locationsetup" }]}));
               }}>
-                <View style={styles.column}><Text style={styles.listAddHeader}>Add a business</Text></View>
+                <View style={styles.column}><Text style={styles.listAddHeader}>{tr.t("list.add")}</Text></View>
                 <View style={styles.column}><AntDesign name="pluscircleo" size={30}/></View>
               </TouchableOpacity>
             </View>
@@ -115,7 +121,7 @@ const styles = StyleSheet.create({
   list: { backgroundColor: 'white', height: '100%', width: '100%' },
   box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
   header: { alignItems: 'center', flexDirection: 'column', height: '10%', justifyContent: 'space-around' },
-  listAdd: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, flexDirection: 'row', height: '70%', justifyContent: 'space-around', width: wsize(50) },
+  listAdd: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, flexDirection: 'row', height: '70%', justifyContent: 'space-around', width: wsize(60) },
   listAddHeader: {  },
 
   body: { alignItems: 'center', height: '80%', width: '100%' },

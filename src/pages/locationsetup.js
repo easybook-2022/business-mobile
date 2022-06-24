@@ -15,6 +15,7 @@ import MapView, { Marker } from 'react-native-maps';
 import { CommonActions } from '@react-navigation/native';
 import { setupLocation } from '../apis/locations'
 import { registerLocationInfo, timeControl } from '../../assets/info'
+import { tr } from '../../assets/translate'
 import { getId, displayPhonenumber, resizePhoto } from 'geottuse-tools'
 
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5'
@@ -33,6 +34,7 @@ const steps = ['type', 'name', 'location', 'phonenumber', 'logo', 'hours']
 const daysArr = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
 export default function Locationsetup({ navigation }) {
+  const [language, setLanguage] = useState('')
 	const [setupType, setSetuptype] = useState('')
 	const [cameraPermission, setCamerapermission] = useState(null);
 	const [pickingPermission, setPickingpermission] = useState(null);
@@ -516,13 +518,25 @@ export default function Locationsetup({ navigation }) {
     }
 	}
 
-  const initialize = async() => setNewbusiness(await AsyncStorage.getItem("newBusiness"))
+  const initialize = async() => {
+    setNewbusiness(await AsyncStorage.getItem("newBusiness"))
+
+    tr.locale = await AsyncStorage.getItem("language")
+
+    setLanguage(await AsyncStorage.getItem("language"))
+  }
 
   useEffect(() => {
     initialize()
   }, [])
 
-  const header = type == 'hair' || type == 'nail' ? type + ' salon' : type
+  useEffect(() => {
+    if (setupType == "type" && type) saveInfo()
+  }, [type])
+
+  const header = type == 'hair' || type == 'nail' ? type + " salon" : type
+
+  if (!language) return <View></View>
   
 	return (
 		<SafeAreaView style={[styles.locationsetup, { opacity: loading ? 0.5 : 1 }]}>
@@ -536,10 +550,10 @@ export default function Locationsetup({ navigation }) {
                     <View style={styles.locationContainer}>
                       {locationInfo === '' && (
                         <View style={{ alignItems: 'center', height: '100%' }}>
-                          <Text style={styles.locationHeader}>If you are at the {header} right now,</Text>
+                          <Text style={styles.locationHeader}>{tr.t("locationsetup.location.if." + header)}</Text>
 
                           <TouchableOpacity style={[styles.locationActionOption, { width: width * 0.5 }]} disabled={loading} onPress={() => markLocation()}>
-                            <Text style={styles.locationActionOptionHeader}>Mark your location</Text>
+                            <Text style={styles.locationActionOptionHeader}>{tr.t("buttons.markLocation")}</Text>
                           </TouchableOpacity>
 
                           <Text style={[styles.locationHeader, { marginVertical: 20 }]}>Or</Text>
@@ -548,7 +562,7 @@ export default function Locationsetup({ navigation }) {
                             setLocationinfo('away')
                             setErrormsg('')
                           }}>
-                            <Text style={styles.locationActionHeader}>Enter address instead</Text>
+                            <Text style={styles.locationActionHeader}>{tr.t("buttons.enterAddress")}</Text>
                           </TouchableOpacity>
 
                           {loading && (
@@ -561,7 +575,7 @@ export default function Locationsetup({ navigation }) {
 
                       {locationInfo === 'destination' && (
                         <View style={{ alignItems: 'center', width: '100%' }}>
-                          <Text style={styles.locationHeader}>Your {header} is located at</Text>
+                          <Text style={styles.locationHeader}>{tr.t("headers.locatedHeader." + header)}</Text>
                           {(locationCoords.longitude && locationCoords.latitude) ? 
                             <>
                               <MapView
@@ -591,7 +605,7 @@ export default function Locationsetup({ navigation }) {
                                 setLocationcoords({ longitude: null, latitude: null })
                                 setLocationinfo('away')
                               }}>
-                                <Text style={styles.locationActionOptionHeader}>Enter address instead</Text>
+                                <Text style={styles.locationActionOptionHeader}>{tr.t("buttons.enterAddress")}</Text>
                               </TouchableOpacity>
                             </>
                           )}
@@ -600,33 +614,33 @@ export default function Locationsetup({ navigation }) {
 
                       {locationInfo === 'away' && (
                         <View style={styles.locationInfos}>
-                          <Text style={styles.locationHeader}>If you are at the {header} right now,</Text>
+                          <Text style={styles.locationHeader}>{tr.t("locationsetup.location.if." + header)}</Text>
                           <TouchableOpacity style={[styles.locationActionOption, { width: width * 0.5 }]} disabled={loading} onPress={() => markLocation()}>
-                            <Text style={styles.locationActionOptionHeader}>Mark your location</Text>
+                            <Text style={styles.locationActionOptionHeader}>{tr.t("buttons.markLocation")}</Text>
                           </TouchableOpacity>
 
                           <Text style={{ fontSize: 20, fontWeight: 'bold', marginVertical: 30 }}>Or</Text>
 
-                          <Text style={styles.locationHeader}>Enter your {header} information</Text>
+                          <Text style={styles.locationHeader}>{tr.t("locationsetup.location.addressHeader." + header)}</Text>
 
                           <View style={styles.inputContainer}>
-                            <Text style={styles.inputHeader}>Enter address #1:</Text>
+                            <Text style={styles.inputHeader}>{tr.t("locationsetup.location.address.addressOne")}</Text>
                             <TextInput style={styles.input} onChangeText={(addressOne) => setAddressone(addressOne)} value={addressOne} autoCorrect={false} autoCapitalize="none"/>
                           </View>
                           <View style={styles.inputContainer}>
-                            <Text style={styles.inputHeader}>Enter address #2: (Optional)</Text>
+                            <Text style={styles.inputHeader}>{tr.t("locationsetup.location.address.addressTwo")}</Text>
                             <TextInput style={styles.input} onChangeText={(addressTwo) => setAddresstwo(addressTwo)} value={addressTwo} autoCorrect={false} autoCapitalize="none"/>
                           </View>
                           <View style={styles.inputContainer}>
-                            <Text style={styles.inputHeader}>Enter city:</Text>
+                            <Text style={styles.inputHeader}>{tr.t("locationsetup.location.address.city")}</Text>
                             <TextInput style={styles.input} onChangeText={(city) => setCity(city)} value={city} placeholder="example: Toronto" autoCorrect={false} autoCapitalize="none"/>
                           </View>
                           <View style={styles.inputContainer}>
-                            <Text style={styles.inputHeader}>Enter province:</Text>
+                            <Text style={styles.inputHeader}>{tr.t("locationsetup.location.address.province")}</Text>
                             <TextInput style={styles.input} onChangeText={(province) => setProvince(province)} value={province} placeholder="example: ON" autoCorrect={false} autoCapitalize="none"/>
                           </View>
                           <View style={styles.inputContainer}>
-                            <Text style={styles.inputHeader}>Enter postal code:</Text>
+                            <Text style={styles.inputHeader}>{tr.t("locationsetup.location.address.postalCode")}</Text>
                             <TextInput style={styles.input} onChangeText={(postalcode) => setPostalcode(postalcode)} value={postalcode} autoCorrect={false} autoCapitalize="none"/>
                           </View>
                         </View>
@@ -638,7 +652,7 @@ export default function Locationsetup({ navigation }) {
                     <View style={styles.days}>
                       {!daysInfo.done ?
                         <>
-                          <Text style={[styles.inputHeader, { marginBottom: 20, textAlign: 'center' }]}>What days are you open ?</Text>
+                          <Text style={[styles.inputHeader, { marginBottom: 20, textAlign: 'center' }]}>{tr.t("locationsetup.openDays.header")}</Text>
 
                           <View style={{ alignItems: 'center', width: '100%' }}>
                             {daysArr.map((day, index) => (
@@ -653,7 +667,7 @@ export default function Locationsetup({ navigation }) {
 
                                 setDaysinfo({ ...daysInfo, working: newWorking })
                               }}>
-                                <Text style={[styles.openingDayTouchHeader, { color: daysInfo.working.indexOf(day) > -1 ? 'white' : 'black' }]}>{day}</Text>
+                                <Text style={[styles.openingDayTouchHeader, { color: daysInfo.working.indexOf(day) > -1 ? 'white' : 'black' }]}>{tr.t("days." + day)}</Text>
                               </TouchableOpacity>
                             ))}
                           </View>
@@ -661,13 +675,18 @@ export default function Locationsetup({ navigation }) {
                         :
                         <View style={styles.daysContainer}>
                           <TouchableOpacity style={styles.daysBack} disabled={loading} onPress={() => setDaysinfo({ ...daysInfo, done: false, step: 0 })}>
-                            <Text style={styles.daysBackHeader}>Change days</Text>
+                            <Text style={styles.daysBackHeader}>{tr.t("buttons.changeDays")}</Text>
                           </TouchableOpacity>
 
                           {days.map((info, index) => (
                             !info.close &&
                               <View key={index} style={styles.day}>
-                                <Text style={styles.dayHeader}>Set open and close hours for {info.header}</Text>
+                                <Text style={styles.dayHeader}>{
+                                  language == "chinese" ? 
+                                    tr.t("locationsetup.openDays.time." + info.header)
+                                    :
+                                    tr.t("locationsetup.openDays.time").replace("{day}", tr.t("days." + info.header))
+                                }</Text>
 
                                 <View style={styles.timeSelectionContainer}>
                                   <View style={styles.timeSelection}>
@@ -783,12 +802,12 @@ export default function Locationsetup({ navigation }) {
                           setSetuptype(steps[index])
                           setErrormsg('')
                         }}>
-                          <Text style={styles.actionHeader}>Back</Text>
+                          <Text style={styles.actionHeader}>{tr.t("buttons.back")}</Text>
                         </TouchableOpacity>
                       )}
 
                       <TouchableOpacity style={styles.action} disabled={loading} onPress={() => setupType == "hours" && daysInfo.step == 1 ? setupYourLocation() : saveInfo()}>
-                        <Text style={styles.actionHeader}>{setupType == "" ? "Let's go" : "Next"}</Text>
+                        <Text style={styles.actionHeader}>{setupType == "" ? tr.t("buttons.letsGo") : tr.t("buttons.next")}</Text>
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -798,77 +817,65 @@ export default function Locationsetup({ navigation }) {
               <View style={styles.inputsBox}>
                 {setupType == "" && (
                   <View style={{ flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
-                    <Text style={styles.introHeader}>Welcome to EasyGO Business</Text>
-                    <Text style={styles.introHeader}>We will bring the nearest customers to your door{'\n'}VERY FAST</Text>
-                    <Text style={styles.introHeader}>Let's setup your business information</Text>
+                    <Text style={styles.introHeader}>{tr.t("locationsetup.intro.welcome")}EasyGO Business</Text>
+                    <Text style={styles.introHeader}>{tr.t("locationsetup.intro.message")}</Text>
+                    <Text style={styles.introHeader}>{tr.t("locationsetup.intro.letsGo")}</Text>
                   </View>
                 )}
 
                 {setupType == "type" && (
                   <View style={styles.typeSelections}>
-                    <Text style={styles.introHeader}>What business are you ?</Text>
+                    <Text style={styles.introHeader}>{tr.t("locationsetup.type.question")}</Text>
 
-                    <TouchableOpacity style={[styles.typeSelection, { backgroundColor: type == 'hair' ? 'rgba(0, 0, 0, 0.5)' : null }]} onPress={() => {
-                      setType('hair')
-                      saveInfo()
-                    }}>
+                    <TouchableOpacity style={[styles.typeSelection, { backgroundColor: type == 'hair' ? 'rgba(0, 0, 0, 0.5)' : null }]} onPress={() => setType('hair')}>
                       <View style={styles.typeSelectionRow}>
                         <View style={styles.column}>
-                          <Text style={styles.typeSelectionHeader}>Hair{'\n'}Salon</Text>
+                          <Text style={styles.typeSelectionHeader}>{tr.t("Hair salon")}</Text>
                         </View>
                         <View style={styles.column}>
                           <Image source={require("../../assets/hairsalon.png")} style={styles.typeSelectionIcon}/>
                         </View>
                         <View style={styles.column}>
-                          <Text style={styles.typeSelectionAction}>Tap{'\n'}to choose</Text>
+                          <Text style={styles.typeSelectionAction}>{tr.t("locationsetup.type.buttonHeaders.tapChoose")}</Text>
                         </View>
                       </View>
                     </TouchableOpacity>
-                    <TouchableOpacity style={[styles.typeSelection, { backgroundColor: type == 'nail' ? 'rgba(0, 0, 0, 0.5)' : null }]} onPress={() => {
-                      setType('nail')
-                      saveInfo()
-                    }}>
+                    <TouchableOpacity style={[styles.typeSelection, { backgroundColor: type == 'nail' ? 'rgba(0, 0, 0, 0.5)' : null }]} onPress={() => setType('nail')}>
                       <View style={styles.typeSelectionRow}>
                         <View style={styles.column}>
-                          <Text style={styles.typeSelectionHeader}>Nail{'\n'}Salon</Text>
+                          <Text style={styles.typeSelectionHeader}>{tr.t("Nail salon")}</Text>
                         </View>
                         <View style={styles.column}>
                           <Image source={require("../../assets/nailsalon.png")} style={styles.typeSelectionIcon}/>
                         </View>
                         <View style={styles.column}>
-                          <Text style={styles.typeSelectionAction}>Tap{'\n'}to choose</Text>
+                          <Text style={styles.typeSelectionAction}>{tr.t("locationsetup.type.buttonHeaders.tapChoose")}</Text>
                         </View>
                       </View>
                     </TouchableOpacity>
-                    <TouchableOpacity style={[styles.typeSelection, { backgroundColor: type == 'restaurant' ? 'rgba(0, 0, 0, 0.5)' : null }]} onPress={() => {
-                      setType('restaurant')
-                      saveInfo()
-                    }}>
+                    <TouchableOpacity style={[styles.typeSelection, { backgroundColor: type == 'restaurant' ? 'rgba(0, 0, 0, 0.5)' : null }]} onPress={() => setType('restaurant')}>
                       <View style={styles.typeSelectionRow}>
                         <View style={styles.column}>
-                          <Text style={styles.typeSelectionHeader}>Restaurant</Text>
+                          <Text style={styles.typeSelectionHeader}>{tr.t("Restaurant")}</Text>
                         </View>
                         <View style={styles.column}>
                           <Image source={require("../../assets/food.png")} style={styles.typeSelectionIcon}/>
                         </View>
                         <View style={styles.column}>
-                          <Text style={styles.typeSelectionAction}>Tap{'\n'}to choose</Text>
+                          <Text style={styles.typeSelectionAction}>{tr.t("locationsetup.type.buttonHeaders.tapChoose")}</Text>
                         </View>
                       </View>
                     </TouchableOpacity>
-                    <TouchableOpacity style={[styles.typeSelection, { backgroundColor: type == 'store' ? 'rgba(0, 0, 0, 0.5)' : null }]} onPress={() => {
-                      setType('store')
-                      saveInfo()
-                    }}>
+                    <TouchableOpacity style={[styles.typeSelection, { backgroundColor: type == 'store' ? 'rgba(0, 0, 0, 0.5)' : null }]} onPress={() => setType('store')}>
                       <View style={styles.typeSelectionRow}>
                         <View style={styles.column}>
-                          <Text style={styles.typeSelectionHeader}>Store</Text>
+                          <Text style={styles.typeSelectionHeader}>{tr.t("Store")}</Text>
                         </View>
                         <View style={styles.column}>
                           <Image source={require("../../assets/shopping-cart.png")} style={styles.typeSelectionIcon}/>
                         </View>
                         <View style={styles.column}>
-                          <Text style={styles.typeSelectionAction}>Tap{'\n'}to choose</Text>
+                          <Text style={styles.typeSelectionAction}>{tr.t("locationsetup.type.buttonHeaders.tapChoose")}</Text>
                         </View>
                       </View>
                     </TouchableOpacity>
@@ -877,47 +884,52 @@ export default function Locationsetup({ navigation }) {
 
                 {setupType == "name" && (
                   <View style={styles.inputContainer}>
-                    <Text style={styles.inputHeader}>Enter {header} name:</Text>
+                    <Text style={styles.inputHeader}>{tr.t("locationsetup.name." + header)}</Text>
                     <TextInput style={styles.input} onChangeText={(storeName) => setStorename(storeName)} value={storeName} autoCorrect={false} autoCapitalize="none"/>
                   </View>
                 )}
 
                 {setupType == "phonenumber" && (
                   <View style={styles.inputContainer}>
-                    <Text style={styles.inputHeader}>Enter {header}'s phone number:</Text>
+                    <Text style={styles.inputHeader}>{tr.t("locationsetup.phonenumber." + header)}</Text>
                     <TextInput style={styles.input} onChangeText={(num) => setPhonenumber(displayPhonenumber(phonenumber, num, () => Keyboard.dismiss()))} value={phonenumber} keyboardType="numeric" autoCorrect={false} autoCapitalize="none"/>
                   </View>
                 )}
 
                 {(setupType == "logo" && (cameraPermission || pickingPermission)) && (
                   <View style={styles.cameraContainer}>
-                    <Text style={styles.inputHeader}>Take a picture of your {header}</Text>
+                    <Text style={styles.inputHeader}>{tr.t("locationsetup.photo." + header)}</Text>
 
                     {logo.uri ? (
                       <>
                         <Image style={styles.camera} source={{ uri: logo.uri }}/>
 
                         <TouchableOpacity style={styles.cameraAction} onPress={() => setLogo({ ...logo, uri: '' })}>
-                          <Text style={styles.cameraActionHeader}>Cancel</Text>
+                          <Text style={styles.cameraActionHeader}>{tr.t("buttons.cancel")}</Text>
                         </TouchableOpacity>
                       </>
                     ) : (
                       <>
                         <Camera 
                           style={styles.camera} 
-                          type={Camera.Constants.Type.back} ref={r => {setCamcomp(r)}}
+                          type={camType} 
+                          ref={r => {setCamcomp(r)}}
                           ratio="1:1"
                         />
 
+                        <View style={{ alignItems: 'center', marginTop: -wsize(7) }}>
+                          <Ionicons color="black" name="camera-reverse-outline" size={wsize(7)} onPress={() => setCamtype(camType == 'back' ? 'front' : 'back')}/>
+                        </View>
+
                         <View style={styles.cameraActions}>
                           <TouchableOpacity style={styles.cameraAction} onPress={snapPhoto.bind(this)}>
-                            <Text style={styles.cameraActionHeader}>Take{'\n'}this photo</Text>
+                            <Text style={styles.cameraActionHeader}>{tr.t("buttons.takePhoto")}</Text>
                           </TouchableOpacity>
                           <TouchableOpacity style={[styles.cameraAction, { opacity: loading ? 0.3 : 1 }]} disabled={loading} onPress={() => {
                             allowChoosing()
                             choosePhoto()
                           }}>
-                            <Text style={styles.cameraActionHeader}>Choose{'\n'}from phone</Text>
+                            <Text style={styles.cameraActionHeader}>{tr.t("buttons.choosePhoto")}</Text>
                           </TouchableOpacity>
                         </View>
                       </>
@@ -938,13 +950,13 @@ export default function Locationsetup({ navigation }) {
                         setSetuptype(steps[index])
                         setErrormsg('')
                       }}>
-                        <Text style={styles.actionHeader}>Back</Text>
+                        <Text style={styles.actionHeader}>{tr.t("buttons.back")}</Text>
                       </TouchableOpacity>
                     )}
 
                     {setupType != "type" && (
                       <TouchableOpacity style={styles.action} disabled={loading} onPress={() => setupType == "hours" && daysInfo.step == 1 ? setupYourLocation() : saveInfo()}>
-                        <Text style={styles.actionHeader}>{setupType == "" ? "Let's go" : "Next"}</Text>
+                        <Text style={styles.actionHeader}>{setupType == "" ? tr.t("buttons.letsGo") : tr.t("buttons.next")}</Text>
                       </TouchableOpacity>
                     )}
                   </View>
@@ -961,7 +973,7 @@ export default function Locationsetup({ navigation }) {
               AsyncStorage.removeItem("newBusiness")
 
               navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "list" }]}));
-            }}><Text style={styles.bottomNavHeader}>Cancel</Text></TouchableOpacity>}
+            }}><Text style={styles.bottomNavHeader}>{tr.t("buttons.cancel")}</Text></TouchableOpacity>}
 
             <TouchableOpacity style={styles.bottomNav} onPress={() => {
               AsyncStorage.clear()

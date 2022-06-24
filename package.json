@@ -30,6 +30,7 @@
     "expo-system-ui": "~1.2.0",
     "expo-updates": "~0.13.2",
     "geottuse-tools": "^0.0.26",
+    "i18n-js": "^3.9.2",
     "react": "17.0.2",
     "react-dom": "17.0.2",
     "react-native": "0.68.2",

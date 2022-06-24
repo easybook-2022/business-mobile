@@ -14,6 +14,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { getId } from 'geottuse-tools';
 import { logo_url } from '../../assets/info'
 import { resizePhoto } from 'geottuse-tools'
+import { tr } from '../../assets/translate'
 import { getLocationProfile } from '../apis/locations'
 import { getOwnerInfo } from '../apis/owners'
 import { getMenus, addNewMenu, removeMenu, getMenuInfo, saveMenu, uploadMenu, deleteMenu } from '../apis/menus'
@@ -32,6 +33,7 @@ const wsize = p => {return width * (p / 100)}
 export default function Menu(props) {
 	const { refetch } = props.route.params
 
+  const [language, setLanguage] = useState('')
 	const [cameraPermission, setCamerapermission] = useState(null);
 	const [pickingPermission, setPickingpermission] = useState(null);
   const [camType, setCamtype] = useState('back')
@@ -50,7 +52,7 @@ export default function Menu(props) {
 		image: { uri: '', name: '' }, errormsg: '' 
 	})
 
-	const [createOptionbox, setCreateoptionbox] = useState({ show: false, id: -1, allow: null })
+	const [createMenuoptionbox, setCreatemenuoptionbox] = useState({ show: false, id: -1, allow: null })
 	const [uploadMenubox, setUploadmenubox] = useState({ show: false, action: '', uri: '', size: { width: 0, height: 0 }, choosing: false, name: '', loading: false })
 	const [menuPhotooption, setMenuphotooption] = useState({ show: false, action: '', photo: '', loading: false })
 	const [removeMenuinfo, setRemovemenuinfo] = useState({ show: false, id: "", name: "", loading: false })
@@ -61,6 +63,9 @@ export default function Menu(props) {
 		const locationid = await AsyncStorage.getItem("locationid")
 		const data = { locationid }
 
+    tr.locale = await AsyncStorage.getItem("language")
+
+    setLanguage(await AsyncStorage.getItem("language"))
 		setLoaded(false)
 
 		getLocationProfile(data)
@@ -130,7 +135,7 @@ export default function Menu(props) {
 		let { id, image, name, list } = info
     const header = ((locationType == "hair" || locationType == "nail") && "service") || 
                   (locationType == "restaurant" && "meal") || 
-                  (locationType == "store" && "product")
+                  (locationType == "store" && "item")
 
 		return (
 			<View>
@@ -148,10 +153,10 @@ export default function Menu(props) {
                 <View style={styles.column}>
                   <View style={styles.menuActions}>
                     <TouchableOpacity style={styles.menuAction} onPress={() => props.navigation.navigate("addmenu", { parentMenuid: id, menuid: id, refetch: () => getAllMenus() })}>
-                      <Text style={styles.menuActionHeader}>Change</Text>
+                      <Text style={styles.menuActionHeader}>{tr.t("buttons.change")}</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.menuAction} onPress={() => removeTheMenu(id)}>
-                      <Text style={styles.menuActionHeader}>Delete</Text>
+                      <Text style={styles.menuActionHeader}>{tr.t("buttons.delete")}</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -175,7 +180,7 @@ export default function Menu(props) {
                     }
                   }}>
                     <View style={styles.column}>
-                      <Text style={styles.itemAddHeader}>Add {header}</Text>
+                      <Text style={styles.itemAddHeader}>{tr.t("buttons.add" + header)}</Text>
                     </View>
                     <AntDesign color="black" name="pluscircleo" size={wsize(7)}/>
                   </TouchableOpacity>
@@ -209,10 +214,10 @@ export default function Menu(props) {
                                   props.navigation.navigate("addproduct", { parentMenuid: id, productid: info.id, refetch: () => getAllMenus() })
                                 }
                               }}>
-                                <Text style={styles.itemActionHeader}>Change</Text>
+                                <Text style={styles.itemActionHeader}>{tr.t("buttons.change")}</Text>
                               </TouchableOpacity>
                               <TouchableOpacity style={styles.itemAction} onPress={() => (locationType == "hair" || locationType == "nail") ? removeTheService(info.id) : removeTheProduct(info.id)}>
-                                <Text style={styles.itemActionHeader}>Delete</Text>
+                                <Text style={styles.itemActionHeader}>{tr.t("buttons.delete")}</Text>
                               </TouchableOpacity>
                             </View>
                           </View>
@@ -238,7 +243,7 @@ export default function Menu(props) {
                           }
                         }}>
                           <View style={styles.column}>
-                            <Text style={styles.itemAddHeader}>Add {header}</Text>
+                            <Text style={styles.itemAddHeader}>{tr.t("buttons.add" + header)}</Text>
                           </View>
                           <AntDesign color="black" name="pluscircleo" size={wsize(7)}/>
                         </TouchableOpacity>
@@ -273,14 +278,16 @@ export default function Menu(props) {
                             <TouchableOpacity style={styles.itemAction} onPress={() => {
                               if ((locationType == "hair" || locationType == "nail")) {
                                 props.navigation.navigate("addservice", { parentMenuid: id, serviceid: info.id, refetch: () => getAllMenus() })
+                              } else if (locationType == "restaurant") {
+                                props.navigation.navigate("addmeal", { parentMenuid: id, productid: info.id, refetch: () => getAllMenus() })
                               } else {
                                 props.navigation.navigate("addproduct", { parentMenuid: id, productid: info.id, refetch: () => getAllMenus() })
                               }
                             }}>
-                              <Text style={styles.itemActionHeader}>Change</Text>
+                              <Text style={styles.itemActionHeader}>{tr.t("buttons.change")}</Text>
                             </TouchableOpacity>
                             <TouchableOpacity style={styles.itemAction} onPress={() => (locationType == "hair" || locationType == "nail") ? removeTheService(info.id) : removeTheProduct(info.id)}>
-                              <Text style={styles.itemActionHeader}>Delete</Text>
+                              <Text style={styles.itemActionHeader}>{tr.t("buttons.delete")}</Text>
                             </TouchableOpacity>
                           </View>
                         </View>
@@ -296,6 +303,11 @@ export default function Menu(props) {
                             "addservice", 
                             { parentMenuid: "", serviceid: null, refetch: () => getAllMenus() }
                           )
+                        } else if (locationType == "restaurant") {
+                          props.navigation.navigate(
+                            "addmeal", 
+                            { parentMenuid: "", productid: null, refetch: () => getAllMenus() }
+                          )
                         } else {
                           props.navigation.navigate(
                             "addproduct", 
@@ -304,7 +316,7 @@ export default function Menu(props) {
                         }
                       }}>
                         <View style={styles.column}>
-                          <Text style={styles.itemAddHeader}>Add more {header}</Text>
+                          <Text style={styles.itemAddHeader}>{tr.t("buttons.add" + header)}</Text>
                         </View>
                         <AntDesign name="pluscircleo" size={40}/>
                       </TouchableOpacity>
@@ -621,7 +633,7 @@ export default function Menu(props) {
 
   const header = ((locationType == "hair" || locationType == "nail") && "service") || 
                   (locationType == "restaurant" && "meal") || 
-                  (locationType == "store" && "product")
+                  (locationType == "store" && "item")
 
 	return (
 		<SafeAreaView style={styles.menuBox}>
@@ -629,7 +641,7 @@ export default function Menu(props) {
 				<View style={styles.box}>
 					<ScrollView style={{ height: '90%', width: '100%' }}>
 						<View style={{ paddingVertical: 10 }}>
-              <Text style={styles.menusHeader}>Photo(s)</Text>
+              <Text style={styles.menusHeader}>{tr.t("menu.photos.header")}</Text>
 							{menuInfo.photos.length > 0 && (
 								menuInfo.photos[0].row && ( 
 									<ScrollView style={{ width: '100%' }}>
@@ -646,11 +658,11 @@ export default function Menu(props) {
                                 <View style={[styles.menuPhotoActions, { marginTop: -30 }]}>
                                   {isOwner == true && (
                                     <TouchableOpacity style={styles.menuPhotoAction} onPress={() => setMenuphotooption({ ...menuPhotooption, show: true, action: 'delete', info: item.photo })}>
-                                      <Text style={styles.menuPhotoActionHeader}>Delete</Text>
+                                      <Text style={styles.menuPhotoActionHeader}>{tr.t("buttons.delete")}</Text>
                                     </TouchableOpacity>
                                   )}
                                   <TouchableOpacity style={styles.menuPhotoAction} onPress={() => setMenuphotooption({ ...menuPhotooption, show: true, action: '', info: item.photo })}>
-                                    <Text style={styles.menuPhotoActionHeader}>See</Text>
+                                    <Text style={styles.menuPhotoActionHeader}>{tr.t("buttons.see")}</Text>
                                   </TouchableOpacity>
                                 </View>
                               </>
@@ -668,20 +680,20 @@ export default function Menu(props) {
                     allowCamera()
                     setUploadmenubox({ ...uploadMenubox, show: true, uri: '', name: '' })
                   }}>
-                    <Text style={styles.menuStartHeader}>Upload photo</Text>
+                    <Text style={styles.menuStartHeader}>{tr.t("buttons.takePhoto")}</Text>
                   </TouchableOpacity>
-                  <Text>(Easier for you)</Text>
+                  <Text>({tr.t("menu.photos.easier")})</Text>
                 </View>
               )}
               <View style={{ marginTop: 100 }}>
-                <Text style={styles.menusHeader}>List(s)</Text>
+                <Text style={styles.menusHeader}>{tr.t("menu.lists.header")}</Text>
                 {displayList({ id: "", name: "", image: "", list: menuInfo.list })}
                 {isOwner == true && (
                   <View style={{ alignItems: 'center' }}>
-                    <TouchableOpacity style={styles.menuStart} onPress={() => setCreateoptionbox({ ...createOptionbox, show: true, id: "", allow: "both" })}>
-                      <Text style={styles.menuStartHeader}>Create manually</Text>
+                    <TouchableOpacity style={styles.menuStart} onPress={() => setCreatemenuoptionbox({ ...createMenuoptionbox, show: true, id: "", allow: "both" })}>
+                      <Text style={styles.menuStartHeader}>{tr.t("menu.lists.create")}</Text>
                     </TouchableOpacity>
-                    <Text>(Easier for {locationType == "nail" || locationType == "hair" ? "clients to book" : "customers to order"})</Text>
+                    <Text>{tr.t("menu.lists.easier." + (header == "service" ? "salon" : "restaurant"))}</Text>
                   </View>
                 )}
               </View>
@@ -694,7 +706,7 @@ export default function Menu(props) {
                 props.navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "main" }]}));
               }}>
                 <Text style={styles.bottomNavButtonHeader}>
-                  {locationType == "hair" || locationType == "nail" ? "Back to\norder(s)" : "Back to\nappointment(s)"}
+                  {locationType == "hair" || locationType == "nail" ? tr.t("menu.bottomNavs.back.salon") : tr.t("menu.bottomNavs.back.restaurant")}
                 </Text>
 							</TouchableOpacity>
 
@@ -710,42 +722,42 @@ export default function Menu(props) {
 						</View>
 					</View>
 
-					{createOptionbox.show && (
+					{createMenuoptionbox.show && (
 						<Modal transparent={true}>
 							<SafeAreaView style={styles.createOptionContainer}>
 								<View style={styles.createOptionBox}>
-									<TouchableOpacity style={styles.createOptionClose} onPress={() => setCreateoptionbox({ show: false, id: -1 })}>
+									<TouchableOpacity style={styles.createOptionClose} onPress={() => setCreatemenuoptionbox({ show: false, id: -1 })}>
 										<AntDesign name="close" size={wsize(7)}/>
 									</TouchableOpacity>
 									<View style={styles.createOptionActions}>
-										{createOptionbox.allow == "both" && (
+										{createMenuoptionbox.allow == "both" && (
 											<TouchableOpacity style={styles.createOptionAction} onPress={() => {
-												setCreateoptionbox({ ...createOptionbox, show: false, id: -1 })
+												setCreatemenuoptionbox({ ...createMenuoptionbox, show: false, id: -1 })
 												props.navigation.navigate(
                           "addmenu", 
-                          { parentMenuid: createOptionbox.id, menuid: null, refetch: () => getAllMenus() }
+                          { parentMenuid: createMenuoptionbox.id, menuid: null, refetch: () => getAllMenus() }
                         )
 											}}>
-												<Text style={styles.createOptionActionHeader}>Add menu</Text>
+												<Text style={styles.createOptionActionHeader}>{tr.t("buttons.addmenu")}</Text>
 											</TouchableOpacity>
 										)}
 											
 										<TouchableOpacity style={styles.createOptionAction} onPress={() => {
-                      setCreateoptionbox({ show: false, id: -1 })
+                      setCreatemenuoptionbox({ show: false, id: -1 })
 
 											if ((locationType == "hair" || locationType == "nail")) {
 												props.navigation.navigate(
 													"addservice", 
-													{ parentMenuid: createOptionbox.id, serviceid: null, refetch: () => getAllMenus() }
+													{ parentMenuid: createMenuoptionbox.id, serviceid: null, refetch: () => getAllMenus() }
 												)
 											} else {
 												props.navigation.navigate(
 													"addproduct", 
-													{ parentMenuid: createOptionbox.id, productid: null, refetch: () => getAllMenus() }
+													{ parentMenuid: createMenuoptionbox.id, productid: null, refetch: () => getAllMenus() }
 												)
 											}
 										}}>
-											<Text style={styles.createOptionActionHeader}>Add {header}</Text>
+											<Text style={styles.createOptionActionHeader}>{tr.t("buttons.add" + header)}</Text>
 										</TouchableOpacity>
 									</View>
 								</View>
@@ -762,13 +774,13 @@ export default function Menu(props) {
 										</TouchableOpacity>
 										<View style={styles.uploadMenuActions}>
 											<TouchableOpacity style={styles.uploadMenuAction} onPress={() => setUploadmenubox({ ...uploadMenubox, action: 'camera' })}>
-												<Text style={styles.uploadMenuActionHeader}>Take a photo</Text>
+												<Text style={styles.uploadMenuActionHeader}>{tr.t("buttons.takePhoto")}</Text>
 											</TouchableOpacity>
 											<TouchableOpacity style={styles.uploadMenuAction} onPress={() => {
                         allowChoosing()
                         choosePhoto()
                       }}>
-												<Text style={styles.uploadMenuActionHeader}>Choose from phone</Text>
+												<Text style={styles.uploadMenuActionHeader}>{tr.t("buttons.choosePhoto")}</Text>
 											</TouchableOpacity>
 										</View>
 									</View>
@@ -801,28 +813,28 @@ export default function Menu(props) {
                     {!uploadMenubox.uri ? 
                       <View style={styles.uploadMenuCameraActions}>
                         <TouchableOpacity style={[styles.uploadMenuCameraAction, { opacity: uploadMenubox.loading ? 0.5 : 1 }]} disabled={uploadMenubox.loading} onPress={() => setUploadmenubox({ ...uploadMenubox, action: '' })}>
-                          <Text style={styles.uploadMenuCameraActionHeader}>Cancel</Text>
+                          <Text style={styles.uploadMenuCameraActionHeader}>{tr.t("buttons.cancel")}</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={[styles.uploadMenuCameraAction, { opacity: uploadMenubox.loading ? 0.5 : 1 }]} disabled={uploadMenubox.loading} onPress={() => {
                           allowChoosing()
                           choosePhoto()
                         }}>
-                          <Text style={styles.uploadMenuCameraActionHeader}>Choose instead</Text>
+                          <Text style={styles.uploadMenuCameraActionHeader}>{tr.t("buttons.choosePhoto")}</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={[styles.uploadMenuCameraAction, { opacity: uploadMenubox.loading ? 0.5 : 1 }]} disabled={uploadMenubox.loading} onPress={snapPhoto.bind(this)}>
-                          <Text style={styles.uploadMenuCameraActionHeader}>Take photo</Text>
+                          <Text style={styles.uploadMenuCameraActionHeader}>{tr.t("buttons.takePhoto")}</Text>
                         </TouchableOpacity>
                       </View>
                       :
                       <View style={styles.uploadMenuCameraActions}>
                         <TouchableOpacity style={[styles.uploadMenuCameraAction, { opacity: uploadMenubox.loading ? 0.5 : 1 }]} disabled={uploadMenubox.loading} onPress={() => setUploadmenubox({ ...uploadMenubox, action: '', uri: '', name: '' })}>
-                          <Text style={styles.uploadMenuCameraActionHeader}>Cancel</Text>
+                          <Text style={styles.uploadMenuCameraActionHeader}>{tr.t("buttons.cancel")}</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={[styles.uploadMenuCameraAction, { opacity: uploadMenubox.loading ? 0.5 : 1 }]} disabled={uploadMenubox.loading} onPress={() => setUploadmenubox({ ...uploadMenubox, uri: '', name: '' })}>
-                          <Text style={styles.uploadMenuCameraActionHeader}>Retake</Text>
+                          <Text style={styles.uploadMenuCameraActionHeader}>{tr.t("buttons.takePhoto")}</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={[styles.uploadMenuCameraAction, { opacity: uploadMenubox.loading ? 0.5 : 1 }]} disabled={uploadMenubox.loading} onPress={() => uploadMenuphoto()}>
-                          <Text style={styles.uploadMenuCameraActionHeader}>Done</Text>
+                          <Text style={styles.uploadMenuCameraActionHeader}>{tr.t("buttons.done")}</Text>
                         </TouchableOpacity>
                       </View>
                     }
@@ -844,22 +856,20 @@ export default function Menu(props) {
 
 								{menuPhotooption.action == "delete" ? 
 									<View style={styles.menuPhotoOptionBottomContainer}>
-										<Text style={styles.menuPhotoOptionActionsHeader}>
-											Are you sure you want to delete{'\n'}this menu ?
-										</Text>
+										<Text style={styles.menuPhotoOptionActionsHeader}>{tr.t("menu.hidden.menuPhotooption.header")}</Text>
 										<View style={styles.menuPhotoOptionActions}>
 											<TouchableOpacity style={styles.menuPhotoOptionAction} onPress={() => setMenuphotooption({ ...menuPhotooption, show: false, action: '', info: {} })}>
-												<Text style={styles.menuPhotoOptionActionHeader}>No</Text>
+												<Text style={styles.menuPhotoOptionActionHeader}>{tr.t("buttons.no")}</Text>
 											</TouchableOpacity>
 											<TouchableOpacity style={styles.menuPhotoOptionAction} onPress={() => deleteTheMenu()}>
-												<Text style={styles.menuPhotoOptionActionHeader}>Yes</Text>
+												<Text style={styles.menuPhotoOptionActionHeader}>{tr.t("buttons.yes")}</Text>
 											</TouchableOpacity>
 										</View>
 									</View>
 									:
 									<View style={styles.menuPhotoOptionBottomContainer}>
 										<TouchableOpacity style={styles.menuPhotoOptionAction} onPress={() => setMenuphotooption({ ...menuPhotooption, show: false, action: '', info: {} })}>
-											<Text style={styles.menuPhotoOptionActionHeader}>Close</Text>
+											<Text style={styles.menuPhotoOptionActionHeader}>{tr.t("buttons.close")}</Text>
 										</TouchableOpacity>
 									</View>
 								}
@@ -884,10 +894,10 @@ export default function Menu(props) {
 
 									<View style={styles.menuInfoActions}>
 										<TouchableOpacity style={styles.menuInfoAction} onPress={() => setRemovemenuinfo({ ...removeMenuinfo, show: false })}>
-											<Text style={styles.menuInfoActionHeader}>Cancel</Text>
+											<Text style={styles.menuInfoActionHeader}>{tr.t("buttons.cancel")}</Text>
 										</TouchableOpacity>
 										<TouchableOpacity style={styles.menuInfoAction} onPress={() => removeTheMenu(removeMenuinfo.id)}>
-											<Text style={styles.menuInfoActionHeader}>Yes</Text>
+											<Text style={styles.menuInfoActionHeader}>{tr.t("buttons.yes")}</Text>
 										</TouchableOpacity>
 									</View>
 								</View>
@@ -943,10 +953,10 @@ export default function Menu(props) {
 
 									<View style={styles.productInfoActions}>
 										<TouchableOpacity style={styles.productInfoAction} onPress={() => setRemoveproductinfo({ ...removeProductinfo, show: false })}>
-											<Text style={styles.productInfoActionHeader}>Cancel</Text>
+											<Text style={styles.productInfoActionHeader}>{tr.t("buttons.cancel")}</Text>
 										</TouchableOpacity>
 										<TouchableOpacity style={styles.productInfoAction} onPress={() => removeTheProduct(removeProductinfo.id)}>
-											<Text style={styles.productInfoActionHeader}>Yes</Text>
+											<Text style={styles.productInfoActionHeader}>{tr.t("buttons.yes")}</Text>
 										</TouchableOpacity>
 									</View>
 								</View>
@@ -972,10 +982,10 @@ export default function Menu(props) {
 
 									<View style={styles.serviceInfoActions}>
 										<TouchableOpacity style={styles.serviceInfoAction} onPress={() => setRemoveserviceinfo({ ...removeServiceinfo, show: false })}>
-											<Text style={styles.serviceInfoActionHeader}>Cancel</Text>
+											<Text style={styles.serviceInfoActionHeader}>{tr.t("buttons.cancel")}</Text>
 										</TouchableOpacity>
 										<TouchableOpacity style={styles.serviceInfoAction} onPress={() => removeTheService(removeServiceinfo.id)}>
-											<Text style={styles.serviceInfoActionHeader}>Yes</Text>
+											<Text style={styles.serviceInfoActionHeader}>{tr.t("buttons.yes")}</Text>
 										</TouchableOpacity>
 									</View>
 								</View>

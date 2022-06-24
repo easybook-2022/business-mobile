@@ -11,6 +11,7 @@ import { Camera } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator'
 import * as ImagePicker from 'expo-image-picker';
 import { getId, resizePhoto } from 'geottuse-tools';
+import { tr } from '../../assets/translate'
 import { logo_url } from '../../assets/info'
 import { addNewMenu, getMenuInfo, saveMenu } from '../apis/menus'
 
@@ -27,6 +28,7 @@ export default function Addmenu(props) {
 	const params = props.route.params
 	const { parentMenuid, menuid, refetch } = params
 
+  const [language, setLanguage] = useState('')
 	const [setupType, setSetuptype] = useState('name')
 	const [cameraPermission, setCamerapermission] = useState(null);
 	const [pickingPermission, setPickingpermission] = useState(null);
@@ -130,6 +132,10 @@ export default function Addmenu(props) {
 	}
 
 	const getTheMenuInfo = async() => {
+    tr.locale = await AsyncStorage.getItem("language")
+
+    setLanguage(await AsyncStorage.getItem("language"))
+    
 		getMenuInfo(menuid)
 			.then((res) => {
 				if (res.status == 200) {
@@ -277,7 +283,7 @@ export default function Addmenu(props) {
 					<View style={styles.box}>
 						{setupType == 'name' && (
 							<View style={styles.inputContainer}>
-								<Text style={styles.addHeader}>What is this menu call</Text>
+								<Text style={styles.addHeader}>{tr.t("addmenu.name")}</Text>
 
 								<TextInput 
 									style={styles.addInput} placeholder="example: Beverages" placeholderTextColor="rgba(127, 127, 127, 0.5)" 
@@ -289,14 +295,14 @@ export default function Addmenu(props) {
             
 						{setupType == 'photo' && (
 							<View style={styles.cameraContainer}>
-								<Text style={styles.cameraHeader}>Provide a photo for {name} (Optional)</Text>
+								<Text style={styles.cameraHeader}>{tr.t("addmenu.photo")}</Text>
                 
 								{image.uri ? (
 									<>
 										<Image style={styles.camera} source={{ uri: image.uri }}/>
 
 										<TouchableOpacity style={styles.cameraAction} onPress={() => setImage({ ...image, uri: '' })}>
-											<Text style={styles.cameraActionHeader}>Cancel</Text>
+											<Text style={styles.cameraActionHeader}>{tr.t("buttons.cancel")}</Text>
 										</TouchableOpacity>
 									</>
 								) : (
@@ -318,13 +324,13 @@ export default function Addmenu(props) {
 
 										<View style={styles.cameraActions}>
 											<TouchableOpacity style={[styles.cameraAction, { opacity: image.loading ? 0.5 : 1 }]} disabled={image.loading} onPress={snapPhoto.bind(this)}>
-												<Text style={styles.cameraActionHeader}>Take{'\n'}this photo</Text>
+												<Text style={styles.cameraActionHeader}>{tr.t("buttons.takePhoto")}</Text>
 											</TouchableOpacity>
 											<TouchableOpacity style={[styles.cameraAction, { opacity: image.loading ? 0.5 : 1 }]} disabled={image.loading} onPress={() => {
                         allowChoosing()
                         choosePhoto()
                       }}>
-												<Text style={styles.cameraActionHeader}>Choose{'\n'}from phone</Text>
+												<Text style={styles.cameraActionHeader}>{tr.t("buttons.choosePhoto")}</Text>
 											</TouchableOpacity>
 										</View>
 									</>
@@ -336,7 +342,7 @@ export default function Addmenu(props) {
 
 						<View style={styles.addActions}>
 							<TouchableOpacity style={styles.addAction} disabled={loading} onPress={() => props.navigation.goBack()}>
-								<Text style={styles.addActionHeader}>Cancel</Text>
+								<Text style={styles.addActionHeader}>{tr.t("buttons.cancel")}</Text>
 							</TouchableOpacity>
 							<TouchableOpacity style={styles.addAction} disabled={loading} onPress={() => {
 								if (!menuid) {
@@ -355,9 +361,9 @@ export default function Addmenu(props) {
 							}}>
 								<Text style={styles.addActionHeader}>{
 									!menuid ? 
-										setupType == "photo" ? image.uri ? "Save" : "Skip" : "Next"
+										setupType == "photo" ? image.uri ? tr.t("buttons.update") : tr.t("buttons.skip") : tr.t("buttons.next")
 										:
-										setupType == "photo" ? image.uri ? "Next" : "Skip" : "Next"
+										setupType == "photo" ? image.uri ? tr.t("buttons.next") : tr.t("buttons.skip") : tr.t("buttons.next")
 								}</Text>
 							</TouchableOpacity>
 						</View>

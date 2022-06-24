@@ -10,6 +10,7 @@ import { Camera } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator'
 import * as ImagePicker from 'expo-image-picker';
 import { getId, resizePhoto } from 'geottuse-tools';
+import { tr } from '../../assets/translate'
 import { logo_url } from '../../assets/info'
 import { getProductInfo, addNewProduct, updateProduct } from '../apis/products'
 
@@ -504,10 +505,10 @@ export default function Addproduct(props) {
 					<View style={styles.box}>
 						{setupType == "name" && (
 							<View style={styles.inputContainer}>
-								<Text style={styles.addHeader}>What is this product call</Text>
+								<Text style={styles.addHeader}>{tr.t("addproduct.name")}</Text>
 
 								<TextInput 
-									style={styles.addInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="example: Iced coffee" 
+									style={styles.addInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="example: pencil" 
 									onChangeText={(name) => setName(name)} value={name} autoCorrect={false} autoCompleteType="off" 
 									autoCapitalize="none"
 								/>
@@ -516,14 +517,14 @@ export default function Addproduct(props) {
 
 						{setupType == "photo" && (
 							<View style={styles.cameraContainer}>
-								<Text style={styles.cameraHeader}>Provide a photo for {name} (Optional)</Text>
+								<Text style={styles.cameraHeader}>{tr.t("addproduct.photo")}</Text>
 
 								{image.uri ? (
 									<>
 										<Image style={styles.camera} source={{ uri: image.uri }}/>
 
 										<TouchableOpacity style={styles.cameraAction} onPress={() => setImage({ ...image, uri: '', name: '' })}>
-											<Text style={styles.cameraActionHeader}>Cancel</Text>
+											<Text style={styles.cameraActionHeader}>{tr.t("buttons.cancel")}</Text>
 										</TouchableOpacity>
 									</>
 								) : (
@@ -537,7 +538,7 @@ export default function Addproduct(props) {
                           ratio="1:1"
                         />
 
-                        <View style={{ alignItems: 'center', marginVertical: 10 }}>
+                        <View style={{ alignItems: 'center', marginTop: -wsize(7) }}>
                           <Ionicons name="camera-reverse-outline" size={wsize(7)} onPress={() => setCamtype(camType == 'back' ? 'front' : 'back')}/>
                         </View>
                       </>
@@ -545,13 +546,13 @@ export default function Addproduct(props) {
 
 										<View style={styles.cameraActions}>
 											<TouchableOpacity style={[styles.cameraAction, { opacity: image.loading ? 0.5 : 1 }]} disabled={image.loading} onPress={snapPhoto.bind(this)}>
-												<Text style={styles.cameraActionHeader}>Take{'\n'}this photo</Text>
+												<Text style={styles.cameraActionHeader}>{tr.t("buttons.takePhoto")}</Text>
 											</TouchableOpacity>
 											<TouchableOpacity style={[styles.cameraAction, { opacity: image.loading ? 0.5 : 1 }]} disabled={image.loading} onPress={() => {
                         allowChoosing()
                         choosePhoto()
                       }}>
-												<Text style={styles.cameraActionHeader}>Choose{'\n'}from phone</Text>
+												<Text style={styles.cameraActionHeader}>{tr.t("buttons.choosePhoto")}</Text>
 											</TouchableOpacity>
 										</View>
 									</>
@@ -576,7 +577,7 @@ export default function Addproduct(props) {
 
 											setOptions([...options, { key: "option-" + new_key.toString(), text: '', option: '' }])
 										}}>
-											<Text style={styles.addOptionHeader}>Add % or amount option</Text>
+											<Text style={styles.addOptionHeader}>{tr.t("addproduct.options.addamount")}</Text>
 										</TouchableOpacity>
 
 										<View style={styles.options}>
@@ -646,7 +647,7 @@ export default function Addproduct(props) {
 
 											setOthers([...others, { key: "other-" + new_key.toString(), name: '', price: "0.00" }])
 										}}>
-											<Text style={styles.addOptionHeader}>Add Specific Option</Text>
+											<Text style={styles.addOptionHeader}>{tr.t("addproduct.options.addoption")}</Text>
 										</TouchableOpacity>
 
 										<View style={styles.options}>
@@ -700,7 +701,7 @@ export default function Addproduct(props) {
 
 											setSizes([...sizes, { key: "size-" + new_key.toString(), name: '', price: "0.00" }])
 										}}>
-											<Text style={styles.addOptionHeader}>Add Size</Text>
+											<Text style={styles.addOptionHeader}>{tr.t("addproduct.price.size")}</Text>
 										</TouchableOpacity>
 
 										<View style={styles.options}>
@@ -763,13 +764,13 @@ export default function Addproduct(props) {
 
 										setSizes([...sizes, { key: "size-" + new_key.toString(), name: '', price: "0.00" }])
 									}}>
-										<Text style={styles.addOptionHeader}>Add Size</Text>
+										<Text style={styles.addOptionHeader}>{tr.t("addproduct.price.sizes")}</Text>
 									</TouchableOpacity>
 
 									<Text style={{ fontSize: wsize(6), fontWeight: 'bold' }}>or</Text>
 
 									<View style={styles.priceBox}>
-										<Text style={styles.priceHeader}>Enter product (one) price</Text>
+										<Text style={styles.priceHeader}>{tr.t("addproduct.price.size")}</Text>
 										<TextInput style={styles.priceInput} placeholderTextColor="rgba(0, 0, 0, 0.5)" placeholder="4.99" onChangeText={(price) => {
 											let newPrice = price.toString()
 
@@ -788,7 +789,7 @@ export default function Addproduct(props) {
 						<View style={{ flexDirection: 'row' }}>
 							<View style={styles.addActions}>
 								<TouchableOpacity style={styles.addAction} disabled={loading} onPress={() => props.navigation.goBack()}>
-									<Text style={styles.addActionHeader}>Cancel</Text>
+									<Text style={styles.addActionHeader}>{tr.t("buttons.cancel")}</Text>
 								</TouchableOpacity>
 								<TouchableOpacity style={styles.addAction} disabled={loading} onPress={() => {
 									if (!productid) {
@@ -807,9 +808,9 @@ export default function Addproduct(props) {
 								}}>
 									<Text style={styles.addActionHeader}>{
 										!productid ? 
-										  setupType == "photo" ? image.uri ? "Save" : "Skip" : "Next" 
+										  setupType == "photo" ? image.uri ? tr.t("buttons.update") : tr.t("buttons.skip") : tr.t("buttons.next") 
 											: 
-										  setupType == "photo" ? image.uri ? "Next" : "Skip" : "Next"
+										  setupType == "photo" ? image.uri ? tr.t("buttons.next") : tr.t("buttons.skip") : tr.t("buttons.next")
 									}</Text>
 								</TouchableOpacity>
 							</View>

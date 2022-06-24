@@ -1,6 +1,6 @@
 import io from 'socket.io-client'
 
-const local_url = false
+const local_url = true
 const test_input = false
 
 const testStores = [
@@ -36,7 +36,7 @@ const useInput = false
 
 const loginLocation = test_input ? testStores[0] : useInput ? realStores[0] : emptyStore
 const ownerSignin = test_input ? testOwners[0] : useInput ? realOwner : emptyOwner
-const registerLocation = test_input ? testStores[0] : useInput ? realStores[0] : emptyStore
+const registerLocation = test_input ? testStores[1] : useInput ? realStores[0] : emptyStore
 
 const host = "10.0.0.60"
 const wifi_api_url = "http://" + host + ":5001/flask"

@@ -11,6 +11,7 @@ import { Camera } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator'
 import * as ImagePicker from 'expo-image-picker';
 import { CommonActions } from '@react-navigation/native';
+import { tr } from '../../assets/translate'
 import { getId, resizePhoto } from 'geottuse-tools';
 import { saveUserInfo } from '../apis/owners'
 import { getLocationProfile } from '../apis/locations'
@@ -30,6 +31,7 @@ const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 
 const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
 export default function Register(props) {
+  const [language, setLanguage] = useState('')
 	const [setupType, setSetuptype] = useState('nickname')
 	const [cameraPermission, setCamerapermission] = useState(null);
 	const [pickingPermission, setPickingpermission] = useState(null);
@@ -53,6 +55,10 @@ export default function Register(props) {
     const locationtype = await AsyncStorage.getItem("locationtype")
     const newBusiness = await AsyncStorage.getItem("newBusiness")
     const data = { locationid }
+
+    tr.locale = await AsyncStorage.getItem("language")
+
+    setLanguage(await AsyncStorage.getItem("language"))
 
     getLocationProfile(data)
       .then((res) => {
@@ -138,7 +144,7 @@ export default function Register(props) {
       setWorkerhours(newWorkerhours)
       setErrormsg('')
     } else {
-      setErrormsg('Please select the days you work on')
+      setErrormsg('')
     }
   }
 
@@ -229,7 +235,7 @@ export default function Register(props) {
             if (err.response && err.response.status == 400) {
               const { errormsg, status } = err.response.data
 
-              setErrormsg(errormsg)
+              setErrormsg(tr.t("register.nameErrormsg"))
             }
 
             setLoading(false)
@@ -425,25 +431,25 @@ export default function Register(props) {
           {setupType != "hours" ? 
             <View style={[styles.box, { opacity: loading ? 0.5 : 1 }]}>
     					<View style={styles.inputsBox}>
-                <Text style={styles.boxHeader}>Setup your stylist info</Text>
+                <Text style={styles.boxHeader}>{tr.t("register.header")}</Text>
 
     						{setupType == "nickname" && (
     							<View style={styles.inputContainer}>
-    								<Text style={styles.inputHeader}>Enter your name:</Text>
+    								<Text style={styles.inputHeader}>{tr.t("register.name")}</Text>
     								<TextInput style={styles.input} onChangeText={(username) => setUsername(username)} value={username} autoCorrect={false} autoCapitalize="none"/>
     							</View>
     						)}
 
                 {(setupType == "profile" && (cameraPermission || pickingPermission)) && (
     							<View style={styles.cameraContainer}>
-    								<Text style={[styles.inputHeader, { fontSize: wsize(5), textAlign: 'center' }]}>Take a picture of your face for clients (Optional)</Text>
+    								<Text style={[styles.inputHeader, { fontSize: wsize(5), textAlign: 'center' }]}>{tr.t("register.photo")}</Text>
 
     								{profile.uri ? (
     									<>
     										<Image style={styles.camera} source={{ uri: profile.uri }}/>
 
     										<TouchableOpacity style={styles.cameraAction} onPress={() => setProfile({ uri: '', name: '' })}>
-    											<Text style={styles.cameraActionHeader}>Cancel</Text>
+    											<Text style={styles.cameraActionHeader}>{tr.t("buttons.cancel")}</Text>
     										</TouchableOpacity>
     									</>
     								) : (
@@ -463,13 +469,13 @@ export default function Register(props) {
 
     										<View style={styles.cameraActions}>
     											<TouchableOpacity style={[styles.cameraAction, { opacity: loading ? 0.5 : 1 }]} disabled={loading} onPress={snapPhoto.bind(this)}>
-    												<Text style={styles.cameraActionHeader}>Take{'\n'}this photo</Text>
+    												<Text style={styles.cameraActionHeader}>{tr.t("buttons.takePhoto")}</Text>
     											</TouchableOpacity>
     											<TouchableOpacity style={[styles.cameraAction, { opacity: loading ? 0.5 : 1 }]} disabled={loading} onPress={() => {
                             allowChoosing()
                             choosePhoto()
                           }}>
-    												<Text style={styles.cameraActionHeader}>Choose{'\n'}from phone</Text>
+    												<Text style={styles.cameraActionHeader}>{tr.t("buttons.choosePhoto")}</Text>
     											</TouchableOpacity>
     										</View>
     									</>
@@ -488,12 +494,12 @@ export default function Register(props) {
 
     									setSetuptype(steps[index])
     								}}>
-    									<Text style={styles.actionHeader}>Back</Text>
+    									<Text style={styles.actionHeader}>{tr.t("buttons.back")}</Text>
     								</TouchableOpacity>
     							)}
 
     							<TouchableOpacity style={[styles.action, { opacity: loading ? 0.3 : 1 }]} disabled={loading} onPress={() => saveInfo()}>
-    								<Text style={styles.actionHeader}>{setupType == "profile" ? profile.uri ? "Next" : "Skip" : "Next"}</Text>
+    								<Text style={styles.actionHeader}>{setupType == "profile" ? profile.uri ? tr.t("buttons.next") : tr.t("buttons.skip") : tr.t("buttons.next")}</Text>
     							</TouchableOpacity>
     						</View>
     					</View>
@@ -503,7 +509,7 @@ export default function Register(props) {
               <KeyboardAvoidingView behavior={Platform.OS == "ios" ? "padding" : "position"}>
                 {!daysInfo.done ? 
                   <View style={{ alignItems: 'center', width: '100%' }}>
-                    <Text style={styles.workerDayHeader}>What days do you work ?</Text>
+                    <Text style={styles.workerDayHeader}>{tr.t("register.workingDays.header")}</Text>
 
                     {days.map((day, index) => (
                       <TouchableOpacity key={index} disabled={hoursRange[index].close} style={
@@ -523,25 +529,25 @@ export default function Register(props) {
 
                         setDaysinfo({ ...daysInfo, working: newWorking })
                       }}>
-                        <Text style={[styles.workerDayTouchHeader, { color: daysInfo.working.indexOf(day) > -1 ? 'white' : 'black' }]}>{day}</Text>
+                        <Text style={[styles.workerDayTouchHeader, { color: daysInfo.working.indexOf(day) > -1 ? 'white' : 'black' }]}>{tr.t("days." + day)}</Text>
                       </TouchableOpacity>
                     ))}
 
                     <TouchableOpacity style={styles.submit} disabled={loading} onPress={() => setTime()}>
-                      <Text style={styles.submitHeader}>Next</Text>
+                      <Text style={styles.submitHeader}>{tr.t("buttons.next")}</Text>
                     </TouchableOpacity>
                   </View>
                   :
                   <>
                     <View style={styles.workerHours}>
                       <TouchableOpacity style={styles.workerHoursBack} onPress={() => setDaysinfo({ ...daysInfo, done: false })}>
-                        <Text style={styles.workerHoursBackHeader}>Change days</Text>
+                        <Text style={styles.workerHoursBackHeader}>{tr.t("buttons.changeDays")}</Text>
                       </TouchableOpacity>
 
                       {workerHours.map((info, index) => (
                         info.working ?
                           <View key={index} style={styles.workerHour}>
-                            <Text style={styles.workerHourHeader}>Set your working hours on {info.header}</Text>
+                            <Text style={styles.workerHourHeader}>{tr.t("register.workingDays.hour").replace("{day}", tr.t("days." + info.header))}</Text>
 
                             <View style={styles.timeSelectionContainer}>
                               <View style={styles.timeSelection}>
@@ -650,12 +656,12 @@ export default function Register(props) {
 
                           setSetuptype(steps[index])
                         }}>
-                          <Text style={styles.actionHeader}>Back</Text>
+                          <Text style={styles.actionHeader}>{tr.t("buttons.back")}</Text>
                         </TouchableOpacity>
                       )}
 
                       <TouchableOpacity style={[styles.action, { opacity: loading ? 0.3 : 1 }]} disabled={loading} onPress={() => register()}>
-                        <Text style={styles.actionHeader}>Done</Text>
+                        <Text style={styles.actionHeader}>{tr.t("buttons.done")}</Text>
                       </TouchableOpacity>
                     </View>
                   </>
@@ -686,7 +692,7 @@ export default function Register(props) {
 const styles = StyleSheet.create({
 	register: { backgroundColor: 'white', height: '100%', width: '100%' },
 	box: { alignItems: 'center', backgroundColor: '#EAEAEA', flexDirection: 'column', height: '90%', justifyContent: 'space-between', width: '100%' },
-	boxHeader: { color: 'black', fontFamily: 'Chilanka_400Regular', fontSize: wsize(7), fontWeight: 'bold' },
+	boxHeader: { color: 'black', fontFamily: 'Chilanka_400Regular', fontSize: wsize(7), fontWeight: 'bold', textAlign: 'center' },
 
 	inputsBox: { alignItems: 'center', height: '90%', width: '100%' },
 	inputContainer: { width: '90%' },
