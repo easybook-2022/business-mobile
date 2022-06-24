@@ -89,7 +89,7 @@ const info = {
       seeOrders: "Voir les commandes"
     },
     bottomNavs: {
-      changeInfo: "Modifier les informations",
+      changeInfo: "Modifier les\ninformations",
       hours: "Heures"
     },
     hidden: {

@@ -32,6 +32,9 @@ export default function Picklanguage({ navigation }) {
             <TouchableOpacity style={styles.language} onPress={() => pick('english')}>
               <Text style={styles.languageHeader}>English</Text>
             </TouchableOpacity>
+            <TouchableOpacity style={styles.language} onPress={() => pick('french')}>
+              <Text style={styles.languageHeader}>French (Français)</Text>
+            </TouchableOpacity>
             <TouchableOpacity style={styles.language} onPress={() => pick('vietnamese')}>
               <Text style={styles.languageHeader}>Vietnamese (Tiếng Việt)</Text>
             </TouchableOpacity>
