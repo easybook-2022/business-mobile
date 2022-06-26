@@ -27,7 +27,7 @@ import {
 } from '../apis/owners'
 import { getLocationProfile, getLocationHours, setLocationHours, updateLocation, setReceiveType, getDayHours } from '../apis/locations'
 import { getMenus, removeMenu, addNewMenu } from '../apis/menus'
-import { cancelSchedule, doneService, getAppointments, getCartOrderers, removeBooking, getAppointmentInfo, blockTime } from '../apis/schedules'
+import { cancelSchedule, doneService, getAppointments, getCartOrderers, removeBooking, getAppointmentInfo, blockTime, salonChangeAppointment } from '../apis/schedules'
 import { removeProduct } from '../apis/products'
 import { setWaitTime } from '../apis/carts'
 
@@ -55,15 +55,13 @@ export default function Main(props) {
 
 	const [appointments, setAppointments] = useState({ list: [], loading: false })
   const [chartInfo, setChartinfo] = useState({ chart: {}, workers: [], workersHour: {}, dayDir: 0, date: {}, loading: false })
-  const [removeBookingconfirm, setRemovebookingconfirm] = useState({ show: false, scheduleid: -1, client: { name: "", cellnumber: "" }, workerid: -1, date: {}, reason: "", confirm: false })
-
+  const [scheduleOption, setScheduleoption] = useState({ show: false, index: -1, id: "", type: "", action: "", client: { id: -1, name: "", cellnumber: "" }, worker: { id: -1 }, service: { id: -1, name: "" }, blocked: [], reason: "", note: "", oldTime: 0, jsonDate: {}, confirm: false })
 	const [cartOrderers, setCartorderers] = useState([])
   const [speakInfo, setSpeakinfo] = useState({ orderNumber: "" })
 
   const [loaded, setLoaded] = useState(false)
 
 	const [viewType, setViewtype] = useState('')
-	const [cancelInfo, setCancelinfo] = useState({ show: false, type: "", requestType: "", reason: "", id: 0, index: 0 })
 
 	const [showDisabledscreen, setShowdisabledscreen] = useState(false)
   const [showInfo, setShowinfo] = useState({ show: false, workersHours: [], locationHours: [] })
@@ -475,11 +473,13 @@ export default function Main(props) {
 
               jsonDate = { ...jsonDate, day: days[date.getDay()], hour, minute }
 
-              times.push({
-                key: "time-" + key + "-" + dayDir,
-                timeDisplay, time: calcTimeStr, jsonDate,
-                timepassed
-              })
+              if (!timepassed) {
+                times.push({
+                  key: "time-" + key + "-" + dayDir,
+                  timeDisplay, time: calcTimeStr, jsonDate,
+                  timepassed
+                })
+              }
 
               key += 1
             }
@@ -509,7 +509,6 @@ export default function Main(props) {
   const blockTheTime = (workerid, jsonDate) => {
     const newWorkershour = {...chartInfo.workersHour}
     const data = { workerid, jsonDate: JSON.stringify(jsonDate) }
-    const unix = jsonDateToUnix(jsonDate)
 
     blockTime(data)
       .then((res) => {
@@ -519,6 +518,8 @@ export default function Main(props) {
       })
       .then((res) => {
         if (res) {
+          const unix = jsonDateToUnix(jsonDate)
+
           if (res.action == "add") {
             newWorkershour[workerid]["scheduled"][unix + "-b"] = res.id
           } else {
@@ -536,8 +537,8 @@ export default function Main(props) {
         }
       })
   }
-  const removeTheBooking = id => {
-    if (!removeBookingconfirm.show) {
+  const showScheduleOption = (id, type, index) => {
+    if (!scheduleOption.show) {
       getAppointmentInfo(id)
         .then((res) => {
           if (res.status == 200) {
@@ -546,51 +547,102 @@ export default function Main(props) {
         })
         .then((res) => {
           if (res) {
-            const { client, worker, time } = res
+            const { name, note, serviceId, time, worker, client, blocked } = res
+            const unix = jsonDateToUnix(time)
 
-            setRemovebookingconfirm({ 
-              ...removeBookingconfirm, 
-              show: true, scheduleid: id, workerid: worker.id, 
-              client: { name: client.name, cellnumber: client.cellnumber }, 
-              date: jsonDateToUnix(time) 
+            blocked.forEach(function (info) {
+              info["unix"] = jsonDateToUnix(JSON.parse(info["time"]))
             })
-          }
-        })
-    } else {
-      const { scheduleid, workerid, date, reason } = removeBookingconfirm
-      const newWorkershour = {...chartInfo.workersHour}
-      let data = { scheduleid, reason, type: "cancelSchedule" }
 
-      if (date + "-c" in newWorkershour[workerid]["scheduled"]) {
-        delete newWorkershour[workerid]["scheduled"][date + "-c"]
-      }
-
-      removeBooking(data)
-        .then((res) => {
-          if (res.status == 200) {
-            return res.data
-          }
-        })
-        .then((res) => {
-          if (res) {
-            data = { ...data, receiver: res.receiver }
-
-            socket.emit("socket/business/cancelSchedule", data, () => {
-              setRemovebookingconfirm({ ...removeBookingconfirm, confirm: true })
-              setChartinfo({ ...chartInfo, workersHour: newWorkershour })
-
-              setTimeout(function () {
-                setRemovebookingconfirm({ ...removeBookingconfirm, show: false, confirm: false })
-              }, 2000)
+            setScheduleoption({ 
+              ...scheduleOption, 
+              show: true, id, type, index, 
+              worker: { id: worker.id },
+              service: { id: serviceId ? serviceId : -1, name }, 
+              client, blocked, note, oldTime: unix, jsonDate: time
             })
-          }
-        })
-        .catch((err) => {
-          if (err.response && err.response.status == 400) {
-            const { errormsg, status } = err.response.data
           }
         })
     }
+  }
+  const rebookSchedule = async(time, jsonDate) => {
+    const { id, worker, client, service, blocked, oldTime, note } = scheduleOption
+    const locationid = await AsyncStorage.getItem("locationid")
+
+    blocked.forEach(function (blockInfo, index) {
+      blockInfo["newTime"] = unixToJsonDate(time + (blockInfo.unix - oldTime))
+    })
+
+    let data = { 
+      id, // id for socket purpose (updating)
+      clientid: client.id, 
+      workerid: worker.id, 
+      locationid, serviceid: service.id ? service.id : -1, 
+      serviceinfo: service.name ? service.name : "",
+      time: JSON.stringify(jsonDate), note, 
+      type: "salonChangeAppointment",
+      timeDisplay: displayTime(jsonDate),
+      blocked
+    }
+
+    salonChangeAppointment(data)
+      .then((res) => {
+        if (res.status == 200) {
+          return res.data
+        }
+      })
+      .then((res) => {
+        if (res) {
+          const newChartinfo = {...chartInfo}
+          const scheduled = newChartinfo.workersHour[worker.id]["scheduled"]
+
+          if (res.receiver) {
+            data = { ...data, receiver: res.receiver, time, worker: res.worker }
+
+            socket.emit("socket/salonChangeAppointment", data, () => {
+              for (let info in scheduled) {
+                if (info.includes("-b")) {
+                  blocked.forEach(function (blockInfo) {
+                    if (scheduled[info] == blockInfo.id) {
+                      scheduled[jsonDateToUnix(blockInfo["newTime"]) + "-b"] = scheduled[info]
+
+                      delete scheduled[info]
+                    }
+                  })
+                } else {
+                  scheduled[time + "-c"] = scheduled[info]
+
+                  delete scheduled[info]
+                }
+              }
+
+              newChartinfo.workersHour[worker.id]["scheduled"] = scheduled
+              setChartinfo(newChartinfo)
+              setScheduleoption({ ...scheduleOption, action: "" })
+            })
+          } else {
+            for (let info in scheduled) {
+              if (info.includes("-b")) {
+                blocked.forEach(function (blockInfo) {
+                  if (scheduled[info] == blockInfo.id) {
+                    scheduled[jsonDateToUnix(blockInfo["newTime"]) + "-b"] = scheduled[info]
+
+                    delete scheduled[info]
+                  }
+                })
+              } else {
+                scheduled[time + "-c"] = scheduled[info]
+
+                delete scheduled[info]
+              }
+            }
+
+            newChartinfo.workersHour[worker.id]["scheduled"] = scheduled
+            setChartinfo(newChartinfo)
+            setScheduleoption({ ...scheduleOption, action: "" })
+          }
+        }
+      })
   }
   const speakToWorker = async(data) => {
     let message
@@ -667,51 +719,77 @@ export default function Main(props) {
 				}
 			})
 	}
-	const cancelTheSchedule = (index, requestType) => {
-    const { list } = {...appointments}
-		let id, type, item = index != null ? list[index] : list[cancelInfo.index]
 
-    id = item.id
-    type = item.type
+  const removeTheBooking = () => {
+    const { id, workerid, date, reason } = scheduleOption
+    const newWorkershour = {...chartInfo.workersHour}
+    let data = { scheduleid: id, reason, type: "cancelSchedule" }
 
-		if (!cancelInfo.show) {
-			setCancelinfo({ ...cancelInfo, show: true, type, requestType, id, index })
-		} else {
-			const { reason, id, index } = cancelInfo
-			let data = { scheduleid: id, reason, type: "cancelSchedule" }
+    if (date + "-c" in newWorkershour[workerid]["scheduled"]) {
+      delete newWorkershour[workerid]["scheduled"][date + "-c"]
+    }
 
-			cancelSchedule(data)
-				.then((res) => {
-					if (res.status == 200) {
-						return res.data
-					}
-				})
-				.then((res) => {
-					if (res) {
-						data = { ...data, receiver: res.receiver }
-						socket.emit("socket/business/cancelSchedule", data, () => {
-              switch (requestType) {
-                case "appointment":
-                  const { list } = {...appointments}
+    removeBooking(data)
+      .then((res) => {
+        if (res.status == 200) {
+          return res.data
+        }
+      })
+      .then((res) => {
+        if (res) {
+          data = { ...data, receiver: res.receiver }
 
-                  list.splice(index, 1)
+          socket.emit("socket/business/cancelSchedule", data, () => {
+            setScheduleoption({ ...scheduleOption, confirm: true })
+            setChartinfo({ ...chartInfo, workersHour: newWorkershour })
 
-                  setAppointments({ ...appointments, list })
+            setTimeout(function () {
+              setScheduleoption({ ...scheduleOption, show: false, confirm: false })
+            }, 2000)
+          })
+        }
+      })
+      .catch((err) => {
+        if (err.response && err.response.status == 400) {
+          const { errormsg, status } = err.response.data
+        }
+      })
+  }
+	const cancelTheSchedule = () => {
+    const { reason, id, index } = scheduleOption
+    let data = { scheduleid: id, reason, type: "cancelSchedule" }
 
-                  break
-                default:
-              }
-    							
-							setCancelinfo({ ...cancelInfo, show: false, type: "", requestType: "", reason: "", id: 0, index: 0 })
-						})				
-					}
-				})
-				.catch((err) => {
-					if (err.response && err.response.status == 400) {
-						const { errormsg, status } = err.response.data
-					}
-				})
-		}
+    cancelSchedule(data)
+      .then((res) => {
+        if (res.status == 200) {
+          return res.data
+        }
+      })
+      .then((res) => {
+        if (res) {
+          data = { ...data, receiver: res.receiver }
+          socket.emit("socket/business/cancelSchedule", data, () => {
+            switch (requestType) {
+              case "appointment":
+                const { list } = {...appointments}
+
+                list.splice(index, 1)
+
+                setAppointments({ ...appointments, list })
+
+                break
+              default:
+            }
+                
+            setScheduleoption({ ...scheduleOption, show: false, type: "", reason: "", id: 0, index: 0 })
+          })        
+        }
+      })
+      .catch((err) => {
+        if (err.response && err.response.status == 400) {
+          const { errormsg, status } = err.response.data
+        }
+      })
 	}
 
   const doneTheService = (index, id) => {
@@ -1719,6 +1797,15 @@ export default function Main(props) {
   const jsonDateToUnix = date => {
     return Date.parse(date["month"] + " " + date["date"] + ", " + date["year"] + " " + date["hour"] + ":" + date["minute"])
   }
+  const unixToJsonDate = unix => {
+    const info = new Date(unix)
+
+    return { 
+      day: days[info.getDay()], month: months[info.getMonth()], 
+      date: info.getDate(), year: info.getFullYear(), 
+      hour: info.getHours(), minute: info.getMinutes() 
+    }
+  }
   
 	useEffect(() => {
     initialize()
@@ -1865,7 +1952,7 @@ export default function Main(props) {
 
                         <View style={styles.scheduleActions}>
                           <View style={styles.column}>
-                            <TouchableOpacity style={styles.scheduleAction} onPress={() => cancelTheSchedule(index, "appointment")}>
+                            <TouchableOpacity style={styles.scheduleAction} onPress={() => showScheduleOption(item.id, "list", index)}>
                               <Text style={styles.scheduleActionHeader}>{tr.t("buttons.cancel")}</Text>
                             </TouchableOpacity>
                           </View>
@@ -1927,7 +2014,7 @@ export default function Main(props) {
                     </View>
 
                     <ScrollView>
-                      {chartInfo.chart.times && chartInfo.chart.times.map(item => (
+                      {chartInfo.chart.times && chartInfo.chart.times.map((item, index) => (
                         <View key={item.key} style={styles.chartRow}>
                           <View style={styles.chartRow}>
                             {chartInfo.workers.map(worker => (
@@ -1958,7 +2045,9 @@ export default function Main(props) {
                                 ]}
                                 onPress={() => {
                                   if (item.time + "-c" in chartInfo.workersHour[worker.id]["scheduled"]) {
-                                    removeTheBooking(chartInfo.workersHour[worker.id]["scheduled"][item.time + "-c"])
+                                    showScheduleOption(chartInfo.workersHour[worker.id]["scheduled"][item.time + "-c"], "chart", index)
+                                  } else if (scheduleOption.action == "rebook") {
+                                    rebookSchedule(item.time, item.jsonDate)
                                   } else {
                                     blockTheTime(worker.id, item.jsonDate)
                                   }
@@ -2064,33 +2153,66 @@ export default function Main(props) {
         </View>
       }
 
-      {(cancelInfo.show || showInfo.show || showMoreoptions.show || removeBookingconfirm.show || showDisabledscreen) && (
+      {(scheduleOption.show || showInfo.show || showMoreoptions.show || showDisabledscreen) && (
         <Modal transparent={true}>
-    			{cancelInfo.show && (
-  					<TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
-  						<SafeAreaView style={styles.cancelRequestBox}>
-  							<Text style={styles.cancelRequestHeader}>{tr.t("main.hidden.cancelInfo.header")}</Text>
+          {scheduleOption.show && (
+            <SafeAreaView style={styles.scheduleOptionBox}>
+              {!scheduleOption.action ? 
+                <View style={styles.scheduleOptionContainer}>
+                  <TouchableOpacity onPress={() => setScheduleoption({ ...scheduleOption, show: false })}>
+                    <AntDesign name="closecircleo" size={30}/>
+                  </TouchableOpacity>
 
-  							<TextInput 
-  								placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder={tr.t("main.hidden.cancelInfo.reason")} 
-  								multiline={true} textAlignVertical="top" style={styles.cancelRequestInput} 
-  								onChangeText={(reason) => setCancelinfo({ ...cancelInfo, reason })} autoCorrect={false} 
-  								autoCapitalize="none"
-  							/>
+                  <View style={styles.scheduleOptions}>
+                    {scheduleOption.type == "chart" && (
+                      <TouchableOpacity style={styles.scheduleOption} onPress={() => {
+                        setScheduleoption({ ...scheduleOption, action: "rebook" })
 
-  							<View style={{ alignItems: 'center' }}>
-  								<View style={styles.cancelRequestActions}>
-  									<TouchableOpacity style={styles.cancelRequestTouch} onPress={() => setCancelinfo({ ...cancelInfo, show: false, type: "", requestType: "", id: 0, index: 0, reason: "" })}>
-  										<Text style={styles.cancelRequestTouchHeader}>{tr.t("buttons.close")}</Text>
-  									</TouchableOpacity>
-  									<TouchableOpacity style={styles.cancelRequestTouch} onPress={() => cancelTheSchedule(null, cancelInfo.requestType)}>
-  										<Text style={styles.cancelRequestTouchHeader}>{tr.t("buttons.done")}</Text>
-  									</TouchableOpacity>
-  								</View>
-  							</View>
-  						</SafeAreaView>
-  					</TouchableWithoutFeedback>
-    			)}
+                        setTimeout(function () {
+                          setScheduleoption({ ...scheduleOption, show: false, action: "rebook" })
+                        }, 500)
+                      }}>
+                        <Text style={styles.scheduleOptionHeader}>{tr.t("buttons.rebook")}</Text>
+                      </TouchableOpacity>
+                    )}
+
+                    <TouchableOpacity style={styles.scheduleOption} onPress={() => setScheduleoption({ ...scheduleOption, action: "cancel" })}>
+                      <Text style={styles.scheduleOptionHeader}>{tr.t("buttons.cancel")}</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+                :
+                scheduleOption.action == "cancel" ? 
+                  <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+                    <View style={styles.scheduleCancelBox}>
+                      <Text style={styles.scheduleCancelHeader}>{tr.t("main.hidden.scheduleOption.header")}</Text>
+
+                      <TextInput 
+                        placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder={tr.t("main.hidden.scheduleOption.reason")} 
+                        multiline={true} textAlignVertical="top" style={styles.scheduleCancelInput} 
+                        onChangeText={(reason) => setScheduleoption({ ...scheduleOption, reason })} autoCorrect={false} 
+                        autoCapitalize="none"
+                      />
+
+                      <View style={{ alignItems: 'center' }}>
+                        <View style={styles.scheduleCancelActions}>
+                          <TouchableOpacity style={styles.scheduleCancelTouch} onPress={() => setScheduleoption({ ...scheduleOption, show: false, action: "" })}>
+                            <Text style={styles.scheduleCancelTouchHeader}>{tr.t("buttons.close")}</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity style={styles.scheduleCancelTouch} onPress={() => cancelTheSchedule()}>
+                            <Text style={styles.scheduleCancelTouchHeader}>{tr.t("buttons.done")}</Text>
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                    </View>
+                  </TouchableWithoutFeedback>
+                  : 
+                  <View style={styles.scheduleRebookBox}>
+                    <Text style={styles.scheduleRebookHeader}>Please Tap any other{'\n'}different time to rebook</Text>
+                  </View>
+              }
+            </SafeAreaView>
+          )} 
           {showInfo.show && (
             <View style={styles.showInfoContainer}>
               <View style={styles.showInfoBox}>
@@ -3625,40 +3747,6 @@ export default function Main(props) {
               </View>
             </View>
           )}
-          {removeBookingconfirm.show && (
-            <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
-              <View style={styles.removeBookingContainer}>
-                <View style={styles.removeBookingBox}>
-                  {!removeBookingconfirm.confirm ? 
-                    <>
-                      <Text style={styles.removeBookingHeader}>Why cancel ? (Optional)</Text>
-
-                      <TextInput 
-                        placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Write your reason" 
-                        multiline={true} textAlignVertical="top" style={styles.removeBookingInput} 
-                        onChangeText={(reason) => setRemovebookingconfirm({ ...removeBookingconfirm, reason })} autoCorrect={false} 
-                        autoCapitalize="none"
-                      />
-
-                      <View style={styles.removeBookingActions}>
-                        <TouchableOpacity style={styles.removeBookingAction} onPress={() => setRemovebookingconfirm({ ...removeBookingconfirm, show: false })}>
-                          <Text style={styles.removeBookingActionHeader}>{tr.t("buttons.cancel")}</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.removeBookingAction} onPress={() => removeTheBooking()}>
-                          <Text style={styles.removeBookingActionHeader}>Ok</Text>
-                        </TouchableOpacity>
-                      </View>
-                    </>
-                    :
-                    <Text style={styles.removeBookingHeader}>
-                      Appointment removed for client: {removeBookingconfirm.client.name}
-                      {'\n' + displayTime(removeBookingconfirm.date)}
-                    </Text>
-                  }
-                </View>
-              </View>
-            </TouchableWithoutFeedback>
-          )}
     			{showDisabledscreen && (
   					<SafeAreaView style={styles.disabled}>
   						<View style={styles.disabledContainer}>
@@ -3736,13 +3824,6 @@ const styles = StyleSheet.create({
 	bottomNavHeader: { color: 'black', fontSize: wsize(4), fontWeight: 'bold', paddingVertical: 5 },
 	bottomNavButton: { backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5 },
 	bottomNavButtonHeader: { color: 'white', fontSize: wsize(4), fontWeight: 'bold', textAlign: 'center' },
-  
-	cancelRequestBox: { backgroundColor: 'white', height: '100%', width: '100%' },
-	cancelRequestHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(6), marginHorizontal: 30, marginTop: 50, textAlign: 'center' },
-	cancelRequestInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), height: 200, margin: '5%', padding: 10, width: '90%' },
-	cancelRequestActions: { flexDirection: 'row', justifyContent: 'space-around' },
-	cancelRequestTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 5, width: wsize(30) },
-	cancelRequestTouchHeader: { fontSize: wsize(5), textAlign: 'center' },
 
   showInfoContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
   showInfoBox: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '90%', justifyContent: 'space-around', width: '90%' },
@@ -3851,13 +3932,19 @@ const styles = StyleSheet.create({
   updateButton: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 10 },
   updateButtonHeader: { fontSize: wsize(5), fontWeight: 'bold' },
 
-  removeBookingContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
-  removeBookingBox: { backgroundColor: 'white', flexDirection: 'column', height: '70%', justifyContent: 'space-around', width: '70%' },
-  removeBookingHeader: { fontSize: wsize(6), fontWeight: 'bold', textAlign: 'center' },
-  removeBookingInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), height: 200, margin: '5%', padding: 10, width: '90%' },
-  removeBookingActions: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
-  removeBookingAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: '40%' },
-  removeBookingActionHeader: { textAlign: 'center' },
+  scheduleOptionBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
+  scheduleOptionContainer: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '90%' },
+  scheduleOptions: { flexDirection: 'column', height: '50%', justifyContent: 'space-around' },
+  scheduleOption: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 10 },
+  scheduleOptionHeader: { textAlign: 'center' },
+  scheduleRebookBox: { backgroundColor: 'white', flexDirection: 'column', height: '20%', justifyContent: 'space-around', width: '100%' },
+  scheduleRebookHeader: { fontSize: wsize(6), paddingHorizontal: '5%', textAlign: 'center' },
+  scheduleCancelBox: { backgroundColor: 'white', height: '100%', width: '100%' },
+  scheduleCancelHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(6), marginHorizontal: 30, marginTop: 50, textAlign: 'center' },
+  scheduleCancelInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), height: 200, margin: '5%', padding: 10, width: '90%' },
+  scheduleCancelActions: { flexDirection: 'row', justifyContent: 'space-around' },
+  scheduleCancelTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 5, width: wsize(30) },
+  scheduleCancelTouchHeader: { fontSize: wsize(5), textAlign: 'center' },
 
 	disabled: { backgroundColor: 'black', flexDirection: 'column', justifyContent: 'space-around', height: '100%', opacity: 0.8, width: '100%' },
   disabledContainer: { alignItems: 'center', width: '100%' },

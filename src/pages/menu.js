@@ -680,7 +680,7 @@ export default function Menu(props) {
                     allowCamera()
                     setUploadmenubox({ ...uploadMenubox, show: true, uri: '', name: '' })
                   }}>
-                    <Text style={styles.menuStartHeader}>{tr.t("buttons.takePhoto")}</Text>
+                    <Text style={styles.menuStartHeader}>{tr.t("menu.photos.upload")}</Text>
                   </TouchableOpacity>
                   <Text>({tr.t("menu.photos.easier")})</Text>
                 </View>
@@ -774,7 +774,7 @@ export default function Menu(props) {
 										</TouchableOpacity>
 										<View style={styles.uploadMenuActions}>
 											<TouchableOpacity style={styles.uploadMenuAction} onPress={() => setUploadmenubox({ ...uploadMenubox, action: 'camera' })}>
-												<Text style={styles.uploadMenuActionHeader}>{tr.t("buttons.takePhoto")}</Text>
+												<Text style={styles.uploadMenuActionHeader}>{tr.t("menu.hidden.uploadMenu.takePhoto")}</Text>
 											</TouchableOpacity>
 											<TouchableOpacity style={styles.uploadMenuAction} onPress={() => {
                         allowChoosing()
@@ -1063,7 +1063,7 @@ const styles = StyleSheet.create({
 	uploadMenuClose: { borderRadius: 18, borderStyle: 'solid', borderWidth: 2 },
 	uploadMenuActions: { flexDirection: 'column', height: '50%', justifyContent: 'space-around' },
 	uploadMenuAction: { borderRadius: 3, borderStyle: 'solid', borderWidth: 1, padding: 5 },
-	uploadMenuActionHeader: { fontSize: wsize(4), textAlign: 'center' },
+	uploadMenuActionHeader: { fontSize: wsize(7), textAlign: 'center' },
 	uploadMenuCameraContainer: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	uploadMenuCamera: { height: '70%', width: '100%' },
 	uploadMenuCameraActions: { flexDirection: 'row', justifyContent: 'space-around' },

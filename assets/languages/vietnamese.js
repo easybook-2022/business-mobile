@@ -93,7 +93,7 @@ const info = {
       hours: "Xem giờ",
     },
     hidden: {
-      cancelInfo: {
+      scheduleOption: {
         header: "Tại sao lại hủy bỏ ? (Không bắt buộc)",
         reason: "Viết lý do"
       },
@@ -206,6 +206,7 @@ const info = {
     },
     photos: {
       header: "Hình ảnh",
+      upload: "Chụp ảnh menu",
       easier: "Dễ dàng hơn cho bạn"
     },
     lists: {
@@ -223,6 +224,9 @@ const info = {
       }
     },
     hidden: {
+      uploadMenu: {
+        takePhoto: "Chụp ảnh"
+      },
       menuPhotooption: {
         header: "Bạn có chắc chắn muốn\nxóa menu này không ?"
       }
@@ -317,6 +321,7 @@ const info = {
     skip: "nhảy",
     add: "cộng",
     edit: "chỉnh sửa",
+    rebook: "Dặt lại",
     update: "cập nhật",
     letsGo: "Đi nào",
     takePhoto: "Chụp",

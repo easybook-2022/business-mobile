@@ -101,7 +101,7 @@ const info = {
       hours: "小时"
     },
     hidden: {
-      cancelInfo: {
+      scheduleOption: {
         header: "为什么取消？(可选的)",
         reason: "写下你的理由"
       },
@@ -222,6 +222,7 @@ const info = {
     },
     photos: {
       header: "相片",
+      upload: "拍摄菜单照片",
       easier: "对你来说更容易"
     },
     lists: {
@@ -239,6 +240,9 @@ const info = {
       }
     },
     hidden: {
+      uploadMenu: {
+        takePhoto: "拍张照片"
+      },
       menuPhotooption: {
         header: "您确定要删除此菜单吗 ?"
       }
@@ -333,6 +337,7 @@ const info = {
     skip: "跳过",
     add: "添加",
     edit: "编辑",
+    rebook: "锐步",
     update: "更新",
     letsGo: "我们走吧",
     takePhoto: "拍这张照片",

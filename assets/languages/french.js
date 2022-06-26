@@ -93,7 +93,7 @@ const info = {
       hours: "Heures"
     },
     hidden: {
-      cancelInfo: {
+      scheduleOption: {
         header: "Pourquoi annuler ? (Optionnel)",
         reason: "Écrivez votre raison"
       },
@@ -206,6 +206,7 @@ const info = {
     },
     photos: {
       header: "Photo(s)",
+      upload: "Prendre une photo de menu",
       easier: "Plus facile pour vous"
     },
     lists: {
@@ -223,6 +224,9 @@ const info = {
       }
     },
     hidden: {
+      uploadMenu: {
+        takePhoto: "Prendre une photo"
+      },
       menuPhotooption: {
         header: "Êtes-vous sûr de vouloir\nsupprimer ce menu ?"
       }
@@ -317,6 +321,7 @@ const info = {
     skip: "Sauter",
     add: "Ajouter",
     edit: "Éditer",
+    rebook: "Reebok",
     update: "Mise à jour",
     letsGo: "Allons-y",
     takePhoto: "Prends\ncette photo",

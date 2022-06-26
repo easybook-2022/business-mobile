@@ -93,7 +93,7 @@ const info = {
       hours: "Hour(s)"
     },
     hidden: {
-      cancelInfo: {
+      scheduleOption: {
         header: "Why cancel ? (Optional)",
         reason: "Write your reason"
       },
@@ -206,6 +206,7 @@ const info = {
     },
     photos: {
       header: "Photo(s)",
+      upload: "Take a\nmenu photo",
       easier: "Easier for you"
     },
     lists: {
@@ -223,6 +224,9 @@ const info = {
       }
     },
     hidden: {
+      uploadMenu: {
+        takePhoto: "Take a photo"
+      },
       menuPhotooption: {
         header: "Are you sure you want to delete\nthis menu ?"
       }
@@ -317,6 +321,7 @@ const info = {
     skip: "Skip",
     add: "Add",
     edit: "Edit",
+    rebook: "Rebook",
     update: "Update",
     letsGo: "Let's go",
     takePhoto: "Take\nthis photo",

@@ -31,7 +31,7 @@ export default function Booktime(props) {
   const [hoursInfo, setHoursinfo] = useState({})
   const [oldTime, setOldtime] = useState(0)
   const [selectedDateinfo, setSelecteddateinfo] = useState({ month: '', year: 0, day: '', date: 0 })
-  const [bookedDateinfo, setBookeddateinfo] = useState({ month: '', year: 0, day: '', date: 0 })
+  const [bookedDateinfo, setBookeddateinfo] = useState({ month: '', year: 0, day: '', date: 0, blocked: [] })
   const [selectedWorkerinfo, setSelectedworkerinfo] = useState({ id: -1, hours: {}, loading: false })
   const [calendar, setCalendar] = useState({ firstDay: 0, numDays: 30, data: [
     { key: "day-row-0", row: [
@@ -83,7 +83,7 @@ export default function Booktime(props) {
       })
       .then((res) => {
         if (res) {
-          const { client, locationId, name, time, worker } = res
+          const { client, locationId, name, time, worker, blocked } = res
           const unix = jsonDateToUnix(time)
 
           setClientinfo({ ...clientInfo, ...client })
@@ -93,12 +93,17 @@ export default function Booktime(props) {
 
           const prevTime = new Date(unix)
 
+          blocked.forEach(function (info) {
+            info["unix"] = jsonDateToUnix(JSON.parse(info["time"]))
+          })
+
           setBookeddateinfo({ 
             ...bookedDateinfo, 
             month: months[prevTime.getMonth()],  
             day: days[prevTime.getDay()].substr(0, 3),
             year: prevTime.getFullYear(),
-            date: prevTime.getDate()
+            date: prevTime.getDate(),
+            blocked
           })
 
           setLoaded(true)
@@ -434,11 +439,17 @@ export default function Booktime(props) {
 
     const locationid = await AsyncStorage.getItem("locationid")
     const workerid = selectedWorkerinfo.id
+    const { blocked } = bookedDateinfo
     const { note, workerIds, time } = confirm
     const selectedinfo = new Date(time)
     const day = days[selectedinfo.getDay()], month = months[selectedinfo.getMonth()], date = selectedinfo.getDate(), year = selectedinfo.getFullYear()
     const hour = selectedinfo.getHours(), minute = selectedinfo.getMinutes()
     const selecteddate = JSON.stringify({ day, month, date, year, hour, minute })
+
+    blocked.forEach(function (info, index) {
+      info["newTime"] = unixToJsonDate(time + (info.unix - oldTime))
+    })
+
     let data = { 
       id: scheduleid, // id for socket purpose (updating)
       clientid: clientInfo.id, 
@@ -448,7 +459,8 @@ export default function Booktime(props) {
       serviceinfo: serviceinfo ? serviceinfo : "",
       time: selecteddate, note: note ? note : "", 
       type: "salonChangeAppointment",
-      timeDisplay: displayTime({ day, month, date, year, hour, minute })
+      timeDisplay: displayTime({ day, month, date, year, hour, minute }),
+      blocked
     }
 
     salonChangeAppointment(data)
@@ -496,6 +508,15 @@ export default function Booktime(props) {
   }
   const jsonDateToUnix = date => {
     return Date.parse(date["day"] + " " + date["month"] + " " + date["date"] + " " + date["year"] + " " + date["hour"] + ":" + date["minute"])
+  }
+  const unixToJsonDate = unix => {
+    const info = new Date(unix)
+
+    return { 
+      day: days[info.getDay()], month: months[info.getMonth()], 
+      date: info.getDate(), year: info.getFullYear(), 
+      hour: info.getHours(), minute: info.getMinutes() 
+    }
   }
 
   const logout = async() => {
