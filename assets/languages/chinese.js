@@ -86,8 +86,8 @@ const info = {
     },
     list: {
       header: "你会在这里看到你的约会",
-      clientName: "客户名称:",
-      staff: "员工姓名:",
+      clientName: "客户名称",
+      staff: "员工姓名",
       changeTime: "与客户更改时间"
     },
     chart: {
@@ -337,6 +337,20 @@ const info = {
     Thursday: "四",
     Friday: "五",
     Saturday: "六"
+  },
+  months: {
+    January: "一月",
+    February: "二月",
+    March: "行进",
+    April: "四月",
+    May: "可能",
+    June: "六月",
+    July: "七月",
+    August: "八月",
+    September: "九月",
+    October: "十月",
+    November: "十一月",
+    December: "十二月"
   },
 
   headers: {

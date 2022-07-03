@@ -78,8 +78,8 @@ const info = {
     },
     list: {
       header: "You will see your appointment(s) here",
-      clientName: "Client name:",
-      staff: "Stylist name:",
+      clientName: "Client name",
+      staff: "Stylist name",
       changeTime: "Change time with client"
     },
     chart: {
@@ -321,6 +321,20 @@ const info = {
     Thursday: "Thursday",
     Friday: "Friday",
     Saturday: "Saturday"
+  },
+  months: {
+    January: "January",
+    February: "February",
+    March: "March",
+    April: "April",
+    May: "May",
+    June: "June",
+    July: "July",
+    August: "August",
+    September: "September",
+    October: "October",
+    November: "November",
+    December: "December"
   },
 
   headers: {

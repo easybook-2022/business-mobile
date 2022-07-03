@@ -78,7 +78,7 @@ const info = {
     },
     list: {
       header: "Bạn sẽ thấy các cuộc hẹn của mình ở đây",
-      clientName: "Tên khách hàng:",
+      clientName: "Tên khách hàng",
       staff: "Nhân Viên",
       changeTime: "Thay đổi thời\ngian với khách hàng"
     },
@@ -321,6 +321,20 @@ const info = {
     Thursday: "Thứ năm",
     Friday: "Thứ sáu",
     Saturday: "Thứ bảy"
+  },
+  months: {
+    January: "Tháng Giêng",
+    February: "Tháng hai",
+    March: "Bước đều",
+    April: "Tháng tư",
+    May: "Có thể",
+    June: "Tháng sáu",
+    July: "Tháng bảy",
+    August: "Tháng tám",
+    September: "Tháng chín",
+    October: "Tháng Mười",
+    November: "Tháng mười một",
+    December: "Tháng mười hai"
   },
 
   headers: {

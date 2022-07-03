@@ -78,8 +78,8 @@ const info = {
     },
     list: {
       header: "Vous verrez vos rendez-vous ici",
-      clientName: "Nom du client:",
-      staff: "Nom du personnel:",
+      clientName: "Nom du client",
+      staff: "Nom du personnel",
       changeTime: "Changer d'heure avec le client"
     },
     chart: {
@@ -321,6 +321,20 @@ const info = {
     Thursday: "Jeudi",
     Friday: "Vendredi",
     Saturday: "Samedi"
+  },
+  months: {
+    January: "Janvier",
+    February: "Février",
+    March: "Mars",
+    April: "Avril",
+    May: "Peut",
+    June: "Juin",
+    July: "Juillet",
+    August: "Août",
+    September: "Septembre",
+    October: "Octobre",
+    November: "Novembre",
+    December: "Décembre"
   },
 
   headers: {

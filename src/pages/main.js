@@ -487,7 +487,12 @@ export default function Main(props) {
             chart = { 
               "key": dayDir.toString(), 
               "times": times, 
-              "dateHeader": tr.t("days." + days[date.getDay()]) + ", " + jsonDate["month"] + " " + jsonDate["date"] + ", " + jsonDate["year"]
+              "dateHeader": {
+                "day": days[date.getDay()],
+                "month": jsonDate["month"],
+                "date": jsonDate["date"],
+                "year": jsonDate["year"]
+              }
             }
 
             setChartinfo({ 
@@ -1810,6 +1815,7 @@ export default function Main(props) {
     const { time, timepassed, jsonDate } = info
     const scheduled = workersHour[worker]["scheduled"]
     let bgColor = 'transparent', opacity = 1, fontColor = 'black', disabled = false
+    let style
 
     switch (type) {
       case "bg":
@@ -1821,7 +1827,7 @@ export default function Main(props) {
               if (JSON.stringify(blocked).includes(JSON.stringify(jsonDate))) { // time blocked belongs to schedule
 
               } else {
-
+                bgColor = 'grey'
               }
             }
           } else {
@@ -1854,10 +1860,16 @@ export default function Main(props) {
         break;
       case "opacity":
         if (timepassed) {
-          if (action == "rebook") {
-            if (time + "-c" in scheduled) {
+          if (action == "rebook") { // in rebook mode
+            if (time + "-c" in scheduled) { // time is confirmed
 
-            } else if (time + "-b" in scheduled) {
+            } else if (time + "-b" in scheduled) { // time is blocked
+              if (JSON.stringify(blocked).includes(JSON.stringify(jsonDate))) {
+                opacity = 0.3
+              } else {
+
+              }
+            } else {
               opacity = 0.3
             }
           } else {
@@ -1892,19 +1904,11 @@ export default function Main(props) {
         break;
       case "disabled":
         if (timepassed) {
-          if (action == "rebook") {
-            if (JSON.stringify(blocked).includes(JSON.stringify(jsonDate))) {
-
-            } else {
-              disabled = true
-            }
-          } else {
-            if (time + "-b" in scheduled || time + "-c" in scheduled) {
-              disabled = true
-            }
-          }
+          disabled = true
         } else {
-
+          if (time + "-c" in scheduled) {
+            disabled = true
+          }
         }
 
         break;
@@ -1912,20 +1916,18 @@ export default function Main(props) {
 
     }
 
-    return (
-      (type == "bg" && bgColor)
-      ||
-      (type == "opacity" && opacity)
-      ||
-      (type == "fontColor" && fontColor)
-      ||
-      (type == "disabled" && disabled)
-    )
+    style = (type == "bg" && bgColor)
+            ||
+            (type == "opacity" && opacity)
+            ||
+            (type == "fontColor" && fontColor)
+            ||
+            (type == "disabled" && disabled)
+
+    return style
   }
   
-	useEffect(() => {
-    initialize()
-  }, [])
+	useEffect(() => initialize(), [])
 
   useFocusEffect(
     useCallback(() => {
@@ -2035,7 +2037,7 @@ export default function Main(props) {
                   locationType == "restaurant" && " Restaurant " || 
                   locationType == "store" && " Store "
   const currenttime = Date.now()
-  const { date, workersHour, workers } = chartInfo
+  const { date, chart, workersHour, workers } = chartInfo
   let currDay = date.day ? date.day.substr(0, 3) : ""
 
 	return (
@@ -2078,7 +2080,7 @@ export default function Main(props) {
                         </View>
                           
                         <Text style={styles.scheduleHeader}>
-                          {tr.t("main.list.clientName")} {item.client.username}
+                          {tr.t("main.list.clientName") + ': ' + item.client.username}
                           {'\n' + tr.t("main.list.staff") + ': ' + item.worker.username}
                           {'\n' + 
                             displayTime(item.time)
@@ -2131,7 +2133,12 @@ export default function Main(props) {
                         </TouchableOpacity>
                       </View>
                       <View style={styles.column}>
-                        <Text style={{ fontSize: wsize(8), fontWeight: 'bold', textAlign: 'center' }}>{chartInfo.chart.dateHeader}</Text>
+                        <Text style={{ fontSize: wsize(8), fontWeight: 'bold', textAlign: 'center' }}>{
+                            tr.t("days." + chart.dateHeader.day) + ", " + 
+                            tr.t("months." + chart.dateHeader.month) + " " + 
+                            chart.dateHeader.date + ", " + 
+                            chart.dateHeader.year
+                          }</Text>
                       </View>
                       <View style={styles.column}>
                         <TouchableOpacity onPress={() => getAppointmentsChart(chartInfo.dayDir + 1, "right")}>
@@ -2160,8 +2167,7 @@ export default function Main(props) {
                         <View key={item.key} style={styles.chartRow}>
                           <View style={styles.chartRow}>
                             {chartInfo.workers.map(worker => (
-                              <TouchableOpacity
-                                disabled={timeStyle(item, worker.id, "disabled")}
+                              <View
                                 key={worker.key}
                                 style={[
                                   styles.chartTime,
@@ -2171,29 +2177,34 @@ export default function Main(props) {
                                     width: workers.length < 5 ? (width / workers.length) : 200
                                   }
                                 ]}
-                                onPress={() => {
-                                  if (scheduleOption.action == "rebook") {
-                                    rebookSchedule(item.time, item.jsonDate)
-                                  } else if (!(item.time + "-c" in workersHour[worker.id]["scheduled"])) {
-                                    blockTheTime(worker.id, item.jsonDate)
-                                  }
-                                }}
                               >
-                                <Text style={[styles.chartTimeHeader, { color: timeStyle(item, worker.id, "fontColor") }]}>
-                                  {item.timeDisplay}
-                                  <Text style={styles.chartScheduledInfo}>
-                                    {item.time + "-c" in workersHour[worker.id]["scheduled"] && "(" + tr.t("main.chart.booked") + ")"}
-                                    {item.time + "-b" in workersHour[worker.id]["scheduled"] && "(" + tr.t("main.chart.stillBusy") + ")"}
+                                <TouchableOpacity
+                                  disabled={timeStyle(item, worker.id, "disabled")}
+                                  onPress={() => {
+                                    if (scheduleOption.action == "rebook") {
+                                      rebookSchedule(item.time, item.jsonDate)
+                                    } else if (!(item.time + "-c" in workersHour[worker.id]["scheduled"])) {
+                                      blockTheTime(worker.id, item.jsonDate)
+                                    }
+                                  }}
+                                  style={{ flexDirection: 'row', height: '100%', justifyContent: 'space-around', width: '100%' }}
+                                >
+                                  <Text style={[styles.chartTimeHeader, { color: timeStyle(item, worker.id, "fontColor") }]}>
+                                    {item.timeDisplay}
+                                    <Text style={styles.chartScheduledInfo}>
+                                      {item.time + "-c" in workersHour[worker.id]["scheduled"] && "(" + tr.t("main.chart.booked") + ")"}
+                                      {item.time + "-b" in workersHour[worker.id]["scheduled"] && "(" + tr.t("main.chart.stillBusy") + ")"}
+                                    </Text>
                                   </Text>
-                                </Text>
 
-                                {item.time + "-c" in workersHour[worker.id]["scheduled"] && (
-                                  <View style={styles.chartScheduledActions}>
-                                     <TouchableOpacity style={styles.chartScheduledAction} onPress={() => showScheduleOption(chartInfo.workersHour[worker.id]["scheduled"][item.time + "-c"], "chart", index, "remove")}><AntDesign color="white" name="closecircleo" size={30}/ ></TouchableOpacity>
-                                     <TouchableOpacity style={[styles.chartScheduledAction, { transform: [{ rotate: "90deg" }] }]} onPress={() => showScheduleOption(chartInfo.workersHour[worker.id]["scheduled"][item.time + "-c"], "chart", index, "change")}><Fontisto color="white" name="arrow-swap" size={30}/ ></TouchableOpacity>
-                                  </View>
-                                )}
-                              </TouchableOpacity>
+                                  {item.time + "-c" in workersHour[worker.id]["scheduled"] && (
+                                    <View style={styles.chartScheduledActions}>
+                                       <TouchableOpacity style={styles.chartScheduledAction} onPress={() => showScheduleOption(chartInfo.workersHour[worker.id]["scheduled"][item.time + "-c"], "chart", index, "remove")}><AntDesign color="white" name="closecircleo" size={30}/ ></TouchableOpacity>
+                                       <TouchableOpacity style={[styles.chartScheduledAction, { marginLeft: 10, transform: [{ rotate: "90deg" }] }]} onPress={() => showScheduleOption(chartInfo.workersHour[worker.id]["scheduled"][item.time + "-c"], "chart", index, "change")}><Fontisto color="white" name="arrow-swap" size={30}/ ></TouchableOpacity>
+                                    </View>
+                                  )}
+                                </TouchableOpacity>
+                              </View>
                             ))}
                           </View>
                         </View>
