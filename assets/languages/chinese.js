@@ -90,6 +90,10 @@ const info = {
       staff: "员工姓名:",
       changeTime: "与客户更改时间"
     },
+    chart: {
+      stillBusy: "还在忙",
+      booked: "预订"
+    },
     cartOrderers: {
       header: "您将在此处查看所有订单",
       customerName: "顾客:",
@@ -102,11 +106,17 @@ const info = {
     },
     hidden: {
       scheduleOption: {
-        header: "为什么取消？(可选的)",
-        reason: "写下你的理由"
+        change: {
+          header: "请点击任何其他时间重新预订"
+        },
+        remove: {
+          header: "为什么取消？(可选的)",
+          reason: "写下你的理由"
+        }
       },
       showInfo: {
-        header: "营业时间",
+        businessHeader: "营业时间",
+        staffHeader: "全体员工",
         staffName: "员工姓名:"
       },
       showMoreoptions: {
@@ -116,11 +126,21 @@ const info = {
         changeBusinesshours: "更改营业时间",
         moreBusinesses: "您的企业",
         walkIn: "客户上门",
+        changeLanguage: "改变语言",
         getAppointmentsby: {
           header: "通过以下方式获得约会",
           staff: "员工",
           owner: "拥有者"
         }
+      },
+      alert: {
+        header: "存在调度冲突"
+      },
+      languages: {
+        english: "英语",
+        french: "法语",
+        vietnamese: "越南语",
+        chinese: "中国人"
       }
     },
     editInfo: {

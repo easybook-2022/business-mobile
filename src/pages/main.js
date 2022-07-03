@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import { 
   SafeAreaView, Platform, ScrollView, HorizontalScrollView, ActivityIndicator, Dimensions, 
   View, FlatList, Image, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, 
@@ -8,7 +8,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useKeepAwake } from 'expo-keep-awake'
 import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
-import { CommonActions } from '@react-navigation/native';
+import { useFocusEffect, useIsFocused, CommonActions } from '@react-navigation/native';
 import * as FileSystem from 'expo-file-system'
 import * as ImageManipulator from 'expo-image-manipulator'
 import * as Speech from 'expo-speech'
@@ -33,6 +33,7 @@ import { setWaitTime } from '../apis/carts'
 
 import FontAwesome from 'react-native-vector-icons/FontAwesome'
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5'
+import Fontisto from 'react-native-vector-icons/Fontisto'
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import Entypo from 'react-native-vector-icons/Entypo'
 import Ionicons from 'react-native-vector-icons/Ionicons'
@@ -54,7 +55,7 @@ export default function Main(props) {
 	const [locationType, setLocationtype] = useState('')
 
 	const [appointments, setAppointments] = useState({ list: [], loading: false })
-  const [chartInfo, setChartinfo] = useState({ chart: {}, workers: [], workersHour: {}, dayDir: 0, date: {}, loading: false })
+  const [chartInfo, setChartinfo] = useState({ chart: {}, resetChart: 0, workers: [], workersHour: {}, dayDir: 0, date: {}, loading: false })
   const [scheduleOption, setScheduleoption] = useState({ show: false, index: -1, id: "", type: "", action: "", client: { id: -1, name: "", cellnumber: "" }, worker: { id: -1 }, service: { id: -1, name: "" }, blocked: [], reason: "", note: "", oldTime: 0, jsonDate: {}, confirm: false })
 	const [cartOrderers, setCartorderers] = useState([])
   const [speakInfo, setSpeakinfo] = useState({ orderNumber: "" })
@@ -64,6 +65,7 @@ export default function Main(props) {
 	const [viewType, setViewtype] = useState('')
 
 	const [showDisabledscreen, setShowdisabledscreen] = useState(false)
+  const [alertInfo, setAlertinfo] = useState({ show: false })
   const [showInfo, setShowinfo] = useState({ show: false, workersHours: [], locationHours: [] })
 
   const [showMoreoptions, setShowmoreoptions] = useState({ show: false, loading: false, infoType: '' })
@@ -240,7 +242,6 @@ export default function Main(props) {
 						if (type == 'store' || type == 'restaurant') {
               getAllCartOrderers()
 						} else {
-              getTheWorkersHour()
               getListAppointments()
 						}
 					})
@@ -316,7 +317,7 @@ export default function Main(props) {
         }
       })
   }
-  const getTheWorkersHour = async() => {
+  const getTheWorkersHour = async(getlist) => {
     const locationid = await AsyncStorage.getItem("locationid")
     const data = { locationid, ownerid: null }
 
@@ -357,7 +358,11 @@ export default function Main(props) {
             }
           }
 
-          setChartinfo({ ...chartInfo, workersHour })
+          setChartinfo({ 
+            ...chartInfo, 
+            resetChart: getlist == true ? chartInfo.resetChart + 1 : chartInfo.resetChart, 
+            workersHour 
+          })
         }
       })
       .catch((err) => {
@@ -429,13 +434,10 @@ export default function Main(props) {
       }
     }
 
-    if (dir == null && (now > closedtime || working == false)) {
+    if (dir == null && ((now + 900000) >= closedtime || working == false)) {
       getAppointmentsChart(dayDir + 1)
     } else {
-      if (dayDir != 0) date.setDate(today.getDate() + dayDir)
-
       jsonDate = {"day":days[date.getDay()].substr(0, 3),"month":months[date.getMonth()],"date":date.getDate(),"year":date.getFullYear()}
-
       const data = { locationid, jsonDate }
 
       getDayHours(data)
@@ -473,13 +475,11 @@ export default function Main(props) {
 
               jsonDate = { ...jsonDate, day: days[date.getDay()], hour, minute }
 
-              if (!timepassed) {
-                times.push({
-                  key: "time-" + key + "-" + dayDir,
-                  timeDisplay, time: calcTimeStr, jsonDate,
-                  timepassed
-                })
-              }
+              times.push({
+                key: "time-" + key + "-" + dayDir,
+                timeDisplay, time: calcTimeStr, jsonDate,
+                timepassed
+              })
 
               key += 1
             }
@@ -495,6 +495,13 @@ export default function Main(props) {
               workersHour: newWorkershour, 
               dayDir, date: jsonDate, 
               loading: false 
+            })
+            setScheduleoption({
+              ...scheduleOption,
+              show: false, index: -1, id: "", type: "", action: "", 
+              client: { id: -1, name: "", cellnumber: "" }, 
+              worker: { id: -1 }, service: { id: -1, name: "" }, 
+              blocked: [], reason: "", note: "", oldTime: 0, jsonDate: {}, confirm: false
             })
             setLoaded(true)
           }
@@ -529,6 +536,7 @@ export default function Main(props) {
           }
 
           setChartinfo({ ...chartInfo, workersHour: newWorkershour })
+          getTheWorkersHour(false)
         }
       })
       .catch((err) => {
@@ -537,8 +545,8 @@ export default function Main(props) {
         }
       })
   }
-  const showScheduleOption = (id, type, index) => {
-    if (!scheduleOption.show) {
+  const showScheduleOption = (id, type, index, action) => {
+    if (!scheduleOption.action) {
       getAppointmentInfo(id)
         .then((res) => {
           if (res.status == 200) {
@@ -552,17 +560,32 @@ export default function Main(props) {
 
             blocked.forEach(function (info) {
               info["unix"] = jsonDateToUnix(JSON.parse(info["time"]))
+              info["time"] = JSON.parse(info["time"])
             })
 
-            setScheduleoption({ 
-              ...scheduleOption, 
-              show: true, id, type, index, 
-              worker: { id: worker.id },
-              service: { id: serviceId ? serviceId : -1, name }, 
-              client, blocked, note, oldTime: unix, jsonDate: time
-            })
+            if (action == "remove") {
+              setScheduleoption({ 
+                ...scheduleOption, 
+                show: true, id, type, index, action: "cancel",
+                worker: { id: worker.id },
+                service: { id: serviceId ? serviceId : -1, name }, 
+                client, blocked, note, oldTime: unix, jsonDate: time
+              })
+            } else {
+              setTimeout(function () {
+                setScheduleoption({ 
+                  ...scheduleOption, 
+                  action: "rebook", id, type, index, 
+                  worker: { id: worker.id },
+                  service: { id: serviceId ? serviceId : -1, name }, 
+                  client, blocked, note, oldTime: unix, jsonDate: time
+                })
+              }, 1000)
+            }
           }
         })
+    } else {
+      setScheduleoption({ ...scheduleOption, action: "" })
     }
   }
   const rebookSchedule = async(time, jsonDate) => {
@@ -593,54 +616,25 @@ export default function Main(props) {
       })
       .then((res) => {
         if (res) {
-          const newChartinfo = {...chartInfo}
-          const scheduled = newChartinfo.workersHour[worker.id]["scheduled"]
-
           if (res.receiver) {
             data = { ...data, receiver: res.receiver, time, worker: res.worker }
 
-            socket.emit("socket/salonChangeAppointment", data, () => {
-              for (let info in scheduled) {
-                if (info.includes("-b")) {
-                  blocked.forEach(function (blockInfo) {
-                    if (scheduled[info] == blockInfo.id) {
-                      scheduled[jsonDateToUnix(blockInfo["newTime"]) + "-b"] = scheduled[info]
-
-                      delete scheduled[info]
-                    }
-                  })
-                } else {
-                  scheduled[time + "-c"] = scheduled[info]
-
-                  delete scheduled[info]
-                }
-              }
-
-              newChartinfo.workersHour[worker.id]["scheduled"] = scheduled
-              setChartinfo(newChartinfo)
-              setScheduleoption({ ...scheduleOption, action: "" })
-            })
+            socket.emit("socket/salonChangeAppointment", data, () => setScheduleoption({ ...scheduleOption, show: false, action: "" }))
           } else {
-            for (let info in scheduled) {
-              if (info.includes("-b")) {
-                blocked.forEach(function (blockInfo) {
-                  if (scheduled[info] == blockInfo.id) {
-                    scheduled[jsonDateToUnix(blockInfo["newTime"]) + "-b"] = scheduled[info]
-
-                    delete scheduled[info]
-                  }
-                })
-              } else {
-                scheduled[time + "-c"] = scheduled[info]
-
-                delete scheduled[info]
-              }
-            }
-
-            newChartinfo.workersHour[worker.id]["scheduled"] = scheduled
-            setChartinfo(newChartinfo)
-            setScheduleoption({ ...scheduleOption, action: "" })
+            setScheduleoption({ ...scheduleOption, show: false, action: "" })
           }
+
+          getTheWorkersHour(false)
+        }
+      })
+      .catch((err) => {
+        if (err.response && err.response.status == 400) {
+          setAlertinfo({ ...alertInfo, show: true })
+
+          setTimeout(function () {
+            setAlertinfo({ ...alertInfo, show: false })
+            setScheduleoption({ ...scheduleOption, action: "" })
+          }, 2000)
         }
       })
   }
@@ -722,12 +716,7 @@ export default function Main(props) {
 
   const removeTheBooking = () => {
     const { id, workerid, date, reason } = scheduleOption
-    const newWorkershour = {...chartInfo.workersHour}
     let data = { scheduleid: id, reason, type: "cancelSchedule" }
-
-    if (date + "-c" in newWorkershour[workerid]["scheduled"]) {
-      delete newWorkershour[workerid]["scheduled"][date + "-c"]
-    }
 
     removeBooking(data)
       .then((res) => {
@@ -741,7 +730,7 @@ export default function Main(props) {
 
           socket.emit("socket/business/cancelSchedule", data, () => {
             setScheduleoption({ ...scheduleOption, confirm: true })
-            setChartinfo({ ...chartInfo, workersHour: newWorkershour })
+            getTheWorkersHour(false)
 
             setTimeout(function () {
               setScheduleoption({ ...scheduleOption, show: false, confirm: false })
@@ -769,8 +758,8 @@ export default function Main(props) {
         if (res) {
           data = { ...data, receiver: res.receiver }
           socket.emit("socket/business/cancelSchedule", data, () => {
-            switch (requestType) {
-              case "appointment":
+            switch (viewType) {
+              case "appointments_list":
                 const { list } = {...appointments}
 
                 list.splice(index, 1)
@@ -780,8 +769,9 @@ export default function Main(props) {
                 break
               default:
             }
-                
+
             setScheduleoption({ ...scheduleOption, show: false, type: "", reason: "", id: 0, index: 0 })
+            getTheWorkersHour(false)
           })        
         }
       })
@@ -808,7 +798,7 @@ export default function Main(props) {
 
           socket.emit("socket/doneService", data, () => {
             setAppointments({ ...appointments, list })
-            getTheWorkersHour()
+            getTheWorkersHour(false)
           })
         }
       })
@@ -883,7 +873,7 @@ export default function Main(props) {
         data.type == "cancelRequest" || 
         data.type == "remakeAppointment"
       ) {
-        getTheWorkersHour()
+        getTheWorkersHour(false)
 
         if (viewType == "appointments_list") {
           getListAppointments()
@@ -925,6 +915,15 @@ export default function Main(props) {
     await Voice.stop()
     await Voice.cancel()
     await Voice.destroy();
+  }
+  const pickLanguage = async(language) => {
+    AsyncStorage.setItem("language", language)
+
+    tr.locale = await AsyncStorage.getItem("language")
+
+    setLanguage(language)
+    setShowmoreoptions({ ...showMoreoptions, infoType: '' })
+    setEditinfo({ ...editInfo, show: false, type: '' })
   }
 
   const verify = () => {
@@ -1325,7 +1324,7 @@ export default function Main(props) {
           })
           setEditinfo({ ...editInfo, show: true })
           getAllAccounts()
-          getTheWorkersHour()
+          getTheWorkersHour(false)
         }
       })
       .catch((err) => {
@@ -1512,7 +1511,7 @@ export default function Main(props) {
           })
           setEditinfo({ ...editInfo, show: true })
           getAllAccounts()
-          getTheWorkersHour()
+          getTheWorkersHour(false)
         }
       })
       .catch((err) => {
@@ -1806,10 +1805,144 @@ export default function Main(props) {
       hour: info.getHours(), minute: info.getMinutes() 
     }
   }
+  const timeStyle = (info, worker, type) => {
+    const { workersHour } = chartInfo, { blocked, action } = scheduleOption
+    const { time, timepassed, jsonDate } = info
+    const scheduled = workersHour[worker]["scheduled"]
+    let bgColor = 'transparent', opacity = 1, fontColor = 'black', disabled = false
+
+    switch (type) {
+      case "bg":
+        if (timepassed) {
+          if (action == "rebook") { // in rebook mode
+            if (time + "-c" in scheduled) { // time is confirmed
+              bgColor = 'black'
+            } else if (time + "-b" in scheduled) { // time is blocked
+              if (JSON.stringify(blocked).includes(JSON.stringify(jsonDate))) { // time blocked belongs to schedule
+
+              } else {
+
+              }
+            }
+          } else {
+            if (time + "-b" in scheduled) {
+              bgColor = 'grey'
+            } else if (time + "-c" in scheduled) {
+              bgColor = 'black'
+            }
+          }
+        } else {
+          if (action == "rebook") {
+            if (time + "-c" in scheduled) {
+              bgColor = "black"
+            } else if (time + "-b" in scheduled) {
+              if (JSON.stringify(blocked).includes(JSON.stringify(jsonDate))) { // time blocked belongs to schedule
+
+              } else {
+                bgColor = "grey"
+              }
+            }
+          } else {
+            if (time + "-c" in scheduled) {
+              bgColor = "black"
+            } else if (time + "-b" in scheduled) {
+              bgColor = "grey"
+            }
+          }
+        }
+
+        break;
+      case "opacity":
+        if (timepassed) {
+          if (action == "rebook") {
+            if (time + "-c" in scheduled) {
+
+            } else if (time + "-b" in scheduled) {
+              opacity = 0.3
+            }
+          } else {
+            if (!(time + "-c" in scheduled) && !(time + "-b" in scheduled)) {
+              opacity = 0.3
+            }
+          }
+        } else {
+
+        }
+
+        break;
+      case "fontColor":
+        if (timepassed) {
+          if (action == "rebook") { // in rebook mode
+            if (time + "-c" in scheduled) { // time is confirmed
+              fontColor = 'white'
+            } else if (time + "-b" in scheduled) { // time is blocked
+
+            }
+          } else {
+            if (time + "-c" in scheduled) {
+              fontColor = 'white'
+            }
+          }
+        } else {
+          if (time + "-c" in scheduled) {
+            fontColor = 'white'
+          }
+        }
+
+        break;
+      case "disabled":
+        if (timepassed) {
+          if (action == "rebook") {
+            if (JSON.stringify(blocked).includes(JSON.stringify(jsonDate))) {
+
+            } else {
+              disabled = true
+            }
+          } else {
+            if (time + "-b" in scheduled || time + "-c" in scheduled) {
+              disabled = true
+            }
+          }
+        } else {
+
+        }
+
+        break;
+      default:
+
+    }
+
+    return (
+      (type == "bg" && bgColor)
+      ||
+      (type == "opacity" && opacity)
+      ||
+      (type == "fontColor" && fontColor)
+      ||
+      (type == "disabled" && disabled)
+    )
+  }
   
 	useEffect(() => {
     initialize()
   }, [])
+
+  useFocusEffect(
+    useCallback(() => {
+      if (props.route.params) {
+        const params = props.route.params
+
+        if (params.cartorders) {
+          getAllCartOrderers()
+          removeFromList(item.id, "cartOrderers")
+        } else if (params.menu) {
+          initialize()
+        }
+      }
+
+      props.navigation.setParams({ num: null })
+    }, [useIsFocused()])
+  )
 
 	useEffect(() => {
 		startWebsocket()
@@ -1823,7 +1956,7 @@ export default function Main(props) {
           data.type == "cancelRequest" || 
           data.type == "remakeAppointment"
         ) {
-          getTheWorkersHour()
+          getTheWorkersHour(false)
 
           if (viewType == "appointments_list") {
             getListAppointments()
@@ -1894,6 +2027,10 @@ export default function Main(props) {
     }
   }, [speakInfo.orderNumber])
 
+  useEffect(() => {
+    if (chartInfo.resetChart > 0) getAppointmentsChart(0, null)
+  }, [chartInfo.resetChart])
+
   const header = (locationType == "hair" || locationType == "nail") && " Salon " || 
                   locationType == "restaurant" && " Restaurant " || 
                   locationType == "store" && " Store "
@@ -1912,7 +2049,7 @@ export default function Main(props) {
                   <TouchableOpacity style={[styles.viewType, { backgroundColor: viewType == "appointments_list" ? "black" : "transparent" }]} onPress={() => getListAppointments()}>
                     <Text style={[styles.viewTypeHeader, { color: viewType == "appointments_list" ? "white": "black" }]}>{tr.t("main.navs.myAppointments")}</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={[styles.viewType, { backgroundColor: viewType == "appointments_chart" ? "black" : "transparent" }]} onPress={() => getAppointmentsChart(0, null)}>
+                  <TouchableOpacity style={[styles.viewType, { backgroundColor: viewType == "appointments_chart" ? "black" : "transparent" }]} onPress={() => getTheWorkersHour(true)}>
                     <Text style={[styles.viewTypeHeader, { color: viewType == "appointments_chart" ? "white" : "black" }]}>{tr.t("main.navs.allAppointments")}</Text>
                   </TouchableOpacity>
                 </View>
@@ -1957,7 +2094,10 @@ export default function Main(props) {
                             </TouchableOpacity>
                           </View>
                           <View style={styles.column}>
-                            <TouchableOpacity style={styles.scheduleAction} onPress={() => props.navigation.navigate("booktime", { scheduleid: item.id, serviceid: item.serviceid, serviceinfo: item.name })}>
+                            <TouchableOpacity style={styles.scheduleAction} onPress={() => {
+                              props.navigation.setParams({ num: 1 })
+                              props.navigation.navigate("booktime", { scheduleid: item.id, serviceid: item.serviceid, serviceinfo: item.name })
+                            }}>
                               <Text style={styles.scheduleActionHeader}>{tr.t("main.list.changeTime")}</Text>
                             </TouchableOpacity>
                           </View>
@@ -2002,12 +2142,14 @@ export default function Main(props) {
                     <View style={styles.chartRow}>
                       {chartInfo.workers.map(worker => (
                         <View key={worker.key} style={[styles.chartWorker, { width: workers.length < 5 ? (width / workers.length) : 200 } ]}>
-                          <Text style={styles.chartWorkerHeader}>{worker.username}</Text>
-                          <View style={styles.chartWorkerProfile}>
-                            <Image
-                              style={resizePhoto(worker.profile, 40)}
-                              source={worker.profile.name ? { uri: logo_url + worker.profile.name } : require("../../assets/profilepicture.jpeg")}
-                            />
+                          <View>
+                            <Text style={styles.chartWorkerHeader}>{worker.username}</Text>
+                            <View style={styles.chartWorkerProfile}>
+                              <Image
+                                style={resizePhoto(worker.profile, 40)}
+                                source={worker.profile.name ? { uri: logo_url + worker.profile.name } : require("../../assets/profilepicture.jpeg")}
+                              />
+                            </View>
                           </View>
                         </View>
                       ))}
@@ -2019,51 +2161,38 @@ export default function Main(props) {
                           <View style={styles.chartRow}>
                             {chartInfo.workers.map(worker => (
                               <TouchableOpacity
-                                disabled={item.timepassed}
+                                disabled={timeStyle(item, worker.id, "disabled")}
                                 key={worker.key}
                                 style={[
-                                  styles.chartWorker,
+                                  styles.chartTime,
                                   {
-                                    backgroundColor: (
-                                        item.time + "-c" in chartInfo.workersHour[worker.id]["scheduled"] || 
-                                        item.time + "-b" in chartInfo.workersHour[worker.id]["scheduled"]
-                                      ) ? 
-                                      item.time + "-c" in chartInfo.workersHour[worker.id]["scheduled"] ? 
-                                        'black' 
-                                        :
-                                        'grey'
-                                      : 
-                                      'transparent',
-                                    opacity: (
-                                      !item.timepassed
-                                      ||
-                                      item.time + "-b" in chartInfo.workersHour[worker.id]["scheduled"]
-                                    ) ? 1 : 0.3,
-                                    paddingVertical: 10,
+                                    backgroundColor: timeStyle(item, worker.id, "bg"),
+                                    opacity: timeStyle(item, worker.id, "opacity"),
                                     width: workers.length < 5 ? (width / workers.length) : 200
                                   }
                                 ]}
                                 onPress={() => {
-                                  if (item.time + "-c" in chartInfo.workersHour[worker.id]["scheduled"]) {
-                                    showScheduleOption(chartInfo.workersHour[worker.id]["scheduled"][item.time + "-c"], "chart", index)
-                                  } else if (scheduleOption.action == "rebook") {
+                                  if (scheduleOption.action == "rebook") {
                                     rebookSchedule(item.time, item.jsonDate)
-                                  } else {
+                                  } else if (!(item.time + "-c" in workersHour[worker.id]["scheduled"])) {
                                     blockTheTime(worker.id, item.jsonDate)
                                   }
                                 }}
                               >
-                                <Text style={[styles.chartTimeHeader, 
-                                  { 
-                                    color: (
-                                      item.time >= chartInfo.workersHour[worker.id][currDay]["open"] && item.time < chartInfo.workersHour[worker.id][currDay]["close"] ?
-                                        item.time + "-c" in chartInfo.workersHour[worker.id]["scheduled"] ? 'white' : 'black'
-                                        :
-                                        'black'
-                                    )
-                                  }
-                                ]}
-                                >{item.timeDisplay}</Text>
+                                <Text style={[styles.chartTimeHeader, { color: timeStyle(item, worker.id, "fontColor") }]}>
+                                  {item.timeDisplay}
+                                  <Text style={styles.chartScheduledInfo}>
+                                    {item.time + "-c" in workersHour[worker.id]["scheduled"] && "(" + tr.t("main.chart.booked") + ")"}
+                                    {item.time + "-b" in workersHour[worker.id]["scheduled"] && "(" + tr.t("main.chart.stillBusy") + ")"}
+                                  </Text>
+                                </Text>
+
+                                {item.time + "-c" in workersHour[worker.id]["scheduled"] && (
+                                  <View style={styles.chartScheduledActions}>
+                                     <TouchableOpacity style={styles.chartScheduledAction} onPress={() => showScheduleOption(chartInfo.workersHour[worker.id]["scheduled"][item.time + "-c"], "chart", index, "remove")}><AntDesign color="white" name="closecircleo" size={30}/ ></TouchableOpacity>
+                                     <TouchableOpacity style={[styles.chartScheduledAction, { transform: [{ rotate: "90deg" }] }]} onPress={() => showScheduleOption(chartInfo.workersHour[worker.id]["scheduled"][item.time + "-c"], "chart", index, "change")}><Fontisto color="white" name="arrow-swap" size={30}/ ></TouchableOpacity>
+                                  </View>
+                                )}
                               </TouchableOpacity>
                             ))}
                           </View>
@@ -2100,10 +2229,8 @@ export default function Main(props) {
 
                           <View style={styles.cartorderActions}>
                             <TouchableOpacity style={styles.cartordererAction} onPress={() => {
-                              props.navigation.navigate("cartorders", { userid: item.adder, type: item.type, ordernumber: item.orderNumber, refetch: () => {
-                                getAllCartOrderers()
-                                removeFromList(item.id, "cartOrderers")
-                              }})
+                              props.navigation.setParams({ cartorders: true })
+                              props.navigation.navigate("cartorders", { userid: item.adder, type: item.type, ordernumber: item.orderNumber })
                             }}>
                               <Text style={styles.cartordererActionHeader}>{tr.t("main.cartOrderers.seeOrders") + '\n'}({item.numOrders})</Text>
                             </TouchableOpacity>
@@ -2153,64 +2280,33 @@ export default function Main(props) {
         </View>
       }
 
-      {(scheduleOption.show || showInfo.show || showMoreoptions.show || showDisabledscreen) && (
+      {(scheduleOption.show || showInfo.show || showMoreoptions.show || showDisabledscreen || alertInfo.show) && (
         <Modal transparent={true}>
           {scheduleOption.show && (
             <SafeAreaView style={styles.scheduleOptionBox}>
-              {!scheduleOption.action ? 
-                <View style={styles.scheduleOptionContainer}>
-                  <TouchableOpacity onPress={() => setScheduleoption({ ...scheduleOption, show: false })}>
-                    <AntDesign name="closecircleo" size={30}/>
-                  </TouchableOpacity>
+              <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+                <View style={styles.scheduleCancelBox}>
+                  <Text style={styles.scheduleCancelHeader}>{tr.t("main.hidden.scheduleOption.remove.header")}</Text>
 
-                  <View style={styles.scheduleOptions}>
-                    {scheduleOption.type == "chart" && (
-                      <TouchableOpacity style={styles.scheduleOption} onPress={() => {
-                        setScheduleoption({ ...scheduleOption, action: "rebook" })
+                  <TextInput 
+                    placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder={tr.t("main.hidden.scheduleOption.remove.reason")} 
+                    multiline={true} textAlignVertical="top" style={styles.scheduleCancelInput} 
+                    onChangeText={(reason) => setScheduleoption({ ...scheduleOption, reason })} autoCorrect={false} 
+                    autoCapitalize="none"
+                  />
 
-                        setTimeout(function () {
-                          setScheduleoption({ ...scheduleOption, show: false, action: "rebook" })
-                        }, 500)
-                      }}>
-                        <Text style={styles.scheduleOptionHeader}>{tr.t("buttons.rebook")}</Text>
+                  <View style={{ alignItems: 'center' }}>
+                    <View style={styles.scheduleCancelActions}>
+                      <TouchableOpacity style={styles.scheduleCancelTouch} onPress={() => setScheduleoption({ ...scheduleOption, show: false, action: "" })}>
+                        <Text style={styles.scheduleCancelTouchHeader}>{tr.t("buttons.close")}</Text>
                       </TouchableOpacity>
-                    )}
-
-                    <TouchableOpacity style={styles.scheduleOption} onPress={() => setScheduleoption({ ...scheduleOption, action: "cancel" })}>
-                      <Text style={styles.scheduleOptionHeader}>{tr.t("buttons.cancel")}</Text>
-                    </TouchableOpacity>
+                      <TouchableOpacity style={styles.scheduleCancelTouch} onPress={() => cancelTheSchedule()}>
+                        <Text style={styles.scheduleCancelTouchHeader}>{tr.t("buttons.done")}</Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
                 </View>
-                :
-                scheduleOption.action == "cancel" ? 
-                  <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
-                    <View style={styles.scheduleCancelBox}>
-                      <Text style={styles.scheduleCancelHeader}>{tr.t("main.hidden.scheduleOption.header")}</Text>
-
-                      <TextInput 
-                        placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder={tr.t("main.hidden.scheduleOption.reason")} 
-                        multiline={true} textAlignVertical="top" style={styles.scheduleCancelInput} 
-                        onChangeText={(reason) => setScheduleoption({ ...scheduleOption, reason })} autoCorrect={false} 
-                        autoCapitalize="none"
-                      />
-
-                      <View style={{ alignItems: 'center' }}>
-                        <View style={styles.scheduleCancelActions}>
-                          <TouchableOpacity style={styles.scheduleCancelTouch} onPress={() => setScheduleoption({ ...scheduleOption, show: false, action: "" })}>
-                            <Text style={styles.scheduleCancelTouchHeader}>{tr.t("buttons.close")}</Text>
-                          </TouchableOpacity>
-                          <TouchableOpacity style={styles.scheduleCancelTouch} onPress={() => cancelTheSchedule()}>
-                            <Text style={styles.scheduleCancelTouchHeader}>{tr.t("buttons.done")}</Text>
-                          </TouchableOpacity>
-                        </View>
-                      </View>
-                    </View>
-                  </TouchableWithoutFeedback>
-                  : 
-                  <View style={styles.scheduleRebookBox}>
-                    <Text style={styles.scheduleRebookHeader}>Please Tap any other{'\n'}different time to rebook</Text>
-                  </View>
-              }
+              </TouchableWithoutFeedback>
             </SafeAreaView>
           )} 
           {showInfo.show && (
@@ -2222,7 +2318,7 @@ export default function Main(props) {
                       <AntDesign name="close" size={wsize(7)}/>
                     </TouchableOpacity>
 
-                    <Text style={styles.showInfoHeader}>{tr.t("main.hidden.showInfo.header")}</Text>
+                    <Text style={styles.showInfoHeader}>{tr.t("main.hidden.showInfo.businessHeader")}</Text>
 
                     {showInfo.locationHours.map(info => (
                       !info.close && (
@@ -2246,8 +2342,10 @@ export default function Main(props) {
                     ))}
 
                     <View style={styles.workerInfoList}>
+                      <Text style={styles.showInfoHeader}>{tr.t("main.hidden.showInfo.staffHeader")}</Text>
+
                       {showInfo.workersHours.map(worker => (
-                        <View key={worker.key} style={{ alignItems: 'center', backgroundColor: 'rgba(127, 127, 127, 0.2)', marginVertical: 50, paddingVertical: 10 }}>
+                        <View key={worker.key} style={{ alignItems: 'center', backgroundColor: 'rgba(127, 127, 127, 0.2)', marginBottom: 50, paddingVertical: 10 }}>
                           <View style={styles.workerInfo}>
                             <View style={styles.workerInfoProfile}>
                               <Image 
@@ -2299,7 +2397,8 @@ export default function Main(props) {
                     <ScrollView style={{ width: '80%' }}>
                       <TouchableOpacity style={styles.moreOptionTouch} onPress={() => {
                         setShowmoreoptions({ ...showMoreoptions, show: false })
-                        props.navigation.navigate("menu", { refetch: () => initialize(), isOwner })
+                        props.navigation.setParams({ menu: true })
+                        props.navigation.navigate("menu", { isOwner })
                       }}>
                         <Text style={styles.moreOptionTouchHeader}>{tr.t("main.hidden.showMoreoptions.changeMenu")}</Text>
                       </TouchableOpacity>
@@ -2358,6 +2457,13 @@ export default function Main(props) {
                             </TouchableOpacity>
                           )}
 
+                          <TouchableOpacity style={styles.moreOptionTouch} onPress={() => {
+                            setShowmoreoptions({ ...showMoreoptions, infoType: 'changelanguage' })
+                            setEditinfo({ ...editInfo, show: true, type: 'changelanguage' })
+                          }}>
+                            <Text style={styles.moreOptionTouchHeader}>{tr.t("main.hidden.showMoreoptions.changeLanguage")}</Text>
+                          </TouchableOpacity>
+
                           {(locationType == "hair" || locationType == "nail") && (
                             <View style={styles.receiveTypesBox}>
                               <Text style={styles.receiveTypesHeader}>{tr.t("main.hidden.showMoreoptions.getAppointmentsby.header")}</Text>
@@ -2390,6 +2496,34 @@ export default function Main(props) {
                                 <AntDesign name="closecircleo" size={30}/>
                               </TouchableOpacity>
                             </View>
+
+                            {editInfo.type == 'changelanguage' && (
+                              <View style={styles.languages}>
+                                {language != "english" && (
+                                  <TouchableOpacity style={styles.language} onPress={() => pickLanguage('english')}>
+                                    <Text style={styles.languageHeader}>{tr.t("main.hidden.languages.english")}</Text>
+                                  </TouchableOpacity>
+                                )}
+                                  
+                                {language != "french" && (
+                                  <TouchableOpacity style={styles.language} onPress={() => pickLanguage('french')}>
+                                    <Text style={styles.languageHeader}>{tr.t("main.hidden.languages.french")}</Text>
+                                  </TouchableOpacity>
+                                )}
+
+                                {language != "vietnamese" && (
+                                  <TouchableOpacity style={styles.language} onPress={() => pickLanguage('vietnamese')}>
+                                    <Text style={styles.languageHeader}>{tr.t("main.hidden.languages.vietnamese")}</Text>
+                                  </TouchableOpacity>
+                                )}
+
+                                {language != "chinese" && (
+                                  <TouchableOpacity style={styles.language} onPress={() => pickLanguage('chinese')}>
+                                    <Text style={styles.languageHeader}>{tr.t("main.hidden.languages.chinese")}</Text>
+                                  </TouchableOpacity>
+                                )}
+                              </View>
+                            )}
 
                             {editInfo.type == 'information' && (
                               <>
@@ -3764,6 +3898,13 @@ export default function Main(props) {
               </View>
   					</SafeAreaView>
     			)}
+          {alertInfo.show && (
+            <SafeAreaView style={styles.alertBox}>
+              <View style={styles.alertContainer}>
+                <Text style={styles.alertHeader}>{tr.t("main.hidden.alert.header")}</Text>
+              </View>
+            </SafeAreaView>
+          )}
         </Modal>
       )}
 		</SafeAreaView>
@@ -3803,9 +3944,13 @@ const styles = StyleSheet.create({
 
   chartRow: { flexDirection: 'row', width: '100%' },
   chartTimeHeader: { fontSize: wsize(7), fontWeight: 'bold', textAlign: 'center' },
-  chartWorker: { alignItems: 'center', borderColor: 'grey', borderStyle: 'solid', borderWidth: 1 },
+  chartWorker: { alignItems: 'center', borderColor: 'grey', borderStyle: 'solid', borderWidth: 1, flexDirection: 'row', justifyContent: 'space-around' },
   chartWorkerHeader: { fontSize: wsize(5), textAlign: 'center' },
   chartWorkerProfile: { borderRadius: 20, height: 40, overflow: 'hidden', width: 40 },
+  chartTime: { alignItems: 'center', borderColor: 'grey', borderStyle: 'solid', borderWidth: 1, flexDirection: 'row', justifyContent: 'space-around', paddingVertical: 10 },
+  chartScheduledInfo: { fontSize: wsize(5), fontWeight: 'bold' },
+  chartScheduledActions: { flexDirection: 'row', justifyContent: 'space-around' },
+  chartScheduledAction: { borderRadius: 15, borderStyle: 'solid', borderWidth: 2 },
 
 	cartorderer: { backgroundColor: 'white', borderRadius: 5, flexDirection: 'row', justifyContent: 'space-around', margin: 10, padding: 5, width: wsize(100) - 20 },
 	cartordererInfo: { alignItems: 'center' },
@@ -3829,7 +3974,7 @@ const styles = StyleSheet.create({
   showInfoBox: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '90%', justifyContent: 'space-around', width: '90%' },
   showInfoClose: { alignItems: 'center', borderRadius: 20, borderStyle: 'solid', borderWidth: 2, marginVertical: 30 },
   showInfoHeader: { fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
-  workerInfoList: { width: '100%' },
+  workerInfoList: { marginVertical: 40, width: '100%' },
   workerInfo: { alignItems: 'center' },
   workerInfoProfile: { borderRadius: wsize(30) / 2, height: wsize(30), overflow: 'hidden', width: wsize(30) },
   workerInfoName: { color: 'black', fontSize: wsize(5), fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
@@ -3844,6 +3989,10 @@ const styles = StyleSheet.create({
   moreOptionsClose: { alignItems: 'center', borderRadius: 20, borderStyle: 'solid', borderWidth: 2, marginVertical: 10 },
   moreOptionTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 5, padding: 5, width: '100%' },
   moreOptionTouchHeader: { fontSize: 20, textAlign: 'center' },
+
+  languages: { alignItems: 'center', width: '100%' },
+  language: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: '10%', padding: 10, width: '80%' },
+  languageHeader: { fontSize: wsize(6), textAlign: 'center' },
 
   locationHeader: { fontSize: wsize(5), fontWeight: 'bold', marginHorizontal: 20, textAlign: 'center' },
   locationAddressHeader: { fontSize: wsize(5), fontWeight: 'bold', margin: 20, textAlign: 'center' },
@@ -3933,7 +4082,6 @@ const styles = StyleSheet.create({
   updateButtonHeader: { fontSize: wsize(5), fontWeight: 'bold' },
 
   scheduleOptionBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
-  scheduleOptionContainer: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '90%' },
   scheduleOptions: { flexDirection: 'column', height: '50%', justifyContent: 'space-around' },
   scheduleOption: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 10 },
   scheduleOptionHeader: { textAlign: 'center' },
@@ -3950,6 +4098,10 @@ const styles = StyleSheet.create({
   disabledContainer: { alignItems: 'center', width: '100%' },
   disabledHeader: { color: 'white', fontWeight: 'bold', textAlign: 'center' },
   disabledClose: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 50, padding: 10 },
+
+  alertBox: { backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', justifyContent: 'space-around', height: '100%', width: '100%' },
+  alertContainer: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '30%', justifyContent: 'space-around', width: '100%' },
+  alertHeader: { color: 'red', fontSize: wsize(6), fontWeight: 'bold', paddingHorizontal: 10 },
 
   loading: { alignItems: 'center', flexDirection: 'column', height: '90%', justifyContent: 'space-around', width: '100%' },
   row: { flexDirection: 'row', justifyContent: 'space-around' },

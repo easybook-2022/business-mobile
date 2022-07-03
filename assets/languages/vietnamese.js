@@ -82,6 +82,10 @@ const info = {
       staff: "Nhân Viên",
       changeTime: "Thay đổi thời\ngian với khách hàng"
     },
+    chart: {
+      stillBusy: "vẫn bận",
+      booked: "đã đặt trước"
+    },
     cartOrderers: {
       header: "Bạn sẽ thấy tất cả các đơn đặt hàng tại đây",
       customerName: "khách hàng:",
@@ -94,11 +98,17 @@ const info = {
     },
     hidden: {
       scheduleOption: {
-        header: "Tại sao lại hủy bỏ ? (Không bắt buộc)",
-        reason: "Viết lý do"
+        change: {
+          header: "Vui lòng nhấn vào bất\nkỳ lúc nào khác để đăng ký lại"
+        },
+        remove: {
+          header: "Tại sao lại hủy bỏ ? (Không bắt buộc)",
+          reason: "Viết lý do"
+        }
       },
       showInfo: {
-        header: "Giờ kinh doanh",
+        businessHeader: "Giờ kinh doanh",
+        staffHeader: "Tất cả nhân viên",
         staffName: "Tên nhân viên:"
       },
       showMoreoptions: {
@@ -108,11 +118,21 @@ const info = {
         changeBusinesshours: "Thay đổi Giờ làm việc",
         moreBusinesses: "Doanh nghiệp của bạn",
         walkIn: "Khách hàng bước vào",
+        changeLanguage: "Thay đổi ngôn ngữ",
         getAppointmentsby: {
           header: "Nhận cuộc hẹn trước",
           staff: "Nhân Viên",
           owner: "Người sở hữu"
         }
+      },
+      alert: {
+        header: "Có xung đột về lịch trình"
+      },
+      languages: {
+        english: "Tiếng Anh",
+        french: "người Pháp",
+        vietnamese: "Tiếng Việt",
+        chinese: "người Trung Quốc"
       }
     },
     editInfo: {

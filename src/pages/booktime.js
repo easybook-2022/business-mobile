@@ -734,7 +734,7 @@ export default function Booktime(props) {
         <View style={styles.bottomNavs}>
           <View style={styles.bottomNavsRow}>
             <View style={styles.column}>
-              <TouchableOpacity style={styles.bottomNavButton} onPress={() => props.navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "main" }]}))}>
+              <TouchableOpacity style={styles.bottomNavButton} onPress={() => props.navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "main", params: { num: 1 } }]}))}>
                 <Text style={styles.bottomNavButtonHeader}>{tr.t("buttons.back")}</Text>
               </TouchableOpacity>
             </View>

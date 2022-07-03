@@ -82,6 +82,10 @@ const info = {
       staff: "Nom du personnel:",
       changeTime: "Changer d'heure avec le client"
     },
+    chart: {
+      stillBusy: "toujours occupé",
+      booked: "réservé"
+    },
     cartOrderers: {
       header: "Vous verrez toutes les commandes ici",
       customerName: "Cliente:",
@@ -94,11 +98,17 @@ const info = {
     },
     hidden: {
       scheduleOption: {
-        header: "Pourquoi annuler ? (Optionnel)",
-        reason: "Écrivez votre raison"
+        change: {
+          header: "Veuillez appuyer à tout\nautre moment pour réserver à nouveau"
+        },
+        remove: {
+          header: "Pourquoi annuler ? (Optionnel)",
+          reason: "Écrivez votre raison"
+        }
       },
       showInfo: {
-        header: "Heures d'ouverture",
+        businessHeader: "Heures d'ouverture",
+        staffHeader: "Tous les états-majors",
         staffName: "Nom du personnel:"
       },
       showMoreoptions: {
@@ -108,11 +118,21 @@ const info = {
         changeBusinesshours: "Changer les heures d'ouverture",
         moreBusinesses: "Vos entreprises",
         walkIn: "Client sans rendez-vous",
+        changeLanguage: "Changer de langue",
         getAppointmentsby: {
           header: "Obtenez des rendez-vous par",
           staff: "Bâtons",
           owner: "Propriétaires"
         }
+      },
+      alert: {
+        header: "Il y a un conflit d'horaire"
+      },
+      languages: {
+        english: "Anglais",
+        french: "Français",
+        vietnamese: "Vietnamien",
+        chinese: "Chinois"
       }
     },
     editInfo: {

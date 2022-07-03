@@ -101,10 +101,8 @@ export default function App() {
               headerLeft: () => (
                 Platform.OS == 'ios' && (
                   <TouchableOpacity style={styles.back} onPress={() => {
-                    if (route.params && route.params.refetch) {
-                      route.params.refetch()
-                    }
-
+                    
+                    navigation.setParams({ num: "this is a number" })
                     navigation.goBack()
                   }}>
                     <Text style={styles.backHeader}>Go Back</Text>

@@ -82,6 +82,10 @@ const info = {
       staff: "Stylist name:",
       changeTime: "Change time with client"
     },
+    chart: {
+      stillBusy: "Still busy",
+      booked: "Booked"
+    },
     cartOrderers: {
       header: "You will see all order(s) here",
       customerName: "Customer:",
@@ -94,11 +98,17 @@ const info = {
     },
     hidden: {
       scheduleOption: {
-        header: "Why cancel ? (Optional)",
-        reason: "Write your reason"
+        change: {
+          header: "Please Tap any other\ndifferent time to rebook"
+        },
+        remove: {
+          header: "Why cancel ? (Optional)",
+          reason: "Write your reason"
+        }
       },
       showInfo: {
-        header: "Business's hour(s)",
+        businessHeader: "Business's hour(s)",
+        staffHeader: "All Staff(s)",
         staffName: "Staff name:"
       },
       showMoreoptions: {
@@ -108,11 +118,21 @@ const info = {
         changeBusinesshours: "Change Business's Hour(s)",
         moreBusinesses: "Your Business(es)",
         walkIn: "Client Walk-In",
+        changeLanguage: "Change language",
         getAppointmentsby: {
           header: "Get appointments by",
           staff: "Staff(s)",
           owner: "Owner(s)"
         }
+      },
+      alert: {
+        header: "There is a scheduling conflict"
+      },
+      languages: {
+        english: "English",
+        french: "French",
+        vietnamese: "Vietnamese",
+        chinese: "Chinese"
       }
     },
     editInfo: {

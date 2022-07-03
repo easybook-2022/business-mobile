@@ -52,7 +52,7 @@
     },
     "android": {
       "package": "com.geottuse.serviceapp.business",
-      "versionCode": 26,
+      "versionCode": 0,
       "permissions": ["CAMERA","ACCESS_MEDIA_LOCATION", "ACCESS_FINE_LOCATION", "MICROPHONE"],
       "googleServicesFile": "./google-services.json",
       "config": {
