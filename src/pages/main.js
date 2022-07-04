@@ -56,7 +56,7 @@ export default function Main(props) {
 
 	const [appointments, setAppointments] = useState({ list: [], loading: false })
   const [chartInfo, setChartinfo] = useState({ chart: {}, resetChart: 0, workers: [], workersHour: {}, dayDir: 0, date: {}, loading: false })
-  const [scheduleOption, setScheduleoption] = useState({ show: false, index: -1, id: "", type: "", action: "", client: { id: -1, name: "", cellnumber: "" }, worker: { id: -1 }, service: { id: -1, name: "" }, blocked: [], reason: "", note: "", oldTime: 0, jsonDate: {}, confirm: false })
+  const [scheduleOption, setScheduleoption] = useState({ show: false, index: -1, id: "", type: "", remove: false, rebook: false, client: { id: -1, name: "", cellnumber: "" }, worker: { id: -1 }, service: { id: -1, name: "" }, blocked: [], reason: "", note: "", oldTime: 0, jsonDate: {}, confirm: false })
 	const [cartOrderers, setCartorderers] = useState([])
   const [speakInfo, setSpeakinfo] = useState({ orderNumber: "" })
 
@@ -501,13 +501,7 @@ export default function Main(props) {
               dayDir, date: jsonDate, 
               loading: false 
             })
-            setScheduleoption({
-              ...scheduleOption,
-              show: false, index: -1, id: "", type: "", action: "", 
-              client: { id: -1, name: "", cellnumber: "" }, 
-              worker: { id: -1 }, service: { id: -1, name: "" }, 
-              blocked: [], reason: "", note: "", oldTime: 0, jsonDate: {}, confirm: false
-            })
+
             setLoaded(true)
           }
         })
@@ -517,6 +511,122 @@ export default function Main(props) {
           }
         })
     }
+  }
+  const timeStyle = (info, worker, type) => {
+    const { workersHour } = chartInfo, { blocked, rebook } = scheduleOption
+    const { time, timepassed, jsonDate } = info
+    const scheduled = workersHour[worker]["scheduled"]
+    let bgColor = 'transparent', opacity = 1, fontColor = 'black', disabled = false
+    let style
+
+    switch (type) {
+      case "bg":
+        if (timepassed) {
+          if (rebook) { // in rebook mode
+            if (time + "-c" in scheduled) { // time is confirmed
+              bgColor = 'black'
+            } else if (time + "-b" in scheduled) { // time is blocked
+              if (JSON.stringify(blocked).includes(JSON.stringify(jsonDate))) { // time blocked belongs to schedule
+
+              } else {
+                bgColor = 'grey'
+              }
+            }
+          } else {
+            if (time + "-b" in scheduled) {
+              bgColor = 'grey'
+            } else if (time + "-c" in scheduled) {
+              bgColor = 'black'
+            }
+          }
+        } else {
+          if (rebook) {
+            if (time + "-c" in scheduled) {
+              bgColor = "black"
+            } else if (time + "-b" in scheduled) {
+              if (JSON.stringify(blocked).includes(JSON.stringify(jsonDate))) { // time blocked belongs to schedule
+
+              } else {
+                bgColor = "grey"
+              }
+            }
+          } else {
+            if (time + "-c" in scheduled) {
+              bgColor = "black"
+            } else if (time + "-b" in scheduled) {
+              bgColor = "grey"
+            }
+          }
+        }
+
+        break;
+      case "opacity":
+        if (timepassed) {
+          if (rebook) { // in rebook mode
+            if (time + "-c" in scheduled) { // time is confirmed
+
+            } else if (time + "-b" in scheduled) { // time is blocked
+              if (JSON.stringify(blocked).includes(JSON.stringify(jsonDate))) {
+                opacity = 0.3
+              } else {
+
+              }
+            } else {
+              opacity = 0.3
+            }
+          } else {
+            if (!(time + "-c" in scheduled) && !(time + "-b" in scheduled)) {
+              opacity = 0.3
+            }
+          }
+        } else {
+
+        }
+
+        break;
+      case "fontColor":
+        if (timepassed) {
+          if (rebook) { // in rebook mode
+            if (time + "-c" in scheduled) { // time is confirmed
+              fontColor = 'white'
+            } else if (time + "-b" in scheduled) { // time is blocked
+
+            }
+          } else {
+            if (time + "-c" in scheduled) {
+              fontColor = 'white'
+            }
+          }
+        } else {
+          if (time + "-c" in scheduled) {
+            fontColor = 'white'
+          }
+        }
+
+        break;
+      case "disabled":
+        if (timepassed) {
+          disabled = true
+        } else {
+          if (time + "-c" in scheduled) {
+            disabled = true
+          }
+        }
+
+        break;
+      default:
+
+    }
+
+    style = (type == "bg" && bgColor)
+            ||
+            (type == "opacity" && opacity)
+            ||
+            (type == "fontColor" && fontColor)
+            ||
+            (type == "disabled" && disabled)
+
+    return style
   }
   const blockTheTime = (workerid, jsonDate) => {
     const newWorkershour = {...chartInfo.workersHour}
@@ -551,47 +661,51 @@ export default function Main(props) {
       })
   }
   const showScheduleOption = (id, type, index, action) => {
-    if (!scheduleOption.action) {
-      getAppointmentInfo(id)
-        .then((res) => {
-          if (res.status == 200) {
-            return res.data
-          }
-        })
-        .then((res) => {
-          if (res) {
-            const { name, note, serviceId, time, worker, client, blocked } = res
-            const unix = jsonDateToUnix(time)
+    getAppointmentInfo(id)
+      .then((res) => {
+        if (res.status == 200) {
+          return res.data
+        }
+      })
+      .then((res) => {
+        if (res) {
+          const { name, note, serviceId, time, worker, client, blocked } = res
+          const unix = jsonDateToUnix(time)
 
-            blocked.forEach(function (info) {
-              info["unix"] = jsonDateToUnix(JSON.parse(info["time"]))
-              info["time"] = JSON.parse(info["time"])
-            })
+          blocked.forEach(function (info) {
+            info["unix"] = jsonDateToUnix(JSON.parse(info["time"]))
+            info["time"] = JSON.parse(info["time"])
+          })
 
-            if (action == "remove") {
+          if (action == "remove") {
+            if (!scheduleOption.remove) {
               setScheduleoption({ 
                 ...scheduleOption, 
-                show: true, id, type, index, action: "cancel",
+                show: true, id, type, index, remove: true,
                 worker: { id: worker.id },
                 service: { id: serviceId ? serviceId : -1, name }, 
                 client, blocked, note, oldTime: unix, jsonDate: time
               })
             } else {
+              setScheduleoption({ ...scheduleOption, remove: false })
+            }
+          } else {
+            if (!scheduleOption.rebook) {
               setTimeout(function () {
                 setScheduleoption({ 
                   ...scheduleOption, 
-                  action: "rebook", id, type, index, 
+                  rebook: true, id, type, index, 
                   worker: { id: worker.id },
                   service: { id: serviceId ? serviceId : -1, name }, 
                   client, blocked, note, oldTime: unix, jsonDate: time
                 })
               }, 1000)
+            } else {
+              setScheduleoption({ ...scheduleOption, rebook: false })
             }
           }
-        })
-    } else {
-      setScheduleoption({ ...scheduleOption, action: "" })
-    }
+        }
+      })
   }
   const rebookSchedule = async(time, jsonDate) => {
     const { id, worker, client, service, blocked, oldTime, note } = scheduleOption
@@ -624,9 +738,17 @@ export default function Main(props) {
           if (res.receiver) {
             data = { ...data, receiver: res.receiver, time, worker: res.worker }
 
-            socket.emit("socket/salonChangeAppointment", data, () => setScheduleoption({ ...scheduleOption, show: false, action: "" }))
+            socket.emit("socket/salonChangeAppointment", data, () => {
+              setScheduleoption({ 
+                ...scheduleOption, 
+                show: false, index: -1, id: "", type: "", remove: false, rebook: false, 
+                client: { id: -1, name: "", cellnumber: "" }, worker: { id: -1 }, 
+                service: { id: -1, name: "" }, blocked: [], reason: "", note: "", 
+                oldTime: 0, jsonDate: {}, confirm: false
+              })
+            })
           } else {
-            setScheduleoption({ ...scheduleOption, show: false, action: "" })
+            setScheduleoption({ ...scheduleOption, show: false, rebook: false })
           }
 
           getTheWorkersHour(false)
@@ -638,7 +760,7 @@ export default function Main(props) {
 
           setTimeout(function () {
             setAlertinfo({ ...alertInfo, show: false })
-            setScheduleoption({ ...scheduleOption, action: "" })
+            setScheduleoption({ ...scheduleOption, rebook: false })
           }, 2000)
         }
       })
@@ -738,7 +860,13 @@ export default function Main(props) {
             getTheWorkersHour(false)
 
             setTimeout(function () {
-              setScheduleoption({ ...scheduleOption, show: false, confirm: false })
+              setScheduleoption({ 
+                ...scheduleOption, 
+                show: false, index: -1, id: "", type: "", remove: false, rebook: false, 
+                client: { id: -1, name: "", cellnumber: "" }, worker: { id: -1 }, 
+                service: { id: -1, name: "" }, blocked: [], reason: "", note: "", 
+                oldTime: 0, jsonDate: {}, confirm: false
+              })
             }, 2000)
           })
         }
@@ -1810,124 +1938,10 @@ export default function Main(props) {
       hour: info.getHours(), minute: info.getMinutes() 
     }
   }
-  const timeStyle = (info, worker, type) => {
-    const { workersHour } = chartInfo, { blocked, action } = scheduleOption
-    const { time, timepassed, jsonDate } = info
-    const scheduled = workersHour[worker]["scheduled"]
-    let bgColor = 'transparent', opacity = 1, fontColor = 'black', disabled = false
-    let style
-
-    switch (type) {
-      case "bg":
-        if (timepassed) {
-          if (action == "rebook") { // in rebook mode
-            if (time + "-c" in scheduled) { // time is confirmed
-              bgColor = 'black'
-            } else if (time + "-b" in scheduled) { // time is blocked
-              if (JSON.stringify(blocked).includes(JSON.stringify(jsonDate))) { // time blocked belongs to schedule
-
-              } else {
-                bgColor = 'grey'
-              }
-            }
-          } else {
-            if (time + "-b" in scheduled) {
-              bgColor = 'grey'
-            } else if (time + "-c" in scheduled) {
-              bgColor = 'black'
-            }
-          }
-        } else {
-          if (action == "rebook") {
-            if (time + "-c" in scheduled) {
-              bgColor = "black"
-            } else if (time + "-b" in scheduled) {
-              if (JSON.stringify(blocked).includes(JSON.stringify(jsonDate))) { // time blocked belongs to schedule
-
-              } else {
-                bgColor = "grey"
-              }
-            }
-          } else {
-            if (time + "-c" in scheduled) {
-              bgColor = "black"
-            } else if (time + "-b" in scheduled) {
-              bgColor = "grey"
-            }
-          }
-        }
-
-        break;
-      case "opacity":
-        if (timepassed) {
-          if (action == "rebook") { // in rebook mode
-            if (time + "-c" in scheduled) { // time is confirmed
-
-            } else if (time + "-b" in scheduled) { // time is blocked
-              if (JSON.stringify(blocked).includes(JSON.stringify(jsonDate))) {
-                opacity = 0.3
-              } else {
-
-              }
-            } else {
-              opacity = 0.3
-            }
-          } else {
-            if (!(time + "-c" in scheduled) && !(time + "-b" in scheduled)) {
-              opacity = 0.3
-            }
-          }
-        } else {
-
-        }
-
-        break;
-      case "fontColor":
-        if (timepassed) {
-          if (action == "rebook") { // in rebook mode
-            if (time + "-c" in scheduled) { // time is confirmed
-              fontColor = 'white'
-            } else if (time + "-b" in scheduled) { // time is blocked
-
-            }
-          } else {
-            if (time + "-c" in scheduled) {
-              fontColor = 'white'
-            }
-          }
-        } else {
-          if (time + "-c" in scheduled) {
-            fontColor = 'white'
-          }
-        }
-
-        break;
-      case "disabled":
-        if (timepassed) {
-          disabled = true
-        } else {
-          if (time + "-c" in scheduled) {
-            disabled = true
-          }
-        }
-
-        break;
-      default:
-
-    }
-
-    style = (type == "bg" && bgColor)
-            ||
-            (type == "opacity" && opacity)
-            ||
-            (type == "fontColor" && fontColor)
-            ||
-            (type == "disabled" && disabled)
-
-    return style
-  }
   
-	useEffect(() => initialize(), [])
+	useEffect(() => {
+    initialize()
+  }, [])
 
   useFocusEffect(
     useCallback(() => {
@@ -2181,7 +2195,7 @@ export default function Main(props) {
                                 <TouchableOpacity
                                   disabled={timeStyle(item, worker.id, "disabled")}
                                   onPress={() => {
-                                    if (scheduleOption.action == "rebook") {
+                                    if (scheduleOption.rebook) {
                                       rebookSchedule(item.time, item.jsonDate)
                                     } else if (!(item.time + "-c" in workersHour[worker.id]["scheduled"])) {
                                       blockTheTime(worker.id, item.jsonDate)
@@ -2193,7 +2207,7 @@ export default function Main(props) {
                                     {item.timeDisplay}
                                     <Text style={styles.chartScheduledInfo}>
                                       {item.time + "-c" in workersHour[worker.id]["scheduled"] && "(" + tr.t("main.chart.booked") + ")"}
-                                      {item.time + "-b" in workersHour[worker.id]["scheduled"] && "(" + tr.t("main.chart.stillBusy") + ")"}
+                                      {(item.time + "-b" in workersHour[worker.id]["scheduled"] && !scheduleOption.rebook) && "(" + tr.t("main.chart.stillBusy") + ")"}
                                     </Text>
                                   </Text>
 
@@ -2308,7 +2322,7 @@ export default function Main(props) {
 
                   <View style={{ alignItems: 'center' }}>
                     <View style={styles.scheduleCancelActions}>
-                      <TouchableOpacity style={styles.scheduleCancelTouch} onPress={() => setScheduleoption({ ...scheduleOption, show: false, action: "" })}>
+                      <TouchableOpacity style={styles.scheduleCancelTouch} onPress={() => setScheduleoption({ ...scheduleOption, show: false, remove: false })}>
                         <Text style={styles.scheduleCancelTouchHeader}>{tr.t("buttons.close")}</Text>
                       </TouchableOpacity>
                       <TouchableOpacity style={styles.scheduleCancelTouch} onPress={() => cancelTheSchedule()}>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { 
   SafeAreaView, ActivityIndicator, Platform, Dimensions, View, FlatList, Text, 
   TextInput, Image, TouchableOpacity, KeyboardAvoidingView, TouchableWithoutFeedback, 
@@ -6,7 +6,7 @@ import {
 } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
-import { CommonActions } from '@react-navigation/native';
+import { useFocusEffect, useIsFocused, CommonActions } from '@react-navigation/native';
 import * as FileSystem from 'expo-file-system'
 import { Camera } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator'
@@ -152,7 +152,10 @@ export default function Menu(props) {
               {isOwner == true && (
                 <View style={styles.column}>
                   <View style={styles.menuActions}>
-                    <TouchableOpacity style={styles.menuAction} onPress={() => props.navigation.navigate("addmenu", { parentMenuid: id, menuid: id, refetch: () => getAllMenus() })}>
+                    <TouchableOpacity style={styles.menuAction} onPress={() => {
+                      props.navigation.setParams({ refetch: true })
+                      props.navigation.navigate("addmenu", { parentMenuid: id, menuid: id })
+                    }}>
                       <Text style={styles.menuActionHeader}>{tr.t("buttons.change")}</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.menuAction} onPress={() => removeTheMenu(id)}>
@@ -167,15 +170,17 @@ export default function Menu(props) {
 							<View style={{ alignItems: 'center', backgroundColor: 'white', marginTop: 10 }}>
                 {isOwner == true && (
                   <TouchableOpacity style={styles.itemAdd} onPress={() => {
+                    props.navigation.setParams({ refetch: true })
+
                     if ((locationType == "hair" || locationType == "nail")) {
                       props.navigation.navigate(
                         "addservice", 
-                        { parentMenuid: id, serviceid: null, refetch: () => getAllMenus() }
+                        { parentMenuid: id, serviceid: null }
                       )
                     } else {
                       props.navigation.navigate(
                         "addproduct", 
-                        { parentMenuid: id, productid: null, refetch: () => getAllMenus() }
+                        { parentMenuid: id, productid: null }
                       )
                     }
                   }}>
@@ -208,10 +213,12 @@ export default function Menu(props) {
                           <View style={styles.column}>
                             <View style={styles.itemActions}>
                               <TouchableOpacity style={styles.itemAction} onPress={() => {
+                                props.navigation.setParams({ refetch: true })
+
                                 if ((locationType == "hair" || locationType == "nail")) {
-                                  props.navigation.navigate("addservice", { parentMenuid: id, serviceid: info.id, refetch: () => getAllMenus() })
+                                  props.navigation.navigate("addservice", { parentMenuid: id, serviceid: info.id })
                                 } else {
-                                  props.navigation.navigate("addproduct", { parentMenuid: id, productid: info.id, refetch: () => getAllMenus() })
+                                  props.navigation.navigate("addproduct", { parentMenuid: id, productid: info.id })
                                 }
                               }}>
                                 <Text style={styles.itemActionHeader}>{tr.t("buttons.change")}</Text>
@@ -230,15 +237,17 @@ export default function Menu(props) {
 										<View style={{ alignItems: 'center', backgroundColor: 'white' }}>
                       {isOwner == true && (
                         <TouchableOpacity style={styles.itemAdd} onPress={() => {
+                          props.navigation.setParams({ refetch: true })
+
                           if ((locationType == "hair" || locationType == "nail")) {
                             props.navigation.navigate(
                               "addservice", 
-                              { parentMenuid: id, serviceid: null, refetch: () => getAllMenus() }
+                              { parentMenuid: id, serviceid: null }
                             )
                           } else {
                             props.navigation.navigate(
                               "addproduct", 
-                              { parentMenuid: id, productid: null, refetch: () => getAllMenus() }
+                              { parentMenuid: id, productid: null }
                             )
                           }
                         }}>
@@ -276,12 +285,14 @@ export default function Menu(props) {
                         <View style={styles.column}>
                           <View style={styles.itemActions}>
                             <TouchableOpacity style={styles.itemAction} onPress={() => {
+                              props.navigation.setParams({ refetch: true })
+
                               if ((locationType == "hair" || locationType == "nail")) {
-                                props.navigation.navigate("addservice", { parentMenuid: id, serviceid: info.id, refetch: () => getAllMenus() })
+                                props.navigation.navigate("addservice", { parentMenuid: id, serviceid: info.id })
                               } else if (locationType == "restaurant") {
-                                props.navigation.navigate("addmeal", { parentMenuid: id, productid: info.id, refetch: () => getAllMenus() })
+                                props.navigation.navigate("addmeal", { parentMenuid: id, productid: info.id })
                               } else {
-                                props.navigation.navigate("addproduct", { parentMenuid: id, productid: info.id, refetch: () => getAllMenus() })
+                                props.navigation.navigate("addproduct", { parentMenuid: id, productid: info.id })
                               }
                             }}>
                               <Text style={styles.itemActionHeader}>{tr.t("buttons.change")}</Text>
@@ -298,20 +309,22 @@ export default function Menu(props) {
                   {list.length - 1 == index && (
                     <View style={{ alignItems: 'center' }}>
                       <TouchableOpacity style={styles.itemAdd} onPress={() => {
+                        props.navigation.setParams({ refetch: true })
+
                         if ((locationType == "hair" || locationType == "nail")) {
                           props.navigation.navigate(
                             "addservice", 
-                            { parentMenuid: "", serviceid: null, refetch: () => getAllMenus() }
+                            { parentMenuid: "", serviceid: null }
                           )
                         } else if (locationType == "restaurant") {
                           props.navigation.navigate(
                             "addmeal", 
-                            { parentMenuid: "", productid: null, refetch: () => getAllMenus() }
+                            { parentMenuid: "", productid: null }
                           )
                         } else {
                           props.navigation.navigate(
                             "addproduct", 
-                            { parentMenuid: "", productid: null, refetch: () => getAllMenus() }
+                            { parentMenuid: "", productid: null }
                           )
                         }
                       }}>
@@ -631,6 +644,20 @@ export default function Menu(props) {
     }
 	}, [])
 
+  useFocusEffect(
+    useCallback(() => {
+      if (props.route.params) {
+        const params = props.route.params
+
+        if (params.refetch) {
+          getAllMenus()
+        }
+
+        props.navigation.setParams({ refetch: null })
+      }
+    }, [useIsFocused()])
+  );
+
   const header = ((locationType == "hair" || locationType == "nail") && "service") || 
                   (locationType == "restaurant" && "meal") || 
                   (locationType == "store" && "item")
@@ -733,9 +760,10 @@ export default function Menu(props) {
 										{createMenuoptionbox.allow == "both" && (
 											<TouchableOpacity style={styles.createOptionAction} onPress={() => {
 												setCreatemenuoptionbox({ ...createMenuoptionbox, show: false, id: -1 })
+                        props.navigation.setParams({ refetch: true })
 												props.navigation.navigate(
                           "addmenu", 
-                          { parentMenuid: createMenuoptionbox.id, menuid: null, refetch: () => getAllMenus() }
+                          { parentMenuid: createMenuoptionbox.id, menuid: null }
                         )
 											}}>
 												<Text style={styles.createOptionActionHeader}>{tr.t("buttons.addmenu")}</Text>
@@ -744,16 +772,17 @@ export default function Menu(props) {
 											
 										<TouchableOpacity style={styles.createOptionAction} onPress={() => {
                       setCreatemenuoptionbox({ show: false, id: -1 })
+                      props.navigation.setParams({ refetch: true })
 
 											if ((locationType == "hair" || locationType == "nail")) {
 												props.navigation.navigate(
 													"addservice", 
-													{ parentMenuid: createMenuoptionbox.id, serviceid: null, refetch: () => getAllMenus() }
+													{ parentMenuid: createMenuoptionbox.id, serviceid: null }
 												)
 											} else {
 												props.navigation.navigate(
 													"addproduct", 
-													{ parentMenuid: createMenuoptionbox.id, productid: null, refetch: () => getAllMenus() }
+													{ parentMenuid: createMenuoptionbox.id, productid: null }
 												)
 											}
 										}}>
