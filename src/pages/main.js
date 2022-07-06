@@ -23,7 +23,7 @@ import { getId, displayTime, resizePhoto, displayPhonenumber } from 'geottuse-to
 import { 
   updateNotificationToken, verifyUser, addOwner, updateOwner, deleteOwner, getStylistInfo, 
   getOtherWorkers, getAccounts, getOwnerInfo, logoutUser, getWorkersTime, getAllWorkersTime, 
-  getWorkersHour
+  getWorkersHour, setUseVoice
 } from '../apis/owners'
 import { getLocationProfile, getLocationHours, setLocationHours, updateLocation, setReceiveType, getDayHours } from '../apis/locations'
 import { getMenus, removeMenu, addNewMenu } from '../apis/menus'
@@ -93,6 +93,7 @@ export default function Main(props) {
   const [postalcode, setPostalcode] = useState(loginInfo.postalcode)
   const [logo, setLogo] = useState({ uri: '', name: '', size: { width: 0, height: 0 }, loading: false })
   const [locationReceivetype, setLocationreceivetype] = useState('')
+  const [useVoice, setUsevoice] = useState(false)
 
   const [locationHours, setLocationhours] = useState([
     { key: "0", header: "Sunday", opentime: { hour: "06", minute: "00", period: "AM" }, closetime: { hour: "09", minute: "00", period: "PM" }, close: false },
@@ -289,6 +290,7 @@ export default function Main(props) {
       .then((res) => {
         if (res) {
           setIsowner(res.isOwner)
+          setUsevoice(res.useVoice)
         }
       })
       .catch((err) => {
@@ -630,7 +632,7 @@ export default function Main(props) {
   }
   const blockTheTime = (workerid, jsonDate) => {
     const newWorkershour = {...chartInfo.workersHour}
-    const data = { workerid, jsonDate: JSON.stringify(jsonDate) }
+    const data = { workerid, jsonDate, time: jsonDateToUnix(jsonDate) }
 
     blockTime(data)
       .then((res) => {
@@ -713,6 +715,7 @@ export default function Main(props) {
 
     blocked.forEach(function (blockInfo, index) {
       blockInfo["newTime"] = unixToJsonDate(time + (blockInfo.unix - oldTime))
+      blockInfo["newUnix"] = (time + (blockInfo.unix - oldTime)).toString()
     })
 
     let data = { 
@@ -721,10 +724,10 @@ export default function Main(props) {
       workerid: worker.id, 
       locationid, serviceid: service.id ? service.id : -1, 
       serviceinfo: service.name ? service.name : "",
-      time: JSON.stringify(jsonDate), note, 
+      time: jsonDate, note, 
+      timeDisplay: displayTime(jsonDate), 
       type: "salonChangeAppointment",
-      timeDisplay: displayTime(jsonDate),
-      blocked
+      blocked, unix: time
     }
 
     salonChangeAppointment(data)
@@ -736,7 +739,10 @@ export default function Main(props) {
       .then((res) => {
         if (res) {
           if (res.receiver) {
-            data = { ...data, receiver: res.receiver, time, worker: res.worker }
+            data = { 
+              ...data, 
+              receiver: res.receiver, time, worker: res.worker
+            }
 
             socket.emit("socket/salonChangeAppointment", data, () => {
               setScheduleoption({ 
@@ -1926,6 +1932,22 @@ export default function Main(props) {
         }
       })
   }
+  const setTheUseVoice = async(option) => {
+    const ownerid = await AsyncStorage.getItem("ownerid")
+    const data = { ownerid, option }
+
+    setUseVoice(data)
+      .then((res) => {
+        if (res.status == 200) {
+          return res.data
+        }
+      })
+      .then((res) => {
+        if (res) {
+          setUsevoice(option)
+        }
+      })
+  }
   const jsonDateToUnix = date => {
     return Date.parse(date["month"] + " " + date["date"] + ", " + date["year"] + " " + date["hour"] + ":" + date["minute"])
   }
@@ -1951,12 +1973,12 @@ export default function Main(props) {
         if (params.cartorders) {
           getAllCartOrderers()
           removeFromList(item.id, "cartOrderers")
-        } else if (params.menu) {
+        } else if (params.menu || params.initialize) {
           initialize()
         }
       }
 
-      props.navigation.setParams({ num: null })
+      props.navigation.setParams({ cartorders: null, menu: null, initialize: null })
     }, [useIsFocused()])
   )
 
@@ -2082,6 +2104,7 @@ export default function Main(props) {
               !appointments.loading ?
                 appointments.list.length > 0 ? 
                   <FlatList
+                    showsVerticalScrollIndicator={false}
                     data={appointments.list}
                     renderItem={({ item, index }) => 
                       <View key={item.key} style={styles.schedule}>
@@ -2111,7 +2134,7 @@ export default function Main(props) {
                           </View>
                           <View style={styles.column}>
                             <TouchableOpacity style={styles.scheduleAction} onPress={() => {
-                              props.navigation.setParams({ num: 1 })
+                              props.navigation.setParams({ initialize: true })
                               props.navigation.navigate("booktime", { scheduleid: item.id, serviceid: item.serviceid, serviceinfo: item.name })
                             }}>
                               <Text style={styles.scheduleActionHeader}>{tr.t("main.list.changeTime")}</Text>
@@ -2138,7 +2161,7 @@ export default function Main(props) {
 
             {viewType == "appointments_chart" && (
               !chartInfo.loading ? 
-                <ScrollView horizontal>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                   <View style={{ borderColor: 'black', borderStyle: 'solid', borderWidth: 2 }}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
                       <View style={styles.column}>
@@ -2147,12 +2170,12 @@ export default function Main(props) {
                         </TouchableOpacity>
                       </View>
                       <View style={styles.column}>
-                        <Text style={{ fontSize: wsize(8), fontWeight: 'bold', textAlign: 'center' }}>{
-                            tr.t("days." + chart.dateHeader.day) + ", " + 
-                            tr.t("months." + chart.dateHeader.month) + " " + 
-                            chart.dateHeader.date + ", " + 
-                            chart.dateHeader.year
-                          }</Text>
+                        <Text style={{ fontSize: wsize(6), fontWeight: 'bold', paddingVertical: 5, textAlign: 'center' }}>{
+                          tr.t("days." + chart.dateHeader.day) + ", " + 
+                          tr.t("months." + chart.dateHeader.month) + " " + 
+                          chart.dateHeader.date + ", " + 
+                          chart.dateHeader.year
+                        }</Text>
                       </View>
                       <View style={styles.column}>
                         <TouchableOpacity onPress={() => getAppointmentsChart(chartInfo.dayDir + 1, "right")}>
@@ -2176,7 +2199,7 @@ export default function Main(props) {
                       ))}
                     </View>
 
-                    <ScrollView>
+                    <ScrollView showsVerticalScrollIndicator={false}>
                       {chartInfo.chart.times && chartInfo.chart.times.map((item, index) => (
                         <View key={item.key} style={styles.chartRow}>
                           <View style={styles.chartRow}>
@@ -2187,7 +2210,12 @@ export default function Main(props) {
                                   styles.chartTime,
                                   {
                                     backgroundColor: timeStyle(item, worker.id, "bg"),
-                                    opacity: timeStyle(item, worker.id, "opacity"),
+                                    opacity: (
+                                      workersHour[worker.id]["open"] < item.time || workersHour[worker.id]["close"] > item.time ? 
+                                        0.3
+                                        :
+                                        timeStyle(item, worker.id, "opacity")
+                                    ),
                                     width: workers.length < 5 ? (width / workers.length) : 200
                                   }
                                 ]}
@@ -2419,7 +2447,7 @@ export default function Main(props) {
                       <AntDesign name="close" size={wsize(7)}/>
                     </TouchableOpacity>
 
-                    <ScrollView style={{ width: '80%' }}>
+                    <ScrollView showsVerticalScrollIndicator={false} style={{ width: '90%' }}>
                       <TouchableOpacity style={styles.moreOptionTouch} onPress={() => {
                         setShowmoreoptions({ ...showMoreoptions, show: false })
                         props.navigation.setParams({ menu: true })
@@ -2490,21 +2518,34 @@ export default function Main(props) {
                           </TouchableOpacity>
 
                           {(locationType == "hair" || locationType == "nail") && (
-                            <View style={styles.receiveTypesBox}>
-                              <Text style={styles.receiveTypesHeader}>{tr.t("main.hidden.showMoreoptions.getAppointmentsby.header")}</Text>
+                            <View style={styles.optionsBox}>
+                              <Text style={styles.optionsHeader}>{tr.t("main.hidden.showMoreoptions.getAppointmentsby.header")}</Text>
 
-                              <View style={styles.receiveTypes}>
-                                <TouchableOpacity style={[styles.receiveType, { backgroundColor: locationReceivetype == 'stylist' ? 'black' : 'white' }]} onPress={() => setTheReceiveType('stylist')}>
-                                  <Text style={[styles.receiveTypeHeader, { color: locationReceivetype == 'stylist' ? 'white' : 'black' }]}>{tr.t("main.hidden.showMoreoptions.getAppointmentsby.staff")}</Text>
+                              <View style={styles.options}>
+                                <TouchableOpacity style={[styles.option, { backgroundColor: locationReceivetype == 'stylist' ? 'black' : 'white' }]} onPress={() => setTheReceiveType('stylist')}>
+                                  <Text style={[styles.optionHeader, { color: locationReceivetype == 'stylist' ? 'white' : 'black' }]}>{tr.t("main.hidden.showMoreoptions.getAppointmentsby.staff")}</Text>
                                 </TouchableOpacity>
-                                <TouchableOpacity style={[styles.receiveType, { backgroundColor: locationReceivetype == 'owner' ? 'black' : 'white' }]} onPress={() => setTheReceiveType('owner')}>
-                                  <Text style={[styles.receiveTypeHeader, { color: locationReceivetype == 'owner' ? 'white' : 'black' }]}>{tr.t("main.hidden.showMoreoptions.getAppointmentsby.owner")}</Text>
+                                <TouchableOpacity style={[styles.option, { backgroundColor: locationReceivetype == 'owner' ? 'black' : 'white' }]} onPress={() => setTheReceiveType('owner')}>
+                                  <Text style={[styles.optionHeader, { color: locationReceivetype == 'owner' ? 'white' : 'black' }]}>{tr.t("main.hidden.showMoreoptions.getAppointmentsby.owner")}</Text>
                                 </TouchableOpacity>
                               </View>
                             </View>
                           )}
                         </>
                       )}
+
+                      <View style={styles.optionsBox}>
+                        <Text style={styles.optionsHeader}>{tr.t("main.hidden.showMoreoptions.useVoice.header")}</Text>
+
+                        <View style={styles.options}>
+                          <TouchableOpacity style={[styles.option, { backgroundColor: useVoice == true ? 'black' : 'white' }]} onPress={() => setTheUseVoice(true)}>
+                            <Text style={[styles.optionHeader, { color: useVoice == true ? 'white' : 'black' }]}>{tr.t("main.hidden.showMoreoptions.useVoice.yes")}</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity style={[styles.option, { backgroundColor: useVoice == false ? 'black' : 'white' }]} onPress={() => setTheUseVoice(false)}>
+                            <Text style={[styles.optionHeader, { color: useVoice == false ? 'white' : 'black' }]}>{tr.t("main.hidden.showMoreoptions.useVoice.no")}</Text>
+                          </TouchableOpacity>
+                        </View>
+                      </View>
                     </ScrollView>
                   </>
                   :
@@ -4096,11 +4137,11 @@ const styles = StyleSheet.create({
   accountEditTouch: { borderRadius: 2, borderStyle: 'solid', borderWidth: 2, marginTop: 5, padding: 5, width: wsize(50) },
   accountEditTouchHeader: { fontSize: wsize(4), textAlign: 'center' },
   
-  receiveTypesBox: { alignItems: 'center', marginHorizontal: 10, marginTop: 30 },
-  receiveTypesHeader: { fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
-  receiveTypes: { flexDirection: 'row', justifyContent: 'space-between' },
-  receiveType: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: '45%' },
-  receiveTypeHeader: { textAlign: 'center' },
+  optionsBox: { alignItems: 'center', marginHorizontal: 10, marginTop: 30 },
+  optionsHeader: { fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
+  options: { flexDirection: 'row', justifyContent: 'space-between' },
+  option: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: '45%' },
+  optionHeader: { textAlign: 'center' },
 
   updateButtons: { flexDirection: 'row', justifyContent: 'space-around' },
   updateButton: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 10 },

@@ -135,6 +135,13 @@ export const getWorkersHour = data => {
   )
 }
 
+export const setUseVoice = data => {
+  return axios.post(
+    `${url}/owners/set_use_voice`,
+    data
+  )
+}
+
 export const getOtherWorkers = data => {
   return axios.post(
     `${url}/owners/get_other_workers`,

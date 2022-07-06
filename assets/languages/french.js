@@ -123,6 +123,11 @@ const info = {
           header: "Obtenez des rendez-vous par",
           staff: "Bâtons",
           owner: "Propriétaires"
+        },
+        useVoice: {
+          header: "Utiliser la voix",
+          yes: "Oui",
+          no: "Non"
         }
       },
       alert: {
@@ -375,7 +380,7 @@ const info = {
     delete: "Effacer",
     change: "Changer",
     see: "Voir",
-    random: "Aléatoire"
+    random: "Choisissez au hasard"
   }
 }
 

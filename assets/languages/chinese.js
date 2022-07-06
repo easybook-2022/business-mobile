@@ -131,6 +131,11 @@ const info = {
           header: "通过以下方式获得约会",
           staff: "员工",
           owner: "拥有者"
+        },
+        useVoice: {
+          header: "使用语音",
+          yes: "是的",
+          no: "不"
         }
       },
       alert: {
@@ -391,7 +396,7 @@ const info = {
     delete: "删除",
     change: "改变",
     see: "看",
-    random: "随机的"
+    random: "随机选择"
   }
 }
 

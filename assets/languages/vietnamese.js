@@ -123,6 +123,11 @@ const info = {
           header: "Nhận cuộc hẹn trước",
           staff: "Nhân Viên",
           owner: "Người sở hữu"
+        },
+        useVoice: {
+          header: "Sử dụng giọng nói",
+          yes: "Đúng",
+          no: "Không"
         }
       },
       alert: {
@@ -375,7 +380,7 @@ const info = {
     delete: "Xóa bỏ",
     change: "Biến đổi",
     see: "Nhìn",
-    random: "Ngẫu nhiên"
+    random: "Chọn ngẫu nhiên"
   }
 }
 

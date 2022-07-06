@@ -123,6 +123,11 @@ const info = {
           header: "Get appointments by",
           staff: "Staff(s)",
           owner: "Owner(s)"
+        },
+        useVoice: {
+          header: "Use voice",
+          yes: "Yes",
+          no: "No"
         }
       },
       alert: {
@@ -375,7 +380,7 @@ const info = {
     delete: "Delete",
     change: "Change",
     see: "See",
-    random: "Random"
+    random: "Pick Random"
   }
 }
 

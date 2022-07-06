@@ -295,7 +295,8 @@ export default function Walkin({ navigation }) {
           service: !serviceInfo ? search : "",
           type: !serviceInfo ? "service" : "",
           name: clientName
-        }, serviceid: serviceInfo ? serviceInfo.id : null
+        }, serviceid: serviceInfo ? serviceInfo.id : null,
+        unix: jsonDateToUnix(jsonDate)
       }
 
       bookWalkIn(data)
