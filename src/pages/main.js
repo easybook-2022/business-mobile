@@ -322,6 +322,7 @@ export default function Main(props) {
   const getTheWorkersHour = async(getlist) => {
     const locationid = await AsyncStorage.getItem("locationid")
     const data = { locationid, ownerid: null }
+    let jsonDate = { ...chartInfo.date }
 
     getWorkersHour(data)
       .then((res) => {
@@ -333,18 +334,15 @@ export default function Main(props) {
         if (res) {
           const { workersHour } = res
 
-          let date = new Date(Date.now())
-          let jsonDate = {"day":days[date.getDay()].substr(0, 3),"month":months[date.getMonth()],"date":date.getDate(),"year":date.getFullYear()}
-
           for (let worker in workersHour) {
-            for (let day in workersHour[worker]) {
-              if (day != "scheduled" && day != "profileInfo") {
-                let { open, close } = workersHour[worker][day]
+            for (let info in workersHour[worker]) {
+              if (info != "scheduled" && info != "profileInfo" && !getlist) { // after rebooking or block time or cancel booking
+                let { begin, end, working } = workersHour[worker][info]
 
-                workersHour[worker][day]["open"] = jsonDateToUnix({ ...jsonDate, "hour": open["hour"], "minute": open["minute"] })
-                workersHour[worker][day]["close"] = jsonDateToUnix({ ...jsonDate, "hour": close["hour"], "minute": close["minute"] })
-              } else if (day == "scheduled") {
-                let scheduled = workersHour[worker][day]
+                workersHour[worker][info]["beginWork"] = jsonDateToUnix({ ...jsonDate, "hour": begin["hour"], "minute": begin["minute"] })
+                workersHour[worker][info]["endWork"] = jsonDateToUnix({ ...jsonDate, "hour": end["hour"], "minute": end["minute"] })
+              } else if (info == "scheduled") {
+                let scheduled = workersHour[worker][info]
                 let newScheduled = {}
 
                 for (let info in scheduled) {
@@ -355,9 +353,18 @@ export default function Main(props) {
                   newScheduled[jsonDateToUnix(JSON.parse(time)) + "-" + status] = scheduled[info]
                 }
 
-                workersHour[worker][day] = newScheduled
+                workersHour[worker][info] = newScheduled
               }
             }
+          }
+
+          if (getlist) {
+            setScheduleoption({
+              ...scheduleOption,
+              show: false, index: -1, id: "", type: "", remove: false, rebook: false, 
+              client: { id: -1, name: "", cellnumber: "" }, worker: { id: -1 }, 
+              service: { id: -1, name: "" }, blocked: [], reason: "", note: "", oldTime: 0, jsonDate: {}, confirm: false
+            })
           }
 
           setChartinfo({ 
@@ -415,23 +422,15 @@ export default function Main(props) {
     let now = Date.parse(days[today.getDay()] + " " + months[today.getMonth()] + ", " + today.getDate() + " " + today.getFullYear() + " " + today.getHours() + ":" + today.getMinutes())
     let day = days[date.getDay()].substr(0, 3), working = false
 
+    jsonDate = {"day":day,"month":months[date.getMonth()],"date":date.getDate(),"year":date.getFullYear()}
+
     for (let worker in newWorkershour) {
       for (let info in newWorkershour[worker]) {
         if (info == day && newWorkershour[worker][info]["working"] == true && working == false) {
-          working = true
-        } else if (info != "scheduled" && info != "profileInfo") {
-          let dayHourInfo = hoursInfo[day]
+          let { end } = newWorkershour[worker][day]
+          let endWork = jsonDateToUnix({ ...jsonDate, "hour": end["hour"], "minute": end["minute"] })
 
-          newWorkershour[worker][day]["open"] = jsonDateToUnix({
-            "day":days[date.getDay()].substr(0, 3),"month":months[date.getMonth()],
-            "date":date.getDate(),"year":date.getFullYear(), 
-            "hour": dayHourInfo["openHour"], "minute": dayHourInfo["openMinute"]
-          })
-          newWorkershour[worker][day]["close"] = jsonDateToUnix({
-            "day":days[date.getDay()].substr(0, 3),"month":months[date.getMonth()],
-            "date":date.getDate(),"year":date.getFullYear(), 
-            "hour": dayHourInfo["closeHour"], "minute": dayHourInfo["closeMinute"]
-          })
+          working = Date.now() < endWork
         }
       }
     }
@@ -439,8 +438,20 @@ export default function Main(props) {
     if (dir == null && ((now + 900000) >= closedtime || working == false)) {
       getAppointmentsChart(dayDir + 1)
     } else {
-      jsonDate = {"day":days[date.getDay()].substr(0, 3),"month":months[date.getMonth()],"date":date.getDate(),"year":date.getFullYear()}
       const data = { locationid, jsonDate }
+
+      for (let worker in newWorkershour) {
+        for (let info in newWorkershour[worker]) {
+          if (info == day && newWorkershour[worker][info]["working"] == true && working == false) {
+            working = true
+          } else if (info != "scheduled" && info != "profileInfo") {
+            let { begin, end, working } = workersHour[worker][day]
+
+            newWorkershour[worker][day]["beginWork"] = jsonDateToUnix({ ...jsonDate, "hour": begin["hour"], "minute": begin["minute"] })
+            newWorkershour[worker][day]["endWork"] = jsonDateToUnix({ ...jsonDate, "hour": end["hour"], "minute": end["minute"] })
+          }
+        }
+      }
 
       getDayHours(data)
         .then((res) => {
@@ -488,19 +499,13 @@ export default function Main(props) {
 
             chart = { 
               "key": dayDir.toString(), 
-              "times": times, 
-              "dateHeader": {
-                "day": days[date.getDay()],
-                "month": jsonDate["month"],
-                "date": jsonDate["date"],
-                "year": jsonDate["year"]
-              }
+              "times": times
             }
 
             setChartinfo({ 
               ...chartInfo, chart, workers, 
-              workersHour: newWorkershour, 
               dayDir, date: jsonDate, 
+              workersHour: newWorkershour,
               loading: false 
             })
 
@@ -515,15 +520,16 @@ export default function Main(props) {
     }
   }
   const timeStyle = (info, worker, type) => {
-    const { workersHour } = chartInfo, { blocked, rebook } = scheduleOption
+    const { chart, workersHour } = chartInfo, { blocked, rebook } = scheduleOption, currDay = chartInfo.date.day.substr(0, 3)
     const { time, timepassed, jsonDate } = info
     const scheduled = workersHour[worker]["scheduled"]
+    const { beginWork, endWork, working } = workersHour[worker][currDay]
     let bgColor = 'transparent', opacity = 1, fontColor = 'black', disabled = false
     let style
 
     switch (type) {
       case "bg":
-        if (timepassed) {
+        if (timepassed || !(time >= beginWork && time <= endWork && working)) {
           if (rebook) { // in rebook mode
             if (time + "-c" in scheduled) { // time is confirmed
               bgColor = 'black'
@@ -563,7 +569,7 @@ export default function Main(props) {
 
         break;
       case "opacity":
-        if (timepassed) {
+        if (timepassed || !(time >= beginWork && time <= endWork && working)) {
           if (rebook) { // in rebook mode
             if (time + "-c" in scheduled) { // time is confirmed
 
@@ -587,7 +593,7 @@ export default function Main(props) {
 
         break;
       case "fontColor":
-        if (timepassed) {
+        if (timepassed || !(time >= beginWork && time <= endWork && working)) {
           if (rebook) { // in rebook mode
             if (time + "-c" in scheduled) { // time is confirmed
               fontColor = 'white'
@@ -607,7 +613,7 @@ export default function Main(props) {
 
         break;
       case "disabled":
-        if (timepassed) {
+        if (timepassed || !(time >= beginWork && time <= endWork && working)) {
           disabled = true
         } else {
           if (time + "-c" in scheduled) {
@@ -642,17 +648,6 @@ export default function Main(props) {
       })
       .then((res) => {
         if (res) {
-          const unix = jsonDateToUnix(jsonDate)
-
-          if (res.action == "add") {
-            newWorkershour[workerid]["scheduled"][unix + "-b"] = res.id
-          } else {
-            if (unix + "-b" in newWorkershour[workerid]["scheduled"]) {
-              delete newWorkershour[workerid]["scheduled"][unix + "-b"]
-            }
-          }
-
-          setChartinfo({ ...chartInfo, workersHour: newWorkershour })
           getTheWorkersHour(false)
         }
       })
@@ -1719,6 +1714,7 @@ export default function Main(props) {
             })
 
             setAccountholders(newAccountholders)
+            setEditinfo({ ...editInfo, show: true })
             setDeleteownerbox({ ...deleteOwnerbox, show: false })
           }
         })
@@ -2171,10 +2167,10 @@ export default function Main(props) {
                       </View>
                       <View style={styles.column}>
                         <Text style={{ fontSize: wsize(6), fontWeight: 'bold', paddingVertical: 5, textAlign: 'center' }}>{
-                          tr.t("days." + chart.dateHeader.day) + ", " + 
-                          tr.t("months." + chart.dateHeader.month) + " " + 
-                          chart.dateHeader.date + ", " + 
-                          chart.dateHeader.year
+                          tr.t("days." + date.day) + ", " + 
+                          tr.t("months." + date.month) + " " + 
+                          date.date + ", " + 
+                          date.year
                         }</Text>
                       </View>
                       <View style={styles.column}>
@@ -2210,12 +2206,7 @@ export default function Main(props) {
                                   styles.chartTime,
                                   {
                                     backgroundColor: timeStyle(item, worker.id, "bg"),
-                                    opacity: (
-                                      workersHour[worker.id]["open"] < item.time || workersHour[worker.id]["close"] > item.time ? 
-                                        0.3
-                                        :
-                                        timeStyle(item, worker.id, "opacity")
-                                    ),
+                                    opacity: timeStyle(item, worker.id, "opacity"),
                                     width: workers.length < 5 ? (width / workers.length) : 200
                                   }
                                 ]}

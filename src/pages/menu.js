@@ -31,8 +31,6 @@ const { height, width } = Dimensions.get('window')
 const wsize = p => {return width * (p / 100)}
 
 export default function Menu(props) {
-	const { refetch } = props.route.params
-
   const [language, setLanguage] = useState('')
 	const [cameraPermission, setCamerapermission] = useState(null);
 	const [pickingPermission, setPickingpermission] = useState(null);

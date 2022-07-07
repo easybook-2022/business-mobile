@@ -26,7 +26,7 @@ const steps = ['name', 'photo']
 
 export default function Addmenu(props) {
 	const params = props.route.params
-	const { parentMenuid, menuid, refetch } = params
+	const { parentMenuid, menuid } = params
 
   const [language, setLanguage] = useState('')
 	const [setupType, setSetuptype] = useState('name')
@@ -61,7 +61,6 @@ export default function Addmenu(props) {
 				if (res) {
           setLoading(false)
 
-					refetch()
 					props.navigation.goBack()
 				}
 			})
@@ -88,7 +87,6 @@ export default function Addmenu(props) {
 				if (res) {
           setLoading(false)
 
-					refetch()
 					props.navigation.goBack()
 				}
 			})

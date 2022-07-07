@@ -28,7 +28,7 @@ const steps = ['name', 'photo', 'options', 'others', 'sizes']
 
 export default function Addmeal(props) {
   const params = props.route.params
-  const { parentMenuid, productid, refetch } = params
+  const { parentMenuid, productid } = params
   
   const [setupType, setSetuptype] = useState('name')
   const [cameraPermission, setCamerapermission] = useState(null);
@@ -140,7 +140,6 @@ export default function Addmeal(props) {
           if (res) {
             setLoading(false)
 
-            refetch()
             props.navigation.goBack()
           }
         })
@@ -263,8 +262,7 @@ export default function Addmeal(props) {
         .then((res) => {
           if (res) {
             setLoading(false)
-
-            refetch()
+            
             props.navigation.goBack()
           }
         })

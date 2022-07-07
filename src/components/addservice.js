@@ -28,7 +28,7 @@ const steps = ['name', 'photo', 'price']
 
 export default function Addservice(props) {
 	const params = props.route.params
-	const { parentMenuid, serviceid, refetch } = params
+	const { parentMenuid, serviceid } = params
 
   const [language, setLanguage] = useState('')
 	const [setupType, setSetuptype] = useState('name')
@@ -61,7 +61,6 @@ export default function Addservice(props) {
 				})
 				.then((res) => {
 					if (res) {
-						refetch()
 						props.navigation.goBack()
 					}
 				})
@@ -107,7 +106,6 @@ export default function Addservice(props) {
 				})
 				.then((res) => {
 					if (res) {
-						refetch()
 						props.navigation.goBack()
 					}
 				})

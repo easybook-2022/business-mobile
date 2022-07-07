@@ -35,7 +35,7 @@ const emptyOwner = { username: "", cellnumber: "", password: "" }
 const useInput = true
 
 const loginLocation = test_input ? testStores[0] : useInput ? realStores[0] : emptyStore
-const ownerSignin = test_input ? testOwners[1] : useInput ? realOwner : emptyOwner
+const ownerSignin = test_input ? testOwners[0] : useInput ? realOwner : emptyOwner
 const registerLocation = test_input ? testStores[0] : useInput ? realStores[0] : emptyStore
 
 const host = "10.0.0.60"

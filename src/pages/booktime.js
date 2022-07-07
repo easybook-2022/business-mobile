@@ -196,9 +196,8 @@ export default function Booktime(props) {
     const numBlockTaken = scheduleid ? 1 + blocked.length : 0
     let start = day in allWorkerstime ? allWorkerstime[day][0]["start"] : openHour + ":" + openMinute
     let end = day in allWorkerstime ? allWorkerstime[day][0]["end"] : closeHour + ":" + closeMinute
-    let openStr = month + " " + date + ", " + year + " " + start
-    let closeStr = month + " " + date + ", " + year + " " + end
-    let openDateStr = Date.parse(openStr), closeDateStr = Date.parse(closeStr), calcDateStr = openDateStr
+    let timeStr = month + " " + date + " " + year + " "
+    let openDateStr = Date.parse(timeStr + start), closeDateStr = Date.parse(timeStr + end), calcDateStr = openDateStr
     let currenttime = Date.now(), newTimes = [], timesRow = [], timesNum = 0
 
     while (calcDateStr < (closeDateStr - pushtime)) {
@@ -237,9 +236,9 @@ export default function Booktime(props) {
         let endTime = selectedWorkerinfo.hours[day]["end"]
 
         if (
-          calcDateStr >= Date.parse(openStr.substring(0, openStr.length - 5) + startTime) 
+          calcDateStr >= Date.parse(timeStr + startTime) 
           && 
-          calcDateStr <= Date.parse(closeStr.substring(0, closeStr.length - 5) + endTime)
+          calcDateStr <= Date.parse(timeStr + endTime)
         ) {
           availableService = true
           workerIds = [selectedWorkerinfo.hours[day]["workerId"]]
@@ -254,9 +253,9 @@ export default function Booktime(props) {
             endTime = info.end
 
             if (
-              calcDateStr >= Date.parse(openStr.substring(0, openStr.length - 5) + startTime) 
+              calcDateStr >= Date.parse(timeStr + startTime) 
               && 
-              calcDateStr <= Date.parse(closeStr.substring(0, closeStr.length - 5) + endTime)
+              calcDateStr <= Date.parse(timeStr + endTime)
             ) {              
               availableService = true
               workerIds.push(info.workerId)
@@ -270,11 +269,15 @@ export default function Booktime(props) {
 
         for (let k = 1; k <= numBlockTaken; k++) {
           if (selectedWorkerinfo.id > -1) { // stylist is picked by client
+            let { start, end } = selectedWorkerinfo.hours[day]
+
             if (startCalc + "-" + selectedWorkerinfo.id + "-b" in scheduled[selectedWorkerinfo.id]["scheduled"]) { // time is blocked
               if (!JSON.stringify(blocked).includes("\"unix\":" + startCalc)) {
                 timeBlocked = true
               }
-            } else if (startCalc + "-" + selectedWorkerinfo.id + "-c" in scheduled[selectedWorkerinfo.id]["scheduled"]) {
+            } else if (startCalc + "-" + selectedWorkerinfo.id + "-c" in scheduled[selectedWorkerinfo.id]["scheduled"]) { // time is taken
+              timeBlocked = true
+            } else if (startCalc >= Date.parse(timeStr + end)) { // stylist is off
               timeBlocked = true
             }
           }
@@ -421,16 +424,7 @@ export default function Booktime(props) {
       })
       .then((res) => {
         if (res) {
-          const daysInfo = res.days
-          const workingDays = {}
-
-          for (let day in daysInfo) {
-            const { start, end } = daysInfo[day]
-
-            workingDays[day] = { start, end }
-          }
-
-          setSelectedworkerinfo({ ...selectedWorkerinfo, id, hours: workingDays })
+          setSelectedworkerinfo({ ...selectedWorkerinfo, id, hours: res.days })
           setStep(1)
         }
       })

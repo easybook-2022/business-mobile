@@ -114,13 +114,7 @@ export default function App() {
               headerTitle: () => <Text style={styles.header}>#{route.params.ordernumber} {tr.t("orders.header")}</Text>,
               headerLeft: () => (
                 Platform.OS == 'ios' && (
-                  <TouchableOpacity style={styles.back} onPress={() => {
-                    if (route.params && route.params.refetch) {
-                      route.params.refetch()
-                    }
-
-                    navigation.goBack()
-                  }}>
+                  <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>
                     <Text style={styles.backHeader}>Go Back</Text>
                   </TouchableOpacity>
                 )
@@ -170,12 +164,7 @@ export default function App() {
               headerTitle: () => <Text style={styles.header}>{tr.t("menu.header." + (route.params.isOwner ? "edit" : "view"))}</Text>,
               headerLeft: () => (
                 Platform.OS == 'ios' && (
-                  <TouchableOpacity style={styles.back} onPress={() => {
-                    const { refetch } = route.params
-
-                    refetch()
-                    navigation.goBack()
-                  }}>
+                  <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>
                     <Text style={styles.backHeader}>Go Back</Text>
                   </TouchableOpacity>
                 )
