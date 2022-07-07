@@ -613,7 +613,15 @@ export default function Main(props) {
 
         break;
       case "disabled":
-        if (timepassed || !(time >= beginWork && time <= endWork && working)) {
+        if (
+          (
+            timepassed 
+            || 
+            !(time >= beginWork && time <= endWork && working)
+          ) 
+          && 
+          !(time + "-c" in scheduled || time + "-b" in scheduled)
+        ) {
           disabled = true
         }
 
@@ -2160,7 +2168,7 @@ export default function Main(props) {
                         </TouchableOpacity>
                       </View>
                       <View style={styles.column}>
-                        <Text style={{ fontSize: wsize(6), fontWeight: 'bold', paddingVertical: 5, textAlign: 'center' }}>{
+                        <Text style={{ fontSize: wsize(5), fontWeight: 'bold', paddingVertical: 10, textAlign: 'center' }}>{
                           tr.t("days." + date.day) + ", " + 
                           tr.t("months." + date.month) + " " + 
                           date.date + ", " + 
@@ -2220,10 +2228,17 @@ export default function Main(props) {
                                 >
                                   <Text style={[styles.chartTimeHeader, { color: timeStyle(item, worker.id, "fontColor") }]}>
                                     {item.timeDisplay}
-                                    <Text style={styles.chartScheduledInfo}>
-                                      {item.time + "-c" in workersHour[worker.id]["scheduled"] && "(" + tr.t("main.chart.booked") + ")"}
-                                      {(item.time + "-b" in workersHour[worker.id]["scheduled"] && !scheduleOption.rebook) && "(" + tr.t("main.chart.stillBusy") + ")"}
-                                    </Text>
+                                    {(
+                                      item.time + "-c" in workersHour[worker.id]["scheduled"]
+                                      ||
+                                      (item.time + "-b" in workersHour[worker.id]["scheduled"] && !scheduleOption.rebook)
+                                    ) && (
+                                      <Text style={styles.chartScheduledInfo}>
+                                        {'\n'}
+                                        {item.time + "-c" in workersHour[worker.id]["scheduled"] && "(" + tr.t("main.chart.booked") + ")"}
+                                        {(item.time + "-b" in workersHour[worker.id]["scheduled"] && !scheduleOption.rebook) && "(" + tr.t("main.chart.stillBusy") + ")"}
+                                      </Text>
+                                    )}
                                   </Text>
 
                                   {item.time + "-c" in workersHour[worker.id]["scheduled"] && (
@@ -2496,13 +2511,6 @@ export default function Main(props) {
                             </TouchableOpacity>
                           )}
 
-                          <TouchableOpacity style={styles.moreOptionTouch} onPress={() => {
-                            setShowmoreoptions({ ...showMoreoptions, infoType: 'changelanguage' })
-                            setEditinfo({ ...editInfo, show: true, type: 'changelanguage' })
-                          }}>
-                            <Text style={styles.moreOptionTouchHeader}>{tr.t("main.hidden.showMoreoptions.changeLanguage")}</Text>
-                          </TouchableOpacity>
-
                           {(locationType == "hair" || locationType == "nail") && (
                             <View style={styles.optionsBox}>
                               <Text style={styles.optionsHeader}>{tr.t("main.hidden.showMoreoptions.getAppointmentsby.header")}</Text>
@@ -2519,6 +2527,13 @@ export default function Main(props) {
                           )}
                         </>
                       )}
+
+                      <TouchableOpacity style={styles.moreOptionTouch} onPress={() => {
+                        setShowmoreoptions({ ...showMoreoptions, infoType: 'changelanguage' })
+                        setEditinfo({ ...editInfo, show: true, type: 'changelanguage' })
+                      }}>
+                        <Text style={styles.moreOptionTouchHeader}>{tr.t("main.hidden.showMoreoptions.changeLanguage")}</Text>
+                      </TouchableOpacity>
 
                       <View style={styles.optionsBox}>
                         <Text style={styles.optionsHeader}>{tr.t("main.hidden.showMoreoptions.useVoice.header")}</Text>
@@ -3995,12 +4010,12 @@ const styles = StyleSheet.create({
 	scheduleActionHeader: { fontSize: wsize(4), textAlign: 'center' },
 
   chartRow: { flexDirection: 'row', width: '100%' },
-  chartTimeHeader: { fontSize: wsize(7), fontWeight: 'bold', textAlign: 'center' },
+  chartTimeHeader: { fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
   chartWorker: { alignItems: 'center', borderColor: 'grey', borderStyle: 'solid', borderWidth: 1, flexDirection: 'row', justifyContent: 'space-around' },
-  chartWorkerHeader: { fontSize: wsize(5), textAlign: 'center' },
+  chartWorkerHeader: { fontSize: wsize(6), textAlign: 'center' },
   chartWorkerProfile: { borderRadius: 20, height: 40, overflow: 'hidden', width: 40 },
   chartTime: { alignItems: 'center', borderColor: 'grey', borderStyle: 'solid', borderWidth: 1, flexDirection: 'row', justifyContent: 'space-around', paddingVertical: 10 },
-  chartScheduledInfo: { fontSize: wsize(5), fontWeight: 'bold' },
+  chartScheduledInfo: { fontSize: wsize(4), fontWeight: 'bold' },
   chartScheduledActions: { flexDirection: 'row', justifyContent: 'space-around' },
   chartScheduledAction: { borderRadius: 15, borderStyle: 'solid', borderWidth: 2 },
 

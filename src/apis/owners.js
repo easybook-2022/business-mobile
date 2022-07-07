@@ -120,6 +120,13 @@ export const getAllStylists = id => {
   return axios.get(`${url}/owners/get_all_stylists/${id}`)
 }
 
+export const getAllWorkingStylists = data => {
+  return axios.post(
+    `${url}/owners/get_all_working_stylists`,
+    data
+  )
+}
+
 export const getStylistInfo = id => {
   return axios.get(`${url}/owners/get_stylist_info/${id}`)
 }

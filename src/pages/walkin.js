@@ -6,7 +6,7 @@ import { socket, logo_url } from '../../assets/info'
 import { displayTime, resizePhoto } from 'geottuse-tools'
 
 import { getLocationHours, getLocationProfile } from '../apis/locations'
-import { getAllStylists, getAllWorkersTime, getWorkersHour } from '../apis/owners'
+import { getAllWorkingStylists, getStylistInfo, getAllWorkersTime, getWorkersHour } from '../apis/owners'
 import { getMenus } from '../apis/menus'
 import { bookWalkIn } from '../apis/schedules'
 
@@ -18,12 +18,14 @@ const wsize = p => {return width * (p / 100)}
 export default function Walkin({ navigation }) {
   const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
   const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+  const monthsObj = { January: 1, February: 2, March: 3, April: 4, May: 5, June: 6, July: 7, August: 8, September: 9, October: 10, November: 11, December: 12 }
+  const daysObj = { Sunday: 1, Monday: 2, Tuesday: 3, Wednesday: 4, Thursday: 5, Friday: 6, Saturday: 7 }
 
   const [locationId, setLocationid] = useState(0)
   const [name, setName] = useState('')
   const [type, setType] = useState('')
   const [step, setStep] = useState('')
-  const [selectedWorkerinfo, setSelectedworkerinfo] = useState({ id: -1, hours: {}, loading: false })
+  const [selectedWorkerinfo, setSelectedworkerinfo] = useState({ id: -1, username: "", hours: {}, loading: false })
   const [hoursInfo, setHoursinfo] = useState({})
   const [allStylists, setAllstylists] = useState({ stylists: [], numStylists: 0, ids: [] })
   const [allWorkerstime, setAllworkerstime] = useState({})
@@ -33,11 +35,13 @@ export default function Walkin({ navigation }) {
   const [confirm, setConfirm] = useState({ show: false, worker: -1, search: "", serviceInfo: null, showClientInput: false, clientName: "", cellnumber: "", confirm: false, timeDisplay: "" })
   const [loaded, setLoaded] = useState(false)
 
-  const getAllTheStylists = async() => {
+  const getAllTheWorkingStylists = async() => {
     const locationid = await AsyncStorage.getItem("locationid")
     const locationtype = await AsyncStorage.getItem("locationtype")
+    const date = new Date(Date.now()), day = days[date.getDay()].substr(0, 3), hour = date.getHours().toString(), minute = date.getMinutes().toString()
+    const data = { locationid, day, hour, minute }
 
-    getAllStylists(locationid)
+    getAllWorkingStylists(data)
       .then((res) => {
         if (res.status == 200) {
           return res.data
@@ -45,7 +49,7 @@ export default function Walkin({ navigation }) {
       })
       .then((res) => {
         if (res) {
-          setAllstylists({ ...allStylists, stylists: res.owners, numStylists: res.numWorkers })
+          setAllstylists({ ...allStylists, stylists: res.stylists, numStylists: res.numStylists, ids: res.ids })
           setLocationid(locationid)
           setType(locationtype)
         }
@@ -156,9 +160,7 @@ export default function Walkin({ navigation }) {
         }
       })
   }
-  const selectWorker = info => {
-    setSelectedworkerinfo({ ...selectedWorkerinfo, id, username, hours: workingDays })
-
+  const selectWorker = id => {
     getStylistInfo(id)
       .then((res) => {
         if (res.status == 200) {
@@ -167,7 +169,8 @@ export default function Walkin({ navigation }) {
       })
       .then((res) => {
         if (res) {
-          setSelectedworkerinfo({ ...selectedWorkerinfo, id, hours: res.days })
+          setSelectedworkerinfo({ ...selectedWorkerinfo, id, username: res.username, hours: res.days })
+          getAllMenus()
           setStep(2)
         }
       })
@@ -258,31 +261,54 @@ export default function Walkin({ navigation }) {
   }
   const bookTheWalkIn = serviceInfo => {
     if (!confirm.show) {
-      let { id } = selectedWorkerinfo
+      let { id, username } = selectedWorkerinfo
       const { search } = requestInfo
-      const { ids } = allStylists
-      const time = new Date(Date.now())
-      const day = days[time.getDay()], month = months[time.getMonth()], date = time.getDate(), year = time.getFullYear()
-      const calcDay = day + " " + month + " " + date + " " + year, now = Date.now()
 
-      if (id == -1) {
-        id = ids[Math.floor(Math.random() * (ids.length)) + 0]
-      }
-
-      setConfirm({ ...confirm, show: true, worker: id, search, serviceInfo })
+      setConfirm({ ...confirm, show: true, worker: { id, username }, search, serviceInfo })
     } else {
       const { worker, search, serviceInfo, clientName } = confirm
-      const time = new Date(Date.now()), hour = time.getHours(), minute = time.getMinutes()
-      const jsonDate = {"day":days[time.getDay()],"month":months[time.getMonth()],"date":time.getDate(),"year":time.getFullYear(), hour, minute}
+      const time = new Date(Date.now()), hour = time.getHours().toString(), minute = time.getMinutes().toString()
+      const jsonDate = { "day":days[time.getDay()],"month":months[time.getMonth()],"date":time.getDate(),"year":time.getFullYear() }
+      let bM = "0", eM = "10", bH = parseInt(hour), eH = parseInt(hour), bTime = "", eTime = ""
+
+      if (minute >= 10) {
+        bM = minute.substr(0, 1)
+        eM = minute.substr(1)
+      }
+
+      if (minute >= 0 && minute < 15) {
+        eMone = 0
+        eMtwo = 15
+      } else if (minute < 30) {
+        eMone = 15
+        eMtwo = 30
+      } else if (minute < 45) {
+        eMone = 30
+        eMtwo = 45
+      } else {
+        eMone = 45
+        eMtwo = 0
+
+        eH = eH < 23 ? eH + 1 : 0
+      }
+
+      bTime = bH.toString() + ":" + eMone.toString()
+      eTime = eH.toString() + ":" + eMtwo.toString()
+
+      jsonDate["hour"] = bH
+      jsonDate["minute"] = eMone
+
       const data = { 
-        workerid: worker, locationid: locationId, 
-        time: jsonDate, note: "", type, 
+        workerid: worker.id, locationid: locationId, 
+        time: jsonDate, bTime, eTime,
+        unix: jsonDateToUnix(jsonDate),
+        note: "", type, 
         client: {
           service: !serviceInfo ? search : "",
           type: !serviceInfo ? "service" : "",
           name: clientName
-        }, serviceid: serviceInfo ? serviceInfo.id : null,
-        unix: jsonDateToUnix(jsonDate)
+        }, 
+        serviceid: serviceInfo ? serviceInfo.id : null
       }
 
       bookWalkIn(data)
@@ -297,6 +323,7 @@ export default function Walkin({ navigation }) {
 
             setTimeout(function () {
               setConfirm({ ...confirm, show: false, client: { name: "", cellnumber: "" }, confirm: false })
+              setSelectedworkerinfo({ ...selectedWorkerinfo, id: -1, hours: {} })
               setStep(0)
             }, 3000)
           }
@@ -332,12 +359,8 @@ export default function Walkin({ navigation }) {
   useEffect(() => initialize(), [])
 
   useEffect(() => {
-    getAllTheStylists()
+    getAllTheWorkingStylists()
   }, [step == 1])
-
-  useEffect(() => {
-    getAllMenus()
-  }, [step == 2])
 
   return (
     <SafeAreaView style={styles.walkin}>
@@ -387,8 +410,9 @@ export default function Walkin({ navigation }) {
 
               <View style={styles.actions}>
                 <TouchableOpacity style={styles.action} onPress={() => {
-                  setSelectedworkerinfo({ ...selectedWorkerinfo, id: -1, hours: {} })
-                  setStep(2)
+                  const { ids } = allStylists
+
+                  selectWorker(ids[Math.floor(Math.random() * ids.length)])
                 }}>
                   <Text style={styles.actionHeader}>Random</Text>
                 </TouchableOpacity>
