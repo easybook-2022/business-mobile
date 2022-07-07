@@ -23,9 +23,9 @@ export default function Walkin({ navigation }) {
   const [name, setName] = useState('')
   const [type, setType] = useState('')
   const [step, setStep] = useState('')
-  const [selectedWorkerinfo, setSelectedworkerinfo] = useState({ id: -1, username: '', hours: {}, loading: false })
+  const [selectedWorkerinfo, setSelectedworkerinfo] = useState({ id: -1, hours: {}, loading: false })
   const [hoursInfo, setHoursinfo] = useState({})
-  const [allStylists, setAllstylists] = useState({ stylists: [], numStylists: 0 })
+  const [allStylists, setAllstylists] = useState({ stylists: [], numStylists: 0, ids: [] })
   const [allWorkerstime, setAllworkerstime] = useState({})
   const [requestInfo, setRequestinfo] = useState({ show: false, search: '', error: false })
   const [menuInfo, setMenuinfo] = useState({ list: [], photos: [] })
@@ -157,21 +157,20 @@ export default function Walkin({ navigation }) {
       })
   }
   const selectWorker = info => {
-    const { id, username } = info
-    const workingDays = {}
+    setSelectedworkerinfo({ ...selectedWorkerinfo, id, username, hours: workingDays })
 
-    for (let day in allWorkerstime) {
-      allWorkerstime[day].forEach(function (workerInfo) {
-        const { workerId, start, end } = workerInfo
-
-        if (workerId == id) {
-          workingDays[day] = { start, end }
+    getStylistInfo(id)
+      .then((res) => {
+        if (res.status == 200) {
+          return res.data
         }
       })
-    }
-
-    setSelectedworkerinfo({ ...selectedWorkerinfo, id, username, hours: workingDays })
-    getAllMenus()
+      .then((res) => {
+        if (res) {
+          setSelectedworkerinfo({ ...selectedWorkerinfo, id, hours: res.days })
+          setStep(2)
+        }
+      })
   }
   const getAllMenus = async() => {
     getMenus(locationId)
@@ -183,7 +182,6 @@ export default function Walkin({ navigation }) {
       .then((res) => {
         if (res) {
           setMenuinfo({ ...menuInfo, list: res.list, photos: res.photos })
-          setStep(2)
         }
       })
       .catch((err) => {
@@ -260,36 +258,24 @@ export default function Walkin({ navigation }) {
   }
   const bookTheWalkIn = serviceInfo => {
     if (!confirm.show) {
-      let { id, username } = selectedWorkerinfo
+      let { id } = selectedWorkerinfo
       const { search } = requestInfo
+      const { ids } = allStylists
       const time = new Date(Date.now())
       const day = days[time.getDay()], month = months[time.getMonth()], date = time.getDate(), year = time.getFullYear()
       const calcDay = day + " " + month + " " + date + " " + year, now = Date.now()
 
       if (id == -1) {
-        const workers = allWorkerstime[day.substr(0, 3)]
-        let activeWorkers = [], info
-
-        workers.forEach(function (worker) {
-          let { start, end, workerId, username } = worker
-
-          if (now >= Date.parse(calcDay + " " + start) && now <= Date.parse(calcDay + " " + end)) {
-            activeWorkers.push({ workerId, username })
-          }
-        })
-
-        info = activeWorkers[Math.floor(Math.random() * (activeWorkers.length)) + 0]
-        id = info.workerId
-        username = info.username
+        id = ids[Math.floor(Math.random() * (ids.length)) + 0]
       }
 
-      setConfirm({ ...confirm, show: true, worker: { id, username }, search, serviceInfo })
+      setConfirm({ ...confirm, show: true, worker: id, search, serviceInfo })
     } else {
       const { worker, search, serviceInfo, clientName } = confirm
       const time = new Date(Date.now()), hour = time.getHours(), minute = time.getMinutes()
       const jsonDate = {"day":days[time.getDay()],"month":months[time.getMonth()],"date":time.getDate(),"year":time.getFullYear(), hour, minute}
       const data = { 
-        workerid: worker.id, locationid: locationId, 
+        workerid: worker, locationid: locationId, 
         time: jsonDate, note: "", type, 
         client: {
           service: !serviceInfo ? search : "",
@@ -337,7 +323,6 @@ export default function Walkin({ navigation }) {
   }
 
   const initialize = () => {
-    getAllTheStylists()
     getTheLocationProfile()
     getTheLocationHours()
     getAllTheWorkersTime()
@@ -345,6 +330,14 @@ export default function Walkin({ navigation }) {
   }
 
   useEffect(() => initialize(), [])
+
+  useEffect(() => {
+    getAllTheStylists()
+  }, [step == 1])
+
+  useEffect(() => {
+    getAllMenus()
+  }, [step == 2])
 
   return (
     <SafeAreaView style={styles.walkin}>
@@ -375,7 +368,7 @@ export default function Walkin({ navigation }) {
                     <View key={item.key} style={styles.workersRow}>
                       {item.row.map(info => (
                         info.id ? 
-                          <TouchableOpacity key={info.key} style={[styles.worker, { backgroundColor: (selectedWorkerinfo.id == info.id) ? 'rgba(0, 0, 0, 0.3)' : null }]} disabled={selectedWorkerinfo.loading} onPress={() => selectWorker(info)}>
+                          <TouchableOpacity key={info.key} style={[styles.worker, { backgroundColor: (selectedWorkerinfo.id == info.id) ? 'rgba(0, 0, 0, 0.3)' : null }]} disabled={selectedWorkerinfo.loading} onPress={() => selectWorker(info.id)}>
                             <View style={styles.workerProfile}>
                               <Image 
                                 source={info.profile.name ? { uri: logo_url + info.profile.name } : require("../../assets/profilepicture.jpeg")} 
@@ -393,7 +386,10 @@ export default function Walkin({ navigation }) {
               </View>
 
               <View style={styles.actions}>
-                <TouchableOpacity style={styles.action} onPress={() => getAllMenus()}>
+                <TouchableOpacity style={styles.action} onPress={() => {
+                  setSelectedworkerinfo({ ...selectedWorkerinfo, id: -1, hours: {} })
+                  setStep(2)
+                }}>
                   <Text style={styles.actionHeader}>Random</Text>
                 </TouchableOpacity>
               </View>
@@ -403,14 +399,14 @@ export default function Walkin({ navigation }) {
           {(step == 2 && (menuInfo.photos.length > 0 || menuInfo.list.length > 0)) && (
             <>
               <TouchableOpacity style={styles.openInput} onPress={() => setRequestinfo({ ...requestInfo, show: true })}>
-                <Text style={styles.openInputHeader}>Search</Text>
+                <Text style={styles.openInputHeader}>Type in service</Text>
               </TouchableOpacity>
               <ScrollView style={{ height: '90%', width: '100%' }}>
-                <View style={{ marginHorizontal: width * 0.025 }}>{displayList({ id: "", name: "", image: "", list: menuInfo.list, left: 0 })}</View>
+                <View style={{ marginHorizontal: width * 0.025 }}>{displayList({ id: "", name: "", image: "", list: menuInfo.list })}</View>
               </ScrollView>
 
               <View style={styles.actions}>
-                <TouchableOpacity style={styles.action} onPress={() => setStep(0)}>
+                <TouchableOpacity style={styles.action} onPress={() => setStep(step - 1)}>
                   <Text style={styles.actionHeader}>Go back</Text>
                 </TouchableOpacity>
               </View>

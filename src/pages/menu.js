@@ -6,7 +6,7 @@ import {
 } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
-import { useFocusEffect, useIsFocused, CommonActions } from '@react-navigation/native';
+import { useFocusEffect, useIsFocused, CommonActions, StackActions } from '@react-navigation/native';
 import * as FileSystem from 'expo-file-system'
 import { Camera } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator'
@@ -727,9 +727,7 @@ export default function Menu(props) {
 
 					<View style={styles.bottomNavs}>
 						<View style={styles.bottomNavsRow}>
-							<TouchableOpacity style={styles.bottomNavButton} onPress={() => {
-                props.navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "main" }]}));
-              }}>
+							<TouchableOpacity style={styles.bottomNavButton} onPress={() => props.navigation.dispatch(StackActions.popToTop())}>
                 <Text style={styles.bottomNavButtonHeader}>
                   {locationType == "hair" || locationType == "nail" ? tr.t("menu.bottomNavs.back.salon") : tr.t("menu.bottomNavs.back.restaurant")}
                 </Text>

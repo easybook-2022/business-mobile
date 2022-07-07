@@ -125,34 +125,64 @@ export default function Booktime(props) {
       months[currTime.getMonth()] + " " + 
       currTime.getDate() + " " + 
       currTime.getFullYear()
-    )
+    ), timeStr = ""
 
     data.forEach(function (info, rowindex) {
       info.row.forEach(function (day, dayindex) {
         day.num = 0
         day.noservice = false
 
+        timeStr = days[dayindex] + " " + months[month] + " " + daynum + " " + year
+
         if (rowindex == 0) {
           if (dayindex >= firstDay) {
-            datetime = Date.parse(days[dayindex] + " " + months[month] + " " + daynum + " " + year)
+            datetime = Date.parse(timeStr)
 
             day.passed = now > datetime
             day.noservice = selectedWorkerinfo.id > -1 ? 
               !(days[dayindex].substr(0, 3) in selectedWorkerinfo.hours)
               :
               !(days[dayindex].substr(0, 3) in allWorkerstime)
+
+            if (!day.noservice) {
+              if (selectedWorkerinfo.id > -1 && days[dayindex].substr(0, 3) in selectedWorkerinfo.hours) {
+                let timeInfo = selectedWorkerinfo.hours[days[dayindex].substr(0, 3)]
+
+                day.noservice = !(Date.now() < Date.parse(timeStr + " " + timeInfo.end))
+              } else {
+                let timeInfos = allWorkerstime[days[dayindex].substr(0, 3)]
+
+                timeInfos.forEach(function (timeInfo) {
+                  day.noservice = !(Date.now() < Date.parse(timeStr + " " + timeInfo.end))
+                })
+              }
+            }
             
             day.num = daynum
             daynum++
           }
         } else if (daynum <= numDays) {
-          datetime = Date.parse(days[dayindex] + " " + months[month] + " " + daynum + " " + year)
+          datetime = Date.parse(timeStr)
 
           day.passed = now > datetime
           day.noservice = selectedWorkerinfo.id > -1 ? 
             !(days[dayindex].substr(0, 3) in selectedWorkerinfo.hours)
             :
             !(days[dayindex].substr(0, 3) in allWorkerstime)
+
+          if (!day.noservice) {
+            if (selectedWorkerinfo.id > -1 && days[dayindex].substr(0, 3) in selectedWorkerinfo.hours) {
+              let timeInfo = selectedWorkerinfo.hours[days[dayindex].substr(0, 3)]
+
+              day.noservice = !(Date.now() < Date.parse(timeStr + " " + timeInfo.end))
+            } else {
+              let timeInfos = allWorkerstime[days[dayindex].substr(0, 3)]
+
+              timeInfos.forEach(function (timeInfo) {
+                day.noservice = !(Date.now() < Date.parse(timeStr + " " + timeInfo.end))
+              })
+            }
+          }
           
           day.num = daynum
           daynum++
@@ -164,7 +194,7 @@ export default function Booktime(props) {
           if (currDay in hoursInfo) {
             hourInfo = hoursInfo[currDay]
 
-            closedtime = Date.parse(days[dayindex] + " " + months[month] + ", " + day.num + " " + year + " " + hourInfo["closeHour"] + ":" + hourInfo["closeMinute"])
+            closedtime = Date.parse(timeStr + " " + hourInfo["closeHour"] + ":" + hourInfo["closeMinute"])
             now = Date.now()
 
             if (now < closedtime) {

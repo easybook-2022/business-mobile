@@ -56,7 +56,7 @@ export default function Main(props) {
 
 	const [appointments, setAppointments] = useState({ list: [], loading: false })
   const [chartInfo, setChartinfo] = useState({ chart: {}, resetChart: 0, workers: [], workersHour: {}, dayDir: 0, date: {}, loading: false })
-  const [scheduleOption, setScheduleoption] = useState({ show: false, index: -1, id: "", type: "", remove: false, rebook: false, client: { id: -1, name: "", cellnumber: "" }, worker: { id: -1 }, service: { id: -1, name: "" }, blocked: [], reason: "", note: "", oldTime: 0, jsonDate: {}, confirm: false })
+  const [scheduleOption, setScheduleoption] = useState({ show: false, index: -1, id: "", type: "", remove: false, rebook: false, client: { id: -1, name: "", cellnumber: "" }, service: { id: -1, name: "" }, blocked: [], reason: "", note: "", oldTime: 0, jsonDate: {}, confirm: false })
 	const [cartOrderers, setCartorderers] = useState([])
   const [speakInfo, setSpeakinfo] = useState({ orderNumber: "" })
 
@@ -615,10 +615,6 @@ export default function Main(props) {
       case "disabled":
         if (timepassed || !(time >= beginWork && time <= endWork && working)) {
           disabled = true
-        } else {
-          if (time + "-c" in scheduled) {
-            disabled = true
-          }
         }
 
         break;
@@ -666,7 +662,7 @@ export default function Main(props) {
       })
       .then((res) => {
         if (res) {
-          const { name, note, serviceId, time, worker, client, blocked } = res
+          const { name, note, serviceId, time, client, blocked } = res
           const unix = jsonDateToUnix(time)
 
           blocked.forEach(function (info) {
@@ -678,8 +674,7 @@ export default function Main(props) {
             if (!scheduleOption.remove) {
               setScheduleoption({ 
                 ...scheduleOption, 
-                show: true, id, type, index, remove: true,
-                worker: { id: worker.id },
+                show: true, id, type, index, remove: true, 
                 service: { id: serviceId ? serviceId : -1, name }, 
                 client, blocked, note, oldTime: unix, jsonDate: time
               })
@@ -692,7 +687,6 @@ export default function Main(props) {
                 setScheduleoption({ 
                   ...scheduleOption, 
                   rebook: true, id, type, index, 
-                  worker: { id: worker.id },
                   service: { id: serviceId ? serviceId : -1, name }, 
                   client, blocked, note, oldTime: unix, jsonDate: time
                 })
@@ -704,8 +698,8 @@ export default function Main(props) {
         }
       })
   }
-  const rebookSchedule = async(time, jsonDate) => {
-    const { id, worker, client, service, blocked, oldTime, note } = scheduleOption
+  const rebookSchedule = async(time, jsonDate, worker) => {
+    const { id, client, service, blocked, oldTime, note } = scheduleOption
     const locationid = await AsyncStorage.getItem("locationid")
 
     blocked.forEach(function (blockInfo, index) {
@@ -716,7 +710,7 @@ export default function Main(props) {
     let data = { 
       id, // id for socket purpose (updating)
       clientid: client.id, 
-      workerid: worker.id, 
+      workerid: worker, 
       locationid, serviceid: service.id ? service.id : -1, 
       serviceinfo: service.name ? service.name : "",
       time: jsonDate, note, 
@@ -2124,7 +2118,7 @@ export default function Main(props) {
 
                         <View style={styles.scheduleActions}>
                           <View style={styles.column}>
-                            <TouchableOpacity style={styles.scheduleAction} onPress={() => showScheduleOption(item.id, "list", index)}>
+                            <TouchableOpacity style={styles.scheduleAction} onPress={() => showScheduleOption(item.id, "list", index, "remove")}>
                               <Text style={styles.scheduleActionHeader}>{tr.t("buttons.cancel")}</Text>
                             </TouchableOpacity>
                           </View>
@@ -2215,9 +2209,11 @@ export default function Main(props) {
                                   disabled={timeStyle(item, worker.id, "disabled")}
                                   onPress={() => {
                                     if (scheduleOption.rebook) {
-                                      rebookSchedule(item.time, item.jsonDate)
+                                      rebookSchedule(item.time, item.jsonDate, worker.id)
                                     } else if (!(item.time + "-c" in workersHour[worker.id]["scheduled"])) {
                                       blockTheTime(worker.id, item.jsonDate)
+                                    } else {
+                                      showScheduleOption(chartInfo.workersHour[worker.id]["scheduled"][item.time + "-c"], "chart", index, "change")
                                     }
                                   }}
                                   style={{ flexDirection: 'row', height: '100%', justifyContent: 'space-around', width: '100%' }}
@@ -2233,7 +2229,6 @@ export default function Main(props) {
                                   {item.time + "-c" in workersHour[worker.id]["scheduled"] && (
                                     <View style={styles.chartScheduledActions}>
                                        <TouchableOpacity style={styles.chartScheduledAction} onPress={() => showScheduleOption(chartInfo.workersHour[worker.id]["scheduled"][item.time + "-c"], "chart", index, "remove")}><AntDesign color="white" name="closecircleo" size={30}/ ></TouchableOpacity>
-                                       <TouchableOpacity style={[styles.chartScheduledAction, { marginLeft: 10, transform: [{ rotate: "90deg" }] }]} onPress={() => showScheduleOption(chartInfo.workersHour[worker.id]["scheduled"][item.time + "-c"], "chart", index, "change")}><Fontisto color="white" name="arrow-swap" size={30}/ ></TouchableOpacity>
                                     </View>
                                   )}
                                 </TouchableOpacity>
