@@ -1,6 +1,6 @@
 const info = {
   authoption: {
-    walkIn: "步入式",
+    walkIn: "为客户",
     appointments: "约会"
   },
   locationsetup: {
@@ -57,14 +57,15 @@ const info = {
     openDays: {
       header: "你们哪几天开门 ?",
       time: {
-        Sunday: "设置周日的开放和关闭时间",
-        Monday: "设置周一的营业时间和关闭时间",
-        Tuesday: "设置周二的开放和关闭时间",
-        Wednesday: "设置周三的开放和关闭时间",
-        Thursday: "设置星期四的开放和关闭时间",
-        Friday: "设置周五的营业时间和关闭时间",
-        Saturday: "设置周六的开放和关闭时间"
-      }
+        Sunday: "设置周日的开闭时间",
+        Monday: "设置星期一的开闭时间",
+        Tuesday: "设置周二的开闭时间",
+        Wednesday: "设置周三的开市和闭市时间",
+        Thursday: "设置周四的开市和闭市时间",
+        Friday: "设置周五的开市和闭市时间",
+        Saturday: "设置周六的开闭时间"
+      },
+      sameTime: "设置打开和关闭时间"
     }
   },
   register: {
@@ -92,7 +93,9 @@ const info = {
     },
     chart: {
       stillBusy: "还在忙",
-      booked: "预订"
+      booked: "预订",
+      editTime: "点击时间重新预订",
+      rebook: "Tap any other time to rebook"
     },
     cartOrderers: {
       header: "您将在此处查看所有订单",
@@ -129,14 +132,19 @@ const info = {
         changeLanguage: "改变语言",
         getAppointmentsby: {
           header: "通过以下方式获得约会",
-          staff: "员工",
-          owner: "拥有者"
+          both: "业主和员工",
+          owner: "仅限所有者"
         },
         useVoice: {
           header: "使用语音",
           yes: "是的",
           no: "不"
         }
+      },
+      workingDays: {
+        header: "新造型师在哪几天上班 ?",
+        hour: "设置新员工的工作时间",
+        sameHour: "设置新员工的工作时间"
       },
       alert: {
         header: "存在调度冲突"
@@ -193,6 +201,7 @@ const info = {
       changeToOpen: "更改为打开",
       notOpen: "周{day}不营业"
     },
+    editingWorkingHours: "编辑您的工作时间",
     deleteStaff: {
       header: "工作 {numDays} 天",
       delete: "移除员工"

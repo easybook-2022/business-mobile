@@ -12,6 +12,13 @@ export const salonChangeAppointment = data => {
   )
 }
 
+export const pushAppointments = data => {
+  return axios.post(
+    `${url}/schedules/push_appointments`,
+    data
+  )
+}
+
 export const rebookAppointment = data => {
   return axios.post(
     `${url}/schedules/rebook_appointment`,

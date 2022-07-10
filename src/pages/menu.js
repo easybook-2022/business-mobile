@@ -1023,7 +1023,7 @@ export default function Menu(props) {
 					<ActivityIndicator color="black" size="large"/>
 				</View>
 			}
-
+      
       {(menuPhotooption.loading || removeMenuinfo.loading || removeServiceinfo.loading || removeProductinfo.loading) && <Modal transparent={true}><Loadingprogress/></Modal>}
 		</SafeAreaView>
 	)

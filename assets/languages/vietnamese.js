@@ -1,6 +1,6 @@
 const info = {
   authoption: {
-    walkIn: "Đi vào",
+    walkIn: "Cho khách hàng",
     appointments: "Các cuộc hẹn"
   },
   locationsetup: {
@@ -56,7 +56,7 @@ const info = {
     },
     openDays: {
       header: "Bạn mở cửa vào những ngày nào ?",
-      time: "Thời gian mở cửa và đóng cửa của bạn vào {day} là bao nhiêu"
+      time: "Đặt thời gian mở và đóng cửa cho {day}"
     }
   },
   register: {
@@ -84,7 +84,9 @@ const info = {
     },
     chart: {
       stillBusy: "vẫn bận",
-      booked: "đã đặt trước"
+      booked: "đã đặt trước",
+      editTime: "Nhấn vào thời gian để đăng ký lại",
+      rebook: "Tap any other time to rebook"
     },
     cartOrderers: {
       header: "Bạn sẽ thấy tất cả các đơn đặt hàng tại đây",
@@ -129,6 +131,11 @@ const info = {
           yes: "Đúng",
           no: "Không"
         }
+      },
+      workingDays: {
+        header: "Nhân viên mới làm việc vào những ngày nào?",
+        hour: "Đặt thời gian làm việc của nhân viên mới",
+        sameHour: "Đặt thời gian làm việc của nhân viên mới cho"
       },
       alert: {
         header: "Có xung đột về lịch trình"
@@ -177,6 +184,7 @@ const info = {
       changeToOpen: "Thay đổi để mở",
       notOpen: "Không mở cửa vào {day}"
     },
+    editingWorkingHours: "Chỉnh sửa thời gian làm việc của bạn",
     deleteStaff: {
       header: "Làm việc {numDays} ngày",
       delete: "Xóa nhân viên"

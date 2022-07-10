@@ -1,6 +1,6 @@
 const info = {
   authoption: {
-    walkIn: "Walk-in(s)",
+    walkIn: "pour les clients",
     appointments: "Rendez-vous"
   },
   locationsetup: {
@@ -56,7 +56,7 @@ const info = {
     },
     openDays: {
       header: "Quels jours êtes-vous ouvert ?",
-      time: "Définir les heures d'ouverture et de fermeture pour le {day}"
+      time: "Définir l'heure d'ouverture et de fermeture pour {day}"
     }
   },
   register: {
@@ -84,7 +84,9 @@ const info = {
     },
     chart: {
       stillBusy: "toujours occupé",
-      booked: "réservé"
+      booked: "réservé",
+      editTime: "Appuyez sur l'heure pour réserver à nouveau",
+      rebook: "Tap any other time to rebook"
     },
     cartOrderers: {
       header: "Vous verrez toutes les commandes ici",
@@ -129,6 +131,11 @@ const info = {
           yes: "Oui",
           no: "Non"
         }
+      },
+      workingDays: {
+        header: "Quels jours les nouveaux employés travaillent-ils ?",
+        hour: "Définir le temps de travail du nouveau personnel",
+        sameHour: "Définir le temps de travail du nouveau personnel pour"
       },
       alert: {
         header: "Il y a un conflit d'horaire"
@@ -177,6 +184,7 @@ const info = {
       changeToOpen: "Changer pour ouvrir",
       notOpen: "Pas ouvert le {day}"
     },
+    editingWorkingHours: "Modifier votre temps de travail",
     deleteStaff: {
       header: "Travail {numDays} jours",
       delete: "Supprimer le personnel"

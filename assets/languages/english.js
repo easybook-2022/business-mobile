@@ -1,6 +1,6 @@
 const info = {
   authoption: {
-    walkIn: "Walk-in(s)",
+    walkIn: "for clients",
     appointments: "Appointment(s)"
   },
   locationsetup: {
@@ -56,7 +56,8 @@ const info = {
     },
     openDays: {
       header: "What days are you open ?",
-      time: "Set the open and close hours for {day}"
+      time: "Set the open and close hours for {day}",
+      sameTime: "Set the open and close time for"
     }
   },
   register: {
@@ -65,7 +66,7 @@ const info = {
     photo: "Take a picture of your face (Optional)",
     workingDays: {
       header: "What days do you work ?",
-      hour: "Set your working time on {day}"
+      hour: "Set your working time for {day}"
     },
     nameErrormsg: "Please enter a name you like",
     workingDaysErrormsg: "Please choose the days you work on"
@@ -79,12 +80,14 @@ const info = {
     list: {
       header: "You will see your appointment(s) here",
       clientName: "Client name",
-      staff: "Stylist name",
+      staff: "Staff name",
       changeTime: "Change time with client"
     },
     chart: {
       stillBusy: "Still busy",
-      booked: "Booked"
+      booked: "Booked",
+      editTime: "Tap time to rebook",
+      rebook: "Tap any other time to rebook"
     },
     cartOrderers: {
       header: "You will see all order(s) here",
@@ -98,12 +101,13 @@ const info = {
     },
     hidden: {
       scheduleOption: {
-        change: {
-          header: "Please Tap any other\ndifferent time to rebook"
-        },
         remove: {
           header: "Why cancel ? (Optional)",
           reason: "Write your reason"
+        },
+        select: {
+          pushByHeader: "Reschedule all appointments by",
+          timeFactorHeader: "Enter how many "
         }
       },
       showInfo: {
@@ -121,14 +125,19 @@ const info = {
         changeLanguage: "Change language",
         getAppointmentsby: {
           header: "Get appointments by",
-          staff: "Staff(s)",
-          owner: "Owner(s)"
+          both: "Owners and Staffs",
+          owner: "Owners only"
         },
         useVoice: {
           header: "Use voice",
           yes: "Yes",
           no: "No"
         }
+      },
+      workingDays: {
+        header: "What days does new staff work on ?",
+        hour: "Set new staff's working time",
+        sameHour: "Set new staff's working time for"
       },
       alert: {
         header: "There is a scheduling conflict"
@@ -177,6 +186,7 @@ const info = {
       changeToOpen: "Change to open",
       notOpen: "Not open on {day}"
     },
+    editingWorkingHours: "Edit your working time",
     deleteStaff: {
       header: "Working {numDays} day(s)",
       delete: "Remove staff"

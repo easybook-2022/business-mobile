@@ -27,7 +27,11 @@ import {
 } from '../apis/owners'
 import { getLocationProfile, getLocationHours, setLocationHours, updateLocation, setReceiveType, getDayHours } from '../apis/locations'
 import { getMenus, removeMenu, addNewMenu } from '../apis/menus'
-import { cancelSchedule, doneService, getAppointments, getCartOrderers, removeBooking, getAppointmentInfo, blockTime, salonChangeAppointment } from '../apis/schedules'
+import { 
+  cancelSchedule, doneService, getAppointments, getCartOrderers, 
+  removeBooking, getAppointmentInfo, blockTime, salonChangeAppointment, 
+  pushAppointments
+} from '../apis/schedules'
 import { removeProduct } from '../apis/products'
 import { setWaitTime } from '../apis/carts'
 
@@ -55,8 +59,16 @@ export default function Main(props) {
 	const [locationType, setLocationtype] = useState('')
 
 	const [appointments, setAppointments] = useState({ list: [], loading: false })
-  const [chartInfo, setChartinfo] = useState({ chart: {}, resetChart: 0, workers: [], workersHour: {}, dayDir: 0, date: {}, loading: false })
-  const [scheduleOption, setScheduleoption] = useState({ show: false, index: -1, id: "", type: "", remove: false, rebook: false, client: { id: -1, name: "", cellnumber: "" }, service: { id: -1, name: "" }, blocked: [], reason: "", note: "", oldTime: 0, jsonDate: {}, confirm: false })
+  const [chartInfo, setChartinfo] = useState({ times: [], resetChart: 0, workers: [], workersHour: {}, dayDir: 0, date: {}, loading: false })
+  const [scheduleOption, setScheduleoption] = useState({ 
+    show: false, index: -1, id: "", type: "", remove: false, rebook: false, 
+    client: { id: -1, name: "", cellnumber: "" }, 
+    service: { id: -1, name: "" }, blocked: [], 
+    reason: "", note: "", oldTime: 0, jsonDate: {}, confirm: false, 
+
+    push: false, select: false, 
+    selectedIds: [], pushBy: "", pushFactor: 0
+  })
 	const [cartOrderers, setCartorderers] = useState([])
   const [speakInfo, setSpeakinfo] = useState({ orderNumber: "" })
 
@@ -77,7 +89,7 @@ export default function Main(props) {
     cellnumber: '', verified: false, verifyCode: '', editCellnumber: false,
     currentPassword: '', newPassword: '', confirmPassword: '', editPassword: false,
     profile: { uri: '', name: '', size: { width: 0, height: 0 }}, editProfile: false, camType: 'front',
-    workerHours: [], editHours: false,
+    daysInfo: { working: ['', '', '', '', '', '', ''], done: false, sameHours: null }, workerHours: [], workerHourssameday: null, editHours: false,
     loading: false,
     errorMsg: ''
   })
@@ -95,15 +107,7 @@ export default function Main(props) {
   const [locationReceivetype, setLocationreceivetype] = useState('')
   const [useVoice, setUsevoice] = useState(false)
 
-  const [locationHours, setLocationhours] = useState([
-    { key: "0", header: "Sunday", opentime: { hour: "06", minute: "00", period: "AM" }, closetime: { hour: "09", minute: "00", period: "PM" }, close: false },
-    { key: "1", header: "Monday", opentime: { hour: "06", minute: "00", period: "AM" }, closetime: { hour: "09", minute: "00", period: "PM" }, close: false },
-    { key: "2", header: "Tuesday", opentime: { hour: "06", minute: "00", period: "AM" }, closetime: { hour: "09", minute: "00", period: "PM" }, close: false },
-    { key: "3", header: "Wednesday", opentime: { hour: "06", minute: "00", period: "AM" }, closetime: { hour: "09", minute: "00", period: "PM" }, close: false },
-    { key: "4", header: "Thursday", opentime: { hour: "06", minute: "00", period: "AM" }, closetime: { hour: "09", minute: "00", period: "PM" }, close: false },
-    { key: "5", header: "Friday", opentime: { hour: "06", minute: "00", period: "AM" }, closetime: { hour: "09", minute: "00", period: "PM" }, close: false },
-    { key: "6", header: "Saturday", opentime: { hour: "06", minute: "00", period: "AM" }, closetime: { hour: "09", minute: "00", period: "PM" }, close: false }
-  ])
+  const [locationHours, setLocationhours] = useState([])
   const [deleteOwnerbox, setDeleteownerbox] = useState({
     show: false,
     id: -1, username: '', 
@@ -115,16 +119,10 @@ export default function Main(props) {
   const [camComp, setCamcomp] = useState(null)
   const [camType, setCamtype] = useState('back')
   const [choosing, setChoosing] = useState(false)
-  const [timeRange, setTimerange] = useState([
-    { key: "0", header: "Sunday", opentime: { hour: "06", minute: "00", period: "AM" }, closetime: { hour: "09", minute: "00", period: "PM" }, working: true, takeShift: "" },
-    { key: "1", header: "Monday", opentime: { hour: "06", minute: "00", period: "AM" }, closetime: { hour: "09", minute: "00", period: "PM" }, working: true, takeShift: "" },
-    { key: "2", header: "Tuesday", opentime: { hour: "06", minute: "00", period: "AM" }, closetime: { hour: "09", minute: "00", period: "PM" }, working: true, takeShift: "" },
-    { key: "3", header: "Wednesday", opentime: { hour: "06", minute: "00", period: "AM" }, closetime: { hour: "09", minute: "00", period: "PM" }, working: true, takeShift: "" },
-    { key: "4", header: "Thursday", opentime: { hour: "06", minute: "00", period: "AM" }, closetime: { hour: "09", minute: "00", period: "PM" }, working: true, takeShift: "" },
-    { key: "5", header: "Friday", opentime: { hour: "06", minute: "00", period: "AM" }, closetime: { hour: "09", minute: "00", period: "PM" }, working: true, takeShift: "" },
-    { key: "6", header: "Saturday", opentime: { hour: "06", minute: "00", period: "AM" }, closetime: { hour: "09", minute: "00", period: "PM" }, working: true, takeShift: "" }
-  ])
-  const [hoursInfo, setHoursinfo] = useState({})
+
+  const [hoursRange, setHoursrange] = useState([])
+  const [hoursRangesameday, setHoursrangesameday] = useState(null)
+  const [hoursInfo, setHoursinfo] = useState([])
   const [getWorkersbox, setGetworkersbox] = useState({ show: false, day: '', workers: [] })
 
 	const getNotificationPermission = async() => {
@@ -212,7 +210,7 @@ export default function Main(props) {
               openTime = openHour + ":" + openMinute + " " + openPeriod
               closeTime = closeHour + ":" + closeMinute + " " + closePeriod
 
-              locationHours.push({ key: locationHours.length.toString(), header, opentime: {...hours[k].opentime}, closetime: {...hours[k].closetime} })
+              locationHours.push({ key: locationHours.length.toString(), header, opentime: {...hours[k].opentime}, closetime: {...hours[k].closetime}, close: hours[k].close })
 
               hours[k].opentime.hour = openHour.toString()
               hours[k].opentime.minute = openMinute.toString()
@@ -220,8 +218,8 @@ export default function Main(props) {
               hours[k].closetime.minute = closeMinute.toString()
 
               hours[k]["date"] = dateStr
-              hours[k]["openunix"] = Date.parse(dateStr + " " + openTime)
-              hours[k]["closeunix"] = Date.parse(dateStr + " " + closeTime)
+              hours[k]["openTime"] = Date.parse(dateStr + " " + openTime)
+              hours[k]["closeTime"] = Date.parse(dateStr + " " + closeTime)
               hours[k]["working"] = true
             }
 
@@ -238,7 +236,7 @@ export default function Main(props) {
             setLocationreceivetype(receiveType)
             setLocationhours(hours)
             setShowinfo({ ...showInfo, locationHours })
-            setTimerange(hours)
+            setHoursrange(hours)
 
 						if (type == 'store' || type == 'restaurant') {
               getAllCartOrderers()
@@ -418,109 +416,115 @@ export default function Main(props) {
     date.setDate(today.getDate() + dayDir)
 
     let jsonDate, newWorkersTime = {}, hourInfo = hoursInfo[days[date.getDay()].substr(0, 3)]
-    let closedtime = Date.parse(days[date.getDay()] + " " + months[date.getMonth()] + ", " + date.getDate() + " " + date.getFullYear() + " " + hourInfo["closeHour"] + ":" + hourInfo["closeMinute"])
-    let now = Date.parse(days[today.getDay()] + " " + months[today.getMonth()] + ", " + today.getDate() + " " + today.getFullYear() + " " + today.getHours() + ":" + today.getMinutes())
-    let day = days[date.getDay()].substr(0, 3), working = false
 
-    jsonDate = {"day":day,"month":months[date.getMonth()],"date":date.getDate(),"year":date.getFullYear()}
+    if (hourInfo != undefined) {
+      let closedtime = Date.parse(days[date.getDay()] + " " + months[date.getMonth()] + ", " + date.getDate() + " " + date.getFullYear() + " " + hourInfo["closeHour"] + ":" + hourInfo["closeMinute"])
+      let now = Date.parse(days[today.getDay()] + " " + months[today.getMonth()] + ", " + today.getDate() + " " + today.getFullYear() + " " + today.getHours() + ":" + today.getMinutes())
+      let day = days[date.getDay()].substr(0, 3), working = false
 
-    for (let worker in newWorkershour) {
-      for (let info in newWorkershour[worker]) {
-        if (info == day && newWorkershour[worker][info]["working"] == true && working == false) {
-          let { end } = newWorkershour[worker][day]
-          let endWork = jsonDateToUnix({ ...jsonDate, "hour": end["hour"], "minute": end["minute"] })
-
-          working = Date.now() < endWork
-        }
-      }
-    }
-
-    if (dir == null && ((now + 900000) >= closedtime || working == false)) {
-      getAppointmentsChart(dayDir + 1)
-    } else {
-      const data = { locationid, jsonDate }
+      jsonDate = {"day":day,"month":months[date.getMonth()],"date":date.getDate(),"year":date.getFullYear()}
 
       for (let worker in newWorkershour) {
         for (let info in newWorkershour[worker]) {
           if (info == day && newWorkershour[worker][info]["working"] == true && working == false) {
-            working = true
-          } else if (info != "scheduled" && info != "profileInfo") {
-            let { begin, end, working } = workersHour[worker][day]
+            let { end } = newWorkershour[worker][day]
+            let endWork = jsonDateToUnix({ ...jsonDate, "hour": end["hour"], "minute": end["minute"] })
 
-            newWorkershour[worker][day]["beginWork"] = jsonDateToUnix({ ...jsonDate, "hour": begin["hour"], "minute": begin["minute"] })
-            newWorkershour[worker][day]["endWork"] = jsonDateToUnix({ ...jsonDate, "hour": end["hour"], "minute": end["minute"] })
+            working = Date.now() < endWork
           }
         }
       }
 
-      getDayHours(data)
-        .then((res) => {
-          if (res.status == 200) {
-            return res.data
+      if (dir == null && ((now + 900000) >= closedtime || working == false)) {
+        getAppointmentsChart(dayDir + 1)
+      } else {
+        const data = { locationid, jsonDate }
+
+        for (let worker in newWorkershour) {
+          for (let info in newWorkershour[worker]) {
+            if (info == day && newWorkershour[worker][info]["working"] == true && working == false) {
+              working = true
+            } else if (info != "scheduled" && info != "profileInfo") {
+              let { begin, end, working } = workersHour[worker][day]
+
+              newWorkershour[worker][day]["beginWork"] = jsonDateToUnix({ ...jsonDate, "hour": begin["hour"], "minute": begin["minute"] })
+              newWorkershour[worker][day]["endWork"] = jsonDateToUnix({ ...jsonDate, "hour": end["hour"], "minute": end["minute"] })
+            }
           }
-        })
-        .then((res) => {
-          if (res) {
-            const { opentime, closetime, workers } = res
-            let times = [], chart = {}, openhour = parseInt(opentime["hour"]), openminute = parseInt(opentime["minute"])
-            let closehour = parseInt(closetime["hour"]), closeminute = parseInt(closetime["minute"])
-            let openStr = jsonDate["month"] + " " + jsonDate["date"] + ", " + jsonDate["year"] + " " + openhour + ":" + openminute
-            let closeStr = jsonDate["month"] + " " + jsonDate["date"] + ", " + jsonDate["year"] + " " + closehour + ":" + closeminute
-            let openTimeStr = Date.parse(openStr), closeTimeStr = Date.parse(closeStr), calcTimeStr = openTimeStr
-            let currenttime = Date.now(), key = 0
+        }
 
-            while (calcTimeStr < closeTimeStr - pushtime) {
-              calcTimeStr += pushtime
+        getDayHours(data)
+          .then((res) => {
+            if (res.status == 200) {
+              return res.data
+            }
+          })
+          .then((res) => {
+            if (res) {
+              const { opentime, closetime, workers } = res
+              let times = [], chart = {}, openhour = parseInt(opentime["hour"]), openminute = parseInt(opentime["minute"])
+              let closehour = parseInt(closetime["hour"]), closeminute = parseInt(closetime["minute"])
+              let openStr = jsonDate["month"] + " " + jsonDate["date"] + ", " + jsonDate["year"] + " " + openhour + ":" + openminute
+              let closeStr = jsonDate["month"] + " " + jsonDate["date"] + ", " + jsonDate["year"] + " " + closehour + ":" + closeminute
+              let openTimeStr = Date.parse(openStr), closeTimeStr = Date.parse(closeStr), calcTimeStr = openTimeStr
+              let currenttime = Date.now(), key = 0
 
-              let timestr = new Date(calcTimeStr)
-              let hour = timestr.getHours()
-              let minute = timestr.getMinutes()
-              let period = hour < 12 ? "AM" : "PM"
-              let timeDisplay = (
-                hour <= 12 ? 
-                  hour == 0 ? 12 : hour
-                  :
-                  hour - 12
-                )
-                + ":" + 
-                (minute < 10 ? '0' + minute : minute) + " " + period
-              let timepassed = currenttime > calcTimeStr
+              while (calcTimeStr < closeTimeStr - pushtime) {
+                calcTimeStr += pushtime
 
-              jsonDate = { ...jsonDate, day: days[date.getDay()], hour, minute }
+                let timestr = new Date(calcTimeStr)
+                let hour = timestr.getHours()
+                let minute = timestr.getMinutes()
+                let period = hour < 12 ? "AM" : "PM"
+                let timeDisplay = (
+                  hour <= 12 ? 
+                    hour == 0 ? 12 : hour
+                    :
+                    hour - 12
+                  )
+                  + ":" + 
+                  (minute < 10 ? '0' + minute : minute) + " " + period
+                let timepassed = currenttime > calcTimeStr
 
-              times.push({
-                key: "time-" + key + "-" + dayDir,
-                timeDisplay, time: calcTimeStr, jsonDate,
-                timepassed
+                jsonDate = { ...jsonDate, day: days[date.getDay()], hour, minute }
+
+                times.push({
+                  key: "time-" + key + "-" + dayDir,
+                  timeDisplay, time: calcTimeStr, jsonDate,
+                  timepassed
+                })
+
+                key += 1
+              }
+
+              setChartinfo({ 
+                ...chartInfo, times, workers, 
+                dayDir, date: jsonDate, 
+                workersHour: newWorkershour,
+                loading: false 
               })
 
-              key += 1
+              setLoaded(true)
             }
-
-            chart = { 
-              "key": dayDir.toString(), 
-              "times": times
+          })
+          .catch((err) => {
+            if (err.response && err.response.status == 400) {
+              const { errormsg, status } = err.response.data
             }
-
-            setChartinfo({ 
-              ...chartInfo, chart, workers, 
-              dayDir, date: jsonDate, 
-              workersHour: newWorkershour,
-              loading: false 
-            })
-
-            setLoaded(true)
-          }
-        })
-        .catch((err) => {
-          if (err.response && err.response.status == 400) {
-            const { errormsg, status } = err.response.data
-          }
-        })
+          })
+      }
+    } else {
+      if (dir != null) {
+        if (dir == "right") {
+          getAppointmentsChart(dayDir + 1, dir)
+        } else {
+          getAppointmentsChart(dayDir - 1, dir)
+        }
+      }
     }
   }
   const timeStyle = (info, worker, type) => {
-    const { chart, workersHour } = chartInfo, { blocked, rebook } = scheduleOption, currDay = chartInfo.date.day.substr(0, 3)
+    const { blocked, rebook } = scheduleOption, currDay = chartInfo.date.day.substr(0, 3)
     const { time, timepassed, jsonDate } = info
     const scheduled = workersHour[worker]["scheduled"]
     const { beginWork, endWork, working } = workersHour[worker][currDay]
@@ -639,6 +643,53 @@ export default function Main(props) {
             (type == "disabled" && disabled)
 
     return style
+  }
+  const pushTheAppointments = (select) => {
+    if (!scheduleOption.push) {
+      setScheduleoption({ ...scheduleOption, show: true, push: true })
+    } else {
+      const { day, month, date, year } = chartInfo.date
+      const data = { currTime: { day, month, date, year }, pushMilli: 50000 }
+
+      pushAllAppointments(data)
+        .then((res) => {
+          if (res.status == 200) {
+            return res.data
+          }
+        })
+        .then((res) => {
+          if (res) {
+            setScheduleoption({ ...scheduleOption, show: false, push: false })
+          }
+        })
+    }
+  }
+  const pushTheSelectedAppointments = () => {
+    if (!scheduleOption.select) {
+      setScheduleoption({ ...scheduleOption, select: true, selectedIds: [] })
+    } else if (!scheduleOption.push) {
+      setScheduleoption({ ...scheduleOption, show: true, push: true })
+    } else {
+      const { day, month, date, year } = chartInfo.date
+      const { selectedIds } = scheduleOption
+      const data = {
+        currTime: { day, month, date, year },
+        pushMilli: 5000,
+        selectedIds
+      }
+
+      pushSelectedAppointments(data)
+        .then((res) => {
+          if (res.status == 200) {
+            return res.data
+          }
+        })
+        .then((res) => {
+          if (res) {
+            setScheduleoption({ ...scheduleOption, show: false, select: false, push: false, selectedIds: [] })
+          }
+        })
+    }
   }
   const blockTheTime = (workerid, jsonDate) => {
     const newWorkershour = {...chartInfo.workersHour}
@@ -1378,10 +1429,11 @@ export default function Main(props) {
   const addNewOwner = async() => {
     setAccountform({ ...accountForm, loading: true, errorMsg: "" })
 
+    const { workerHours, workerHourssameday } = accountForm
     const hours = {}
 
     accountForm.workerHours.forEach(function (workerHour) {
-      let { opentime, closetime, working, takeShift } = workerHour
+      let { opentime, closetime, working, takeShift } = accountForm.sameHours == true && workerHour.working ? workerHourssameday : workerHour
       let newOpentime = {...opentime}, newClosetime = {...closetime}
       let openhour = parseInt(newOpentime.hour), closehour = parseInt(newClosetime.hour)
       let openperiod = newOpentime.period, closeperiod = newClosetime.period
@@ -1481,9 +1533,79 @@ export default function Main(props) {
         }
       })
   }
+  const setWorkingTime = () => {
+    const newAccountform = {...accountForm}
+    const { daysInfo } = newAccountform
+    const newWorkerhours = []
+    const newWorkershourssameday = {}
+    const newHoursrangesameday = {}
+    let emptyDays = true, calcOpenTime, calcCloseTime, calcDate
+
+    days.forEach(function (day, index) {
+      if (index == 0) {
+        calcOpenTime = locationHours[0].openTime
+        calcCloseTime = locationHours[0].closeTime
+      } else {
+        if (locationHours[index].openTime > calcOpenTime || locationHours[index].closeTime < calcCloseTime) {
+          calcOpenTime = locationHours[index].openTime
+          calcCloseTime = locationHours[index].closeTime
+          calcDate = locationHours[index].date
+        }
+      }
+
+      newWorkerhours.push({
+        key: newWorkerhours.length.toString(),
+        header: day,
+        opentime: {...locationHours[index].opentime},
+        closetime: {...locationHours[index].closetime},
+        working: daysInfo.working[index] ? true : false
+      })
+
+      if (daysInfo.working[index]) {
+        emptyDays = false
+      }
+    })
+
+    let calcOpen = new Date(calcOpenTime), calcClose = new Date(calcCloseTime)
+    let openHour = calcOpen.getHours(), openMinute = calcOpen.getMinutes(), openPeriod = openHour < 12 ? "AM" : "PM"
+    let closeHour = calcClose.getHours(), closeMinute = calcClose.getMinutes(), closePeriod = closeHour < 12 ? "AM" : "PM"
+
+    openHour = openHour > 12 ? openHour - 12 : openHour
+    openMinute = openMinute < 10 ? "0" + openMinute : openMinute.toString()
+    closeHour = closeHour > 12 ? closeHour - 12 : closeHour
+    closeMinute = closeMinute < 10 ? "0" + closeMinute : closeMinute.toString()
+
+    openHour = openHour < 10 ? "0" + openHour : openHour.toString()
+    closeHour = closeHour < 10 ? "0" + closeHour : closeHour.toString()
+
+    newWorkershourssameday["opentime"] = { hour: openHour, minute: openMinute, period: openPeriod }
+    newWorkershourssameday["closetime"] = { hour: closeHour, minute: closeMinute, period: closePeriod }
+    newWorkershourssameday["working"] = true
+
+    newHoursrangesameday["opentime"] = { hour: openHour, minute: openMinute, period: openPeriod }
+    newHoursrangesameday["openTime"] = calcOpenTime
+    newHoursrangesameday["closetime"] = { hour: closeHour, minute: closeMinute, period: closePeriod }
+    newHoursrangesameday["closeTime"] = calcCloseTime
+    newHoursrangesameday["date"] = calcDate
+    newHoursrangesameday["working"] = true
+
+    daysInfo.done = true
+    daysInfo.workerHours = newWorkerhours
+    daysInfo.workerHourssameday = newWorkershourssameday
+
+    if (!emptyDays) {
+      setAccountform({ 
+        ...accountForm, 
+        daysInfo, done: true,
+        workerHours: newWorkerhours,
+        workerHourssameday: newWorkershourssameday
+      })
+      setHoursrangesameday(newHoursrangesameday)
+    }
+  }
   const updateWorkingHour = (index, timetype, dir, open) => {
-    const newWorkerhours = [...accountForm.workerHours], timeRangeInfo = [...timeRange]
-    let value, { openunix, closeunix, date } = timeRangeInfo[index]
+    const newWorkerhours = [...accountForm.workerHours], newHoursrange = [...hoursRange]
+    let value, { openTime, closeTime, date } = newHoursrange[index]
     let { opentime, closetime } = newWorkerhours[index], valid = false
 
     value = open ? opentime : closetime
@@ -1492,9 +1614,9 @@ export default function Main(props) {
     let calcTime = Date.parse(date + " " + hour + ":" + minute + " " + period)
 
     if (open) {
-      valid = (calcTime >= openunix && calcTime <= Date.parse(date + " " + closetime.hour + ":" + closetime.minute + " " + closetime.period))
+      valid = (calcTime >= openTime && calcTime <= Date.parse(date + " " + closetime.hour + ":" + closetime.minute + " " + closetime.period))
     } else {
-      valid = (calcTime <= closeunix && calcTime >= Date.parse(date + " " + opentime.hour + ":" + opentime.minute + " " + opentime.period))
+      valid = (calcTime <= closeTime && calcTime >= Date.parse(date + " " + opentime.hour + ":" + opentime.minute + " " + opentime.period))
     }
       
     if (valid) {
@@ -1509,6 +1631,36 @@ export default function Main(props) {
       }
 
       setAccountform({ ...accountForm, workerHours: newWorkerhours })
+    }
+  }
+  const updateWorkingSameHour = (timetype, dir, open) => {
+    const newWorkershourssameday = {...accountForm.workerHourssameday}
+    let value, { openTime, closeTime, date } = hoursRangesameday
+    let { opentime, closetime } = newWorkershourssameday, valid = false
+
+    value = open ? opentime : closetime
+
+    let { hour, minute, period } = timeControl(timetype, value, dir, open)
+    let calcTime = Date.parse(date + " " + hour + ":" + minute + " " + period)
+
+    if (open) {
+      valid = (calcTime >= openTime && calcTime <= Date.parse(date + " " + closetime.hour + ":" + closetime.minute + " " + closetime.period))
+    } else {
+      valid = (calcTime <= closeTime && calcTime >= Date.parse(date + " " + opentime.hour + ":" + opentime.minute + " " + opentime.period))
+    }
+
+    if (valid) {
+      value.hour = hour < 10 ? "0" + hour : hour.toString()
+      value.minute = minute < 10 ? "0" + minute : minute.toString()
+      value.period = period
+
+      if (open) {
+        newWorkershourssameday.opentime = value
+      } else {
+        newWorkershourssameday.closetime = value
+      }
+
+      setAccountform({ ...accountForm, workerHourssameday: newWorkershourssameday })
     }
   }
   const updateTime = (index, timetype, dir, open) => {
@@ -1614,10 +1766,14 @@ export default function Main(props) {
           delete newOpentime.period
           delete newClosetime.period
 
+          if (takeShift) {
+            delete takeShift.key
+          }
+
           hours[workerHour.header.substr(0, 3)] = { 
             opentime: newOpentime, 
             closetime: newClosetime, working, 
-            takeShift: takeShift ? takeShift : ""
+            takeShift: takeShift ? takeShift.id : ""
           }
         })
 
@@ -1643,6 +1799,7 @@ export default function Main(props) {
             cellnumber: "", editCellnumber: false,
             currentPassword: "", newPassword: "", confirmPassword: "", editPassword: false, 
             profile: { name: "", uri: "" }, editProfile: false, 
+            daysInfo: { working: ['', '', '', '', '', '', ''], done: false, sameHours: null }, workerHours: [], workerHourssameday: null, editHours: false,
             loading: false, errorMsg: ""
           })
           setEditinfo({ ...editInfo, show: true })
@@ -1764,14 +1921,14 @@ export default function Main(props) {
         }
       })
   }
-  const selectTheOtherWorker = id => {
+  const selectTheOtherWorker = workerInfo => {
     const { day } = getWorkersbox
 
     const newWorkerhours = [...accountForm.workerHours]
 
     newWorkerhours.forEach(function (info) {
       if (info.header.substr(0, 3) == day) {
-        info.takeShift = id.toString()
+        info.takeShift = workerInfo
       }
     })
 
@@ -2071,8 +2228,9 @@ export default function Main(props) {
                   locationType == "restaurant" && " Restaurant " || 
                   locationType == "store" && " Store "
   const currenttime = Date.now()
-  const { date, chart, workersHour, workers } = chartInfo
+  const { date, workersHour, workers } = chartInfo
   let currDay = date.day ? date.day.substr(0, 3) : ""
+  const { daysInfo } = accountForm
 
 	return (
 		<SafeAreaView style={styles.main}>
@@ -2163,7 +2321,7 @@ export default function Main(props) {
                   <View style={{ borderColor: 'black', borderStyle: 'solid', borderWidth: 2 }}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
                       <View style={styles.column}>
-                        <TouchableOpacity onPress={() => getAppointmentsChart(chartInfo.dayDir - 1, "left")}>
+                        <TouchableOpacity disabled={scheduleOption.select} onPress={() => getAppointmentsChart(chartInfo.dayDir - 1, "left")}>
                           <AntDesign name="left" size={wsize(7)}/>
                         </TouchableOpacity>
                       </View>
@@ -2176,8 +2334,18 @@ export default function Main(props) {
                         }</Text>
                       </View>
                       <View style={styles.column}>
-                        <TouchableOpacity onPress={() => getAppointmentsChart(chartInfo.dayDir + 1, "right")}>
+                        <TouchableOpacity disabled={scheduleOption.select} onPress={() => getAppointmentsChart(chartInfo.dayDir + 1, "right")}>
                           <AntDesign name="right" size={wsize(7)}/>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                    <View style={{ alignItems: 'center' }}>
+                      <View style={styles.chartActions}>
+                        <TouchableOpacity style={styles.chartAction} onPress={() => pushTheAppointments(false)}>
+                          <Text style={styles.chartActionHeader}>Reschedule All</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.chartAction} onPress={() => pushTheAppointments(true)}>
+                          <Text style={styles.chartActionHeader}>Reschedule Some</Text>
                         </TouchableOpacity>
                       </View>
                     </View>
@@ -2198,7 +2366,7 @@ export default function Main(props) {
                     </View>
 
                     <ScrollView showsVerticalScrollIndicator={false}>
-                      {chartInfo.chart.times && chartInfo.chart.times.map((item, index) => (
+                      {chartInfo.times && chartInfo.times.map((item, index) => (
                         <View key={item.key} style={styles.chartRow}>
                           <View style={styles.chartRow}>
                             {chartInfo.workers.map(worker => (
@@ -2206,11 +2374,16 @@ export default function Main(props) {
                                 key={worker.key}
                                 style={[
                                   styles.chartTime,
-                                  {
-                                    backgroundColor: timeStyle(item, worker.id, "bg"),
-                                    opacity: timeStyle(item, worker.id, "opacity"),
-                                    width: workers.length < 5 ? (width / workers.length) : 200
-                                  }
+                                  item.time + "-c" in chartInfo.workersHour[worker.id]["scheduled"] 
+                                  && 
+                                  scheduleOption.selectedIds.includes(chartInfo.workersHour[worker.id]["scheduled"][item.time + "-c"]) ? 
+                                    { backgrondColor: 'white' }
+                                    :
+                                    {
+                                      backgroundColor: timeStyle(item, worker.id, "bg"),
+                                      opacity: timeStyle(item, worker.id, "opacity"),
+                                      width: workers.length < 5 ? (width / workers.length) : 200
+                                    }
                                 ]}
                               >
                                 <TouchableOpacity
@@ -2221,7 +2394,16 @@ export default function Main(props) {
                                     } else if (!(item.time + "-c" in workersHour[worker.id]["scheduled"])) {
                                       blockTheTime(worker.id, item.jsonDate)
                                     } else {
-                                      showScheduleOption(chartInfo.workersHour[worker.id]["scheduled"][item.time + "-c"], "chart", index, "change")
+                                      if (scheduleOption.select) {
+                                        const { selectedIds } = scheduleOption
+                                        const scheduleId = chartInfo.workersHour[worker.id]["scheduled"][item.time + "-c"]
+
+                                        selectedIds.push(scheduleId)
+
+                                        setScheduleoption({ ...scheduleOption, selectedIds })
+                                      } else {
+                                        showScheduleOption(chartInfo.workersHour[worker.id]["scheduled"][item.time + "-c"], "chart", index, "change")
+                                      }
                                     }
                                   }}
                                   style={{ flexDirection: 'row', height: '100%', justifyContent: 'space-around', width: '100%' }}
@@ -2338,29 +2520,111 @@ export default function Main(props) {
         <Modal transparent={true}>
           {scheduleOption.show && (
             <SafeAreaView style={styles.scheduleOptionBox}>
-              <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
-                <View style={styles.scheduleCancelBox}>
-                  <Text style={styles.scheduleCancelHeader}>{tr.t("main.hidden.scheduleOption.remove.header")}</Text>
+              {scheduleOption.remove && (
+                <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+                  <View style={styles.scheduleBox}>
+                    <Text style={styles.scheduleHeader}>{tr.t("main.hidden.scheduleOption.remove.header")}</Text>
 
-                  <TextInput 
-                    placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder={tr.t("main.hidden.scheduleOption.remove.reason")} 
-                    multiline={true} textAlignVertical="top" style={styles.scheduleCancelInput} 
-                    onChangeText={(reason) => setScheduleoption({ ...scheduleOption, reason })} autoCorrect={false} 
-                    autoCapitalize="none"
-                  />
+                    <TextInput 
+                      placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder={tr.t("main.hidden.scheduleOption.remove.reason")} 
+                      multiline={true} textAlignVertical="top" style={styles.scheduleCancelInput} 
+                      onChangeText={(reason) => setScheduleoption({ ...scheduleOption, reason })} autoCorrect={false} 
+                      autoCapitalize="none"
+                    />
 
-                  <View style={{ alignItems: 'center' }}>
-                    <View style={styles.scheduleCancelActions}>
-                      <TouchableOpacity style={styles.scheduleCancelTouch} onPress={() => setScheduleoption({ ...scheduleOption, show: false, remove: false })}>
-                        <Text style={styles.scheduleCancelTouchHeader}>{tr.t("buttons.close")}</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity style={styles.scheduleCancelTouch} onPress={() => cancelTheSchedule()}>
-                        <Text style={styles.scheduleCancelTouchHeader}>{tr.t("buttons.done")}</Text>
-                      </TouchableOpacity>
+                    <View style={{ alignItems: 'center' }}>
+                      <View style={styles.scheduleCancelActions}>
+                        <TouchableOpacity style={styles.scheduleCancelTouch} onPress={() => setScheduleoption({ ...scheduleOption, show: false, remove: false })}>
+                          <Text style={styles.scheduleCancelTouchHeader}>{tr.t("buttons.close")}</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.scheduleCancelTouch} onPress={() => cancelTheSchedule()}>
+                          <Text style={styles.scheduleCancelTouchHeader}>{tr.t("buttons.done")}</Text>
+                        </TouchableOpacity>
+                      </View>
                     </View>
                   </View>
+                </TouchableWithoutFeedback>
+              )}
+
+              {scheduleOption.push && (
+                <View style={styles.scheduleBox}>
+                  {!scheduleOption.pushBy ? 
+                    <>
+                      <Text style={styles.scheduleHeader}>{tr.t("main.hidden.scheduleOption.select.pushByHeader")}</Text>
+
+                      <View style={styles.schedulePushActions}>
+                        <TouchableOpacity style={styles.schedulePushAction} onPress={() => setScheduleoption({ ...scheduleOption, pushBy: "days" })}>
+                          <Text style={styles.schedulePushActionHeader}>Days</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.schedulePushAction} onPress={() => setScheduleoption({ ...scheduleOption, pushBy: "hours" })}>
+                          <Text style={styles.schedulePushActionHeader}>Hours</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.schedulePushAction} onPress={() => setScheduleoption({ ...scheduleOption, pushBy: "minutes" })}>
+                          <Text style={styles.schedulePushActionHeader}>Minutes</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </>
+                    :
+                    <>
+                      <Text style={styles.scheduleHeader}>{tr.t("main.hidden.scheduleOption.select.timeFactorHeader")}{scheduleOption.pushBy}</Text>
+                      <TextInput style={styles.scheduleInput} placeholder={"Enter how many " + scheduleOption.pushBy}/>
+
+                      <Text style={styles.scheduleHeader}>Or{'\n'}Choose</Text>
+
+                      <View style={styles.schedulePushActions}>
+                        {scheduleOption.pushBy == "days" && (
+                          <>
+                            <TouchableOpacity style={styles.schedulePushAction} onPress={() => setScheduleoption({ ...scheduleOption, pushFactor: 1 })}>
+                              <Text style={styles.schedulePushActionHeader}>Tomorrow</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.schedulePushAction} onPress={() => setScheduleoption({ ...scheduleOption, pushFactor: 2 })}>
+                              <Text style={styles.schedulePushActionHeader}>{Tomorrow + 1}</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.schedulePushAction} onPress={() => setScheduleoption({ ...scheduleOption, pushFactor: 3 })}>
+                              <Text style={styles.schedulePushActionHeader}>{Tomorrow + 2}</Text>
+                            </TouchableOpacity>
+                          </>
+                        )}
+
+                        {scheduleOption.pushBy == "hours" && (
+                          <>
+                            <TouchableOpacity style={styles.schedulePushAction} onPress={() => setScheduleoption({ ...scheduleOption, pushFactor: 1 })}>
+                              <Text style={styles.schedulePushActionHeader}>by 2 hours</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.schedulePushAction} onPress={() => setScheduleoption({ ...scheduleOption, pushFactor: 2 })}>
+                              <Text style={styles.schedulePushActionHeader}>by 3 hours</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.schedulePushAction} onPress={() => setScheduleoption({ ...scheduleOption, pushFactor: 3 })}>
+                              <Text style={styles.schedulePushActionHeader}>by 4 hours</Text>
+                            </TouchableOpacity>
+                          </>
+                        )}
+
+                        {scheduleOption.pushBy == "minutes" && (
+                          <>
+                            <TouchableOpacity style={styles.schedulePushAction} onPress={() => setScheduleoption({ ...scheduleOption, pushFactor: 1 })}>
+                              <Text style={styles.schedulePushActionHeader}>by 30 minutes</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.schedulePushAction} onPress={() => setScheduleoption({ ...scheduleOption, pushFactor: 2 })}>
+                              <Text style={styles.schedulePushActionHeader}>by 45 minutes</Text>
+                            </TouchableOpacity>
+                          </>
+                        )}
+                      </View>
+
+                      <TouchableOpacity style={styles.scheduleSubmit} onPress={() => {
+                        if (scheduleOption.select) {
+                          pushTheSelectedAppointments()
+                        } else {
+                          pushAllTheAppointments()
+                        }
+                      }}>
+                        <Text style={styles.scheduleSubmitHeader}>Reschedule Now</Text>
+                      </TouchableOpacity>
+                    </>
+                  }
                 </View>
-              </TouchableWithoutFeedback>
+              )}
             </SafeAreaView>
           )} 
           {showInfo.show && (
@@ -2517,7 +2781,7 @@ export default function Main(props) {
 
                               <View style={styles.options}>
                                 <TouchableOpacity style={[styles.option, { backgroundColor: locationReceivetype == 'stylist' ? 'black' : 'white' }]} onPress={() => setTheReceiveType('stylist')}>
-                                  <Text style={[styles.optionHeader, { color: locationReceivetype == 'stylist' ? 'white' : 'black' }]}>{tr.t("main.hidden.showMoreoptions.getAppointmentsby.staff")}</Text>
+                                  <Text style={[styles.optionHeader, { color: locationReceivetype == 'stylist' ? 'white' : 'black' }]}>{tr.t("main.hidden.showMoreoptions.getAppointmentsby.both")}</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity style={[styles.option, { backgroundColor: locationReceivetype == 'owner' ? 'black' : 'white' }]} onPress={() => setTheReceiveType('owner')}>
                                   <Text style={[styles.optionHeader, { color: locationReceivetype == 'owner' ? 'white' : 'black' }]}>{tr.t("main.hidden.showMoreoptions.getAppointmentsby.owner")}</Text>
@@ -2910,7 +3174,7 @@ export default function Main(props) {
                                       currentPassword: ownerSigninInfo.password, 
                                       newPassword: ownerSigninInfo.password, 
                                       confirmPassword: ownerSigninInfo.password,
-                                      workerHours: [...timeRange]
+                                      workerHours: [...hoursRange]
                                     })
                                     setEditinfo({ ...editInfo, show: false })
                                   }}>
@@ -3344,149 +3608,320 @@ export default function Main(props) {
                                     )}
 
                                     {accountForm.addStep == 4 && (
-                                      accountForm.workerHours.map((info, index) => (
-                                        <View key={index} style={styles.workerHour}>
-                                          {info.working == true ? 
-                                            <>
-                                              <View style={{ opacity: info.working ? 1 : 0.1 }}>
-                                                <Text style={styles.workerHourHeader}>Set new stylist's working hours on {info.header}</Text>
-                                                <View style={styles.timeSelectionContainer}>
-                                                  <View style={styles.timeSelection}>
-                                                    <View style={styles.selection}>
-                                                      <TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "up", true)}>
-                                                        <AntDesign name="up" size={wsize(7)}/>
-                                                      </TouchableOpacity>
-                                                      <TextInput style={styles.selectionHeader} onChangeText={(hour) => {
-                                                        const newWorkerhours = [...accountForm.workerHours]
+                                      !daysInfo.done ? 
+                                        <View style={{ alignItems: 'center', width: '100%' }}>
+                                          <Text style={styles.accountformHeader}>What days does {accountForm.username} work on</Text>
 
-                                                        newWorkerhours[index].opentime["hour"] = hour.toString()
+                                          {days.map((day, index) => (
+                                            <TouchableOpacity key={index} disabled={locationHours[index].close} style={
+                                              !locationHours[index].close ? 
+                                                daysInfo.working.indexOf(day) > -1 ? 
+                                                  styles.workerDayTouchSelected : styles.workerDayTouch
+                                                :
+                                                styles.workerDayTouchOff
+                                            } onPress={() => {
+                                              const newAccountform = {...accountForm}
+                                              const newDaysinfo = newAccountform.daysInfo
 
-                                                        setAccountform({ ...accountForm, workerHours: newWorkerhours })
-                                                      }} keyboardType="numeric" maxLength={2} value={info.opentime.hour}/>
-                                                      <TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "down", true)}>
-                                                        <AntDesign name="down" size={wsize(7)}/>
-                                                      </TouchableOpacity>
-                                                    </View>
-                                                    <View style={styles.column}>
-                                                      <Text style={styles.selectionDiv}>:</Text>
-                                                    </View>
-                                                    <View style={styles.selection}>
-                                                      <TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "up", true)}>
-                                                        <AntDesign name="up" size={wsize(7)}/>
-                                                      </TouchableOpacity>
-                                                      <TextInput style={styles.selectionHeader} onChangeText={(minute) => {
-                                                        const newWorkerhours = [...accountForm.workerHours]
+                                              if (newDaysinfo.working[index] == '') {
+                                                newDaysinfo.working[index] = day
+                                              } else {
+                                                newDaysinfo.working[index] = ''
+                                              }
 
-                                                        newWorkerhours[index].opentime["minute"] = minute.toString()
+                                              setAccountform({ ...newAccountform, daysInfo: newDaysinfo })
+                                            }}>
+                                              <Text style={[styles.workerDayTouchHeader, { color: daysInfo.working.indexOf(day) > -1 ? 'white' : 'black' }]}>{tr.t("days." + day)}</Text>
+                                            </TouchableOpacity>
+                                          ))}
+                                        </View>
+                                        :
+                                        daysInfo.sameHours == null ? 
+                                          <View style={{ alignItems: 'center', width: '100%' }}>
+                                            <Text style={styles.accountformHeader}>Does {accountForm.username} work the same hours on</Text>
 
-                                                        setAccountform({ ...accountForm, workerHours: newWorkerhours })
-                                                      }} keyboardType="numeric" maxLength={2} value={info.opentime.minute}/>
-                                                      <TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "down", true)}>
-                                                        <AntDesign name="down" size={wsize(7)}/>
-                                                      </TouchableOpacity>
-                                                    </View>
-                                                    <View style={styles.selection}>
-                                                      <TouchableOpacity onPress={() => updateWorkingHour(index, "period", "up", true)}>
-                                                        <AntDesign name="up" size={wsize(7)}/>
-                                                      </TouchableOpacity>
-                                                      <Text style={styles.selectionHeader}>{info.opentime.period}</Text>
-                                                      <TouchableOpacity onPress={() => updateWorkingHour(index, "period", "down", true)}>
-                                                        <AntDesign name="down" size={wsize(7)}/>
-                                                      </TouchableOpacity>
-                                                    </View>
+                                            <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+                                              {accountForm.workerHours.map((info, index) => (
+                                                info.working && ( 
+                                                  <View key={index} style={styles.workingDay}>
+                                                    <Text style={styles.workingDayHeader}>{info.header}</Text>
                                                   </View>
-                                                  <View style={styles.timeSelectionColumn}>
-                                                    <Text style={styles.timeSelectionHeader}>To</Text>
-                                                  </View>
-                                                  <View style={styles.timeSelection}>
-                                                    <View style={styles.selection}>
-                                                      <TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "up", false)}>
-                                                        <AntDesign name="up" size={wsize(7)}/>
-                                                      </TouchableOpacity>
-                                                      <TextInput style={styles.selectionHeader} onChangeText={(hour) => {
-                                                        const newWorkerhours = [...accountForm.workerHours]
+                                                )
+                                              ))}
+                                            </View>
 
-                                                        newWorkerhours[index].closetime["hour"] = hour.toString()
-
-                                                        setAccountform({ ...accountForm, workerHours: newWorkerhours })
-                                                      }} keyboardType="numeric" maxLength={2} value={info.closetime.hour}/>
-                                                      <TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "down", false)}>
-                                                        <AntDesign name="down" size={wsize(7)}/>
-                                                      </TouchableOpacity>
-                                                    </View>
-                                                    <View style={styles.column}>
-                                                      <Text style={styles.selectionDiv}>:</Text>
-                                                    </View>
-                                                    <View style={styles.selection}>
-                                                      <TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "up", false)}>
-                                                        <AntDesign name="up" size={wsize(7)}/>
-                                                      </TouchableOpacity>
-                                                      <TextInput style={styles.selectionHeader} onChangeText={(minute) => {
-                                                        const newWorkerhours = [...accountForm.workerHours]
-
-                                                        newWorkerhours[index].closetime["minute"] = minute.toString()
-
-                                                        setAccountform({ ...accountForm, workerHours: newWorkerhours })
-                                                      }} keyboardType="numeric" maxLength={2} value={info.closetime.minute}/>
-                                                      <TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "down", false)}>
-                                                        <AntDesign name="down" size={wsize(7)}/>
-                                                      </TouchableOpacity>
-                                                    </View>
-                                                    <View style={styles.selection}>
-                                                      <TouchableOpacity onPress={() => updateWorkingHour(index, "period", "up", false)}>
-                                                        <AntDesign name="up" size={wsize(7)}/>
-                                                      </TouchableOpacity>
-                                                      <Text style={styles.selectionHeader}>{info.closetime.period}</Text>
-                                                      <TouchableOpacity onPress={() => updateWorkingHour(index, "period", "down", false)}>
-                                                        <AntDesign name="down" size={wsize(7)}/>
-                                                      </TouchableOpacity>
-                                                    </View>
-                                                  </View>
-                                                </View>
-                                              </View>
-                                              <TouchableOpacity style={styles.workerHourAction} onPress={() => {
-                                                const newWorkerhours = [...accountForm.workerHours]
-
-                                                newWorkerhours[index].working = false
-
-                                                setAccountform({ ...accountForm, workerHours: newWorkerhours })
-                                              }}>
-                                                <Text style={styles.workerHourActionHeader}>Change to not working</Text>
+                                            <View style={{ flexDirection: 'row' }}>
+                                              <TouchableOpacity style={styles.accountformSubmit} onPress={() => setAccountform({ ...accountForm, daysInfo: {...daysInfo, sameHours: false }})}>
+                                                <Text style={styles.accountformSubmitHeader}>{tr.t("buttons.no")}</Text>
                                               </TouchableOpacity>
-                                            </>
-                                            :
-                                            info.close == false ? 
-                                              <>
-                                                <Text style={styles.workerHourHeader}>Not working on {info.header}</Text>
+                                              <TouchableOpacity style={styles.accountformSubmit} onPress={() => setAccountform({ ...accountForm, daysInfo: {...daysInfo, sameHours: true }})}>
+                                                <Text style={styles.accountformSubmitHeader}>{tr.t("buttons.yes")}</Text>
+                                              </TouchableOpacity>
+                                            </View>
+                                          </View>
+                                          :
+                                          <View style={{ alignItems: 'center', width: '100%' }}>
+                                            <TouchableOpacity style={styles.accountformSubmit} onPress={() => setAccountform({ ...accountForm, daysInfo: {...daysInfo, done: false, sameHours: null }})}>
+                                              <Text style={styles.accountformSubmitHeader}>Change days</Text>
+                                            </TouchableOpacity>
 
-                                                <View style={styles.workerHourActions}>
-                                                  <TouchableOpacity style={styles.workerHourAction} onPress={() => {
-                                                    const newWorkerhours = [...accountForm.workerHours]
+                                            <Text style={styles.accountformHeader}>Set new staff's working time</Text>
 
-                                                    newWorkerhours[index].working = true
+                                            {daysInfo.sameHours == false ? 
+                                              accountForm.workerHours.map((info, index) => (
+                                                <View key={index} style={styles.workerHour}>
+                                                  {info.working == true ? 
+                                                    <>
+                                                      <View style={{ opacity: info.working ? 1 : 0.1 }}>
+                                                        <Text style={styles.workerHourHeader}>{info.header}</Text>
+                                                        <View style={styles.timeSelectionContainer}>
+                                                          <View style={styles.timeSelection}>
+                                                            <View style={styles.selection}>
+                                                              <TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "up", true)}>
+                                                                <AntDesign name="up" size={wsize(7)}/>
+                                                              </TouchableOpacity>
+                                                              <TextInput style={styles.selectionHeader} onChangeText={(hour) => {
+                                                                const newWorkerhours = [...accountForm.workerHours]
 
-                                                    setAccountform({ ...accountForm, workerHours: newWorkerhours })
-                                                  }}>
-                                                    <Text style={styles.workerHourActionHeader}>Will work</Text>
-                                                  </TouchableOpacity>
+                                                                newWorkerhours[index].opentime["hour"] = hour.toString()
 
-                                                  {info.takeShift != "" ? 
-                                                    <TouchableOpacity style={styles.workerHourAction} onPress={() => cancelTheShift(info.header.substr(0, 3))}>
-                                                      <Text style={styles.workerHourActionHeader}>Cancel shift</Text>
-                                                    </TouchableOpacity>
+                                                                setAccountform({ ...accountForm, workerHours: newWorkerhours })
+                                                              }} keyboardType="numeric" maxLength={2} value={info.opentime.hour}/>
+                                                              <TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "down", true)}>
+                                                                <AntDesign name="down" size={wsize(7)}/>
+                                                              </TouchableOpacity>
+                                                            </View>
+                                                            <View style={styles.column}>
+                                                              <Text style={styles.selectionDiv}>:</Text>
+                                                            </View>
+                                                            <View style={styles.selection}>
+                                                              <TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "up", true)}>
+                                                                <AntDesign name="up" size={wsize(7)}/>
+                                                              </TouchableOpacity>
+                                                              <TextInput style={styles.selectionHeader} onChangeText={(minute) => {
+                                                                const newWorkerhours = [...accountForm.workerHours]
+
+                                                                newWorkerhours[index].opentime["minute"] = minute.toString()
+
+                                                                setAccountform({ ...accountForm, workerHours: newWorkerhours })
+                                                              }} keyboardType="numeric" maxLength={2} value={info.opentime.minute}/>
+                                                              <TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "down", true)}>
+                                                                <AntDesign name="down" size={wsize(7)}/>
+                                                              </TouchableOpacity>
+                                                            </View>
+                                                            <View style={styles.selection}>
+                                                              <TouchableOpacity onPress={() => updateWorkingHour(index, "period", "up", true)}>
+                                                                <AntDesign name="up" size={wsize(7)}/>
+                                                              </TouchableOpacity>
+                                                              <Text style={styles.selectionHeader}>{info.opentime.period}</Text>
+                                                              <TouchableOpacity onPress={() => updateWorkingHour(index, "period", "down", true)}>
+                                                                <AntDesign name="down" size={wsize(7)}/>
+                                                              </TouchableOpacity>
+                                                            </View>
+                                                          </View>
+                                                          <View style={styles.timeSelectionColumn}>
+                                                            <Text style={styles.timeSelectionHeader}>To</Text>
+                                                          </View>
+                                                          <View style={styles.timeSelection}>
+                                                            <View style={styles.selection}>
+                                                              <TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "up", false)}>
+                                                                <AntDesign name="up" size={wsize(7)}/>
+                                                              </TouchableOpacity>
+                                                              <TextInput style={styles.selectionHeader} onChangeText={(hour) => {
+                                                                const newWorkerhours = [...accountForm.workerHours]
+
+                                                                newWorkerhours[index].closetime["hour"] = hour.toString()
+
+                                                                setAccountform({ ...accountForm, workerHours: newWorkerhours })
+                                                              }} keyboardType="numeric" maxLength={2} value={info.closetime.hour}/>
+                                                              <TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "down", false)}>
+                                                                <AntDesign name="down" size={wsize(7)}/>
+                                                              </TouchableOpacity>
+                                                            </View>
+                                                            <View style={styles.column}>
+                                                              <Text style={styles.selectionDiv}>:</Text>
+                                                            </View>
+                                                            <View style={styles.selection}>
+                                                              <TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "up", false)}>
+                                                                <AntDesign name="up" size={wsize(7)}/>
+                                                              </TouchableOpacity>
+                                                              <TextInput style={styles.selectionHeader} onChangeText={(minute) => {
+                                                                const newWorkerhours = [...accountForm.workerHours]
+
+                                                                newWorkerhours[index].closetime["minute"] = minute.toString()
+
+                                                                setAccountform({ ...accountForm, workerHours: newWorkerhours })
+                                                              }} keyboardType="numeric" maxLength={2} value={info.closetime.minute}/>
+                                                              <TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "down", false)}>
+                                                                <AntDesign name="down" size={wsize(7)}/>
+                                                              </TouchableOpacity>
+                                                            </View>
+                                                            <View style={styles.selection}>
+                                                              <TouchableOpacity onPress={() => updateWorkingHour(index, "period", "up", false)}>
+                                                                <AntDesign name="up" size={wsize(7)}/>
+                                                              </TouchableOpacity>
+                                                              <Text style={styles.selectionHeader}>{info.closetime.period}</Text>
+                                                              <TouchableOpacity onPress={() => updateWorkingHour(index, "period", "down", false)}>
+                                                                <AntDesign name="down" size={wsize(7)}/>
+                                                              </TouchableOpacity>
+                                                            </View>
+                                                          </View>
+                                                        </View>
+                                                      </View>
+                                                      <TouchableOpacity style={styles.workerHourAction} onPress={() => {
+                                                        const newWorkerhours = [...accountForm.workerHours]
+
+                                                        newWorkerhours[index].working = false
+
+                                                        setAccountform({ ...accountForm, workerHours: newWorkerhours })
+                                                      }}>
+                                                        <Text style={styles.workerHourActionHeader}>Change to not working</Text>
+                                                      </TouchableOpacity>
+                                                    </>
                                                     :
-                                                    <TouchableOpacity style={styles.workerHourAction} onPress={() => getTheOtherWorkers(info.header.substr(0, 3))}>
-                                                      <Text style={styles.workerHourActionHeader}>Take co-worker's shift</Text>
-                                                    </TouchableOpacity>
+                                                    info.close == false ? 
+                                                      <>
+                                                        <Text style={styles.workerHourHeader}>Not working on {info.header}</Text>
+
+                                                        <View style={styles.workerHourActions}>
+                                                          <TouchableOpacity style={styles.workerHourAction} onPress={() => {
+                                                            const newWorkerhours = [...accountForm.workerHours]
+
+                                                            newWorkerhours[index].working = true
+
+                                                            setAccountform({ ...accountForm, workerHours: newWorkerhours })
+                                                          }}>
+                                                            <Text style={styles.workerHourActionHeader}>Will work</Text>
+                                                          </TouchableOpacity>
+
+                                                          {info.takeShift != "" ? 
+                                                            <TouchableOpacity style={styles.workerHourAction} onPress={() => cancelTheShift(info.header.substr(0, 3))}>
+                                                              <Text style={styles.workerHourActionHeader}>Cancel shift</Text>
+                                                            </TouchableOpacity>
+                                                            :
+                                                            <TouchableOpacity style={styles.workerHourAction} onPress={() => getTheOtherWorkers(info.header.substr(0, 3))}>
+                                                              <Text style={styles.workerHourActionHeader}>Take co-worker's shift</Text>
+                                                            </TouchableOpacity>
+                                                          }
+                                                        </View>
+                                                      </>
+                                                      : 
+                                                      <Text style={styles.workerHourHeader}>Not open on {info.header}</Text>
                                                   }
                                                 </View>
+                                              ))
+                                              :
+                                              <>
+                                                <Text style={styles.accountformHeader}>Set new staff's working time for</Text>
+
+                                                <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+                                                  {accountForm.workerHours.map((info, index) => (
+                                                    info.working && (
+                                                      <View key={index} style={styles.workingDay}>
+                                                        <Text style={styles.workingDayHeader}>{info.header}</Text>
+                                                      </View>
+                                                    )
+                                                  ))}
+                                                </View>
+
+                                                <View style={styles.workerHour}>
+                                                  <View style={styles.timeSelectionContainer}>
+                                                    <View style={styles.timeSelection}>
+                                                      <View style={styles.selection}>
+                                                        <TouchableOpacity onPress={() => updateWorkingSameHour("hour", "up", true)}>
+                                                          <AntDesign name="up" size={wsize(7)}/>
+                                                        </TouchableOpacity>
+                                                        <TextInput style={styles.selectionHeader} onChangeText={(hour) => {
+                                                          const newWorkershourssameday = {...accountForm.workerHourssameday}
+
+                                                          newWorkershourssameday.opentime["hour"] = hour.toString()
+
+                                                          setAccountform({ ...accountForm, workerHourssameday: newWorkerhourssameday })
+                                                        }} keyboardType="numeric" maxLength={2} value={accountForm.workerHourssameday.opentime.hour}/>
+                                                        <TouchableOpacity onPress={() => updateWorkingSameHour("hour", "down", true)}>
+                                                          <AntDesign name="down" size={wsize(7)}/>
+                                                        </TouchableOpacity>
+                                                      </View>
+                                                      <View style={styles.column}>
+                                                        <Text style={styles.selectionDiv}>:</Text>
+                                                      </View>
+                                                      <View style={styles.selection}>
+                                                        <TouchableOpacity onPress={() => updateWorkingSameHour("minute", "up", true)}>
+                                                          <AntDesign name="up" size={wsize(7)}/>
+                                                        </TouchableOpacity>
+                                                        <TextInput style={styles.selectionHeader} onChangeText={(minute) => {
+                                                          const newWorkershourssameday = {...accountForm.workerHourssameday}
+
+                                                          newWorkershourssameday.opentime["minute"] = minute.toString()
+
+                                                          setAccountform({ ...accountForm, workerHourssameday: newWorkerhourssameday })
+                                                        }} keyboardType="numeric" maxLength={2} value={accountForm.workerHourssameday.opentime.minute}/>
+                                                        <TouchableOpacity onPress={() => updateWorkingSameHour("minute", "down", true)}>
+                                                          <AntDesign name="down" size={wsize(7)}/>
+                                                        </TouchableOpacity>
+                                                      </View>
+                                                      <View style={styles.selection}>
+                                                        <TouchableOpacity onPress={() => updateWorkingSameHour("period", "up", true)}>
+                                                          <AntDesign name="up" size={wsize(7)}/>
+                                                        </TouchableOpacity>
+                                                        <Text style={styles.selectionHeader}>{accountForm.workerHourssameday.opentime.period}</Text>
+                                                        <TouchableOpacity onPress={() => updateWorkingSameHour("period", "down", true)}>
+                                                          <AntDesign name="down" size={wsize(7)}/>
+                                                        </TouchableOpacity>
+                                                      </View>
+                                                    </View>
+                                                    <View style={styles.timeSelectionColumn}>
+                                                      <Text style={styles.timeSelectionHeader}>To</Text>
+                                                    </View>
+                                                    <View style={styles.timeSelection}>
+                                                      <View style={styles.selection}>
+                                                        <TouchableOpacity onPress={() => updateWorkingSameHour("hour", "up", false)}>
+                                                          <AntDesign name="up" size={wsize(7)}/>
+                                                        </TouchableOpacity>
+                                                        <TextInput style={styles.selectionHeader} onChangeText={(hour) => {
+                                                          const newWorkershourssameday = {...accountForm.workerHourssameday}
+
+                                                          newWorkershourssameday.closetime["hour"] = hour.toString()
+
+                                                          setAccountform({ ...accountForm, workerHourssameday: newWorkerhourssameday })
+                                                        }} keyboardType="numeric" maxLength={2} value={accountForm.workerHourssameday.closetime.hour}/>
+                                                        <TouchableOpacity onPress={() => updateWorkingSameHour("hour", "down", false)}>
+                                                          <AntDesign name="down" size={wsize(7)}/>
+                                                        </TouchableOpacity>
+                                                      </View>
+                                                      <View style={styles.column}>
+                                                        <Text style={styles.selectionDiv}>:</Text>
+                                                      </View>
+                                                      <View style={styles.selection}>
+                                                        <TouchableOpacity onPress={() => updateWorkingSameHour("minute", "up", false)}>
+                                                          <AntDesign name="up" size={wsize(7)}/>
+                                                        </TouchableOpacity>
+                                                        <TextInput style={styles.selectionHeader} onChangeText={(minute) => {
+                                                          const newWorkershourssameday = {...accountForm.workerHourssameday}
+
+                                                          newWorkershourssameday.closetime["minute"] = minute.toString()
+
+                                                          setAccountform({ ...accountForm, workerHourssameday: newWorkerhourssameday })
+                                                        }} keyboardType="numeric" maxLength={2} value={accountForm.workerHourssameday.closetime.minute}/>
+                                                        <TouchableOpacity onPress={() => updateWorkingSameHour("minute", "down", false)}>
+                                                          <AntDesign name="down" size={wsize(7)}/>
+                                                        </TouchableOpacity>
+                                                      </View>
+                                                      <View style={styles.selection}>
+                                                        <TouchableOpacity onPress={() => updateWorkingSameHour("period", "up", false)}>
+                                                          <AntDesign name="up" size={wsize(7)}/>
+                                                        </TouchableOpacity>
+                                                        <Text style={styles.selectionHeader}>{accountForm.workerHourssameday.closetime.period}</Text>
+                                                        <TouchableOpacity onPress={() => updateWorkingSameHour("period", "down", false)}>
+                                                          <AntDesign name="down" size={wsize(7)}/>
+                                                        </TouchableOpacity>
+                                                      </View>
+                                                    </View>
+                                                  </View>
+                                                </View>
                                               </>
-                                              : 
-                                              <Text style={styles.workerHourHeader}>Not open on {info.header}</Text>
-                                              
-                                          }
-                                        </View>
-                                      ))
+                                            }
+                                          </View>
                                     )}
 
                                     {accountForm.errorMsg ? <Text style={styles.errorMsg}>{accountForm.errorMsg}</Text> : null}
@@ -3504,7 +3939,7 @@ export default function Main(props) {
                                               cellnumber: '', verified: false, verifyCode: '', editCellnumber: false,
                                               currentPassword: '', newPassword: '', confirmPassword: '', editPassword: false,
                                               profile: { uri: '', name: '', size: { width: 0, height: 0 }}, editProfile: false,
-                                              workerHours: [], editHours: false,
+                                              daysInfo: { working: ['', '', '', '', '', '', ''], done: false, sameHours: null }, workerHours: [], editHours: false,
                                               errorMsg: ""
                                             })
                                             setEditinfo({ ...editInfo, show: true })
@@ -3513,7 +3948,15 @@ export default function Main(props) {
                                           </TouchableOpacity>
                                           <TouchableOpacity style={[styles.accountformSubmit, { opacity: accountForm.loading ? 0.3 : 1 }]} disabled={accountForm.loading} onPress={() => {
                                             if (accountForm.addStep == 4) {
-                                              addNewOwner()
+                                              if (daysInfo.done && daysInfo.sameHours != null) {
+                                                addNewOwner()
+                                              } else {
+                                                if (!daysInfo.done) {
+                                                  setWorkingTime()
+                                                } else {
+
+                                                }
+                                              }
                                             } else if (accountForm.addStep == 0 && accountForm.verified == false) {
                                               verify()
                                             } else {
@@ -3525,7 +3968,10 @@ export default function Main(props) {
                                                 accountForm.profile.uri ? tr.t("buttons.next") : tr.t("buttons.skip")
                                                 :
                                                 accountForm.addStep == 4 ? 
-                                                  (accountForm.type == 'add' ? tr.t("buttons.add") : tr.t("buttons.update")) + ' Account'
+                                                  daysInfo.done && daysInfo.sameHours != null ? 
+                                                    (accountForm.type == 'add' ? tr.t("buttons.add") : tr.t("buttons.update")) + ' Account'
+                                                    :
+                                                    tr.t("buttons.next")
                                                   :
                                                   tr.t("buttons.next")
                                               }
@@ -3553,7 +3999,7 @@ export default function Main(props) {
                                                   name: info.profile.name ? info.profile.name : "", 
                                                   size: { width: info.profile.width, height: info.profile.height }
                                                 }, editProfile: false,
-                                                workerHours: info.hours, editHours: false,
+                                                daysInfo: { working: ['', '', '', '', '', '', ''], done: false, sameHours: null }, workerHours: info.hours, editHours: false,
                                                 errorMsg: ""
                                               })
                                             } else {
@@ -3663,171 +4109,187 @@ export default function Main(props) {
                                     )}
 
                                     {accountForm.editHours && (
-                                      accountForm.workerHours.map((info, index) => (
-                                        <View key={index} style={styles.workerHour}>
-                                          {info.working == true ? 
-                                            <>
-                                              <View style={{ opacity: info.working ? 1 : 0.1 }}>
-                                                <Text style={styles.workerHourHeader}>Your hours on {info.header}</Text>
-                                                <View style={styles.timeSelectionContainer}>
-                                                  <View style={styles.timeSelection}>
-                                                    <View style={styles.selection}>
-                                                      <TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "up", true)}>
-                                                        <AntDesign name="up" size={wsize(7)}/>
-                                                      </TouchableOpacity>
-                                                      <TextInput style={styles.selectionHeader} onChangeText={(hour) => {
-                                                        const newWorkerhours = [...accountForm.workerHours]
+                                      <>
+                                        <Text style={styles.workerHourHeader}>{tr.t("main.editingWorkingHours")}</Text>
 
-                                                        newWorkerhours[index].opentime["hour"] = hour.toString()
-
-                                                        setAccountform({ ...accountForm, workerHours: newWorkerhours })
-                                                      }} keyboardType="numeric" maxLength={2} value={info.opentime.hour}/>
-                                                      <TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "down", true)}>
-                                                        <AntDesign name="down" size={wsize(7)}/>
-                                                      </TouchableOpacity>
-                                                    </View>
-                                                    <View style={styles.column}>
-                                                      <Text style={styles.selectionDiv}>:</Text>
-                                                    </View>
-                                                    <View style={styles.selection}>
-                                                      <TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "up", true)}>
-                                                        <AntDesign name="up" size={wsize(7)}/>
-                                                      </TouchableOpacity>
-                                                      <TextInput style={styles.selectionHeader} onChangeText={(minute) => {
-                                                        const newWorkerhours = [...accountForm.workerHours]
-
-                                                        newWorkerhours[index].opentime["minute"] = minute.toString()
-
-                                                        setAccountform({ ...accountForm, workerHours: newWorkerhours })
-                                                      }} keyboardType="numeric" maxLength={2} value={info.opentime.minute}/>
-                                                      <TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "down", true)}>
-                                                        <AntDesign name="down" size={wsize(7)}/>
-                                                      </TouchableOpacity>
-                                                    </View>
-                                                    <View style={styles.selection}>
-                                                      <TouchableOpacity onPress={() => updateWorkingHour(index, "period", "up", true)}>
-                                                        <AntDesign name="up" size={wsize(7)}/>
-                                                      </TouchableOpacity>
-                                                      <Text style={styles.selectionHeader}>{info.opentime.period}</Text>
-                                                      <TouchableOpacity onPress={() => updateWorkingHour(index, "period", "down", true)}>
-                                                        <AntDesign name="down" size={wsize(7)}/>
-                                                      </TouchableOpacity>
-                                                    </View>
-                                                  </View>
-                                                  <View style={styles.timeSelectionColumn}>
-                                                    <Text style={styles.timeSelectionHeader}>To</Text>
-                                                  </View>
-                                                  <View style={styles.timeSelection}>
-                                                    <View style={styles.selection}>
-                                                      <TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "up", false)}>
-                                                        <AntDesign name="up" size={wsize(7)}/>
-                                                      </TouchableOpacity>
-                                                      <TextInput style={styles.selectionHeader} onChangeText={(hour) => {
-                                                        const newWorkerhours = [...accountForm.workerHours]
-
-                                                        newWorkerhours[index].closetime["hour"] = hour.toString()
-
-                                                        setAccountform({ ...accountForm, workerHours: newWorkerhours })
-                                                      }} keyboardType="numeric" maxLength={2} value={info.closetime.hour}/>
-                                                      <TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "down", false)}>
-                                                        <AntDesign name="down" size={wsize(7)}/>
-                                                      </TouchableOpacity>
-                                                    </View>
-                                                    <View style={styles.column}>
-                                                      <Text style={styles.selectionDiv}>:</Text>
-                                                    </View>
-                                                    <View style={styles.selection}>
-                                                      <TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "up", false)}>
-                                                        <AntDesign name="up" size={wsize(7)}/>
-                                                      </TouchableOpacity>
-                                                      <TextInput style={styles.selectionHeader} onChangeText={(minute) => {
-                                                        const newWorkerhours = [...accountForm.workerHours]
-
-                                                        newWorkerhours[index].closetime["minute"] = minute.toString()
-
-                                                        setAccountform({ ...accountForm, workerHours: newWorkerhours })
-                                                      }} keyboardType="numeric" maxLength={2} value={info.closetime.minute}/>
-                                                      <TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "down", false)}>
-                                                        <AntDesign name="down" size={wsize(7)}/>
-                                                      </TouchableOpacity>
-                                                    </View>
-                                                    <View style={styles.selection}>
-                                                      <TouchableOpacity onPress={() => updateWorkingHour(index, "period", "up", false)}>
-                                                        <AntDesign name="up" size={wsize(7)}/>
-                                                      </TouchableOpacity>
-                                                      <Text style={styles.selectionHeader}>{info.closetime.period}</Text>
-                                                      <TouchableOpacity onPress={() => updateWorkingHour(index, "period", "down", false)}>
-                                                        <AntDesign name="down" size={wsize(7)}/>
-                                                      </TouchableOpacity>
-                                                    </View>
-                                                  </View>
-                                                </View>
-                                              </View>
-                                              <TouchableOpacity style={styles.workerHourAction} onPress={() => {
-                                                const newWorkerhours = [...accountForm.workerHours]
-
-                                                newWorkerhours[index].working = false
-
-                                                setAccountform({ ...accountForm, workerHours: newWorkerhours })
-                                              }}>
-                                                <Text style={styles.workerHourActionHeader}>No service</Text>
-                                              </TouchableOpacity>
-                                            </>
-                                            :
-                                            info.close == false ? 
-                                              !info.takeShift ? 
-                                                <>
-                                                  <Text style={styles.workerHourHeader}><Text style={{ fontWeight: '300' }}>Not working on</Text> {info.header}</Text>
-
-                                                  <View style={styles.workerHourActions}>
-                                                    <TouchableOpacity style={styles.workerHourAction} onPress={() => {
-                                                      const newWorkerhours = [...accountForm.workerHours]
-
-                                                      newWorkerhours[index].working = true
-
-                                                      setAccountform({ ...accountForm, workerHours: newWorkerhours })
-                                                    }}>
-                                                      <Text style={styles.workerHourActionHeader}>Will work</Text>
-                                                    </TouchableOpacity>
-
-                                                    {info.takeShift != "" ? 
-                                                      <TouchableOpacity style={styles.workerHourAction} onPress={() => cancelTheShift(info.header.substr(0, 3))}>
-                                                        <Text style={styles.workerHourActionHeader}>Cancel shift</Text>
-                                                      </TouchableOpacity>
-                                                      :
-                                                      <TouchableOpacity style={styles.workerHourAction} onPress={() => getTheOtherWorkers(info.header.substr(0, 3))}>
-                                                        <Text style={styles.workerHourActionHeader}>Take co-worker's shift</Text>
-                                                      </TouchableOpacity>
-                                                    }
-                                                  </View>
-                                                </>
-                                                :
-                                                <>
-                                                  <Text style={styles.workerHourHeader}><Text style={{ fontWeight: '300' }}>Taking {info.takeShift.name}'s shift for</Text> {info.header}</Text>
-
+                                        {accountForm.workerHours.map((info, index) => (
+                                          <View key={index} style={styles.workerHour}>
+                                            {info.working == true ? 
+                                              <>
+                                                <View style={{ opacity: info.working ? 1 : 0.1 }}>
+                                                  <Text style={styles.workerHourHeader}>{info.header}</Text>
                                                   <View style={styles.timeSelectionContainer}>
                                                     <View style={styles.timeSelection}>
-                                                      <Text style={styles.selectionHeader}>{info.opentime.hour}</Text>
-                                                      <Text style={styles.selectionDiv}>:</Text>
-                                                      <Text style={styles.selectionHeader}>{info.opentime.minute}</Text>
-                                                      <Text style={styles.selectionHeader}>{info.opentime.period}</Text>
+                                                      <View style={styles.selection}>
+                                                        <TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "up", true)}>
+                                                          <AntDesign name="up" size={wsize(7)}/>
+                                                        </TouchableOpacity>
+                                                        <TextInput style={styles.selectionHeader} onChangeText={(hour) => {
+                                                          const newWorkerhours = [...accountForm.workerHours]
+
+                                                          newWorkerhours[index].opentime["hour"] = hour.toString()
+
+                                                          setAccountform({ ...accountForm, workerHours: newWorkerhours })
+                                                        }} keyboardType="numeric" maxLength={2} value={info.opentime.hour}/>
+                                                        <TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "down", true)}>
+                                                          <AntDesign name="down" size={wsize(7)}/>
+                                                        </TouchableOpacity>
+                                                      </View>
+                                                      <View style={styles.column}>
+                                                        <Text style={styles.selectionDiv}>:</Text>
+                                                      </View>
+                                                      <View style={styles.selection}>
+                                                        <TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "up", true)}>
+                                                          <AntDesign name="up" size={wsize(7)}/>
+                                                        </TouchableOpacity>
+                                                        <TextInput style={styles.selectionHeader} onChangeText={(minute) => {
+                                                          const newWorkerhours = [...accountForm.workerHours]
+
+                                                          newWorkerhours[index].opentime["minute"] = minute.toString()
+
+                                                          setAccountform({ ...accountForm, workerHours: newWorkerhours })
+                                                        }} keyboardType="numeric" maxLength={2} value={info.opentime.minute}/>
+                                                        <TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "down", true)}>
+                                                          <AntDesign name="down" size={wsize(7)}/>
+                                                        </TouchableOpacity>
+                                                      </View>
+                                                      <View style={styles.selection}>
+                                                        <TouchableOpacity onPress={() => updateWorkingHour(index, "period", "up", true)}>
+                                                          <AntDesign name="up" size={wsize(7)}/>
+                                                        </TouchableOpacity>
+                                                        <Text style={styles.selectionHeader}>{info.opentime.period}</Text>
+                                                        <TouchableOpacity onPress={() => updateWorkingHour(index, "period", "down", true)}>
+                                                          <AntDesign name="down" size={wsize(7)}/>
+                                                        </TouchableOpacity>
+                                                      </View>
                                                     </View>
                                                     <View style={styles.timeSelectionColumn}>
                                                       <Text style={styles.timeSelectionHeader}>To</Text>
                                                     </View>
                                                     <View style={styles.timeSelection}>
-                                                      <Text style={styles.selectionHeader}>{info.closetime.hour}</Text>
-                                                      <Text style={styles.selectionDiv}>:</Text>
-                                                      <Text style={styles.selectionHeader}>{info.closetime.minute}</Text>
-                                                      <Text style={styles.selectionHeader}>{info.closetime.period}</Text>
+                                                      <View style={styles.selection}>
+                                                        <TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "up", false)}>
+                                                          <AntDesign name="up" size={wsize(7)}/>
+                                                        </TouchableOpacity>
+                                                        <TextInput style={styles.selectionHeader} onChangeText={(hour) => {
+                                                          const newWorkerhours = [...accountForm.workerHours]
+
+                                                          newWorkerhours[index].closetime["hour"] = hour.toString()
+
+                                                          setAccountform({ ...accountForm, workerHours: newWorkerhours })
+                                                        }} keyboardType="numeric" maxLength={2} value={info.closetime.hour}/>
+                                                        <TouchableOpacity onPress={() => updateWorkingHour(index, "hour", "down", false)}>
+                                                          <AntDesign name="down" size={wsize(7)}/>
+                                                        </TouchableOpacity>
+                                                      </View>
+                                                      <View style={styles.column}>
+                                                        <Text style={styles.selectionDiv}>:</Text>
+                                                      </View>
+                                                      <View style={styles.selection}>
+                                                        <TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "up", false)}>
+                                                          <AntDesign name="up" size={wsize(7)}/>
+                                                        </TouchableOpacity>
+                                                        <TextInput style={styles.selectionHeader} onChangeText={(minute) => {
+                                                          const newWorkerhours = [...accountForm.workerHours]
+
+                                                          newWorkerhours[index].closetime["minute"] = minute.toString()
+
+                                                          setAccountform({ ...accountForm, workerHours: newWorkerhours })
+                                                        }} keyboardType="numeric" maxLength={2} value={info.closetime.minute}/>
+                                                        <TouchableOpacity onPress={() => updateWorkingHour(index, "minute", "down", false)}>
+                                                          <AntDesign name="down" size={wsize(7)}/>
+                                                        </TouchableOpacity>
+                                                      </View>
+                                                      <View style={styles.selection}>
+                                                        <TouchableOpacity onPress={() => updateWorkingHour(index, "period", "up", false)}>
+                                                          <AntDesign name="up" size={wsize(7)}/>
+                                                        </TouchableOpacity>
+                                                        <Text style={styles.selectionHeader}>{info.closetime.period}</Text>
+                                                        <TouchableOpacity onPress={() => updateWorkingHour(index, "period", "down", false)}>
+                                                          <AntDesign name="down" size={wsize(7)}/>
+                                                        </TouchableOpacity>
+                                                      </View>
                                                     </View>
                                                   </View>
-                                                </>
-                                              : 
-                                              <Text style={styles.workerHourHeader}><Text style={{ fontWeight: '300' }}>Not open on</Text> {info.header}</Text>
-                                          }
-                                        </View>
-                                      ))
+                                                </View>
+                                                <TouchableOpacity style={styles.workerHourAction} onPress={() => {
+                                                  const newWorkerhours = [...accountForm.workerHours]
+
+                                                  newWorkerhours[index].working = false
+
+                                                  setAccountform({ ...accountForm, workerHours: newWorkerhours })
+                                                }}>
+                                                  <Text style={styles.workerHourActionHeader}>No service</Text>
+                                                </TouchableOpacity>
+                                              </>
+                                              :
+                                              info.close == false ? 
+                                                !info.takeShift ? 
+                                                  <>
+                                                    <Text style={styles.workerHourHeader}><Text style={{ fontWeight: '300' }}>Not working on</Text> {info.header}</Text>
+
+                                                    <View style={styles.workerHourActions}>
+                                                      <TouchableOpacity style={styles.workerHourAction} onPress={() => {
+                                                        const newWorkerhours = [...accountForm.workerHours]
+
+                                                        newWorkerhours[index].working = true
+
+                                                        setAccountform({ ...accountForm, workerHours: newWorkerhours })
+                                                      }}>
+                                                        <Text style={styles.workerHourActionHeader}>Will work</Text>
+                                                      </TouchableOpacity>
+
+                                                      {info.takeShift != "" ? 
+                                                        <TouchableOpacity style={styles.workerHourAction} onPress={() => cancelTheShift(info.header.substr(0, 3))}>
+                                                          <Text style={styles.workerHourActionHeader}>Cancel shift</Text>
+                                                        </TouchableOpacity>
+                                                        :
+                                                        <TouchableOpacity style={styles.workerHourAction} onPress={() => getTheOtherWorkers(info.header.substr(0, 3))}>
+                                                          <Text style={styles.workerHourActionHeader}>Take shift</Text>
+                                                        </TouchableOpacity>
+                                                      }
+                                                    </View>
+                                                  </>
+                                                  :
+                                                  <>
+                                                    <Text style={styles.workerHourHeader}><Text style={{ fontWeight: '300' }}>Taking {info.takeShift.name}'s shift for</Text> {info.header}</Text>
+
+                                                    <View style={styles.timeSelectionContainer}>
+                                                      <View style={styles.timeSelection}>
+                                                        <Text style={styles.selectionHeader}>{info.opentime.hour}</Text>
+                                                        <Text style={styles.selectionDiv}>:</Text>
+                                                        <Text style={styles.selectionHeader}>{info.opentime.minute}</Text>
+                                                        <Text style={styles.selectionHeader}>{info.opentime.period}</Text>
+                                                      </View>
+                                                      <View style={styles.timeSelectionColumn}>
+                                                        <Text style={styles.timeSelectionHeader}>To</Text>
+                                                      </View>
+                                                      <View style={styles.timeSelection}>
+                                                        <Text style={styles.selectionHeader}>{info.closetime.hour}</Text>
+                                                        <Text style={styles.selectionDiv}>:</Text>
+                                                        <Text style={styles.selectionHeader}>{info.closetime.minute}</Text>
+                                                        <Text style={styles.selectionHeader}>{info.closetime.period}</Text>
+                                                      </View>
+                                                    </View>
+
+                                                    <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+                                                      {info.takeShift && (
+                                                        <TouchableOpacity style={styles.workerHourAction} onPress={() => cancelTheShift(info.header.substr(0, 3))}>
+                                                          <Text style={styles.workerHourActionHeader}>Cancel shift</Text>
+                                                        </TouchableOpacity>
+                                                      )}
+
+                                                      <TouchableOpacity style={styles.workerHourAction} onPress={() => getTheOtherWorkers(info.header.substr(0, 3))}>
+                                                        <Text style={styles.workerHourActionHeader}>Take shift</Text>
+                                                      </TouchableOpacity>
+                                                    </View>
+                                                  </>
+                                                : 
+                                                <Text style={styles.workerHourHeader}><Text style={{ fontWeight: '300' }}>Not open on</Text> {info.header}</Text>
+                                            }
+                                          </View>
+                                        ))}
+                                      </>
                                     )}
 
                                     {accountForm.errorMsg ? <Text style={styles.errorMsg}>{accountForm.errorMsg}</Text> : null}
@@ -3850,7 +4312,7 @@ export default function Main(props) {
                                                     name: info.profile.name ? info.profile.name : "", 
                                                     size: { width: info.profile.width, height: info.profile.height }
                                                   }, editProfile: false,
-                                                  workerHours: info.hours, editHours: false,
+                                                  daysInfo: { working: ['', '', '', '', '', '', ''], done: false, sameHours: null }, workerHours: [], workerHourssameday: null, editHours: false,
                                                   errorMsg: "", loading: false
                                                 })
                                               } else {
@@ -3886,26 +4348,33 @@ export default function Main(props) {
                         </ScrollView>
 
                         {getWorkersbox.show && (
-                          <View style={styles.workersContainer}>
-                            <TouchableOpacity style={styles.workersClose} onPress={() => setGetworkersbox({ ...getWorkersbox, show: false })}>
-                              <AntDesign color="black" size={wsize(7)} name="closecircleo"/>
-                            </TouchableOpacity>
-                            {getWorkersbox.workers.map(info => (
-                              <View key={info.key} style={styles.row}>
-                                {info.row.map(worker => (
-                                  <TouchableOpacity key={worker.key} style={styles.worker} onPress={() => selectTheOtherWorker(worker.id)}>
-                                    <View style={styles.workerProfile}>
-                                      <Image 
-                                        style={resizePhoto(worker.profile, wsize(20))} 
-                                        source={worker.profile.name ? { uri: logo_url + worker.profile.name } : require("../../assets/profilepicture.jpeg")}
-                                      />
-                                    </View>
-                                    <Text style={styles.workerUsername}>{worker.username}</Text>
-                                  </TouchableOpacity>
+                          <Modal transparent={true}>
+                            <View style={styles.workersBox}>
+                              <View style={styles.workersContainer}>
+                                <TouchableOpacity style={styles.workersClose} onPress={() => setGetworkersbox({ ...getWorkersbox, show: false })}>
+                                  <AntDesign color="black" size={wsize(7)} name="closecircleo"/>
+                                </TouchableOpacity>
+                                {getWorkersbox.workers.map(info => (
+                                  <View key={info.key} style={styles.row}>
+                                    {info.row.map(worker => (
+                                      worker.id ? 
+                                        <TouchableOpacity key={worker.key} style={styles.worker} onPress={() => selectTheOtherWorker(worker)}>
+                                          <View style={styles.workerProfile}>
+                                            <Image 
+                                              style={resizePhoto(worker.profile, wsize(20))} 
+                                              source={worker.profile.name ? { uri: logo_url + worker.profile.name } : require("../../assets/profilepicture.jpeg")}
+                                            />
+                                          </View>
+                                          <Text style={styles.workerUsername}>{worker.username}</Text>
+                                        </TouchableOpacity>
+                                        :
+                                        <View key={worker.key} style={styles.worker}></View>
+                                    ))}
+                                  </View>
                                 ))}
                               </View>
-                            ))}
-                          </View>
+                            </View>
+                          </Modal>
                         )}
                       </>
                     )}
@@ -4003,12 +4472,14 @@ const styles = StyleSheet.create({
 	scheduleImageHolder: { borderRadius: wsize(20) / 2, margin: 5, overflow: 'hidden', width: wsize(20) },
 	scheduleImage: { height: wsize(20), width: wsize(20) },
 	scheduleHeader: { fontSize: wsize(5), fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
-	scheduleActionsHeader: { fontSize: wsize(4), marginTop: 10, textAlign: 'center' },
 	scheduleActions: { flexDirection: 'row', justifyContent: 'space-around' },
   column: { flexDirection: 'column', justifyContent: 'space-around' },
 	scheduleAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, paddingVertical: 10, width: wsize(30) },
 	scheduleActionHeader: { fontSize: wsize(4), textAlign: 'center' },
 
+  chartActions: { flexDirection: 'row', justifyContent: 'space-around' },
+  chartAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: '40%' },
+  chartActionHeader: { textAlign: 'center' },
   chartRow: { flexDirection: 'row', width: '100%' },
   chartTimeHeader: { fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
   chartWorker: { alignItems: 'center', borderColor: 'grey', borderStyle: 'solid', borderWidth: 1, flexDirection: 'row', justifyContent: 'space-around' },
@@ -4100,6 +4571,13 @@ const styles = StyleSheet.create({
 
   workerHour: { alignItems: 'center', backgroundColor: 'rgba(127, 127, 127, 0.3)', borderRadius: 10, marginTop: 10, marginHorizontal: '1%', padding: '2%', width: '98%' },
   workerHourHeader: { fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
+  workerDayTouch: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: '90%' },
+  workerDayTouchSelected: { backgroundColor: 'rgba(0, 0, 0, 0.6)', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: '90%' },
+  workerDayTouchOff: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, margin: 5, opacity: 0.2, padding: 5, width: '90%' },
+  workerDayTouchHeader: { fontSize: wsize(6), textAlign: 'center' },
+  workingDay: { backgroundColor: 'rgba(0, 0, 0, 0.2)', borderRadius: 10, margin: 5, padding: 10 },
+  workingDayHeader: { fontSize: wsize(6), textAlign: 'center' },
+
   timeSelectionContainer: { flexDirection: 'row', width: '100%' },
   workerHourActions: { flexDirection: 'row', justifyContent: 'space-around' },
   workerHourAction: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: wsize(35) },
@@ -4138,7 +4616,7 @@ const styles = StyleSheet.create({
   accountEditTouch: { borderRadius: 2, borderStyle: 'solid', borderWidth: 2, marginTop: 5, padding: 5, width: wsize(50) },
   accountEditTouchHeader: { fontSize: wsize(4), textAlign: 'center' },
   
-  optionsBox: { alignItems: 'center', marginHorizontal: 10, marginTop: 30 },
+  optionsBox: { alignItems: 'center', marginHorizontal: 10, marginVertical: 50 },
   optionsHeader: { fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
   options: { flexDirection: 'row', justifyContent: 'space-between' },
   option: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: '45%' },
@@ -4154,12 +4632,17 @@ const styles = StyleSheet.create({
   scheduleOptionHeader: { textAlign: 'center' },
   scheduleRebookBox: { backgroundColor: 'white', flexDirection: 'column', height: '20%', justifyContent: 'space-around', width: '100%' },
   scheduleRebookHeader: { fontSize: wsize(6), paddingHorizontal: '5%', textAlign: 'center' },
-  scheduleCancelBox: { backgroundColor: 'white', height: '100%', width: '100%' },
-  scheduleCancelHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(6), marginHorizontal: 30, marginTop: 50, textAlign: 'center' },
+  scheduleBox: { alignItems: 'center', backgroundColor: 'white', height: '100%', width: '100%' },
   scheduleCancelInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), height: 200, margin: '5%', padding: 10, width: '90%' },
   scheduleCancelActions: { flexDirection: 'row', justifyContent: 'space-around' },
   scheduleCancelTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 5, width: wsize(30) },
   scheduleCancelTouchHeader: { fontSize: wsize(5), textAlign: 'center' },
+  scheduleHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(6), marginHorizontal: 30, marginTop: 50, textAlign: 'center' },
+  schedulePushActions: { flexDirection: 'column', height: '50%', justifyContent: 'space-between', width: '100%' },
+  schedulePushAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: '80%' },
+  schedulePushActionHeader: { textAlign: 'center' },
+  scheduleSubmit: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 10, width: '60%' },
+  scheduleSubmitHeader: { textAlign: 'center' },
 
 	disabled: { backgroundColor: 'black', flexDirection: 'column', justifyContent: 'space-around', height: '100%', opacity: 0.8, width: '100%' },
   disabledContainer: { alignItems: 'center', width: '100%' },
