@@ -86,8 +86,7 @@ const info = {
     chart: {
       stillBusy: "Still busy",
       booked: "Booked",
-      editTime: "Tap time to rebook",
-      rebook: "Tap any other time to rebook"
+      editTime: "Tap time to rebook"
     },
     cartOrderers: {
       header: "You will see all order(s) here",
@@ -101,6 +100,8 @@ const info = {
     },
     hidden: {
       scheduleOption: {
+        rebook: "Tap any other time to rebook",
+        select: "Tap the schedules you want to change",
         remove: {
           header: "Why cancel ? (Optional)",
           reason: "Write your reason"
