@@ -100,14 +100,15 @@ const info = {
     },
     hidden: {
       scheduleOption: {
-        rebook: "Tap any other time to rebook",
-        select: "Tap the schedules you want to change",
+        rebookHeader: "Tap any other time to rebook",
+        selectHeader: "Tap the schedules you want to change",
         remove: {
           header: "Why cancel ? (Optional)",
           reason: "Write your reason"
         },
         select: {
-          pushByHeader: "Reschedule all appointments by",
+          pushTypeHeader: "Reschedule appointments forward or backward ?",
+          pushByHeader: "Reschedule appointments by",
           timeFactorHeader: "Enter how many "
         }
       },

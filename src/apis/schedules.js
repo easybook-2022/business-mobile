@@ -5,6 +5,13 @@ export const getAppointmentInfo = id => {
 	return axios.get(`${url}/schedules/get_appointment_info/${id}`)
 }
 
+export const getReschedulingAppointments = data => {
+  return axios.post(
+    `${url}/schedules/get_rescheduling_appointments`,
+    data
+  )
+}
+
 export const salonChangeAppointment = data => {
   return axios.post(
     `${url}/schedules/salon_change_appointment`,
