@@ -40,6 +40,12 @@ const info = {
         city: "Enter city:",
         province: "Enter province:",
         postalCode: "Enter postal code:"
+      },
+      sameOpen: {
+        "hair salon": "Is the hair salon open same time on",
+        "nail salon": "Is the nail salon open same time on",
+        restaurant: "Is the restaurant open same time on",
+        store: "Is the store open same time on"
       }
     },
     phonenumber: {
@@ -86,7 +92,13 @@ const info = {
     chart: {
       stillBusy: "Still busy",
       booked: "Booked",
-      editTime: "Tap time to rebook"
+      editTime: "Tap time to rebook",
+      reschedule: {
+        all: "Reschedule All",
+        some: "Reschedule Some",
+        finishSelect: "Finish selecting",
+      },
+      rebook: "Tap any schedule to rebook"
     },
     cartOrderers: {
       header: "You will see all order(s) here",
@@ -101,16 +113,27 @@ const info = {
     hidden: {
       scheduleOption: {
         rebookHeader: "Tap any other time to rebook",
-        selectHeader: "Tap the schedules you want to change",
+        selectHeader: "Tap the schedules you want to rebook",
         remove: {
           header: "Why cancel ? (Optional)",
           reason: "Write your reason"
         },
         select: {
           pushTypeHeader: "Reschedule appointments forward or backward ?",
-          pushByHeader: "Reschedule appointments by",
-          timeFactorHeader: "Enter how many "
-        }
+          pushByHeader: "Reschedule appointments {dir} by",
+          timeFactorHeader: "Enter how many ",
+          pushTypes: {
+            backward: "Push Backward",
+            forward: "Push Forward"
+          },
+          pushBys: {
+            days: "Days",
+            hours: "Hours",
+            minutes: "Minutes"
+          }
+        },
+        rescheduleNow: "Reschedule Now",
+        selectFactor: "Select how many {factor}"
       },
       showInfo: {
         businessHeader: "Business's hour(s)",
@@ -392,7 +415,9 @@ const info = {
     delete: "Delete",
     change: "Change",
     see: "See",
-    random: "Pick Random"
+    random: "Pick Random",
+    forward: "Forward",
+    backward: "Backward"
   }
 }
 

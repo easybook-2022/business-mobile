@@ -122,7 +122,9 @@ export default function Main(props) {
 
   const [hoursRange, setHoursrange] = useState([])
   const [hoursRangesameday, setHoursrangesameday] = useState(null)
-  const [hoursInfo, setHoursinfo] = useState([])
+  const [hoursInfo, setHoursinfo] = useState({})
+  const [workersHoursinfo, setWorkershoursinfo] = useState({})
+
   const [getWorkersbox, setGetworkersbox] = useState({ show: false, day: '', workers: [] })
 
 	const getNotificationPermission = async() => {
@@ -317,6 +319,22 @@ export default function Main(props) {
         }
       })
   }
+  const getAllTheWorkersTime = async() => {
+    const locationid = await AsyncStorage.getItem("locationid")
+
+    getAllWorkersTime(locationid)
+      .then((res) => {
+        if (res.status == 200) {
+          return res.data
+        }
+      })
+      .then((res) => {
+        if (res) {
+          setWorkershoursinfo(res.workers)
+        }
+      })
+  }
+
   const getTheWorkersHour = async(getlist) => {
     const locationid = await AsyncStorage.getItem("locationid")
     const data = { locationid, ownerid: null }
@@ -415,9 +433,11 @@ export default function Main(props) {
 
     date.setDate(today.getDate() + dayDir)
 
-    let jsonDate, newWorkersTime = {}, hourInfo = hoursInfo[days[date.getDay()].substr(0, 3)]
+    let jsonDate, newWorkersTime = {}, hourInfo = workersHoursinfo[days[date.getDay()].substr(0, 3)]
 
     if (hourInfo != undefined) {
+      hourInfo = hoursInfo[days[date.getDay()].substr(0, 3)]
+
       let closedtime = Date.parse(days[date.getDay()] + " " + months[date.getMonth()] + ", " + date.getDate() + " " + date.getFullYear() + " " + hourInfo["closeHour"] + ":" + hourInfo["closeMinute"])
       let now = Date.parse(days[today.getDay()] + " " + months[today.getMonth()] + ", " + today.getDate() + " " + today.getFullYear() + " " + today.getHours() + ":" + today.getMinutes())
       let day = days[date.getDay()].substr(0, 3), working = false
@@ -530,7 +550,7 @@ export default function Main(props) {
     const { time, timepassed, jsonDate } = info
     const scheduled = workersHour[worker]["scheduled"]
     const { beginWork, endWork, working } = workersHour[worker][currDay]
-    let bgColor = 'transparent', opacity = 1, fontColor = 'black', disabled = false
+    let bgColor = 'transparent', opacity = 1, fontColor = 'black', disabled = false, header = ""
     let style
 
     switch (type) {
@@ -558,7 +578,7 @@ export default function Main(props) {
             if (time + "-c" in scheduled) {
               bgColor = "black"
             } else if (time + "-b" in scheduled) {
-              if (JSON.stringify(blocked).includes(JSON.stringify(jsonDate))) { // time blocked belongs to schedule
+              if (JSON.stringify(blocked).includes("\"id\":" + scheduled[time + "-b"])) { // time blocked belongs to schedule
 
               } else {
                 bgColor = "grey"
@@ -632,6 +652,26 @@ export default function Main(props) {
         }
 
         break;
+      case "header":
+        if (rebook) {
+          if (time + "-c" in scheduled) {
+            header = "(" + tr.t("main.chart.booked") + ")"
+          } else if (time + "-b" in scheduled) {
+            if (JSON.stringify(blocked).includes("\"id\":" + scheduled[time + "-b"])) { // time blocked belongs to schedule
+
+            } else {
+              header = "(" + tr.t("main.chart.stillBusy") + ")"
+            }
+          }
+        } else {
+          if (time + "-c" in scheduled) {
+            header = "(" + tr.t("main.chart.booked") + ")"
+          } else if (time + "-b" in scheduled) {
+            header = "(" + tr.t("main.chart.stillBusy") + ")"
+          }
+        }
+
+        break;
       default:
 
     }
@@ -643,6 +683,8 @@ export default function Main(props) {
             (type == "fontColor" && fontColor)
             ||
             (type == "disabled" && disabled)
+            ||
+            (type == "header" && header)
 
     return style
   }
@@ -663,7 +705,7 @@ export default function Main(props) {
       }
     } else {
       if (!scheduleOption.push) {
-        setScheduleoption({ ...scheduleOption, show: true, push: true })
+        setScheduleoption({ ...scheduleOption, show: true, push: true, selectedIds: [] })
       } else {
         compute = true
       }
@@ -671,7 +713,7 @@ export default function Main(props) {
 
     if (compute) {
       const { pushBy, selectedIds, selectedFactor } = scheduleOption
-      const data = { selectedIds }
+      const data = { date: chartInfo.date, selectedIds }
 
       getReschedulingAppointments(data)
         .then((res) => {
@@ -776,6 +818,8 @@ export default function Main(props) {
       })
   }
   const showScheduleOption = (id, type, index, action) => {
+    setScheduleoption({ ...scheduleOption, show: true, showRebookHeader: true })
+
     getAppointmentInfo(id)
       .then((res) => {
         if (res.status == 200) {
@@ -805,7 +849,6 @@ export default function Main(props) {
             }
           } else {
             if (!scheduleOption.rebook) {
-              setScheduleoption({ ...scheduleOption, show: true, showRebookHeader: true })
               setTimeout(function () {
                 setScheduleoption({ 
                   ...scheduleOption, 
@@ -813,7 +856,7 @@ export default function Main(props) {
                   service: { id: serviceId ? serviceId : -1, name }, 
                   client, blocked, note, oldTime: unix, jsonDate: time
                 })
-              }, 1000)
+              }, 500)
             } else {
               setScheduleoption({ ...scheduleOption, rebook: false })
             }
@@ -2285,6 +2328,11 @@ export default function Main(props) {
   }, [speakInfo.orderNumber])
 
   useEffect(() => {
+    if (scheduleOption.pushBy != "") getAllTheWorkersTime()
+    if (scheduleOption.selectedFactor != "") pushTheAppointments()
+  }, [scheduleOption.selectedFactor, scheduleOption.pushBy])
+
+  useEffect(() => {
     if (chartInfo.resetChart > 0) getAppointmentsChart(0, null)
   }, [chartInfo.resetChart])
 
@@ -2407,14 +2455,26 @@ export default function Main(props) {
                       <View style={styles.chartActions}>
                         {!scheduleOption.select && (
                           <TouchableOpacity style={styles.chartAction} onPress={() => pushTheAppointments(false)}>
-                            <Text style={styles.chartActionHeader}>Reschedule All</Text>
+                            <Text style={styles.chartActionHeader}>{tr.t("main.chart.reschedule.all")}</Text>
                           </TouchableOpacity>
                         )}
 
-                        <TouchableOpacity style={styles.chartAction} onPress={() => pushTheAppointments(true)}>
-                          <Text style={styles.chartActionHeader}>{!scheduleOption.select ? 'Reschedule Some' : 'Finish Selecting'}</Text>
-                        </TouchableOpacity>
+                        {!scheduleOption.select ? 
+                          <TouchableOpacity style={styles.chartAction} onPress={() => pushTheAppointments(true)}>
+                            <Text style={styles.chartActionHeader}>{tr.t("main.chart.reschedule.some")}</Text>
+                          </TouchableOpacity>
+                          :
+                          <>
+                            <TouchableOpacity style={styles.chartAction} onPress={() => setScheduleoption({ ...scheduleOption, show: false, select: false, push: false, pushType: null, pushBy: null, selectedIds: [] })}>
+                              <Text style={styles.chartActionHeader}>{tr.t("buttons.cancel")}</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.chartAction} onPress={() => pushTheAppointments(true)}>
+                              <Text style={styles.chartActionHeader}>{tr.t("main.chart.reschedule.finishSelect")}</Text>
+                            </TouchableOpacity>
+                          </>
+                        }
                       </View>
+                      <Text style={{ fontSize: wsize(5), fontWeight: 'bold' }}>{tr.t("main.chart.rebook")}</Text>
                     </View>
                     <View style={styles.chartRow}>
                       {chartInfo.workers.map(worker => (
@@ -2459,7 +2519,11 @@ export default function Main(props) {
                                   disabled={timeStyle(item, worker.id, "disabled")}
                                   onPress={() => {
                                     if (scheduleOption.rebook) {
-                                      rebookSchedule(item.time, item.jsonDate, worker.id)
+                                      if (scheduleOption.id == chartInfo.workersHour[worker.id]["scheduled"][item.time + "-c"]) {
+                                        setScheduleoption({ ...scheduleOption, show: false, rebook: false })
+                                      } else {
+                                        rebookSchedule(item.time, item.jsonDate, worker.id)
+                                      }
                                     } else if (!(item.time + "-c" in workersHour[worker.id]["scheduled"])) {
                                       blockTheTime(worker.id, item.jsonDate)
                                     } else {
@@ -2486,17 +2550,13 @@ export default function Main(props) {
                                       :
                                       { color: timeStyle(item, worker.id, "fontColor") }
                                   ]}>
-                                    {item.timeDisplay}
+                                    {item.timeDisplay + '\n'}
                                     {(
                                       item.time + "-c" in workersHour[worker.id]["scheduled"]
                                       ||
-                                      (item.time + "-b" in workersHour[worker.id]["scheduled"] && !scheduleOption.rebook)
+                                      (item.time + "-b" in workersHour[worker.id]["scheduled"])
                                     ) && (
-                                      <Text style={styles.chartScheduledInfo}>
-                                        {'\n'}
-                                        {item.time + "-c" in workersHour[worker.id]["scheduled"] && "(" + tr.t("main.chart.booked") + ")"}
-                                        {(item.time + "-b" in workersHour[worker.id]["scheduled"] && !scheduleOption.rebook) && "(" + tr.t("main.chart.stillBusy") + ")"}
-                                      </Text>
+                                      <Text style={styles.chartScheduledInfo}>{timeStyle(item, worker.id, "header")}</Text>
                                     )}
                                   </Text>
 
@@ -2606,7 +2666,7 @@ export default function Main(props) {
                   <Text style={styles.scheduleOptionHeader}>{tr.t("main.hidden.scheduleOption.rebookHeader")}</Text>
                 </View>
               )}
-
+              
               {scheduleOption.showSelectHeader && (
                 <View style={styles.scheduleOptionHeaderBox}>
                   <Text style={styles.scheduleOptionHeader}>{tr.t("main.hidden.scheduleOption.selectHeader")}</Text>
@@ -2641,132 +2701,157 @@ export default function Main(props) {
 
               {scheduleOption.push && (
                 <View style={styles.scheduleBox}>
-                  {scheduleOption.pushType == null && (
+                  {scheduleOption.pushType == null ? 
                     <>
                       <Text style={styles.scheduleOptionHeader}>{tr.t("main.hidden.scheduleOption.select.pushTypeHeader")}</Text>
 
                       <View style={styles.schedulePushActions}>
-                        <TouchableOpacity style={styles.schedulePushAction} onPress={() => setScheduleoption({ ...scheduleOption, pushType: "back" })}>
-                          <Text style={styles.schedulePushActionHeader}>Move Back</Text>
+                        <TouchableOpacity style={styles.schedulePushAction} onPress={() => setScheduleoption({ ...scheduleOption, pushType: "backward" })}>
+                          <Text style={styles.schedulePushActionHeader}>{tr.t("main.hidden.scheduleOption.select.pushTypes.backward")}</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={styles.schedulePushAction} onPress={() => setScheduleoption({ ...scheduleOption, pushType: "forward" })}>
-                          <Text style={styles.schedulePushActionHeader}>Move Forward</Text>
+                          <Text style={styles.schedulePushActionHeader}>{tr.t("main.hidden.scheduleOption.select.pushTypes.forward")}</Text>
                         </TouchableOpacity>
                       </View>
 
                       <View style={styles.scheduleActions}>
                         <TouchableOpacity style={styles.scheduleAction} onPress={() => setScheduleoption({ ...scheduleOption, show: false, select: false, push: false, pushType: null, pushBy: null, selectedIds: [] })}>
-                          <Text style={styles.scheduleActionHeader}>Cancel</Text>
+                          <Text style={styles.scheduleActionHeader}>{tr.t("buttons.cancel")}</Text>
                         </TouchableOpacity>
                       </View>
                     </>
-                  )}
+                    :
+                    scheduleOption.pushBy == null ? 
+                      <>
+                        <Text style={styles.scheduleOptionHeader}>{
+                          language == "chinese" || language == "french" ? 
+                            tr.t("main.hidden.scheduleOption.select.pushByHeader." + scheduleOption.pushType)
+                            :
+                            tr.t("main.hidden.scheduleOption.select.pushByHeader").replace("{dir}", scheduleOption.pushType)
+                        }</Text>
 
-                  {scheduleOption.pushType != null && (
-                    <>
-                      <Text style={styles.scheduleOptionHeader}>{tr.t("main.hidden.scheduleOption.select.pushByHeader")}</Text>
+                        <View style={styles.schedulePushActions}>
+                          <TouchableOpacity style={styles.schedulePushAction} onPress={() => {
+                            const today = new Date(), calcDate = new Date(), pushFactors = []
+                            let k = 0
 
-                      <View style={styles.schedulePushActions}>
-                        <TouchableOpacity style={styles.schedulePushAction} onPress={() => {
-                          const { pushType } = scheduleOption
-                          const today = new Date(), calcDate = new Date(), pushFactors = []
-                          let k = 0
+                            today.setDate(today.getDate() + chartInfo.dayDir)
 
-                          today.setDate(today.getDate() + chartInfo.dayDir)
+                            while (pushFactors.length < 3) {
+                              k = scheduleOption.pushType == "back" ? k - 1 : k + 1
 
-                          while (pushFactors.length < 3) {
-                            k = pushType == "back" ? k - 1 : k + 1
+                              calcDate.setDate(today.getDate() + k)
 
-                            calcDate.setDate(today.getDate() + k)
-
-                            if ((k == 1 || k == -1) && days[calcDate.getDay()].substr(0, 3) in hoursInfo) {
-                              if (calcDate.getTime() == today.getTime()) {
-                                pushFactors.push({ header: k == 1 ? "Tomorrow" : "Yesterday", pushBy: k })
-                              } else {
-                                pushFactors.push({ header: days[calcDate.getDay()], pushBy: k })
+                              if ((k == 1 || k == -1) && days[calcDate.getDay()].substr(0, 3) in workersHoursinfo && calcDate.getTime() == today.getTime()) {
+                                pushFactors.push({ header: (k == 1 ? "Tomorrow" : "Yesterday") + ",\n" + days[calcDate.getDay()], pushBy: k })
+                              } else if (days[calcDate.getDay()].substr(0, 3) in workersHoursinfo) {
+                                pushFactors.push({ 
+                                  header: (k < 0 ? "Back " + (0 - k) + " day(s) on\n" : k + " day(s) on\n") + days[calcDate.getDay()], 
+                                  pushBy: k 
+                                })
                               }
-                            } else if (days[calcDate.getDay()].substr(0, 3) in hoursInfo) {
-                              pushFactors.push({ header: days[calcDate.getDay()], pushBy: k })
                             }
-                          }
 
-                          setScheduleoption({ ...scheduleOption, pushBy: "days", pushFactors })
-                        }}>
-                          <Text style={styles.schedulePushActionHeader}>Days</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.schedulePushAction} onPress={() => {
-                          const { pushType } = scheduleOption
-                          const today = new Date(), date = new Date(today.getTime())
-                          const pushFactors = [{ header: "2 hours", pushBy: 2 }]
-
-                          for (let k = 3; k <= 4; k++) {
-                            date.setDate(today.getHours() + k)
-
-                            pushFactors.push({ header: k + " hours", pushBy: k })
-                          }
-
-                          setScheduleoption({ ...scheduleOption, pushBy: "hours", pushFactors })
-                        }}>
-                          <Text style={styles.schedulePushActionHeader}>Hours</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.schedulePushAction} onPress={() => {
-                          const today = new Date(), date = new Date(today.getTime())
-                          const pushFactors = [{ header: "30 minutes", pushBy: 30 }]
-
-                          for (let k = 45; k <= 60; k += 15) {
-                            date.setDate(today.getMinutes() + 15)
-
-                            pushFactors.push({ header: k + " minutes", pushBy: k })
-                          }
-
-                          setScheduleoption({ ...scheduleOption, pushBy: "minutes", pushFactors })
-                        }}>
-                          <Text style={styles.schedulePushActionHeader}>Minutes</Text>
-                        </TouchableOpacity>
-                      </View>
-
-                      <View style={styles.scheduleActions}>
-                        <TouchableOpacity style={styles.scheduleAction} onPress={() => setScheduleoption({ ...scheduleOption, show: false, select: false, push: false, pushType: null, pushBy: null, selectedIds: [] })}>
-                          <Text style={styles.scheduleActionHeader}>Cancel</Text>
-                        </TouchableOpacity>
-                      </View>
-                    </>
-                  )}
-
-                  {scheduleOption.pushBy != null && (
-                    <>
-                      <Text style={styles.scheduleOptionHeader}>Select a day</Text>
-
-                      <View style={styles.schedulePushActions}>
-                        {scheduleOption.pushFactors.map((factor, index) => (
-                          <TouchableOpacity key={index} style={[
-                            styles.schedulePushAction, 
-                            { backgroundColor: scheduleOption.selectedFactor == factor.pushBy ? 'black' : 'transparent' }
-                          ]} onPress={() => setScheduleoption({ ...scheduleOption, selectedFactor: factor.pushBy })}>
-                            <Text style={[
-                              styles.schedulePushActionHeader,
-                              { color: scheduleOption.selectedFactor == factor.pushBy ? 'white' : 'black' }
-                            ]}>{factor.header}</Text>
+                            setScheduleoption({ ...scheduleOption, pushBy: "days", pushFactors })
+                          }}>
+                            <Text style={styles.schedulePushActionHeader}>{tr.t("main.hidden.scheduleOption.select.pushBys.days")}</Text>
                           </TouchableOpacity>
-                        ))}
-                      </View>
+                          <TouchableOpacity style={styles.schedulePushAction} onPress={() => {
+                            const { pushType } = scheduleOption
+                            const today = new Date(), calcDate = new Date(), pushFactors = []
+                            let k = 0, hour = "", period = ""
 
-                      <Text style={styles.scheduleOptionHeader}>Or{'\n' + tr.t("main.hidden.scheduleOption.select.timeFactorHeader")}{scheduleOption.pushBy}</Text>
-                      <TextInput style={styles.scheduleInput} placeholder={"Enter how many " + scheduleOption.pushBy} onChangeText={factor => setScheduleoption({ ...scheduleOption, selectedFactor: factor })}/>
+                            today.setDate(today.getDate() + chartInfo.dayDir)
 
-                      <View style={styles.scheduleActions}>
-                        <TouchableOpacity style={styles.scheduleAction} onPress={() => setScheduleoption({ ...scheduleOption, pushBy: "", pushFactors: [] })}>
-                          <Text style={styles.scheduleActionHeader}>Back</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.scheduleAction} onPress={() => setScheduleoption({ ...scheduleOption, show: false, select: false, push: false, pushType: null, pushBy: null, selectedIds: [] })}>
-                          <Text style={styles.scheduleActionHeader}>Cancel</Text>
-                        </TouchableOpacity>
+                            while (pushFactors.length < 3) {
+                              k = pushType == "back" ? k - 1 : k + 1
+
+                              calcDate.setDate(today.getHours() + k)
+
+                              if ((k == 1 || k == -1) && calcDate.getTime() == today.getTime()) {
+                                pushFactors.push({ header: "Now", pushBy: k })
+                              } else {
+                                pushFactors.push({ 
+                                  header: (k < 0 ? 0 - k : k) + " " + tr.t("main.hidden.scheduleOption.select.pushBys.hours").toLowerCase() + " " + tr.t("buttons." + pushType), 
+                                  pushBy: k 
+                                })
+                              }
+                            }
+
+                            setScheduleoption({ ...scheduleOption, pushBy: "hours", pushFactors })
+                          }}>
+                            <Text style={styles.schedulePushActionHeader}>{tr.t("main.hidden.scheduleOption.select.pushBys.hours")}</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity style={styles.schedulePushAction} onPress={() => {
+                            const { pushType } = scheduleOption
+                            const today = new Date(), calcDate = new Date(), pushFactors = []
+                            let k = 0, minute
+
+                            today.setDate(today.getDate() + chartInfo.dayDir)
+
+                            while (pushFactors.length < 3) {
+                              k = pushType == "back" ? k - 15 : k + 15
+
+                              calcDate.setDate(today.getMinutes() + k)
+
+                              if ((k == 1 || k == -1) && calcDate.getTime() == today.getTime()) {
+                                pushFactors.push({ header: "Now", pushBy: k })
+                              } else {
+                                pushFactors.push({ 
+                                  header: (k < 0 ? 0 - k : k) + " minute(s) " + pushType, 
+                                  pushBy: k 
+                                })
+                              }
+                            }
+
+                            setScheduleoption({ ...scheduleOption, pushBy: "minutes", pushFactors })
+                          }}>
+                            <Text style={styles.schedulePushActionHeader}>{tr.t("main.hidden.scheduleOption.select.pushBys.minutes")}</Text>
+                          </TouchableOpacity>
+                        </View>
+
+                        <View style={styles.scheduleActions}>
+                          <TouchableOpacity style={styles.scheduleAction} onPress={() => setScheduleoption({ ...scheduleOption, show: false, select: false, push: false, pushType: null, pushBy: null, selectedIds: [] })}>
+                            <Text style={styles.scheduleActionHeader}>{tr.t("buttons.cancel")}</Text>
+                          </TouchableOpacity>
+                        </View>
+                      </>
+                      :
+                      <>
+                        <Text style={styles.scheduleOptionHeader}>
+                          {tr.t("main.hidden.scheduleOption.selectFactor").replace("{factor}", tr.t("main.hidden.scheduleOption.select.pushBys." + scheduleOption.pushBy))}
+                        </Text>
+
+                        <View style={styles.schedulePushActions}>
+                          {scheduleOption.pushFactors.map((factor, index) => (
+                            <TouchableOpacity key={index} style={[
+                              styles.schedulePushAction, 
+                              { backgroundColor: scheduleOption.selectedFactor == factor.pushBy ? 'black' : 'transparent' }
+                            ]} onPress={() => setScheduleoption({ ...scheduleOption, selectedFactor: factor.pushBy })}>
+                              <Text style={[
+                                styles.schedulePushActionHeader,
+                                { color: scheduleOption.selectedFactor == factor.pushBy ? 'white' : 'black' }
+                              ]}>{factor.header}</Text>
+                            </TouchableOpacity>
+                          ))}
+                        </View>
+
+                        <Text style={styles.scheduleOptionHeader}>Or{'\n' + tr.t("main.hidden.scheduleOption.select.timeFactorHeader")}{tr.t("main.hidden.scheduleOption.select.pushBys." + scheduleOption.pushBy)}</Text>
+                        <TextInput style={styles.scheduleInput} placeholder={"Enter how many " + scheduleOption.pushBy} onChangeText={factor => setScheduleoption({ ...scheduleOption, selectedFactor: factor })}/>
                         <TouchableOpacity style={styles.scheduleAction} onPress={() => pushTheAppointments()}>
-                          <Text style={styles.scheduleActionHeader}>Reschedule Now</Text>
+                          <Text style={styles.scheduleActionHeader}>{tr.t("main.hidden.scheduleOption.rescheduleNow")}</Text>
                         </TouchableOpacity>
-                      </View>
-                    </>
-                  )}
+
+                        <View style={styles.scheduleActions}>
+                          <TouchableOpacity style={styles.scheduleAction} onPress={() => setScheduleoption({ ...scheduleOption, pushBy: null, pushFactors: [] })}>
+                            <Text style={styles.scheduleActionHeader}>{tr.t("buttons.back")}</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity style={styles.scheduleAction} onPress={() => setScheduleoption({ ...scheduleOption, show: false, select: false, push: false, pushType: null, pushBy: null, selectedIds: [] })}>
+                            <Text style={styles.scheduleActionHeader}>{tr.t("buttons.cancel")}</Text>
+                          </TouchableOpacity>
+                        </View>
+                      </>
+                  }
                 </View>
               )}
             </SafeAreaView>

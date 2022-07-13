@@ -40,6 +40,12 @@ const info = {
         city: "进入城市:",
         province: "输入省份:",
         postalCode: "输入邮政编码:"
+      },
+      sameOpen: {
+        "hair salon": "美发沙龙同日开门吗",
+        "nail salon": "美甲沙龙同日开门吗",
+        restaurant: "餐厅在同一时间营业吗",
+        store: "商店是同一时间开门吗"
       }
     },
     phonenumber: {
@@ -95,7 +101,12 @@ const info = {
       stillBusy: "还在忙",
       booked: "预订",
       editTime: "点击时间重新预订",
-      rebook: "Tap any other time to rebook"
+      reschedule: {
+        all: "重新安排所有",
+        some: "重新安排一些",
+        finishSelect: "Finish selecting",
+      },
+      rebook: "点击任何其他时间重新预订"
     },
     cartOrderers: {
       header: "您将在此处查看所有订单",
@@ -109,13 +120,31 @@ const info = {
     },
     hidden: {
       scheduleOption: {
-        change: {
-          header: "请点击任何其他时间重新预订"
-        },
+        rebookHeader: "点击任何其他时间重新预订",
+        selectHeader: "点按您要更改的时间表",
         remove: {
           header: "为什么取消？(可选的)",
           reason: "写下你的理由"
-        }
+        },
+        select: {
+          pushTypeHeader: "向前或向后重新安排约会 ?",
+          pushByHeader: {
+            forward: "重新安排约会",
+            backward: "向后重新安排约会"
+          },
+          timeFactorHeader: "输入多少 ",
+          pushTypes: {
+            backward: "向后推",
+            forward: "向前推进"
+          },
+          pushBys: {
+            days: "天",
+            hours: "小时",
+            minutes: "分钟"
+          }
+        },
+        rescheduleNow: "立即重新安排",
+        selectFactor: "选择多少{factor}"
       },
       showInfo: {
         businessHeader: "营业时间",
@@ -405,7 +434,9 @@ const info = {
     delete: "删除",
     change: "改变",
     see: "看",
-    random: "随机选择"
+    random: "随机选择",
+    forward: "向前",
+    backward: "落后"
   }
 }
 

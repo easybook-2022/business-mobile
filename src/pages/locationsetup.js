@@ -704,7 +704,7 @@ export default function Locationsetup({ navigation }) {
                         :
                         daysInfo.sameHours == null ? 
                           <View style={styles.daysContainer}>
-                            <Text style={[styles.inputHeader, { marginBottom: 20, textAlign: 'center' }]}>Is the {header} open same time on</Text>
+                            <Text style={[styles.inputHeader, { marginBottom: 20, textAlign: 'center' }]}>{tr.t("locationsetup.location.sameOpen." + header)}</Text>
 
                             {days.map((info, index) => (
                               !info.close && (

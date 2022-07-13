@@ -40,6 +40,12 @@ const info = {
         city: "Entrez la ville:",
         province: "Entrez la province:",
         postalCode: "Entrez le code postal:"
+      },
+      sameOpen: {
+        "hair salon": "Le salon de coiffure est-il ouvert à la même heure",
+        "nail salon": "Le salon de manucure est-il ouvert à la même heure",
+        restaurant: "Le restaurant est-il ouvert à la même heure",
+        store: "Le magasin est-il ouvert à la même heure le"
       }
     },
     phonenumber: {
@@ -56,7 +62,8 @@ const info = {
     },
     openDays: {
       header: "Quels jours êtes-vous ouvert ?",
-      time: "Définir l'heure d'ouverture et de fermeture pour {day}"
+      time: "Définir l'heure d'ouverture et de fermeture pour {day}",
+      sameTime: "Réglez l'heure d'ouverture et de fermeture pour"
     }
   },
   register: {
@@ -86,7 +93,12 @@ const info = {
       stillBusy: "toujours occupé",
       booked: "réservé",
       editTime: "Appuyez sur l'heure pour réserver à nouveau",
-      rebook: "Tap any other time to rebook"
+      reschedule: {
+        all: "Tout reprogrammer",
+        some: "Reprogrammer certains",
+        finishSelect: "Terminer la sélection",
+      },
+      rebook: "Appuyez à tout autre\nmoment pour réserver à nouveau"
     },
     cartOrderers: {
       header: "Vous verrez toutes les commandes ici",
@@ -100,13 +112,31 @@ const info = {
     },
     hidden: {
       scheduleOption: {
-        change: {
-          header: "Veuillez appuyer à tout\nautre moment pour réserver à nouveau"
-        },
+        rebookHeader: "Appuyez à tout autre moment pour réserver à nouveau",
+        selectHeader: "Appuyez sur les horaires que vous souhaitez modifier",
         remove: {
           header: "Pourquoi annuler ? (Optionnel)",
           reason: "Écrivez votre raison"
-        }
+        },
+        select: {
+          pushTypeHeader: "Replanifier les rendez-vous en avant ou en arrière ?",
+          pushByHeader: {
+            forward: "Reporter les rendez-vous d'ici",
+            backward: "Reprogrammer les rendez-vous en arrière de"
+          },
+          timeFactorHeader: "Entrez combien ",
+          pushTypes: {
+            backward: "Poussez vers l'arrière",
+            forward: "Faire avancer"
+          },
+          pushBys: {
+            days: "Journées",
+            hours: "Heures",
+            minutes: "Minutes"
+          }
+        },
+        rescheduleNow: "Reprogrammer Maintenant",
+        selectFactor: "Sélectionnez combien {factor}"
       },
       showInfo: {
         businessHeader: "Heures d'ouverture",
@@ -388,7 +418,9 @@ const info = {
     delete: "Effacer",
     change: "Changer",
     see: "Voir",
-    random: "Choisissez au hasard"
+    random: "Choisissez au hasard",
+    forward: "vers l'avant",
+    backward: "en arrière"
   }
 }
 

@@ -40,6 +40,12 @@ const info = {
         city: "Nhập vào thành phố:",
         province: "Nhập tỉnh:",
         postalCode: "Nhập mã bưu điện:"
+      },
+      sameOpen: {
+        "hair salon": "Tiệm cắt tóc có mở cùng lúc không",
+        "nail salon": "Tiệm làm móng có mở cùng lúc không",
+        restaurant: "Nhà hàng có mở cửa cùng giờ không",
+        store: "Cửa hàng có mở cùng thời gian không"
       }
     },
     phonenumber: {
@@ -56,7 +62,8 @@ const info = {
     },
     openDays: {
       header: "Bạn mở cửa vào những ngày nào ?",
-      time: "Đặt thời gian mở và đóng cửa cho {day}"
+      time: "Đặt thời gian mở và đóng cửa cho {day}",
+      sameTime: "Đặt thời gian mở và đóng cửa cho"
     }
   },
   register: {
@@ -86,7 +93,12 @@ const info = {
       stillBusy: "vẫn bận",
       booked: "đã đặt trước",
       editTime: "Nhấn vào thời gian để đăng ký lại",
-      rebook: "Tap any other time to rebook"
+      reschedule: {
+        all: "Lên lịch lại tất cả",
+        some: "Lên lịch lại một số",
+        finishSelect: "Hoàn thành chọn",
+      },
+      rebook: "Tap any schedule to rebook"
     },
     cartOrderers: {
       header: "Bạn sẽ thấy tất cả các đơn đặt hàng tại đây",
@@ -100,13 +112,31 @@ const info = {
     },
     hidden: {
       scheduleOption: {
-        change: {
-          header: "Vui lòng nhấn vào bất\nkỳ lúc nào khác để đăng ký lại"
-        },
+        rebookHeader: "Nhấn vào bất kỳ lúc nào khác để đăng ký lại",
+        selectHeader: "Nhấn vào lịch bạn muốn đặt lại",
         remove: {
           header: "Tại sao lại hủy bỏ ? (Không bắt buộc)",
           reason: "Viết lý do"
-        }
+        },
+        select: {
+          pushTypeHeader: "Lên lịch lại các cuộc hẹn về phía trước hoặc phía sau ?",
+          pushByHeader: {
+            forward: "Các cuộc hẹn đã lên lịch lại trước",
+            backward: "Các cuộc hẹn đã lên lịch lùi lại trước"
+          },
+          timeFactorHeader: "Nhập bao nhiêu ",
+          pushTypes: {
+            backward: "Đẩy lùi",
+            forward: "Đẩy về phía trước"
+          },
+          pushBys: {
+            days: "Ngày",
+            hours: "Giờ",
+            minutes: "Phút"
+          }
+        },
+        rescheduleNow: "Lên lịch lại ngay",
+        selectFactor: "Chọn bao nhiêu {factor}"
       },
       showInfo: {
         businessHeader: "Giờ kinh doanh",
@@ -388,7 +418,9 @@ const info = {
     delete: "Xóa bỏ",
     change: "Biến đổi",
     see: "Nhìn",
-    random: "Chọn ngẫu nhiên"
+    random: "Chọn ngẫu nhiên",
+    forward: "ở đằng trước",
+    backward: "phía sau"
   }
 }
 
