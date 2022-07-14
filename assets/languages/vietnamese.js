@@ -7,7 +7,7 @@ const info = {
     intro: {
       welcome: "Chào mừng bạn đến\n",
       message: "Chúng tôi sẽ đưa khách hàng gần nhất đến cửa nhà bạn\nRẤT NHANH CHÓNG",
-      letsGo: "Hãy điền thông tin doanh nghiệp của bạn"
+      begin: "Hãy điền thông tin doanh nghiệp của bạn"
     },
     type: {
       question: "Bạn đang kinh doanh gì ?",
@@ -28,12 +28,7 @@ const info = {
         restaurant: "nếu bạn đang ở nhà hàng ngay bây giờ,",
         store: "nếu bạn đang ở cửa hàng ngay bây giờ,"
       },
-      addressHeader: {
-        "hair salon": "Nhập địa chỉ tiệm làm tóc",
-        "nail salon": "Nhập địa chỉ tiệm làm móng",
-        restaurant: "Nhập địa chỉ nhà hàng",
-        store: "Nhập địa chỉ cửa hàng"
-      },
+      addressHeader: "Entrez l'adresse de l'entreprise",
       address: {
         addressOne: "Nhập địa chỉ #1:",
         addressTwo: "Nhập địa chỉ #2 (Tùy chọn):",
@@ -42,18 +37,11 @@ const info = {
         postalCode: "Nhập mã bưu điện:"
       },
       sameOpen: {
-        "hair salon": "Tiệm cắt tóc có mở cùng lúc không",
-        "nail salon": "Tiệm làm móng có mở cùng lúc không",
-        restaurant: "Nhà hàng có mở cửa cùng giờ không",
-        store: "Cửa hàng có mở cùng thời gian không"
+        some: "Votre entreprise est-elle ouverte à la même heure le",
+        all: "Votre entreprise est-elle ouverte à la même heure tous les jours"
       }
     },
-    phonenumber: {
-      "hair salon": "Nhập số điện thoại của tiệm làm tóc:",
-      "nail salon": "Nhập số điện thoại của tiệm làm móng:",
-      restaurant: "Nhập số điện thoại của nhà hàng:",
-      store: "Nhập số điện thoại của cửa hàng:"
-    },
+    phonenumber: "Saisissez votre numéro de téléphone professionnel:",
     photo: {
       "hair salon": "Chụp ảnh tiệm làm tóc của bạn",
       "nail salon": "Chụp ảnh tiệm nail của bạn",
@@ -63,7 +51,10 @@ const info = {
     openDays: {
       header: "Bạn mở cửa vào những ngày nào ?",
       time: "Đặt thời gian mở và đóng cửa cho {day}",
-      sameTime: "Đặt thời gian mở và đóng cửa cho"
+      sameTime: {
+        all: "Réglez l'heure d'ouverture et de fermeture pour tous les jours",
+        some: "Réglez l'heure d'ouverture et de fermeture pour"
+      }
     }
   },
   register: {
@@ -120,10 +111,7 @@ const info = {
         },
         select: {
           pushTypeHeader: "Lên lịch lại các cuộc hẹn về phía trước hoặc phía sau ?",
-          pushByHeader: {
-            forward: "Các cuộc hẹn đã lên lịch lại trước",
-            backward: "Các cuộc hẹn đã lên lịch lùi lại trước"
-          },
+          pushByHeader: { forward: "Các cuộc hẹn đã lên lịch lại trước", backward: "Các cuộc hẹn đã lên lịch lùi lại trước" },
           timeFactorHeader: "Nhập bao nhiêu ",
           pushTypes: {
             backward: "Đẩy lùi",
@@ -152,9 +140,9 @@ const info = {
         walkIn: "Khách hàng bước vào",
         changeLanguage: "Thay đổi ngôn ngữ",
         getAppointmentsby: {
-          header: "Nhận cuộc hẹn trước",
-          staff: "Nhân Viên",
-          owner: "Người sở hữu"
+          header: "Get appointments by",
+          both: "Chủ sở hữu và nhân viên",
+          owner: "Chỉ chủ sở hữu"
         },
         useVoice: {
           header: "Sử dụng giọng nói",
@@ -356,29 +344,8 @@ const info = {
   store: "cửa hàng",
   restaurant: "quán ăn",
 
-  days: {
-    Sunday: "Chủ nhật",
-    Monday: "Thứ hai",
-    Tuesday: "Thứ ba",
-    Wednesday: "Thứ Tư",
-    Thursday: "Thứ năm",
-    Friday: "Thứ sáu",
-    Saturday: "Thứ bảy"
-  },
-  months: {
-    January: "Tháng Giêng",
-    February: "Tháng hai",
-    March: "Bước đều",
-    April: "Tháng tư",
-    May: "Có thể",
-    June: "Tháng sáu",
-    July: "Tháng bảy",
-    August: "Tháng tám",
-    September: "Tháng chín",
-    October: "Tháng Mười",
-    November: "Tháng mười một",
-    December: "Tháng mười hai"
-  },
+  days: { Sunday: "Chủ nhật", Monday: "Thứ hai", Tuesday: "Thứ ba", Wednesday: "Thứ Tư", Thursday: "Thứ năm", Friday: "Thứ sáu", Saturday: "Thứ bảy" },
+  months: { January: "Tháng Giêng", February: "Tháng hai", March: "Bước đều", April: "Tháng tư", May: "Có thể", June: "Tháng sáu", July: "Tháng bảy", August: "Tháng tám", September: "Tháng chín", October: "Tháng Mười", November: "Tháng mười một", December: "Tháng mười hai" },
 
   headers: {
     locatedHeader: {
@@ -400,7 +367,7 @@ const info = {
     edit: "chỉnh sửa",
     rebook: "Dặt lại",
     update: "cập nhật",
-    letsGo: "Đi nào",
+    begin: "Bắt đầu",
     takePhoto: "Chụp",
     choosePhoto: "Chọn từ điện thoại",
     markLocation: "đánh dấu vị trí của bạn",
@@ -421,7 +388,9 @@ const info = {
     random: "Chọn ngẫu nhiên",
     forward: "ở đằng trước",
     backward: "phía sau"
-  }
+  },
+
+  disableHeader: "Có một bản cập nhật cho ứng dụng\nXin vui lòng chờ trong giây lát\nhoặc chạm vào đóng"
 }
 
 export const vietnamese = info

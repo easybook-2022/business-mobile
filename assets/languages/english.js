@@ -7,7 +7,7 @@ const info = {
     intro: {
       welcome: "Welcome to\n",
       message: "We will bring the nearest customers to your door\nVERY FAST",
-      letsGo: "Let's setup your business information"
+      begin: "Let's setup your business information"
     },
     type: {
       question: "What business are you ?",
@@ -23,17 +23,12 @@ const info = {
     },
     location: {
       if: {
-        "hair salon": "if you are at the hair salon right now,",
-        "nail salon": "if you are at the nail salon right now,",
-        restaurant: "if you are at the restaurant right now,",
-        store: "if you are at the store right now,"
+        "hair salon": "if you are at your the hair salon right now,",
+        "nail salon": "if you are at your the nail salon right now,",
+        restaurant: "if you are at your restaurant right now,",
+        store: "if you are at your store right now,"
       },
-      addressHeader: {
-        "hair salon": "Enter hair salon address",
-        "nail salon": "Enter nail salon address",
-        restaurant: "Enter restaurant address",
-        store: "Enter store address"
-      },
+      addressHeader: "Enter business address",
       address: {
         addressOne: "Enter address #1:",
         addressTwo: "Enter address #2 (Optional):",
@@ -42,18 +37,11 @@ const info = {
         postalCode: "Enter postal code:"
       },
       sameOpen: {
-        "hair salon": "Is the hair salon open same time on",
-        "nail salon": "Is the nail salon open same time on",
-        restaurant: "Is the restaurant open same time on",
-        store: "Is the store open same time on"
+        some: "Is your business open same time on",
+        all: "Is your business open same time everyday"
       }
     },
-    phonenumber: {
-      "hair salon": "Enter hair salon's phone number:",
-      "nail salon": "Enter nail salon's phone number:",
-      restaurant: "Enter restaurant's phone number:",
-      store: "Enter store's phone number:"
-    },
+    phonenumber: "Enter your business phone number:",
     photo: {
       "hair salon": "Take a picture of your hair salon",
       "nail salon": "Take a picture of your nail salon",
@@ -61,9 +49,12 @@ const info = {
       store: "Take a picture of your store"
     },
     openDays: {
-      header: "What days are you open ?",
+      header: "What days are your business open ?",
       time: "Set the open and close hours for {day}",
-      sameTime: "Set the open and close time for"
+      sameTime: {
+        all: "Set the open and close time for everyday",
+        some: "Set the open and close time for"
+      }
     }
   },
   register: {
@@ -353,29 +344,8 @@ const info = {
   store: "store",
   restaurant: "restaurant",
 
-  days: {
-    Sunday: "Sunday",
-    Monday: "Monday",
-    Tuesday: "Tuesday",
-    Wednesday: "Wednesday",
-    Thursday: "Thursday",
-    Friday: "Friday",
-    Saturday: "Saturday"
-  },
-  months: {
-    January: "January",
-    February: "February",
-    March: "March",
-    April: "April",
-    May: "May",
-    June: "June",
-    July: "July",
-    August: "August",
-    September: "September",
-    October: "October",
-    November: "November",
-    December: "December"
-  },
+  days: { Sunday: "Sunday", Monday: "Monday", Tuesday: "Tuesday", Wednesday: "Wednesday", Thursday: "Thursday", Friday: "Friday", Saturday: "Saturday" },
+  months: { January: "January", February: "February", March: "March", April: "April", May: "May", June: "June", July: "July", August: "August", September: "September", October: "October", November: "November", December: "December" },
 
   headers: {
     locatedHeader: {
@@ -397,7 +367,7 @@ const info = {
     edit: "Edit",
     rebook: "Rebook",
     update: "Update",
-    letsGo: "Let's go",
+    begin: "Begin",
     takePhoto: "Take\nthis photo",
     choosePhoto: "Choose\nfrom phone",
     markLocation: "Mark your location",
@@ -418,7 +388,9 @@ const info = {
     random: "Pick Random",
     forward: "Forward",
     backward: "Backward"
-  }
+  },
+
+  disableHeader: "There is an update to the app\n\nPlease wait a moment\n\nor tap 'Close'"
 }
 
 export const english = info

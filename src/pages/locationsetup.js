@@ -147,7 +147,7 @@ export default function Locationsetup({ navigation }) {
 
 			const data = {
 				storeName, phonenumber, addressOne, addressTwo, city, province, postalcode, logo, hours, type, 
-				longitude, latitude, ownerid, permission: cameraPermission
+				longitude, latitude, ownerid
 			}
 
 			if (!invalid) {
@@ -276,12 +276,6 @@ export default function Locationsetup({ navigation }) {
 			case 3:
 				if (!phonenumber) {
 					msg = "Please provide the " + type + " phone number"
-				}
-
-				break
-			case 4:
-				if (!logo.uri && Platform.OS == 'ios') {
-					msg = "Please provide a photo of the " + type
 				}
 
 				break
@@ -650,7 +644,7 @@ export default function Locationsetup({ navigation }) {
 
                           <Text style={{ fontSize: 20, fontWeight: 'bold', marginVertical: 30 }}>Or</Text>
 
-                          <Text style={styles.locationHeader}>{tr.t("locationsetup.location.addressHeader." + header)}</Text>
+                          <Text style={styles.locationHeader}>{tr.t("locationsetup.location.addressHeader")}</Text>
 
                           <View style={styles.inputContainer}>
                             <Text style={styles.inputHeader}>{tr.t("locationsetup.location.address.addressOne")}</Text>
@@ -704,15 +698,21 @@ export default function Locationsetup({ navigation }) {
                         :
                         daysInfo.sameHours == null ? 
                           <View style={styles.daysContainer}>
-                            <Text style={[styles.inputHeader, { marginBottom: 20, textAlign: 'center' }]}>{tr.t("locationsetup.location.sameOpen." + header)}</Text>
+                            <Text style={[styles.inputHeader, { marginBottom: 20, textAlign: 'center' }]}>{
+                                tr.t("locationsetup.location.sameOpen." + (
+                                  JSON.stringify(days).split("\"close\":false").length - 1 == 7 ? "all" : "some"
+                                ))
+                            }</Text>
 
-                            {days.map((info, index) => (
-                              !info.close && (
-                                <View key={index} style={styles.openDay}>
-                                  <Text style={styles.openDayHeader}>{info.header}</Text>
-                                </View>
-                              )
-                            ))}
+                            <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+                              {days.map((info, index) => (
+                                !info.close && (
+                                  <View key={index} style={styles.openDay}>
+                                    <Text style={styles.openDayHeader}>{info.header}</Text>
+                                  </View>
+                                )
+                              ))}
+                            </View>
 
                             <View style={styles.actions}>
                               <TouchableOpacity style={styles.action} onPress={() => setDaysinfo({ ...daysInfo, sameHours: false })}>
@@ -839,7 +839,11 @@ export default function Locationsetup({ navigation }) {
                               ))
                               :
                               <>
-                                <Text style={styles.dayHeader}>{tr.t("locationsetup.openDays.sameTime")}</Text>
+                                <Text style={styles.dayHeader}>{
+                                  tr.t("locationsetup.openDays.sameTime." + (
+                                    JSON.stringify(days).split("\"close\":false").length - 1 == 7 ? "all" : "some"
+                                  ))
+                                }</Text>
 
                                 <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
                                   {days.map((day, index) => (
@@ -979,7 +983,7 @@ export default function Locationsetup({ navigation }) {
 
                       {!(locationInfo == '' || (daysInfo.done && daysInfo.sameHours == null)) && (
                         <TouchableOpacity style={styles.action} disabled={loading} onPress={() => setupType == "hours" && daysInfo.step == 1 ? setupYourLocation() : saveInfo()}>
-                          <Text style={styles.actionHeader}>{setupType == "" ? tr.t("buttons.letsGo") : tr.t("buttons.next")}</Text>
+                          <Text style={styles.actionHeader}>{setupType == "" ? tr.t("buttons.begin") : tr.t("buttons.next")}</Text>
                         </TouchableOpacity>
                       )}
                     </View>
@@ -992,7 +996,7 @@ export default function Locationsetup({ navigation }) {
                   <View style={{ flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
                     <Text style={styles.introHeader}>{tr.t("locationsetup.intro.welcome")}EasyGO Business</Text>
                     <Text style={styles.introHeader}>{tr.t("locationsetup.intro.message")}</Text>
-                    <Text style={styles.introHeader}>{tr.t("locationsetup.intro.letsGo")}</Text>
+                    <Text style={styles.introHeader}>{tr.t("locationsetup.intro.begin")}</Text>
                   </View>
                 )}
 
@@ -1064,7 +1068,7 @@ export default function Locationsetup({ navigation }) {
 
                 {setupType == "phonenumber" && (
                   <View style={styles.inputContainer}>
-                    <Text style={styles.inputHeader}>{tr.t("locationsetup.phonenumber." + header)}</Text>
+                    <Text style={styles.inputHeader}>{tr.t("locationsetup.phonenumber")}</Text>
                     <TextInput style={styles.input} onChangeText={(num) => setPhonenumber(displayPhonenumber(phonenumber, num, () => Keyboard.dismiss()))} value={phonenumber} keyboardType="numeric" autoCorrect={false} autoCapitalize="none"/>
                   </View>
                 )}
@@ -1129,7 +1133,15 @@ export default function Locationsetup({ navigation }) {
 
                     {setupType != "type" && (
                       <TouchableOpacity style={styles.action} disabled={loading} onPress={() => setupType == "hours" && daysInfo.step == 1 ? setupYourLocation() : saveInfo()}>
-                        <Text style={styles.actionHeader}>{setupType == "" ? tr.t("buttons.letsGo") : tr.t("buttons.next")}</Text>
+                        <Text style={styles.actionHeader}>{
+                          setupType == "" ? 
+                            tr.t("buttons.begin") 
+                            : 
+                            setupType == "logo" ? 
+                              logo.uri ? tr.t("buttons.next") : tr.t("buttons.skip")
+                              :
+                              tr.t("buttons.next")
+                        }</Text>
                       </TouchableOpacity>
                     )}
                   </View>

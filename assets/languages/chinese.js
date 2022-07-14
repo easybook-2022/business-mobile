@@ -7,7 +7,7 @@ const info = {
     intro: {
       welcome: "欢迎来到\n",
       message: "我们会将最近的客户带到您家门口\n非常快",
-      letsGo: "让我们填写您的业务信息"
+      begin: "让我们填写您的业务信息"
     },
     type: {
       question: "你是做什么生意的 ?",
@@ -28,12 +28,7 @@ const info = {
         restaurant: "如果你现在在餐厅,",
         store: "如果你现在在店里,"
       },
-      addressHeader: {
-        "hair salon": "输入美发店地址",
-        "nail salon": "输入美甲店地址",
-        restaurant: "输入餐厅地址",
-        store: "输入店铺地址"
-      },
+      addressHeader: "输入公司地址",
       address: {
         addressOne: "输入地址#1:",
         addressTwo: "输入地址 #2（可选):",
@@ -42,18 +37,11 @@ const info = {
         postalCode: "输入邮政编码:"
       },
       sameOpen: {
-        "hair salon": "美发沙龙同日开门吗",
-        "nail salon": "美甲沙龙同日开门吗",
-        restaurant: "餐厅在同一时间营业吗",
-        store: "商店是同一时间开门吗"
+        some: "您的业务是否同时营业",
+        all: "您的企业每天都在同一时间营业吗"
       }
     },
-    phonenumber: {
-      "hair salon": "输入美发店的电话号码:",
-      "nail salon": "输入美甲店的电话号码:",
-      restaurant: "输入餐厅电话号码:",
-      store: "输入商店的电话号码:"
-    },
+    phonenumber: "输入您的公司电话号码:",
     photo: {
       "hair salon": "给你的美发沙龙拍照",
       "nail salon": "为您的美甲沙龙拍照",
@@ -62,16 +50,11 @@ const info = {
     },
     openDays: {
       header: "你们哪几天开门 ?",
-      time: {
-        Sunday: "设置周日的开闭时间",
-        Monday: "设置星期一的开闭时间",
-        Tuesday: "设置周二的开闭时间",
-        Wednesday: "设置周三的开市和闭市时间",
-        Thursday: "设置周四的开市和闭市时间",
-        Friday: "设置周五的开市和闭市时间",
-        Saturday: "设置周六的开闭时间"
-      },
-      sameTime: "设置打开和关闭时间"
+      time: { Sunday: "设置周日的开闭时间", Monday: "设置星期一的开闭时间", Tuesday: "设置周二的开闭时间", Wednesday: "设置周三的开市和闭市时间", Thursday: "设置周四的开市和闭市时间", Friday: "设置周五的开市和闭市时间", Saturday: "设置周六的开闭时间" },
+      sameTime: {
+        all: "设置每天的开闭时间",
+        some: "设置打开和关闭时间"
+      }
     }
   },
   register: {
@@ -128,10 +111,7 @@ const info = {
         },
         select: {
           pushTypeHeader: "向前或向后重新安排约会 ?",
-          pushByHeader: {
-            forward: "重新安排约会",
-            backward: "向后重新安排约会"
-          },
+          pushByHeader: { forward: "重新安排约会", backward: "向后重新安排约会" },
           timeFactorHeader: "输入多少 ",
           pushTypes: {
             backward: "向后推",
@@ -217,15 +197,7 @@ const info = {
     },
     editingHours: {
       header: "修改营业时间",
-      openHeader: {
-        Sunday: "周日营业",
-        Monday: "周一开",
-        Tuesday: "周二开",
-        Wednesday: "周三开放",
-        Thursday: "周四开放",
-        Friday: "周五开放",
-        Saturday: "周六开"
-      },
+      openHeader: { Sunday: "周日营业", Monday: "周一开", Tuesday: "周二开", Wednesday: "周三开放", Thursday: "周四开放", Friday: "周五开放", Saturday: "周六开" },
       changeToNotOpen: "改为不开放",
       changeToOpen: "更改为打开",
       notOpen: "周{day}不营业"
@@ -372,29 +344,8 @@ const info = {
   store: "店铺",
   restaurant: "餐厅",
 
-  days: {
-    Sunday: "天",
-    Monday: "一",
-    Tuesday: "二",
-    Wednesday: "三",
-    Thursday: "四",
-    Friday: "五",
-    Saturday: "六"
-  },
-  months: {
-    January: "一月",
-    February: "二月",
-    March: "行进",
-    April: "四月",
-    May: "可能",
-    June: "六月",
-    July: "七月",
-    August: "八月",
-    September: "九月",
-    October: "十月",
-    November: "十一月",
-    December: "十二月"
-  },
+  days: { Sunday: "天", Monday: "一", Tuesday: "二", Wednesday: "三", Thursday: "四", Friday: "五", Saturday: "六" },
+  months: { January: "一月", February: "二月", March: "行进", April: "四月", May: "可能", June: "六月", July: "七月", August: "八月", September: "九月", October: "十月", November: "十一月", December: "十二月" },
 
   headers: {
     locatedHeader: {
@@ -416,7 +367,7 @@ const info = {
     edit: "编辑",
     rebook: "锐步",
     update: "更新",
-    letsGo: "我们走吧",
+    begin: "开始",
     takePhoto: "拍这张照片",
     choosePhoto: "从手机中选择",
     markLocation: "标记您的位置",
@@ -437,7 +388,9 @@ const info = {
     random: "随机选择",
     forward: "向前",
     backward: "落后"
-  }
+  },
+
+  disableHeader: "该应用程序有更新\n请稍候\n或点击关闭"
 }
 
 export const chinese = info

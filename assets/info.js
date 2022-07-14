@@ -19,17 +19,17 @@ const realStores = [
 const emptyStore = { storeName: "", storeType: "", phonenumber: "", addressOne: "", addressTwo: "", city: "", province: "", postalcode: "", longitude: 0, latitude: 0 }
 
 const testOwners = [
-	{ id: 0, username: 'owner1', cellnumber: "(000) 000-0000", password: "password" },
-	{ id: 1, username: 'owner2', cellnumber: "(111) 111-1111", password: "password" },
-	{ id: 2, username: 'owner3', cellnumber: "(222) 222-2222", password: "password" },
-	{ id: 3, username: 'owner4', cellnumber: "(333) 333-3333", password: "password" },
-	{ id: 4, username: 'owner5', cellnumber: "(444) 444-4444", password: "password" },
-	{ id: 5, username: 'owner6', cellnumber: "(555) 555-5555", password: "password" },
-	{ id: 6, username: 'owner7', cellnumber: "(666) 666-6666", password: "password" },
-	{ id: 7, username: 'owner8', cellnumber: "(777) 777-7777", password: "password" },
-	{ id: 8, username: 'owner9', cellnumber: "(888) 888-8888", password: "password" }
+	{ id: 0, username: 'owner1', cellnumber: "(000) 000-0000", password: "qqqqqq" },
+	{ id: 1, username: 'owner2', cellnumber: "(111) 111-1111", password: "qqqqqq" },
+	{ id: 2, username: 'owner3', cellnumber: "(222) 222-2222", password: "qqqqqq" },
+	{ id: 3, username: 'owner4', cellnumber: "(333) 333-3333", password: "qqqqqq" },
+	{ id: 4, username: 'owner5', cellnumber: "(444) 444-4444", password: "qqqqqq" },
+	{ id: 5, username: 'owner6', cellnumber: "(555) 555-5555", password: "qqqqqq" },
+	{ id: 6, username: 'owner7', cellnumber: "(666) 666-6666", password: "qqqqqq" },
+	{ id: 7, username: 'owner8', cellnumber: "(777) 777-7777", password: "qqqqqq" },
+	{ id: 8, username: 'owner9', cellnumber: "(888) 888-8888", password: "qqqqqq" }
 ]
-const realOwner = { id: 0, username: 'kevin', cellnumber: "(647) 926-3868", password: "password" }
+const realOwner = { id: 0, username: 'kevin', cellnumber: "(647) 926-3868", password: "qqqqqq" }
 const emptyOwner = { username: "", cellnumber: "", password: "" }
 
 const useInput = true
@@ -38,7 +38,7 @@ const loginLocation = test_input ? testStores[0] : useInput ? realStores[0] : em
 const ownerSignin = test_input ? testOwners[0] : useInput ? realOwner : emptyOwner
 const registerLocation = test_input ? testStores[0] : useInput ? realStores[0] : emptyStore
 
-const host = "10.0.0.60"
+const host = "192.168.2.107"
 const wifi_api_url = "http://" + host + ":5001/flask"
 const wifi_socket_url = "http://" + host + ":5002"
 const server_api_url = "https://www.easygo.tk/flask"

@@ -7,7 +7,7 @@ const info = {
     intro: {
       welcome: "Bienvenue à\n",
       message: "Nous amènerons les clients les plus proches à votre porte\nTRÈS VITE",
-      letsGo: "Complétons les informations de votre entreprise"
+      begin: "Complétons les informations de votre entreprise"
     },
     type: {
       question: "Quelle entreprise êtes-vous ?",
@@ -28,12 +28,7 @@ const info = {
         restaurant: "si vous êtes au restaurant en ce moment,",
         store: "si vous êtes au magasin en ce moment,"
       },
-      addressHeader: {
-        "hair salon": "Entrer l'adresse du salon de coiffure",
-        "nail salon": "Entrez l'adresse du salon de manucure",
-        restaurant: "Entrez l'adresse du restaurant",
-        store: "Entrez l'adresse du magasin"
-      },
+      addressHeader: "Entrez l'adresse de l'entreprise",
       address: {
         addressOne: "Entrez l'adresse #1:",
         addressTwo: "Entrez l'adresse #2 (facultatif):",
@@ -42,18 +37,11 @@ const info = {
         postalCode: "Entrez le code postal:"
       },
       sameOpen: {
-        "hair salon": "Le salon de coiffure est-il ouvert à la même heure",
-        "nail salon": "Le salon de manucure est-il ouvert à la même heure",
-        restaurant: "Le restaurant est-il ouvert à la même heure",
-        store: "Le magasin est-il ouvert à la même heure le"
+        some: "Votre entreprise est-elle ouverte à la même heure le",
+        all: "Votre entreprise est-elle ouverte à la même heure tous les jours"
       }
     },
-    phonenumber: {
-      "hair salon": "Entrez le numéro de téléphone du salon de coiffure:",
-      "nail salon": "Entrez le numéro de téléphone du salon de manucure:",
-      restaurant: "Entrez le numéro de téléphone du restaurant:",
-      store: "Entrez le numéro de téléphone du magasin:"
-    },
+    phonenumber: "Saisissez votre numéro de téléphone professionnel",
     photo: {
       "hair salon": "Prenez une photo de votre salon de coiffure",
       "nail salon": "Prenez une photo de votre salon de manucure",
@@ -63,7 +51,10 @@ const info = {
     openDays: {
       header: "Quels jours êtes-vous ouvert ?",
       time: "Définir l'heure d'ouverture et de fermeture pour {day}",
-      sameTime: "Réglez l'heure d'ouverture et de fermeture pour"
+      sameTime: {
+        all: "Réglez l'heure d'ouverture et de fermeture pour tous les jours",
+        some: "Réglez l'heure d'ouverture et de fermeture pour"
+      }
     }
   },
   register: {
@@ -120,10 +111,7 @@ const info = {
         },
         select: {
           pushTypeHeader: "Replanifier les rendez-vous en avant ou en arrière ?",
-          pushByHeader: {
-            forward: "Reporter les rendez-vous d'ici",
-            backward: "Reprogrammer les rendez-vous en arrière de"
-          },
+          pushByHeader: { forward: "Reporter les rendez-vous d'ici", backward: "Reprogrammer les rendez-vous en arrière de" },
           timeFactorHeader: "Entrez combien ",
           pushTypes: {
             backward: "Poussez vers l'arrière",
@@ -153,8 +141,8 @@ const info = {
         changeLanguage: "Changer de langue",
         getAppointmentsby: {
           header: "Obtenez des rendez-vous par",
-          staff: "Bâtons",
-          owner: "Propriétaires"
+          both: "Propriétaires et personnel",
+          owner: "Propriétaires uniquement"
         },
         useVoice: {
           header: "Utiliser la voix",
@@ -356,29 +344,8 @@ const info = {
   store: "magasin",
   restaurant: "restaurant",
 
-  days: {
-    Sunday: "Dimanche",
-    Monday: "Lundi",
-    Tuesday: "Mardi",
-    Wednesday: "Mercredi",
-    Thursday: "Jeudi",
-    Friday: "Vendredi",
-    Saturday: "Samedi"
-  },
-  months: {
-    January: "Janvier",
-    February: "Février",
-    March: "Mars",
-    April: "Avril",
-    May: "Peut",
-    June: "Juin",
-    July: "Juillet",
-    August: "Août",
-    September: "Septembre",
-    October: "Octobre",
-    November: "Novembre",
-    December: "Décembre"
-  },
+  days: { Sunday: "Dimanche", Monday: "Lundi", Tuesday: "Mardi", Wednesday: "Mercredi", Thursday: "Jeudi", Friday: "Vendredi", Saturday: "Samedi" },
+  months: { January: "Janvier", February: "Février", March: "Mars", April: "Avril", May: "Peut", June: "Juin", July: "Juillet", August: "Août", September: "Septembre", October: "Octobre", November: "Novembre", December: "Décembre" },
 
   headers: {
     locatedHeader: {
@@ -400,7 +367,7 @@ const info = {
     edit: "Éditer",
     rebook: "Reebok",
     update: "Mise à jour",
-    letsGo: "Allons-y",
+    begin: "Commencer",
     takePhoto: "Prends\ncette photo",
     choosePhoto: "Choisissez\nparmi le téléphone",
     markLocation: "Marquez votre emplacement",
@@ -421,7 +388,9 @@ const info = {
     random: "Choisissez au hasard",
     forward: "vers l'avant",
     backward: "en arrière"
-  }
+  },
+
+  disableHeader: "l y a une mise à jour de l'application.\nPatientez s'il-vous-plait\nou appuyez sur Fermer"
 }
 
 export const french = info

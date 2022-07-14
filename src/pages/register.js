@@ -126,19 +126,16 @@ export default function Register(props) {
   }
   const setTime = () => {
     const newWorkerhours = []
-    const newWorkershourssameday = {}
+    const newWorkerhourssameday = {}
     const newHoursrangesameday = {}
-    let emptyDays = true, calcOpenTime, calcCloseTime, calcDate
+    let emptyDays = true, info, numWorking = 0
 
     days.forEach(function (day, index) {
       if (index == 0) {
-        calcOpenTime = hoursRange[0].openTime
-        calcCloseTime = hoursRange[0].closeTime
+        info = hoursRange[0]
       } else {
-        if (hoursRange[index].openTime > calcOpenTime || hoursRange[index].closeTime < calcCloseTime) {
-          calcOpenTime = hoursRange[index].openTime
-          calcCloseTime = hoursRange[index].closeTime
-          calcDate = hoursRange[index].date
+        if (hoursRange[index].openTime > info.openTime || hoursRange[index].closeTime < info.closeTime) {
+          info = hoursRange[index]
         }
       }
 
@@ -147,41 +144,34 @@ export default function Register(props) {
         header: day, 
         opentime: {...hoursRange[index].opentime}, 
         closetime: {...hoursRange[index].closetime}, 
-        working: daysInfo.working[index] ? true : false
+        working: daysInfo.working[index] != '' ? true : false
       })
 
-      if (daysInfo.working[index]) {
+      if (daysInfo.working[index] != '') {
+        numWorking++
         emptyDays = false
       }
     })
 
-    let calcOpen = new Date(calcOpenTime), calcClose = new Date(calcCloseTime)
-    let openHour = calcOpen.getHours(), openMinute = calcOpen.getMinutes(), openPeriod = openHour < 12 ? "AM" : "PM"
-    let closeHour = calcClose.getHours(), closeMinute = calcClose.getMinutes(), closePeriod = closeHour < 12 ? "AM" : "PM"
+    newWorkerhourssameday["opentime"] = info.opentime
+    newWorkerhourssameday["closetime"] = info.closetime
+    newWorkerhourssameday["working"] = true
 
-    openHour = openHour > 12 ? openHour - 12 : openHour
-    openMinute = openMinute < 10 ? "0" + openMinute : openMinute.toString()
-    closeHour = closeHour > 12 ? closeHour - 12 : closeHour
-    closeMinute = closeMinute < 10 ? "0" + closeMinute : closeMinute.toString()
-
-    openHour = openHour < 10 ? "0" + openHour : openHour.toString()
-    closeHour = closeHour < 10 ? "0" + closeHour : closeHour.toString()
-
-    newWorkershourssameday["opentime"] = { hour: openHour, minute: openMinute, period: openPeriod }
-    newWorkershourssameday["closetime"] = { hour: closeHour, minute: closeMinute, period: closePeriod }
-    newWorkershourssameday["working"] = true
-
-    newHoursrangesameday["opentime"] = { hour: openHour, minute: openMinute, period: openPeriod }
-    newHoursrangesameday["openTime"] = calcOpenTime
-    newHoursrangesameday["closetime"] = { hour: closeHour, minute: closeMinute, period: closePeriod }
-    newHoursrangesameday["closeTime"] = calcCloseTime
-    newHoursrangesameday["date"] = calcDate
+    newHoursrangesameday["opentime"] = info.opentime
+    newHoursrangesameday["openTime"] = info.openTime
+    newHoursrangesameday["closetime"] = info.closetime
+    newHoursrangesameday["closeTime"] = info.closeTime
+    newHoursrangesameday["date"] = info.date
     newHoursrangesameday["working"] = true
 
     if (!emptyDays) {
-      setDaysinfo({ ...daysInfo, done: true })
+      setDaysinfo({ 
+        ...daysInfo, 
+        done: true, 
+        sameHours: numWorking == 1 ? false : daysInfo.sameHours 
+      })
       setWorkerhours(newWorkerhours)
-      setWorkerhourssameday(newWorkershourssameday)
+      setWorkerhourssameday(newWorkerhourssameday)
       setHoursrangesameday(newHoursrangesameday)
       setErrormsg('')
     } else {
@@ -198,9 +188,8 @@ export default function Register(props) {
 
     workerHours.forEach(function (workerHour) {
       let { opentime, closetime, working } = sameHours == true && workerHour.working ? workerHourssameday : workerHour
-      let newOpentime = {...opentime}, newClosetime = {...closetime}
-      let openhour = parseInt(newOpentime.hour), closehour = parseInt(newClosetime.hour)
-      let openperiod = newOpentime.period, closeperiod = newClosetime.period
+      let openhour = parseInt(opentime.hour), closehour = parseInt(closetime.hour)
+      let openperiod = opentime.period, closeperiod = closetime.period, newOpentime, newClosetime
 
       if (working == true || working == false) {
         if (openperiod == "PM") {
@@ -241,15 +230,14 @@ export default function Register(props) {
           }
         }
 
-        newOpentime.hour = openhour
-        newClosetime.hour = closehour
+        opentime.hour = openhour
+        closetime.hour = closehour
 
-        delete newOpentime.period
-        delete newClosetime.period
+        newOpentime = { hour: opentime.hour, minute: opentime.minute }
+        newClosetime = { hour: closetime.hour, minute: closetime.minute }
 
         hours[workerHour.header.substr(0, 3)] = { 
-          opentime: newOpentime, 
-          closetime: newClosetime, working, 
+          opentime: newOpentime, closetime: newClosetime, working, 
           takeShift: "" 
         }
       } else {
@@ -465,9 +453,9 @@ export default function Register(props) {
     }
   }
   const updateSameWorkingHour = (timetype, dir, open) => {
-    const newWorkershourssameday = {...workerHourssameday}
+    const newWorkerhourssameday = {...workerHourssameday}
     let value, { openTime, closeTime, date } = hoursRangesameday
-    let { opentime, closetime } = newWorkershourssameday, valid = false
+    let { opentime, closetime } = newWorkerhourssameday, valid = false
 
     value = open ? opentime : closetime
     
@@ -486,18 +474,22 @@ export default function Register(props) {
       value.period = period
 
       if (open) {
-        newWorkershourssameday.opentime = value
+        newWorkerhourssameday.opentime = value
       } else {
-        newWorkershourssameday.closetime = value
+        newWorkerhourssameday.closetime = value
       }
 
-      setWorkerhourssameday(newWorkershourssameday)
+      setWorkerhourssameday(newWorkerhourssameday)
     }
   }
 
   useEffect(() => {
     getTheLocationProfile()
   }, [])
+
+  useEffect(() => {
+    if (daysInfo.sameHours != null) setTime()
+  }, [daysInfo.sameHours])
 
 	return (
 		<SafeAreaView style={styles.register}>
@@ -768,11 +760,11 @@ export default function Register(props) {
                                       <AntDesign name="up" size={wsize(6)}/>
                                     </TouchableOpacity>
                                     <TextInput style={styles.selectionHeader} onChangeText={(hour) => {
-                                      const newWorkershourssameday = {...workerHourssameday}
+                                      const newWorkerhourssameday = {...workerHourssameday}
 
-                                      newWorkershourssameday.opentime["hour"] = hour.toString()
+                                      newWorkerhourssameday.opentime["hour"] = hour.toString()
 
-                                      setWorkerhourssameday(newWorkershourssameday)
+                                      setWorkerhourssameday(newWorkerhourssameday)
                                     }} keyboardType="numeric" maxLength={2} value={workerHourssameday.opentime.hour}/>
                                     <TouchableOpacity onPress={() => updateSameWorkingHour("hour", "down", true)}>
                                       <AntDesign name="down" size={wsize(6)}/>
@@ -786,11 +778,11 @@ export default function Register(props) {
                                       <AntDesign name="up" size={wsize(6)}/>
                                     </TouchableOpacity>
                                     <TextInput style={styles.selectionHeader} onChangeText={(minute) => {
-                                      const newWorkershourssameday = {...workerHourssameday}
+                                      const newWorkerhourssameday = {...workerHourssameday}
 
-                                      newWorkershourssameday.opentime["minute"] = minute.toString()
+                                      newWorkerhourssameday.opentime["minute"] = minute.toString()
 
-                                      setWorkerhourssameday(newWorkershourssameday)
+                                      setWorkerhourssameday(newWorkerhourssameday)
                                     }} keyboardType="numeric" maxLength={2} value={workerHourssameday.opentime.minute}/>
                                     <TouchableOpacity onPress={() => updateSameWorkingHour("minute", "down", true)}>
                                       <AntDesign name="down" size={wsize(6)}/>
@@ -815,11 +807,11 @@ export default function Register(props) {
                                       <AntDesign name="up" size={wsize(6)}/>
                                     </TouchableOpacity>
                                     <TextInput style={styles.selectionHeader} onChangeText={(hour) => {
-                                      const newWorkershourssameday = {...workerHourssameday}
+                                      const newWorkerhourssameday = {...workerHourssameday}
 
-                                      newWorkershourssameday.closetime["hour"] = hour.toString()
+                                      newWorkerhourssameday.closetime["hour"] = hour.toString()
 
-                                      setWorkerhourssameday(newWorkershourssameday)
+                                      setWorkerhourssameday(newWorkerhourssameday)
                                     }} keyboardType="numeric" maxLength={2} value={workerHourssameday.closetime.hour}/>
                                     <TouchableOpacity onPress={() => updateSameWorkingHour("hour", "down", false)}>
                                       <AntDesign name="down" size={wsize(6)}/>
@@ -833,11 +825,11 @@ export default function Register(props) {
                                       <AntDesign name="up" size={wsize(6)}/>
                                     </TouchableOpacity>
                                     <TextInput style={styles.selectionHeader} onChangeText={(minute) => {
-                                      const newWorkershourssameday = {...workerHourssameday}
+                                      const newWorkerhourssameday = {...workerHourssameday}
 
-                                      newWorkershourssameday.closetime["minute"] = minute.toString()
+                                      newWorkerhourssameday.closetime["minute"] = minute.toString()
 
-                                      setWorkerhourssameday(newWorkershourssameday)
+                                      setWorkerhourssameday(newWorkerhourssameday)
                                     }} keyboardType="numeric" maxLength={2} value={workerHourssameday.closetime.minute}/>
                                     <TouchableOpacity onPress={() => updateSameWorkingHour("minute", "down", false)}>
                                       <AntDesign name="down" size={wsize(6)}/>
@@ -880,7 +872,7 @@ export default function Register(props) {
                         </TouchableOpacity>
                       )}
 
-                      {!(daysInfo.done && daysInfo.sameHours == null) && (
+                      {!(daysInfo.done && (daysInfo.sameHours == null && JSON.stringify(workerHours).split("\"working\":true").length - 1 > 1)) && (
                         <TouchableOpacity style={[styles.action, { opacity: loading ? 0.3 : 1 }]} disabled={loading} onPress={() => register()}>
                           <Text style={styles.actionHeader}>{tr.t("buttons.done")}</Text>
                         </TouchableOpacity>
