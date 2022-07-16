@@ -35,15 +35,18 @@ const emptyOwner = { username: "", cellnumber: "", password: "" }
 const useInput = true
 
 const loginLocation = test_input ? testStores[0] : useInput ? realStores[0] : emptyStore
-const ownerSignin = test_input ? testOwners[0] : useInput ? realOwner : emptyOwner
-const registerLocation = test_input ? testStores[0] : useInput ? realStores[0] : emptyStore
+const ownerSignin = test_input ? testOwners[1] : useInput ? realOwner : emptyOwner
+const registerLocation = test_input ? testStores[1] : useInput ? realStores[0] : emptyStore
 
-const host = "192.168.2.107"
+const host = "10.0.0.60"
 const wifi_api_url = "http://" + host + ":5001/flask"
 const wifi_socket_url = "http://" + host + ":5002"
 const server_api_url = "https://www.easygo.tk/flask"
 const server_socket_url = "wss://www.easygo.tk"
+const wifi_table_url = "http://" + host + ":3000/diningtable/"
+const server_table_url = "https://www.easygo.tk/diningtable/"
 const socket_url = local_url ? wifi_socket_url : server_socket_url
+export let tableUrl = local_url ? wifi_table_url : server_table_url
 
 export const loginInfo = { 
 	cellnumber: ownerSignin.cellnumber, password: ownerSignin.password, storeName: loginLocation.storeName, 

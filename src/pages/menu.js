@@ -142,7 +142,7 @@ export default function Menu(props) {
 						<View style={{ flexDirection: 'row' }}>
               <View style={styles.menuImageHolder}>
                 <Image 
-                  style={resizePhoto(image, wsize(10))} 
+                  style={resizePhoto(image, wsize(30))} 
                   source={image.name ? { uri: logo_url + image.name } : require("../../assets/noimage.jpeg")}
                 />
               </View>
@@ -164,32 +164,7 @@ export default function Menu(props) {
               )}
 						</View>
               
-						{list.length == 0 ?
-							<View style={{ alignItems: 'center', backgroundColor: 'white', marginTop: 10 }}>
-                {isOwner == true && (
-                  <TouchableOpacity style={styles.itemAdd} onPress={() => {
-                    props.navigation.setParams({ refetch: true })
-
-                    if ((locationType == "hair" || locationType == "nail")) {
-                      props.navigation.navigate(
-                        "addservice", 
-                        { parentMenuid: id, serviceid: null }
-                      )
-                    } else {
-                      props.navigation.navigate(
-                        "addproduct", 
-                        { parentMenuid: id, productid: null }
-                      )
-                    }
-                  }}>
-                    <View style={styles.column}>
-                      <Text style={styles.itemAddHeader}>{tr.t("buttons.add" + header)}</Text>
-                    </View>
-                    <AntDesign color="black" name="pluscircleo" size={wsize(7)}/>
-                  </TouchableOpacity>
-                )}
-							</View>
-							:
+						{list.length > 0 && (
 							list.map((info, index) => (
 								<View key={"list-" + index}>
 									{info.listType == "list" ? 
@@ -199,86 +174,14 @@ export default function Menu(props) {
 											<View style={{ flexDirection: 'row' }}>
                         <View style={styles.itemImageHolder}>
                           <Image 
-                            style={resizePhoto(info.image, wsize(10))} 
+                            style={resizePhoto(info.image, wsize(30))} 
                             source={info.image.name ? { uri: logo_url + info.image.name } : require("../../assets/noimage.jpeg")}
                           />
                         </View>
   												
                         <View style={styles.column}><Text style={styles.itemHeader}>{info.name}</Text></View>
                         <View style={styles.column}><Text style={styles.itemHeader}>{info.price ? '$' + info.price : info.sizes.length + ' size(s)'}</Text></View>
-
-                        {isOwner == true && (
-                          <View style={styles.column}>
-                            <View style={styles.itemActions}>
-                              <TouchableOpacity style={styles.itemAction} onPress={() => {
-                                props.navigation.setParams({ refetch: true })
-
-                                if ((locationType == "hair" || locationType == "nail")) {
-                                  props.navigation.navigate("addservice", { parentMenuid: id, serviceid: info.id })
-                                } else {
-                                  props.navigation.navigate("addproduct", { parentMenuid: id, productid: info.id })
-                                }
-                              }}>
-                                <Text style={styles.itemActionHeader}>{tr.t("buttons.change")}</Text>
-                              </TouchableOpacity>
-                              <TouchableOpacity style={styles.itemAction} onPress={() => (locationType == "hair" || locationType == "nail") ? removeTheService(info.id) : removeTheProduct(info.id)}>
-                                <Text style={styles.itemActionHeader}>{tr.t("buttons.delete")}</Text>
-                              </TouchableOpacity>
-                            </View>
-                          </View>
-                        )}
 											</View>
-										</View>
-									}
-
-									{(list.length - 1 == index && info.listType != "list") && (
-										<View style={{ alignItems: 'center', backgroundColor: 'white' }}>
-                      {isOwner == true && (
-                        <TouchableOpacity style={styles.itemAdd} onPress={() => {
-                          props.navigation.setParams({ refetch: true })
-
-                          if ((locationType == "hair" || locationType == "nail")) {
-                            props.navigation.navigate(
-                              "addservice", 
-                              { parentMenuid: id, serviceid: null }
-                            )
-                          } else {
-                            props.navigation.navigate(
-                              "addproduct", 
-                              { parentMenuid: id, productid: null }
-                            )
-                          }
-                        }}>
-                          <View style={styles.column}>
-                            <Text style={styles.itemAddHeader}>{tr.t("buttons.add" + header)}</Text>
-                          </View>
-                          <AntDesign color="black" name="pluscircleo" size={wsize(7)}/>
-                        </TouchableOpacity>
-                      )}
-										</View>
-									)}
-								</View>
-							))
-						}
-					</View>
-					:
-					list.map((info, index) => (
-						<View key={"list-" + index}>
-							{info.listType == "list" ? 
-                displayList({ id: info.id, name: info.name, image: info.image, list: info.list })
-								:
-                <>
-  								<View style={styles.item}>
-  									<View style={{ flexDirection: 'row', }}>
-    									<View style={styles.itemImageHolder}>
-                        <Image 
-                          style={resizePhoto(info.image, wsize(10))} 
-                          source={info.image.name ? { uri: logo_url + info.image.name } : require("../../assets/noimage.jpeg")}
-                        />
-                      </View>
-  										<View style={styles.column}><Text style={styles.itemHeader}>{info.name}</Text></View>
-  										<View style={styles.column}><Text style={styles.itemHeader}>{info.price ? '$' + info.price : info.sizes.length + ' size(s)'}</Text></View>
-
                       {isOwner == true && (
                         <View style={styles.column}>
                           <View style={styles.itemActions}>
@@ -301,38 +204,53 @@ export default function Menu(props) {
                           </View>
                         </View>
                       )}
+										</View>
+									}
+								</View>
+							))
+						)}
+					</View>
+					:
+					list.map((info, index) => (
+						<View key={"list-" + index}>
+							{info.listType == "list" ? 
+                displayList({ id: info.id, name: info.name, image: info.image, list: info.list })
+								:
+                <>
+  								<View style={styles.item}>
+  									<View style={{ flexDirection: 'row', }}>
+    									<View style={styles.itemImageHolder}>
+                        <Image 
+                          style={resizePhoto(info.image, wsize(30))} 
+                          source={info.image.name ? { uri: logo_url + info.image.name } : require("../../assets/noimage.jpeg")}
+                        />
+                      </View>
+  										<View style={styles.column}><Text style={styles.itemHeader}>{info.name}</Text></View>
+  										<View style={styles.column}><Text style={styles.itemHeader}>{info.price ? '$' + info.price : info.sizes.length + ' size(s)'}</Text></View>
   									</View>
-  								</View>
+                    {isOwner == true && (
+                      <View style={styles.column}>
+                        <View style={styles.itemActions}>
+                          <TouchableOpacity style={styles.itemAction} onPress={() => {
+                            props.navigation.setParams({ refetch: true })
 
-                  {list.length - 1 == index && (
-                    <View style={{ alignItems: 'center' }}>
-                      <TouchableOpacity style={styles.itemAdd} onPress={() => {
-                        props.navigation.setParams({ refetch: true })
-
-                        if ((locationType == "hair" || locationType == "nail")) {
-                          props.navigation.navigate(
-                            "addservice", 
-                            { parentMenuid: "", serviceid: null }
-                          )
-                        } else if (locationType == "restaurant") {
-                          props.navigation.navigate(
-                            "addmeal", 
-                            { parentMenuid: "", productid: null }
-                          )
-                        } else {
-                          props.navigation.navigate(
-                            "addproduct", 
-                            { parentMenuid: "", productid: null }
-                          )
-                        }
-                      }}>
-                        <View style={styles.column}>
-                          <Text style={styles.itemAddHeader}>{tr.t("buttons.add" + header)}</Text>
+                            if ((locationType == "hair" || locationType == "nail")) {
+                              props.navigation.navigate("addservice", { parentMenuid: id, serviceid: info.id })
+                            } else if (locationType == "restaurant") {
+                              props.navigation.navigate("addmeal", { parentMenuid: id, productid: info.id })
+                            } else {
+                              props.navigation.navigate("addproduct", { parentMenuid: id, productid: info.id })
+                            }
+                          }}>
+                            <Text style={styles.itemActionHeader}>{tr.t("buttons.change")}</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity style={styles.itemAction} onPress={() => (locationType == "hair" || locationType == "nail") ? removeTheService(info.id) : removeTheProduct(info.id)}>
+                            <Text style={styles.itemActionHeader}>{tr.t("buttons.delete")}</Text>
+                          </TouchableOpacity>
                         </View>
-                        <AntDesign name="pluscircleo" size={40}/>
-                      </TouchableOpacity>
-                    </View>
-                  )}
+                      </View>
+                    )}
+  								</View>
                 </>
 							}
 						</View>
@@ -666,61 +584,84 @@ export default function Menu(props) {
 				<View style={styles.box}>
 					<ScrollView style={{ height: '90%', width: '100%' }}>
 						<View style={{ paddingVertical: 10 }}>
-              <Text style={styles.menusHeader}>{tr.t("menu.photos.header")}</Text>
-							{menuInfo.photos.length > 0 && (
-								menuInfo.photos[0].row && ( 
-									<ScrollView style={{ width: '100%' }}>
-										{menuInfo.photos.map(info => (
-											<View key={info.key} style={styles.menuRow}>
-												{info.row.map(item => (
-													<View key={item.key} style={{ width: width * 0.3 }}>
-														{item.photo && (
-                              <>
-                                <View style={resizePhoto(item.photo, width * 0.3)}>
-                                  <Image style={{ height: '100%', width: '100%' }} source={{ uri: logo_url + item.photo.name }}/>
-                                </View>
+              {(locationType == "hair" || locationType == "nail") && (
+                <>
+    							{menuInfo.photos.length > 0 && (
+    								menuInfo.photos[0].row && ( 
+    									<ScrollView style={{ width: '100%' }}>
+    										{menuInfo.photos.map(info => (
+    											<View key={info.key} style={styles.menuRow}>
+    												{info.row.map(item => (
+    													<View key={item.key} style={{ width: width * 0.3 }}>
+    														{item.photo && (
+                                  <>
+                                    <View style={resizePhoto(item.photo, width * 0.3)}>
+                                      <Image style={{ height: '100%', width: '100%' }} source={{ uri: logo_url + item.photo.name }}/>
+                                    </View>
 
-                                <View style={[styles.menuPhotoActions, { marginTop: -30 }]}>
-                                  {isOwner == true && (
-                                    <TouchableOpacity style={styles.menuPhotoAction} onPress={() => setMenuphotooption({ ...menuPhotooption, show: true, action: 'delete', info: item.photo })}>
-                                      <Text style={styles.menuPhotoActionHeader}>{tr.t("buttons.delete")}</Text>
-                                    </TouchableOpacity>
-                                  )}
-                                  <TouchableOpacity style={styles.menuPhotoAction} onPress={() => setMenuphotooption({ ...menuPhotooption, show: true, action: '', info: item.photo })}>
-                                    <Text style={styles.menuPhotoActionHeader}>{tr.t("buttons.see")}</Text>
-                                  </TouchableOpacity>
-                                </View>
-                              </>
-														)}
-													</View>
-												))}
-											</View>
-										))}
-									</ScrollView>
-								)
-							)}
-              {isOwner == true && (
-                <View style={{ alignItems: 'center' }}>
-                  <TouchableOpacity style={styles.menuStart} onPress={() => {
-                    allowCamera()
-                    setUploadmenubox({ ...uploadMenubox, show: true, uri: '', name: '' })
-                  }}>
-                    <Text style={styles.menuStartHeader}>{tr.t("menu.photos.upload")}</Text>
-                  </TouchableOpacity>
-                  <Text>({tr.t("menu.photos.easier")})</Text>
-                </View>
+                                    <View style={[styles.menuPhotoActions, { marginTop: -30 }]}>
+                                      {isOwner == true && (
+                                        <TouchableOpacity style={styles.menuPhotoAction} onPress={() => setMenuphotooption({ ...menuPhotooption, show: true, action: 'delete', info: item.photo })}>
+                                          <Text style={styles.menuPhotoActionHeader}>{tr.t("buttons.delete")}</Text>
+                                        </TouchableOpacity>
+                                      )}
+                                      <TouchableOpacity style={styles.menuPhotoAction} onPress={() => setMenuphotooption({ ...menuPhotooption, show: true, action: '', info: item.photo })}>
+                                        <Text style={styles.menuPhotoActionHeader}>{tr.t("buttons.see")}</Text>
+                                      </TouchableOpacity>
+                                    </View>
+                                  </>
+    														)}
+    													</View>
+    												))}
+    											</View>
+    										))}
+    									</ScrollView>
+    								)
+    							)}
+                  {isOwner == true && (
+                    <View style={{ alignItems: 'center' }}>
+                      <TouchableOpacity style={styles.menuStart} onPress={() => {
+                        allowCamera()
+                        setUploadmenubox({ ...uploadMenubox, show: true, uri: '', name: '' })
+                      }}>
+                        <Text style={styles.menuStartHeader}>{tr.t("menu.photos.upload")}</Text>
+                      </TouchableOpacity>
+                      <Text>({tr.t("menu.photos.easier")})</Text>
+                    </View>
+                  )}
+                </>
               )}
-              <View style={{ marginTop: 100 }}>
-                <Text style={styles.menusHeader}>{tr.t("menu.lists.header")}</Text>
-                {displayList({ id: "", name: "", image: "", list: menuInfo.list })}
+
+              <View>                
                 {isOwner == true && (
                   <View style={{ alignItems: 'center' }}>
-                    <TouchableOpacity style={styles.menuStart} onPress={() => setCreatemenuoptionbox({ ...createMenuoptionbox, show: true, id: "", allow: "both" })}>
-                      <Text style={styles.menuStartHeader}>{tr.t("menu.lists.create")}</Text>
+                    <TouchableOpacity style={styles.menuStart} onPress={() => {
+                      if ((locationType == "hair" || locationType == "nail")) {
+                        props.navigation.navigate(
+                          "addservice", 
+                          { parentMenuid: -1, serviceid: null }
+                        )
+                      } else {
+                        props.navigation.navigate(
+                          locationType == "store" ? "addproduct" : "addmeal", 
+                          { parentMenuid: -1, productid: null }
+                        )
+                      }
+                    }}>
+                      <Text style={styles.menuStartHeader}>{
+                        locationType == "hair" || locationType == "nail" ? 
+                          tr.t("buttons.addservice")
+                          :
+                          locationType == "store" ? 
+                            tr.t("buttons.addproduct")
+                            :
+                            tr.t("buttons.addmeal")
+                      }</Text>
                     </TouchableOpacity>
-                    <Text>{tr.t("menu.lists.easier." + (header == "service" ? "salon" : "restaurant"))}</Text>
+                    {(locationType == "hair" || locationType == "nail") && <Text>{tr.t("menu.lists.easier." + (header == "service" ? "salon" : "restaurant"))}</Text>}
                   </View>
                 )}
+                {displayList({ id: "", name: "", image: "", list: menuInfo.list })}
               </View>
 						</View>
 					</ScrollView>
@@ -1043,7 +984,7 @@ const styles = StyleSheet.create({
   menuStartDiv: { fontSize: wsize(7), fontWeight: 'bold', marginVertical: 20 },
 
 	menu: { backgroundColor: 'black', marginBottom: 30, paddingTop: 3, width: '100%' },
-	menuImageHolder: { borderRadius: wsize(10) / 2, height: wsize(10), overflow: 'hidden' },
+	menuImageHolder: { borderRadius: wsize(30) / 2, height: wsize(30), overflow: 'hidden', width: wsize(30) },
   column: { flexDirection: 'column', justifyContent: 'space-around' },
 	menuName: { color: 'white', fontSize: wsize(5), fontWeight: 'bold', marginLeft: 5, textDecorationLine: 'underline' },
 	menuActions: { flexDirection: 'row' },
@@ -1051,8 +992,8 @@ const styles = StyleSheet.create({
 	menuActionHeader: { fontSize: wsize(4), textAlign: 'center' },
   itemAdd: { borderColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, flexDirection: 'row', marginVertical: 10, padding: 5 },
 	itemAddHeader: { color: 'black', fontWeight: 'bold', marginRight: 5 },
-  item: { backgroundColor: 'white' },
-	itemImageHolder: { borderRadius: wsize(10) / 2, height: wsize(10), overflow: 'hidden' },
+  item: { backgroundColor: 'white', marginBottom: 50 },
+	itemImageHolder: { borderRadius: wsize(30) / 2, height: wsize(30), overflow: 'hidden', width: wsize(30) },
 	itemHeader: { fontSize: wsize(5), fontWeight: 'bold', marginHorizontal: 10, textDecorationStyle: 'solid' },
 	itemActions: { flexDirection: 'row' },
 	itemAction: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, marginLeft: 10, padding: 3 },

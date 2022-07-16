@@ -139,6 +139,7 @@ const info = {
         moreBusinesses: "Doanh nghiệp của bạn",
         walkIn: "Khách hàng bước vào",
         changeLanguage: "Thay đổi ngôn ngữ",
+        editTables: "Chỉnh sửa bảng",
         getAppointmentsby: {
           header: "Get appointments by",
           both: "Chủ sở hữu và nhân viên",

@@ -139,6 +139,7 @@ const info = {
         moreBusinesses: "您的企业",
         walkIn: "客户上门",
         changeLanguage: "改变语言",
+        editTables: "编辑表格",
         getAppointmentsby: {
           header: "通过以下方式获得约会",
           both: "业主和员工",

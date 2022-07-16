@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { 
   SafeAreaView, Platform, ScrollView, HorizontalScrollView, ActivityIndicator, Dimensions, 
   View, FlatList, Image, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, 
@@ -25,6 +25,7 @@ import {
   getOtherWorkers, getAccounts, getOwnerInfo, logoutUser, getWorkersTime, getAllWorkersTime, 
   getWorkersHour, setUseVoice
 } from '../apis/owners'
+import { getTables, getTableOrders, finishOrder, viewPayment, finishDining } from '../apis/dining_tables'
 import { getLocationProfile, getLocationHours, setLocationHours, updateLocation, setReceiveType, getDayHours } from '../apis/locations'
 import { getMenus, removeMenu, addNewMenu } from '../apis/menus'
 import { 
@@ -72,6 +73,7 @@ export default function Main(props) {
     selectedIds: [], pushType: null, pushBy: null, pushFactors: [], selectedFactor: ""
   })
 	const [cartOrderers, setCartorderers] = useState([])
+  const [tableOrders, setTableorders] = useState([])
   const [speakInfo, setSpeakinfo] = useState({ orderNumber: "" })
 
   const [loaded, setLoaded] = useState(false)
@@ -79,7 +81,7 @@ export default function Main(props) {
 	const [viewType, setViewtype] = useState('')
 
 	const [showDisabledscreen, setShowdisabledscreen] = useState(false)
-  const [alertInfo, setAlertinfo] = useState({ show: false })
+  const [alertInfo, setAlertinfo] = useState({ show: false, text: "" })
   const [showInfo, setShowinfo] = useState({ show: false, workersHours: [], locationHours: [] })
 
   const [showMoreoptions, setShowmoreoptions] = useState({ show: false, loading: false, infoType: '' })
@@ -128,6 +130,7 @@ export default function Main(props) {
   const [workersHoursinfo, setWorkershoursinfo] = useState({})
 
   const [getWorkersbox, setGetworkersbox] = useState({ show: false, day: '', workers: [] })
+  const [showOrders, setShoworders] = useState({ show: false, id: -1, orders: [], paymentInfo: { show: false, subTotalcost: "", totalCost: "" }})
 
 	const getNotificationPermission = async() => {
 		const ownerid = await AsyncStorage.getItem("ownerid")
@@ -923,10 +926,10 @@ export default function Main(props) {
       })
       .catch((err) => {
         if (err.response && err.response.status == 400) {
-          setAlertinfo({ ...alertInfo, show: true })
+          setAlertinfo({ ...alertInfo, show: true, text: tr.t("main.hidden.alert.schedulingConflict") })
 
           setTimeout(function () {
-            setAlertinfo({ ...alertInfo, show: false })
+            setAlertinfo({ ...alertInfo, show: false, text: "" })
             setScheduleoption({ ...scheduleOption, rebook: false })
           }, 1000)
         }
@@ -1007,6 +1010,131 @@ export default function Main(props) {
 				}
 			})
 	}
+  const getAllTables = async() => {
+    const locationid = await AsyncStorage.getItem("locationid")
+
+    getTables(locationid)
+      .then((res) => {
+        if (res.status == 200) {
+          return res.data
+        }
+      })
+      .then((res) => {
+        if (res) {
+          setTableorders(res.tables)
+          setViewtype('tableorders')
+          setLoaded(true)
+        }
+      })
+      .catch((err) => {
+        if (err.response && err.response.status == 400) {
+          const { errormsg, status } = err.response.data
+        }
+      })
+  }
+  const getTheTableOrders = id => {
+    getTableOrders(id)
+      .then((res) => {
+        if (res.status == 200) {
+          return res.data
+        }
+      })
+      .then((res) => {
+        if (res) {
+          setShoworders({ ...showOrders, show: true, id, orders: res.orders, paymentInfo: { show: false, subTotalcost: "", totalCost: "" }})
+        }
+      })
+      .catch((err) => {
+        if (err.response && err.response.status == 400) {
+          const { errormsg, status } = err.response.data
+
+          switch (status) {
+            case "noOrders":
+              setAlertinfo({ ...alertInfo, show: true, text: tr.t("main.hidden.alert.noOrders") })
+              break;
+            default:
+          }
+
+          setTimeout(function () {
+            setAlertinfo({ ...alertInfo, show: false, text: '' })
+          }, 2000)
+        }
+      })
+  }
+  const finishTheOrder = orderid => {
+    const newOrders = [...showOrders.orders]
+    const { id } = showOrders
+    const data = { orderid, id }
+
+    finishOrder(data)
+      .then((res) => {
+        if (res.status == 200) {
+          return res.data
+        }
+      })
+      .then((res) => {
+        if (res) {
+          newOrders.forEach(function (order, index) {
+            if (orderid == order.key) {
+              newOrders.splice(index, 1)
+            }
+          })
+
+          setShoworders({ ...showOrders, orders: newOrders })
+          getAllTables()
+        }
+      })
+  }
+  const viewThePayment = id => {
+    viewPayment(id)
+      .then((res) => {
+        if (res.status == 200) {
+          return res.data
+        }
+      })
+      .then((res) => {
+        if (res) {
+          const newPaymentinfo = {...showOrders.paymentInfo}
+
+          newPaymentinfo.show = true
+          newPaymentinfo.subTotalcost = res.subTotalCost
+          newPaymentinfo.totalCost = res.totalCost
+
+          setShoworders({ ...showOrders, show: true, orders: res.orders, paymentInfo: newPaymentinfo })
+        }
+      })
+      .catch((err) => {
+        if (err.response && err.response.status == 400) {
+          const { errormsg, status } = err.response.data
+
+          switch (status) {
+            case "unfinishedOrders":
+              setAlertinfo({ ...alertInfo, show: true, text: tr.t("main.hidden.alert.unfinishedOrders") })
+
+              break;
+            case "noOrders":
+              setAlertinfo({ ...alertInfo, show: true, text: tr.t("main.hidden.alert.noOrders") })
+          }
+
+          setTimeout(function () {
+            setAlertinfo({ ...alertInfo, show: false, text: "" })
+          }, 2000)
+        }
+      })
+  }
+  const finishTheDining = () => {
+    finishDining(showOrders.id)
+      .then((res) => {
+        if (res.status == 200) {
+          return res.data
+        }
+      })
+      .then((res) => {
+        if (res) {
+          setShoworders({ ...showOrders, show: false, orders: [], paymentInfo: { show: false, subTotalcost: "", totalCost: "" }})
+        }
+      })
+  }
 
   const removeTheBooking = () => {
     const { id, workerid, date, reason } = scheduleOption
@@ -1187,6 +1315,7 @@ export default function Main(props) {
 
       speakToWorker(data)
     })
+    socket.on("updateTableOrders", () => getAllTables())
 		socket.io.on("open", () => {
 			if (ownerId != null) {
 				socket.emit("socket/business/login", ownerId, () => setShowdisabledscreen(false))
@@ -1197,6 +1326,7 @@ export default function Main(props) {
     return () => {
       socket.off("updateSchedules")
       socket.off("updateOrders")
+      socket.off("updateTableOrders")
     }
 	}
   
@@ -2359,6 +2489,9 @@ export default function Main(props) {
                   <TouchableOpacity style={styles.viewType} onPress={() => getAllCartOrderers()}>
                     <Text style={styles.viewTypeHeader}>{tr.t("main.navs.cartOrderers")}</Text>
                   </TouchableOpacity>
+                  <TouchableOpacity style={styles.viewType} onPress={() => getAllTables()}>
+                    <Text style={styles.viewTypeHeader}>Table Order(s)</Text>
+                  </TouchableOpacity>
                 </View>
               }
             </View>
@@ -2616,6 +2749,32 @@ export default function Main(props) {
                   <Text style={styles.bodyResultHeader}>{tr.t("main.cartOrderers.header")}</Text>
                 </View>
             )}
+
+            {viewType == 'tableorders' && (
+              tableOrders.length > 0 ? 
+                <FlatList
+                  data={tableOrders}
+                  renderItem={({ item, index }) => 
+                    <View key={item.key} style={styles.tableOrder}>
+                      <Text style={styles.tableOrderHeader}>Table #{item.name}</Text>
+
+                      <TouchableOpacity style={styles.tableOrderPayment} onPress={() => viewThePayment(item.key)}>
+                        <FontAwesome name="dollar" size={20}/>
+                      </TouchableOpacity>
+
+                      {item.numOrders > 0 && (
+                        <TouchableOpacity style={styles.tableOrderNum} onPress={() => getTheTableOrders(item.key)}>
+                          <Text style={styles.tableOrderNumHeader}>See orders {item.numOrders}</Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  }
+                />
+                :
+                <View style={styles.bodyResult}>
+                  <Text style={styles.bodyResultHeader}>There are no order(s) yet</Text>
+                </View>
+            )}
   				</View>
 
   				<View style={styles.bottomNavs}>
@@ -2652,7 +2811,7 @@ export default function Main(props) {
         </View>
       }
 
-      {(scheduleOption.show || showInfo.show || showMoreoptions.show || showDisabledscreen || alertInfo.show) && (
+      {(scheduleOption.show || showInfo.show || showMoreoptions.show || showDisabledscreen || alertInfo.show || showOrders.show) && (
         <Modal transparent={true}>
           {scheduleOption.show && (
             <SafeAreaView style={styles.scheduleOptionBox}>
@@ -3023,6 +3182,13 @@ export default function Main(props) {
                         setEditinfo({ ...editInfo, show: true, type: 'changelanguage' })
                       }}>
                         <Text style={styles.moreOptionTouchHeader}>{tr.t("main.hidden.showMoreoptions.changeLanguage")}</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity style={styles.moreOptionTouch} onPress={() => {
+                        setShowmoreoptions({ ...showMoreoptions, show: false })
+                        props.navigation.navigate("tables")
+                      }}>
+                        <Text style={styles.moreOptionTouchHeader}>{tr.t("main.hidden.showMoreoptions.editTables")}</Text>
                       </TouchableOpacity>
 
                       <View style={styles.optionsBox}>
@@ -4658,9 +4824,91 @@ export default function Main(props) {
           {alertInfo.show && (
             <SafeAreaView style={styles.alertBox}>
               <View style={styles.alertContainer}>
-                <Text style={styles.alertHeader}>{tr.t("main.hidden.alert.header")}</Text>
+                <Text style={styles.alertHeader}>{alertInfo.text}</Text>
               </View>
             </SafeAreaView>
+          )}
+          {showOrders.show && (
+            <View style={styles.ordersBox}>
+              <View style={styles.ordersContainer}>
+                <TouchableOpacity style={styles.ordersClose} onPress={() => setShoworders({ ...showOrders, show: false })}><AntDesign name="closecircleo" size={30}/></TouchableOpacity>
+
+                {!showOrders.paymentInfo.show ? 
+                  <>
+                    <FlatList
+                      style={{ width: '100%' }}
+                      data={showOrders.orders}
+                      renderItem={({ item, index }) => 
+                        <View style={styles.ordersItem}>
+                          <View style={styles.itemImage}>
+                            <Image 
+                              style={resizePhoto(item.image, wsize(20))} 
+                              source={item.image.name ? { uri: logo_url + item.image.name } : require("../../assets/noimage.jpeg")}
+                            />
+                          </View>
+
+                          <View style={styles.ordersItemInfo}>
+                            <Text style={styles.ordersItemInfoHeader}>{item.name}</Text>
+                            <Text style={styles.ordersItemInfoHeader}>${item.cost} {item.quantity > 1 && "(" + item.quantity + ")"}</Text>
+
+                            {item.sizes.length > 0 && (
+                              item.sizes.map(size => (
+                                size["selected"] && <Text key={size.key} style={styles.ordersItemInfoHeader}>Size: {size["name"]}</Text>
+                              ))
+                            )}
+                          </View>
+
+                          <View style={styles.column}>
+                            <TouchableOpacity style={styles.ordersItemDone} onPress={() => finishTheOrder(item.key)}>
+                              <Text style={styles.ordersItemDoneHeader}>Done</Text>
+                            </TouchableOpacity>
+                          </View>
+                        </View>
+                      }
+                    />
+                  </>
+                  :
+                  <>
+                    <Text style={styles.paymentHeader}>Payment Detail</Text>
+
+                    <FlatList
+                      style={{ width: '100%' }}
+                      data={showOrders.orders}
+                      renderItem={({ item, index }) => 
+                        <View style={styles.ordersItem}>
+                          <View style={styles.itemImage}>
+                            <Image 
+                              style={resizePhoto(item.image, wsize(20))} 
+                              source={item.image.name ? { uri: logo_url + item.image.name } : require("../../assets/noimage.jpeg")}
+                            />
+                          </View>
+
+                          <View style={styles.ordersItemInfo}>
+                            <Text style={styles.ordersItemInfoHeader}>{item.name}</Text>
+                            <Text style={styles.ordersItemInfoHeader}>${item.cost} {item.quantity > 1 && "(" + item.quantity + ")"}</Text>
+
+                            {item.sizes.length > 0 && (
+                              item.sizes.map(size => (
+                                size["selected"] && <Text key={size.key} style={styles.ordersItemInfoHeader}>Size: {size["name"]}</Text>
+                              ))
+                            )}
+                          </View>
+                        </View>
+                      }
+                    />
+
+                    <View style={styles.paymentInfos}>
+                      <Text style={styles.paymentInfo}>Subtotal: $ {showOrders.paymentInfo.subTotalcost}</Text>
+                      <Text style={styles.paymentInfo}>Total: $ {showOrders.paymentInfo.totalCost}</Text>
+                    </View>
+
+                    <TouchableOpacity style={styles.paymentFinish} onPress={() => finishTheDining()}>
+                      <Text style={styles.paymentFinishHeader}>Finish Dining</Text>
+                    </TouchableOpacity>
+                  </>
+                }
+              </View>
+            </View>
           )}
         </Modal>
       )}
@@ -4719,6 +4967,12 @@ const styles = StyleSheet.create({
   cartordererActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	cartordererAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: wsize(30) },
 	cartordererActionHeader: { fontSize: wsize(4), textAlign: 'center' },
+
+  tableOrder: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20, marginHorizontal: '2%', padding: 10, width: '96%' },
+  tableOrderHeader: { fontSize: wsize(6), fontWeight: 'bold' },
+  tableOrderPayment: { borderRadius: 10, padding: 10 },
+  tableOrderNum: { backgroundColor: 'black', borderRadius: 10, padding: 10 },
+  tableOrderNumHeader: { color: 'white', fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
 
 	bodyResult: { alignItems: 'center', flexDirection: 'column', height: '90%', justifyContent: 'space-around' },
 	bodyResultHeader: { fontSize: wsize(5), fontWeight: 'bold', paddingHorizontal: '10%', textAlign: 'center' },
@@ -4867,6 +5121,20 @@ const styles = StyleSheet.create({
   alertBox: { backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', justifyContent: 'space-around', height: '100%', width: '100%' },
   alertContainer: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '30%', justifyContent: 'space-around', width: '100%' },
   alertHeader: { color: 'red', fontSize: wsize(6), fontWeight: 'bold', paddingHorizontal: 10 },
+
+  ordersBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
+  ordersContainer: { alignItems: 'center', backgroundColor: 'white', height: '90%', width: '90%' },
+  ordersClose: { marginVertical: 20 },
+  ordersHeader: { fontSize: wsize(6), marginVertical: 20, textAlign: 'center' },
+  ordersItem: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, flexDirection: 'row', justifyContent: 'space-between', margin: '5%', padding: 10, width: '90%' },
+  ordersItemInfoHeader: { fontSize: wsize(4), fontWeight: 'bold' },
+  ordersItemDone: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, padding: 3 },
+  ordersItemDoneHeader: { textAlign: 'center' },
+  paymentHeader: { fontSize: wsize(6), fontWeight: 'bold' },
+  paymentInfos: {  },
+  paymentInfo: { fontSize: wsize(7), textAlign: 'center' },
+  paymentFinish: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 20, padding: 10 },
+  paymentFinishHeader: { fontSize: wsize(5), textAlign: 'center' },
 
   loading: { alignItems: 'center', flexDirection: 'column', height: '90%', justifyContent: 'space-around', width: '100%' },
   row: { flexDirection: 'row', justifyContent: 'space-around' },

@@ -139,6 +139,7 @@ const info = {
         moreBusinesses: "Your Business(es)",
         walkIn: "Client Walk-In",
         changeLanguage: "Change language",
+        editTables: "Edit Table(s)",
         getAppointmentsby: {
           header: "Get appointments by",
           both: "Owners and Staffs",
@@ -156,7 +157,9 @@ const info = {
         sameHour: "Set new staff's working time for"
       },
       alert: {
-        header: "There is a scheduling conflict"
+        schedulingConflict: "There is a scheduling conflict",
+        unfinishedOrders: "There are some unfinished orders",
+        noOrders: "There are no orders"
       },
       languages: {
         english: "English",
@@ -262,7 +265,6 @@ const info = {
     },
     lists: {
       header: "List(s)",
-      create: "Add one-by-one",
       easier: {
         salon: "Easier for clients to book",
         restaurant: "Easier for customers to order"
@@ -305,8 +307,8 @@ const info = {
       edit: "Edit product",
       add: "Add new product"
     },
-    name: "Enter a name of this product",
-    photo: "Take a picture of this product (Optional)",
+    name: "Enter product name",
+    photo: "Take product picture (Optional)",
     options: {
       addamount: "Add % or amount option",
       addoption: "Add Specific Option"
@@ -321,15 +323,15 @@ const info = {
       edit: "Edit meal",
       add: "Add new meal"
     },
-    name: "Enter a name of this meal",
-    photo: "Take a picture of this meal (Optional)",
+    name: "Enter meal name",
+    photo: "Take meal picture (Optional)",
     options: {
       addamount: "Add % or amount option",
       addoption: "Add Specific Option"
     },
     price: {
-      size: "Add size",
-      sizes: "Enter a price",
+      size: "Enter one price",
+      sizes: "Add a size",
     }
   },
 
@@ -380,7 +382,7 @@ const info = {
     close: "Close",
     addmenu: "Add menu",
     addmeal: "Add meal",
-    additem: "Add item",
+    addproduct: "Add product",
     addservice: "Add service",
     delete: "Delete",
     change: "Change",

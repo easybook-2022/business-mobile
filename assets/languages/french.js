@@ -139,6 +139,7 @@ const info = {
         moreBusinesses: "Vos entreprises",
         walkIn: "Client sans rendez-vous",
         changeLanguage: "Changer de langue",
+        editTables: "Modifier les tableaux",
         getAppointmentsby: {
           header: "Obtenez des rendez-vous par",
           both: "Propriétaires et personnel",

@@ -49,7 +49,7 @@ export default function Addservice(props) {
 		const locationid = await AsyncStorage.getItem("locationid")
 
 		if (name && (price && !isNaN(price))) {
-			const data = { locationid, menuid: parentMenuid ? parentMenuid : "", name, image, price }
+			const data = { locationid, menuid: parentMenuid > -1 ? parentMenuid : "", name, image, price }
 
 			setLoading(true)
 
@@ -94,7 +94,7 @@ export default function Addservice(props) {
 		const locationid = await AsyncStorage.getItem("locationid")
 
 		if (name && (price && !isNaN(price))) {
-			const data = { locationid, menuid: parentMenuid ? parentMenuid : "", serviceid, name, image, price }
+			const data = { locationid, menuid: parentMenuid > -1 ? parentMenuid : "", serviceid, name, image, price }
 
       setLoading(true)
 
@@ -424,9 +424,9 @@ export default function Addservice(props) {
 							}}>
 								<Text style={styles.addActionHeader}>{
 									!serviceid ? 
-										setupType == steps[steps.length - 1] ? tr.t("buttons.done") : setupType == "photo" ? image.uri ? tr.t("buttons.next") : tr.t("buttons.skip") : tr.t("buttons.next")
+										steps.indexOf(setupType) == steps.length - 1 ? tr.t("buttons.done") : setupType == "photo" ? image.uri ? tr.t("buttons.next") : tr.t("buttons.skip") : tr.t("buttons.next")
 										: 
-										setupType == steps[steps.length - 1] ? tr.t("buttons.update") : setupType == "photo" ? image.uri ? tr.t("buttons.next") : tr.t("buttons.skip") : tr.t("buttons.next")
+										steps.indexOf(setupType) == steps.length - 1 ? tr.t("buttons.update") : setupType == "photo" ? image.uri ? tr.t("buttons.next") : tr.t("buttons.skip") : tr.t("buttons.next")
 								}</Text>
 							</TouchableOpacity>
 						</View>

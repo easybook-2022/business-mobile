@@ -24,7 +24,7 @@ import Loadingprogress from '../widgets/loadingprogress';
 
 const { height, width } = Dimensions.get('window')
 const wsize = p => {return width * (p / 100)}
-const steps = ['name', 'photo', 'options', 'others', 'sizes']
+const steps = ['name', 'photo', 'sizes']
 
 export default function Addproduct(props) {
 	const params = props.route.params
@@ -38,8 +38,6 @@ export default function Addproduct(props) {
   const [choosing, setChoosing] = useState(false)
 	const [name, setName] = useState('')
 	const [image, setImage] = useState({ uri: '', name: '', size: { height: 0, width: 0 }, loading: false })
-	const [options, setOptions] = useState([])
-	const [others, setOthers] = useState([])
 	const [sizes, setSizes] = useState([])
 	const [price, setPrice] = useState('')
 	const [loaded, setLoaded] = useState(productid ? false : true)
@@ -52,40 +50,6 @@ export default function Addproduct(props) {
 		const sizenames = { "small": false, "medium": false, "large": false, "extra large": false }
 
 		setErrormsg("")
-
-		for (let k = 0; k < options.length; k++) {
-			if (!options[k].text) {
-				setErrormsg("One of the options has empty values")
-
-				return
-			}
-
-			if (!options[k].option) {
-				setErrormsg("One of the options has empty values")
-
-				return
-			}
-		}
-
-		for (let k = 0; k < others.length; k++) {
-			if (!others[k].name) {
-				setErrormsg("One of the options has empty values")
-
-				return
-			}
-
-			if (!others[k].input) {
-				setErrormsg("One of the options has empty values")
-
-				return
-			}
-
-			if (!others[k].price) {
-				setErrormsg("One of the options has empty prices")
-
-				return
-			}
-		}
 
 		for (let k = 0; k < sizes.length; k++) {
 			if (!sizes[k].name) {
@@ -114,19 +78,11 @@ export default function Addproduct(props) {
 		}
 
 		if (name && (sizes.length > 0 || (price && !isNaN(price)))) {
-			options.forEach(function (option) {
-				delete option['key']
-			})
-
-			others.forEach(function (other) {
-				delete other['key']
-			})
-
 			sizes.forEach(function (size) {
 				delete size['key']
 			})
 
-			const data = { locationid, menuid: parentMenuid ? parentMenuid : "", name, image, options, others, sizes, price: sizes.length > 0 ? "" : price }
+			const data = { locationid, menuid: parentMenuid > -1 ? parentMenuid : "", name, image, sizes, price: sizes.length > 0 ? "" : price }
 
 			setLoading(true)
 
@@ -176,40 +132,6 @@ export default function Addproduct(props) {
 
 		setErrormsg("")
 
-		for (let k = 0; k < options.length; k++) {
-			if (!options[k].text) {
-				setErrormsg("One of the options has empty values")
-
-				return
-			}
-
-			if (!options[k].option) {
-				setErrormsg("One of the options has empty values")
-
-				return
-			}
-		}
-
-		for (let k = 0; k < others.length; k++) {
-			if (!others[k].name) {
-				setErrormsg("One of the options has empty values")
-
-				return
-			}
-
-			if (!others[k].input) {
-				setErrormsg("One of the options has empty values")
-
-				return
-			}
-
-			if (!others[k].price) {
-				setErrormsg("One of the options has empty prices")
-
-				return
-			}
-		}
-
 		for (let k = 0; k < sizes.length; k++) {
 			if (!sizes[k].name) {
 				setErrormsg("One of the size is not named")
@@ -237,19 +159,11 @@ export default function Addproduct(props) {
 		}
 
 		if (name && (sizes.length > 0 || (price && !isNaN(price)))) {
-			options.forEach(function (option) {
-				delete option['key']
-			})
-
-			others.forEach(function (other) {
-				delete other['key']
-			})
-
 			sizes.forEach(function (size) {
 				delete size['key']
 			})
 
-			const data = { locationid, menuid: parentMenuid ? parentMenuid : "", productid, name, image, options, others, sizes, price: sizes.length > 0 ? "" : price }
+			const data = { locationid, menuid: parentMenuid > -1 ? parentMenuid : "", productid, name, image, sizes, price: sizes.length > 0 ? "" : price }
 
 			setLoading(true)
 
@@ -311,7 +225,7 @@ export default function Addproduct(props) {
 		}
 
 		if (msg == "") {
-			const nextStep = index == 4 ? "done" : steps[index + 1]
+			const nextStep = index == 2 ? "done" : steps[index + 1]
 
 			if (nextStep == "photo") {
 				allowCamera()
@@ -447,29 +361,12 @@ export default function Addproduct(props) {
 			})
 			.then((res) => {
 				if (res) {
-					const { productImage, name, options, others, sizes, price } = res.productInfo
-					const newOptions = [], newOthers = [], newSizes = []
+					const { productImage, name, sizes, price } = res.productInfo
+					const newSizes = []
 
 					setName(name)
 					setImage({ ...image, uri: productImage.name ? logo_url + productImage.name : "" })
 					setPrice(price)
-
-					options.forEach(function (option, index) {
-						newOptions.push({
-							key: "option-" + index.toString(),
-							text: option.header,
-							option: option.type
-						})
-					})
-
-					others.forEach(function (other, index) {
-						newOthers.push({
-							key: "other-" + index.toString(),
-							name: other.name,
-							input: other.input,
-							price: other.price
-						})
-					})
 
 					sizes.forEach(function (size, index) {
 						newSizes.push({
@@ -479,8 +376,6 @@ export default function Addproduct(props) {
 						})
 					})
 
-					setOptions(newOptions)
-					setOthers(newOthers)
 					setSizes(newSizes)
 					setLoaded(true)
 				}
@@ -556,130 +451,6 @@ export default function Addproduct(props) {
 									</>
 								)}	
 							</View>
-						)}
-
-						{setupType == "options" && (
-							<>
-								<ScrollView style={{ height: '50%', width: '100%' }}>
-									<View style={{ alignItems: 'center', width: '100%' }}>
-										<TouchableOpacity style={styles.addOption} onPress={() => {
-											let new_key
-
-											if (options.length > 0) {
-												let last_option = options[options.length - 1]
-
-												new_key = parseInt(last_option.key.split("-")[1]) + 1
-											} else {
-												new_key = 0
-											}
-
-											setOptions([...options, { key: "option-" + new_key.toString(), text: '', option: '' }])
-										}}>
-											<Text style={styles.addOptionHeader}>{tr.t("addproduct.options.addamount")}</Text>
-										</TouchableOpacity>
-
-										<View style={styles.options}>
-											{options.map((option, index) => (
-												<View key={option.key} style={styles.option}>
-													<TouchableOpacity style={styles.optionRemove} onPress={() => {
-														let newOptions = [...options]
-
-														newOptions.splice(index, 1)
-
-														setOptions(newOptions)
-													}}>
-														<FontAwesome name="close" size={40}/>
-													</TouchableOpacity>
-													<TextInput style={styles.optionInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="eg. Sugar" value={option.text} onChangeText={(text) => {
-														let newOptions = [...options]
-
-														newOptions[index].text = text
-
-														setOptions(newOptions)
-													}} autoCorrect={false} autoCapitalize="none"/>
-													<View style={styles.optionTypesBox}>
-														<Text style={styles.optionTypesHeader}>Select type</Text>
-														<View style={styles.optionTypes}>
-															<TouchableOpacity style={option.option == 'percentage' ? styles.optionTypeSelected : styles.optionType} onPress={() => {
-																let newOptions = [...options]
-
-																newOptions[index].option = 'percentage'
-
-																setOptions(newOptions)
-															}}>
-																<Text>%</Text>
-															</TouchableOpacity>
-															<TouchableOpacity style={option.option == 'amount' ? styles.optionTypeSelected : styles.optionType} onPress={() => {
-																let newOptions = [...options]
-																
-																newOptions[index].option = 'amount'
-
-																setOptions(newOptions)
-															}}>
-																<Text>#</Text>
-															</TouchableOpacity>
-														</View>
-													</View>
-												</View>
-											))}
-										</View>
-									</View>
-								</ScrollView>
-							</>
-						)}
-
-            {setupType == "others" && (
-							<>
-								<ScrollView style={{ height: '50%', width: '100%' }}>
-									<View style={{ alignItems: 'center', width: '100%' }}>
-										<TouchableOpacity style={styles.addOption} onPress={() => {
-											let new_key
-
-											if (others.length > 0) {
-												let last_other = others[others.length - 1]
-
-												new_key = parseInt(last_other.key.split("-")[1]) + 1
-											} else {
-												new_key = 0
-											}
-
-											setOthers([...others, { key: "other-" + new_key.toString(), name: '', price: "0.00" }])
-										}}>
-											<Text style={styles.addOptionHeader}>{tr.t("addproduct.options.addoption")}</Text>
-										</TouchableOpacity>
-
-										<View style={styles.options}>
-											{others.map((other, index) => (
-												<View key={other.key} style={styles.other}>
-													<TouchableOpacity style={styles.otherRemove} onPress={() => {
-														let newOthers = [...others]
-
-														newOthers.splice(index, 1)
-
-														setOthers(newOthers)
-													}}>
-														<FontAwesome name="close" size={40}/>
-													</TouchableOpacity>
-													<TextInput style={styles.otherInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Tapioca" value={other.name.toString()} onChangeText={(name) => {
-														let newOthers = [...others]
-
-														newOthers[index].name = name.toString()
-
-														setOthers(newOthers)
-													}} autoCorrect={false} autoCapitalize="none"/>
-													<TextInput style={styles.otherPrice} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="eg. 0.50" value={other.price.toString()} onChangeText={(price) => {
-														let newOthers = [...others]
-
-														newOthers[index].price = price.toString()
-
-														setOthers(newOthers)
-													}} keyboardType="numeric" autoCorrect={false} autoCapitalize="none"/>
-												</View>
-											))}
-										</View>
-									</View>
-								</ScrollView>
-							</>
 						)}
 
 						{setupType == "sizes" && (
@@ -806,9 +577,9 @@ export default function Addproduct(props) {
 								}}>
 									<Text style={styles.addActionHeader}>{
 										!productid ? 
-										  setupType == "photo" ? image.uri ? tr.t("buttons.update") : tr.t("buttons.skip") : tr.t("buttons.next") 
+										  steps.indexOf(setupType) == steps.length - 1 ? image.uri ? tr.t("buttons.done") : tr.t("buttons.skip") : tr.t("buttons.next") 
 											: 
-										  setupType == "photo" ? image.uri ? tr.t("buttons.next") : tr.t("buttons.skip") : tr.t("buttons.next")
+										  steps.indexOf(setupType) == steps.length - 1 ? image.uri ? tr.t("buttons.update") : tr.t("buttons.skip") : tr.t("buttons.next")
 									}</Text>
 								</TouchableOpacity>
 							</View>
@@ -843,21 +614,7 @@ const styles = StyleSheet.create({
 	addOption: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 10 },
 	addOptionHeader: { fontSize: wsize(6) },
 
-	options: { marginBottom: 10, width: '95%' },
-	option: { flexDirection: 'row', justifyContent: 'space-between' },
-	optionRemove: { alignItems: 'center', borderRadius: 27.5, borderStyle: 'solid', borderWidth: 2, paddingHorizontal: 8 },
-	optionInput: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), padding: 3, width: '50%' }, 
-	optionTypesBox: { alignItems: 'center' },
-	optionTypesHeader: { fontSize: wsize(4), fontWeight: 'bold' },
-	optionTypes: { flexDirection: 'row' },
-	optionType: { alignItems: 'center', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 2, padding: 8 },
-	optionTypeSelected: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.4)', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 2, padding: 8 },
-
-	other: { flexDirection: 'row', justifyContent: 'space-between' },
-	otherRemove: { alignItems: 'center', borderRadius: 27.5, borderStyle: 'solid', borderWidth: 2, height: 45, marginTop: 30, width: 45 },
-	otherInput: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), height: 50, marginTop: 30, padding: 3, width: '50%' }, 
-	otherPrice: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), height: 50, marginTop: 30, padding: 3, width: 80 }, 
-
+  sizes: { marginBottom: 10, width: '95%' },
 	size: { alignItems: 'center' },
 	sizeRemove: { alignItems: 'center', borderRadius: 27.5, borderStyle: 'solid', borderWidth: 2, height: 45, marginTop: 30, width: 45 },
 	sizeTypesBox: { alignItems: 'center' },

@@ -3,7 +3,7 @@ import { ActivityIndicator, SafeAreaView, View, Text, TouchableOpacity, StyleShe
 import { tr } from '../../assets/translate'
 
 export default function Disable(props) {
-  const { ownerId, close, language } = props.route.params
+  const { ownerId, close, language } = props
 
   useEffect(() => {
     tr.locale = language
