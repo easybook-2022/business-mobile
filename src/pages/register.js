@@ -392,7 +392,7 @@ export default function Register(props) {
           PermissionsAndroid.PERMISSIONS.CAMERA,
           {
             title: "Camera Permission",
-            message: "EasyGO Business uses camera to allow you to take a photo of yourself",
+            message: "EasyBook Business uses camera to allow you to take a photo of yourself",
             buttonNegative: "Cancel",
             buttonPositive: "OK"
           }
@@ -614,7 +614,7 @@ export default function Register(props) {
                           {workerHours.map((info, index) => (
                             info.working && ( 
                               <View key={index} style={styles.workingDay}>
-                                <Text style={styles.workingDayHeader}>{info.header}</Text>
+                                <Text style={styles.workingDayHeader}>{tr.t("days." + info.header)}</Text>
                               </View>
                             )
                           ))}
@@ -740,17 +740,24 @@ export default function Register(props) {
                           ))
                           :
                           <>
-                            <Text style={styles.workerHourHeader}>{tr.t("register.workingDays.hour").replace("{day}", "")}</Text>
+                            <Text style={styles.workerHourHeader}>{
+                              JSON.stringify(workerHours).split("\"working\":true").length - 1 == 7 ? 
+                                tr.t("register.workingDays.sameHours.all")
+                                : 
+                                tr.t("register.workingDays.sameHours.some")
+                            }</Text>
 
-                            <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-                              {workerHours.map((info, index) => (
-                                info.working && (
-                                  <View key={index} style={styles.workingDay}>
-                                    <Text style={styles.workingDayHeader}>{info.header}</Text>
-                                  </View>
-                                )
-                              ))}
-                            </View>
+                            {JSON.stringify(workerHours).split("\"working\":true").length - 1 < 7 && (
+                              <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+                                {workerHours.map((info, index) => (
+                                  info.working && (
+                                    <View key={index} style={styles.workingDay}>
+                                      <Text style={styles.workingDayHeader}>{tr.t("days." + info.header)}</Text>
+                                    </View>
+                                  )
+                                ))}
+                              </View>
+                            )}
 
                             <View style={styles.workerHour}>
                               <View style={styles.timeSelectionContainer}>

@@ -523,7 +523,7 @@ export default function Menu(props) {
           PermissionsAndroid.PERMISSIONS.CAMERA,
           {
             title: "Camera Permission",
-            message: "EasyGO Business allows you to take a photo for menu",
+            message: "EasyBook Business allows you to take a photo for menu",
             buttonNegative: "Cancel",
             buttonPositive: "OK"
           }
@@ -632,37 +632,37 @@ export default function Menu(props) {
                 </>
               )}
 
-              <View>                
-                {isOwner == true && (
-                  <View style={{ alignItems: 'center' }}>
-                    <TouchableOpacity style={styles.menuStart} onPress={() => {
-                      if ((locationType == "hair" || locationType == "nail")) {
-                        props.navigation.navigate(
-                          "addservice", 
-                          { parentMenuid: -1, serviceid: null }
-                        )
-                      } else {
-                        props.navigation.navigate(
-                          locationType == "store" ? "addproduct" : "addmeal", 
-                          { parentMenuid: -1, productid: null }
-                        )
-                      }
-                    }}>
-                      <Text style={styles.menuStartHeader}>{
-                        locationType == "hair" || locationType == "nail" ? 
-                          tr.t("buttons.addservice")
+              {isOwner == true && (
+                <View style={{ alignItems: 'center' }}>
+                  <TouchableOpacity style={styles.menuStart} onPress={() => {
+                    props.navigation.setParams({ refetch: true })
+
+                    if ((locationType == "hair" || locationType == "nail")) {
+                      props.navigation.navigate(
+                        "addservice", 
+                        { parentMenuid: -1, serviceid: null }
+                      )
+                    } else {
+                      props.navigation.navigate(
+                        locationType == "store" ? "addproduct" : "addmeal", 
+                        { parentMenuid: -1, productid: null }
+                      )
+                    }
+                  }}>
+                    <Text style={styles.menuStartHeader}>{
+                      locationType == "hair" || locationType == "nail" ? 
+                        tr.t("buttons.addservice")
+                        :
+                        locationType == "store" ? 
+                          tr.t("buttons.addproduct")
                           :
-                          locationType == "store" ? 
-                            tr.t("buttons.addproduct")
-                            :
-                            tr.t("buttons.addmeal")
-                      }</Text>
-                    </TouchableOpacity>
-                    {(locationType == "hair" || locationType == "nail") && <Text>{tr.t("menu.lists.easier." + (header == "service" ? "salon" : "restaurant"))}</Text>}
-                  </View>
-                )}
-                {displayList({ id: "", name: "", image: "", list: menuInfo.list })}
-              </View>
+                          tr.t("buttons.addmeal")
+                    }</Text>
+                  </TouchableOpacity>
+                  {(locationType == "hair" || locationType == "nail") && <Text>{tr.t("menu.lists.easier." + (header == "service" ? "salon" : "restaurant"))}</Text>}
+                </View>
+              )}
+              {displayList({ id: "", name: "", image: "", list: menuInfo.list })}
 						</View>
 					</ScrollView>
 
@@ -888,21 +888,6 @@ export default function Menu(props) {
 									<Text style={styles.productInfoName}>Item: {removeProductinfo.name}</Text>
 
 									<View>
-										{removeProductinfo.options.map((option, infoindex) => (
-											<Text key={option.key}>
-												<Text style={{ fontWeight: 'bold' }}>{option.header}: </Text> 
-												{option.type == 'percentage' && '%'}
-											</Text>
-										))}
-
-										{removeProductinfo.others.map((other, otherindex) => (
-											<Text key={other.key}>
-												<Text style={{ fontWeight: 'bold' }}>{other.name}: </Text>
-												<Text>{other.input}</Text>
-												<Text> ($ {other.price.toFixed(2)})</Text>
-											</Text>
-										))}
-
 										{removeProductinfo.sizes.map((size, sizeindex) => (
 											<Text key={size.key}>
 												<Text style={{ fontWeight: 'bold' }}>Size #{sizeindex + 1}: </Text>
@@ -915,7 +900,7 @@ export default function Menu(props) {
 										<Text style={styles.productInfoPrice}><Text style={{ fontWeight: 'bold' }}>Price: </Text>$ {(removeProductinfo.price).toFixed(2)}</Text>
 									: null }
 
-									<Text style={styles.productInfoHeader}>Are you sure you want to delete this product</Text>
+									<Text style={styles.productInfoHeader}>Are you sure you want to delete this {header}</Text>
 
 									<View style={styles.productInfoActions}>
 										<TouchableOpacity style={styles.productInfoAction} onPress={() => setRemoveproductinfo({ ...removeProductinfo, show: false })}>

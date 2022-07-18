@@ -1,24 +1,26 @@
 import axios from 'axios'
 import { url } from '../../assets/info'
 
+const beginUrl = `${url}/owners/`
+
 export const verifyUser = cellnumber => {
-	return axios.get(`${url}/owners/owner_verify/${cellnumber}`)
+	return axios.get(`${beginUrl}owner_verify/${cellnumber}`)
 }
 
 export const loginUser = data => {
 	return axios.post(
-		`${url}/owners/owner_login`,
+		`${beginUrl}owner_login`,
 		data
 	)
 }
 
 export const logoutUser = id => {
-  return axios.get(`${url}/owners/owner_logout/${id}`)
+  return axios.get(`${beginUrl}owner_logout/${id}`)
 }
 
 export const registerUser = data => {
   return axios.post(
-    `${url}/owners/owner_register`,
+    `${beginUrl}owner_register`,
     data
   )
 }
@@ -38,7 +40,7 @@ export const saveUserInfo = data => {
   form.append("hours", JSON.stringify(data.hours))
 
   return axios.post(
-    `${url}/owners/save_user_info`,
+    `${beginUrl}save_user_info`,
     form
   )
 }
@@ -60,7 +62,7 @@ export const addOwner = data => {
 	}
 
 	return axios.post(
-		`${url}/owners/add_owner`,
+		`${beginUrl}add_owner`,
 		form
 	)
 }
@@ -103,92 +105,92 @@ export const updateOwner = data => {
   }
 
 	return axios.post(
-		`${url}/owners/update_owner`,
+		`${beginUrl}update_owner`,
 		form
 	)
 }
 
 export const deleteOwner = id => {
-  return axios.get(`${url}/owners/delete_owner/${id}`)
+  return axios.get(`${beginUrl}delete_owner/${id}`)
 }
 
 export const getWorkers = id => {
-  return axios.get(`${url}/owners/get_workers/${id}`)
+  return axios.get(`${beginUrl}get_workers/${id}`)
 }
 
 export const getAllStylists = id => {
-  return axios.get(`${url}/owners/get_all_stylists/${id}`)
+  return axios.get(`${beginUrl}get_all_stylists/${id}`)
 }
 
 export const getAllWorkingStylists = data => {
   return axios.post(
-    `${url}/owners/get_all_working_stylists`,
+    `${beginUrl}get_all_working_stylists`,
     data
   )
 }
 
 export const getStylistInfo = id => {
-  return axios.get(`${url}/owners/get_stylist_info/${id}`)
+  return axios.get(`${beginUrl}get_stylist_info/${id}`)
 }
 
 export const getAllWorkersTime = id => {
-  return axios.get(`${url}/owners/get_all_workers_time/${id}`)
+  return axios.get(`${beginUrl}get_all_workers_time/${id}`)
 }
 
 export const getWorkersHour = data => {
   return axios.post(
-    `${url}/owners/get_workers_hour`,
+    `${beginUrl}get_workers_hour`,
     data
   )
 }
 
 export const setUseVoice = data => {
   return axios.post(
-    `${url}/owners/set_use_voice`,
+    `${beginUrl}set_use_voice`,
     data
   )
 }
 
 export const getOtherWorkers = data => {
   return axios.post(
-    `${url}/owners/get_other_workers`,
+    `${beginUrl}get_other_workers`,
     data
   )
 }
 
 export const getWorkersTime = id => {
-  return axios.get(`${url}/owners/get_workers_time/${id}`)
+  return axios.get(`${beginUrl}get_workers_time/${id}`)
 }
 
 export const getOwnerInfo = id => {
-  return axios.get(`${url}/owners/get_owner_info/${id}`)
+  return axios.get(`${beginUrl}get_owner_info/${id}`)
 }
 
 export const setOwnerHours = data => {
   return axios.post(
-    `${url}/owners/set_owner_hours`,
+    `${beginUrl}set_owner_hours`,
     data
   )
 }
 
 export const updateNotificationToken = data => {
 	return axios.post(
-		`${url}/owners/update_owner_notification_token`,
+		`${beginUrl}update_owner_notification_token`,
 		data
 	)
 }
 
 export const getAccounts = id => {
-	return axios.get(`${url}/owners/get_accounts/${id}`)
+	return axios.get(`${beginUrl}get_accounts/${id}`)
 }
 
 export const getCode = cellnumber => {
-	return axios.get(`${url}/owners/get_reset_code/${cellnumber}`)
+	return axios.get(`${beginUrl}get_reset_code/${cellnumber}`)
 }
 
 export const resetPassword = data => {
 	return axios.post(
-		`${url}/owners/reset_password`,
+		`${beginUrl}reset_password`,
 		data
 	)
 }

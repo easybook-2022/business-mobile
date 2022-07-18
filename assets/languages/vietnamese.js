@@ -63,7 +63,11 @@ const info = {
     photo: "Chụp ảnh khuôn mặt của bạn (Tùy chọn)",
     workingDays: {
       header: "Những ngày nào thì bạn làm việc ?",
-      hour: "Đặt thời gian làm việc của bạn cho {day}"
+      hour: "Đặt thời gian làm việc của bạn cho {day}",
+      sameHours: {
+        some: "Đặt thời gian làm việc của bạn cho",
+        all: "Đặt thời gian làm việc hàng ngày của bạn"
+      }
     },
     nameErrormsg: "Vui lòng cung cấp một cái tên bạn thích",
     workingDaysErrormsg: "Vui lòng chọn ngày bạn làm việc"
@@ -72,7 +76,8 @@ const info = {
     navs: {
       myAppointments: "Cuộc hẹn\ncủa tôi",
       allAppointments: "Tất cả các\ncuộc hẹn",
-      cartOrderers: "Người đặt hàng xe"
+      cartOrderers: "Người đặt hàng xe",
+      tableOrders: "(Các) Thứ tự Bảng"
     },
     list: {
       header: "Bạn sẽ thấy các cuộc hẹn của mình ở đây",
@@ -96,6 +101,12 @@ const info = {
       customerName: "khách hàng:",
       orderNumber: "Số đơn hàng:",
       seeOrders: "Xem đơn đặt hàng"
+    },
+    tableOrders: {
+      header: "Chưa có đơn đặt hàng nào",
+      tableHeader: "Bàn #",
+      seeBill: "Xem hóa đơn",
+      seeOrders: "Xem Đơn hàng"
     },
     bottomNavs: {
       changeInfo: "Thay đổi\nthông tin",
@@ -134,7 +145,9 @@ const info = {
       showMoreoptions: {
         changeMenu: "Thay đổi menu",
         changeStaffinfo: "Thay đổi thông tin nhân viên",
-        changeBusinessinfo: "Thay đổi thông tin kinh doanh",
+        changeBusinessinformation: "Thay đổi tên / số điện thoại",
+        changeBusinesslocation: "Thay đổi địa chỉ",
+        changeBusinesslogo: "Thay đổi ảnh",
         changeBusinesshours: "Thay đổi Giờ làm việc",
         moreBusinesses: "Doanh nghiệp của bạn",
         walkIn: "Khách hàng bước vào",
@@ -154,17 +167,13 @@ const info = {
       workingDays: {
         header: "Nhân viên mới làm việc vào những ngày nào?",
         hour: "Đặt thời gian làm việc của nhân viên mới",
-        sameHour: "Đặt thời gian làm việc của nhân viên mới cho"
+        sameHours: "Đặt thời gian làm việc của nhân viên mới cho"
       },
       alert: {
-        header: "Có xung đột về lịch trình"
+        schedulingConflict: "Có xung đột về lịch trình",
+        unfinishedOrders: "Có một số đơn hàng chưa hoàn thành",
+        noOrders: "Không có đơn đặt hàng"
       },
-      languages: {
-        english: "Tiếng Anh",
-        french: "người Pháp",
-        vietnamese: "Tiếng Việt",
-        chinese: "người Trung Quốc"
-      }
     },
     editInfo: {
       staff: {
@@ -187,15 +196,18 @@ const info = {
       changePassword: "Thay đổi mật khẩu của bạn",
       changeWorking: "Thay đổi ngày và giờ làm việc của bạn"
     },
-    editingAddress: {
-      name: "Tên doanh nghiệp",
-      phoneNumber: "Số điện thoại doanh nghiệp",
-      addressOne: "Địa chỉ 1",
-      addressTwo: "Địa chỉ # 2 (Tùy chọn)",
-      city: "Thành phố",
-      Province: "Địa bàn tỉnh",
-      postalCode: "mã bưu điện"
+    editingLanguage: {
+      english: "Tiếng Anh",
+      french: "người Pháp",
+      vietnamese: "Tiếng Việt",
+      chinese: "người Trung Quốc"
     },
+    editingInformation: {
+      name: "Nhập tên doanh nghiệp",
+      phonenumber: "Nhập số điện thoại doanh nghiệp"
+    },
+    editingLocation: "Nhập địa chỉ doanh nghiệp",
+    editingLogo: "Ảnh của doanh nghiệp",
     editingHours: {
       header: "Chỉnh sửa giờ làm việc",
       openHeader: "Mở cửa vào {day}",
@@ -249,6 +261,22 @@ const info = {
       }
     }
   },
+  tables: {
+    addTable: "Thêm bảng",
+    table: "Bàn #",
+    showBarcode: "Chương trình mã vạch",
+    hidden: {
+      add: {
+        tableNumber: "Nhập bảng #:",
+      },
+      remove: {
+        header: "Xóa bảng #"
+      },
+      qr: {
+        header: "Bàn #"
+      }
+    }
+  },
 
   // components
   menu: {
@@ -263,7 +291,6 @@ const info = {
     },
     lists: {
       header: "Danh sách",
-      create: "Tạo thủ công",
       easier: {
         salon: "Khách hàng đặt phòng dễ dàng hơn",
         restaurant: "Khách hàng đặt hàng dễ dàng hơn"

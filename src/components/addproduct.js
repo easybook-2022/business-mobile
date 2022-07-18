@@ -323,7 +323,7 @@ export default function Addproduct(props) {
           PermissionsAndroid.PERMISSIONS.CAMERA,
           {
             title: "Camera Permission",
-            message: "EasyGO Business allows you to take a photo for product",
+            message: "EasyBook Business allows you to take a photo for product",
             buttonNegative: "Cancel",
             buttonPositive: "OK"
           }

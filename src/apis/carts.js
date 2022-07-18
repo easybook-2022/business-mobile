@@ -1,16 +1,18 @@
 import axios from 'axios'
 import { url } from '../../assets/info'
 
+const beginUrl = `${url}/carts/`
+
 export const orderDone = data => {
 	return axios.post(
-		`${url}/carts/order_done`,
+		`${beginUrl}order_done`,
 		data
 	)
 }
 
 export const setWaitTime = data => {
   return axios.post(
-    `${url}/carts/set_wait_time`,
+    `${beginUrl}set_wait_time`,
     data
   )
 }

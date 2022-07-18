@@ -63,7 +63,11 @@ const info = {
     photo: "拍一张你的脸（可选)",
     workingDays: {
       header: "你几天工作 ?",
-      hour: "把你的工作时间定在星期{day}"
+      hour: "把你的工作时间定在星期{day}",
+      sameHours: {
+        some: "设置你的工作时间",
+        all: "设定每天的工作时间"
+      }
     },
     nameErrormsg: "请输入您喜欢的名字",
     workingDaysErrormsg: "请选择您工作的日子"
@@ -72,7 +76,8 @@ const info = {
     navs: {
       myAppointments: "我的约会",
       allAppointments: "所有约会",
-      cartOrderers: "购物车订购者"
+      cartOrderers: "购物车订购者",
+      tableOrders: "表顺序"
     },
     list: {
       header: "你会在这里看到你的约会",
@@ -95,6 +100,12 @@ const info = {
       header: "您将在此处查看所有订单",
       customerName: "顾客:",
       orderNumber: "命令 #:",
+      seeOrders: "查看订单"
+    },
+    tableOrders: {
+      header: "还没有订单",
+      tableHeader: "桌子 #",
+      seeBill: "见比尔",
       seeOrders: "查看订单"
     },
     bottomNavs: {
@@ -134,7 +145,9 @@ const info = {
       showMoreoptions: {
         changeMenu: "更改菜单",
         changeStaffinfo: "更改员工信息",
-        changeBusinessinfo: "更改商家信息",
+        changeBusinessinformation: "更改姓名/电话号码",
+        changeBusinesslocation: "更换地址",
+        changeBusinesslogo: "更改照片",
         changeBusinesshours: "更改营业时间",
         moreBusinesses: "您的企业",
         walkIn: "客户上门",
@@ -157,13 +170,9 @@ const info = {
         sameHour: "设置新员工的工作时间"
       },
       alert: {
-        header: "存在调度冲突"
-      },
-      languages: {
-        english: "英语",
-        french: "法语",
-        vietnamese: "越南语",
-        chinese: "中国人"
+        schedulingConflict: "存在调度冲突",
+        unfinishedOrders: "有一些未完成的订单",
+        noOrders: "没有订单"
       }
     },
     editInfo: {
@@ -187,15 +196,18 @@ const info = {
       changePassword: "更改您的密码",
       changeWorking: "更改您的工作日和时间"
     },
-    editingAddress: {
-      name: "企业名称",
-      phoneNumber: "业务电话号码",
-      addressOne: "地址1",
-      addressTwo: "地址 #2（可选)",
-      city: "城市",
-      Province: "省",
-      postalCode: "邮政编码"
+    editingLanguage: {
+      english: "英语",
+      french: "法语",
+      vietnamese: "越南语",
+      chinese: "中国人"
     },
+    editingInformation: {
+      name: "输入企业名称",
+      phonenumber: "输入企业电话号码"
+    },
+    editingLocation: "输入公司地址",
+    editingLogo: "商家合影",
     editingHours: {
       header: "修改营业时间",
       openHeader: { Sunday: "周日营业", Monday: "周一开", Tuesday: "周二开", Wednesday: "周三开放", Thursday: "周四开放", Friday: "周五开放", Saturday: "周六开" },
@@ -249,6 +261,22 @@ const info = {
       }
     }
   },
+  tables: {
+    addTable: "添加表",
+    table: "桌子 #",
+    showBarcode: "显示条码",
+    hidden: {
+      add: {
+        tableNumber: "输入表 #:",
+      },
+      remove: {
+        header: "删除表# #"
+      },
+      qr: {
+        header: "桌子 #"
+      }
+    }
+  },
 
   // components
   menu: {
@@ -263,7 +291,6 @@ const info = {
     },
     lists: {
       header: "列表",
-      create: "一个一个地添加",
       easier: {
         salon: "客户预订更方便",
         restaurant: "客户下单更方便"

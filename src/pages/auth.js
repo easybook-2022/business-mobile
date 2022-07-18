@@ -135,7 +135,7 @@ export default function Auth({ navigation }) {
           <View style={{ alignItems: 'center' }}>
             <Image style={styles.icon} source={require("../../assets/icon.png")}/>
 
-            <Text style={styles.boxHeader}>Welcome to EasyGO Business</Text>
+            <Text style={styles.boxHeader}>Welcome to EasyBook Business</Text>
           </View>
 
           <View style={styles.inputsBox}>
@@ -222,7 +222,7 @@ export default function Auth({ navigation }) {
 const styles = StyleSheet.create({
 	auth: { backgroundColor: 'white', height: '100%', paddingTop: Platform.OS == "ios" ? 0 : Constants.statusBarHeight, width: '100%' },
 	box: { alignItems: 'center', height: '100%', paddingHorizontal: 10, width: '100%' },
-  icon: { height: width * 0.2, width: width * 0.2 },
+  icon: { height: wsize(30), width: wsize(30) },
 	boxHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(5), fontWeight: 'bold', marginVertical: '10%', textAlign: 'center' },
 
   inputsBox: { alignItems: 'center', width: '80%' },

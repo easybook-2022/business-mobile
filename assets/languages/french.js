@@ -63,7 +63,11 @@ const info = {
     photo: "Prenez une photo de votre visage (facultatif)",
     workingDays: {
       header: "Quels jours travaillez-vous ?",
-      hour: "Fixez votre temps de travail le {day}"
+      hour: "Fixez votre temps de travail le {day}",
+      sameHours: {
+        some: "Définissez votre temps de travail pour",
+        all: "Définissez votre temps de travail pour tous les jours"
+      }
     },
     nameErrormsg: "Veuillez entrer un nom que vous aimez",
     workingDaysErrormsg: "Veuillez choisir les jours où vous travaillez"
@@ -72,7 +76,8 @@ const info = {
     navs: {
       myAppointments: "Mes\nrendez-vous",
       allAppointments: "Tous\nles rendez-vous",
-      cartOrderers: "Commandeurs de panier"
+      cartOrderers: "Commandeurs de panier",
+      tableOrders: "Commande(s) de table"
     },
     list: {
       header: "Vous verrez vos rendez-vous ici",
@@ -95,6 +100,12 @@ const info = {
       header: "Vous verrez toutes les commandes ici",
       customerName: "Cliente:",
       orderNumber: "Ordre #:",
+      seeOrders: "Voir les commandes"
+    },
+    tableOrders: {
+      header: "Il n'y a pas encore de commande(s)",
+      tableHeader: "Table #",
+      seeBill: "Voir facture",
       seeOrders: "Voir les commandes"
     },
     bottomNavs: {
@@ -134,7 +145,9 @@ const info = {
       showMoreoptions: {
         changeMenu: "Changer de menu",
         changeStaffinfo: "Modifier les informations du personnel",
-        changeBusinessinfo: "Modifier les informations sur l'entreprise",
+        changeBusinessinformation: "Changer de nom/numéro de téléphone",
+        changeBusinesslocation: "Changement d'adresse",
+        changeBusinesslogo: "Changer la photo",
         changeBusinesshours: "Changer les heures d'ouverture",
         moreBusinesses: "Vos entreprises",
         walkIn: "Client sans rendez-vous",
@@ -157,13 +170,9 @@ const info = {
         sameHour: "Définir le temps de travail du nouveau personnel pour"
       },
       alert: {
-        header: "Il y a un conflit d'horaire"
-      },
-      languages: {
-        english: "Anglais",
-        french: "Français",
-        vietnamese: "Vietnamien",
-        chinese: "Chinois"
+        schedulingConflict: "Il y a un conflit d'horaire",
+        unfinishedOrders: "Il y a des commandes inachevées",
+        noOrders: "Il n'y a pas de commandes"
       }
     },
     editInfo: {
@@ -187,15 +196,18 @@ const info = {
       changePassword: "Changez votre mot de passe",
       changeWorking: "Modifier vos jours et heures de travail"
     },
-    editingAddress: {
-      name: "Nom de l'entreprise",
-      phoneNumber: "Numéro de téléphone professionnel",
-      addressOne: "Address #1",
-      addressTwo: "Adresse #2 (Facultatif)",
-      city: "Ville",
-      Province: "Province",
-      postalCode: "Code postal"
+    editingLanguage: {
+      english: "Anglais",
+      french: "Français",
+      vietnamese: "Vietnamien",
+      chinese: "Chinois"
     },
+    editingInformation: {
+      name: "Entrez le nom de l'entreprise",
+      phonenumber: "Entrez le numéro de téléphone professionnel"
+    },
+    editingLocation: "Entrez l'adresse de l'entreprise",
+    editingLogo: "Photo de l'entreprise",
     editingHours: {
       header: "Modifier les heures d'ouverture",
       openHeader: "Ouvert le {day}",
@@ -249,6 +261,22 @@ const info = {
       }
     }
   },
+  tables: {
+    addTable: "Ajouter un tableau",
+    table: "Tableau #",
+    showBarcode: "Afficher le code barre",
+    hidden: {
+      add: {
+        tableNumber: "Entrer le tableau #:",
+      },
+      remove: {
+        header: "Supprimer le tableau #"
+      },
+      qr: {
+        header: "Tableau #"
+      }
+    }
+  },
 
   // components
   menu: {
@@ -263,7 +291,6 @@ const info = {
     },
     lists: {
       header: "Listes",
-      create: "Ajouter un par un",
       easier: {
         salon: "Réservation plus facile pour les clients",
         restaurant: "Commande plus facile pour les clients"

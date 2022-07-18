@@ -324,7 +324,7 @@ export default function Addmeal(props) {
           PermissionsAndroid.PERMISSIONS.CAMERA,
           {
             title: "Camera Permission",
-            message: "EasyGO Business allows you to take a photo for product",
+            message: "EasyBook Business allows you to take a photo for product",
             buttonNegative: "Cancel",
             buttonPositive: "OK"
           }
@@ -541,10 +541,28 @@ export default function Addmeal(props) {
                   }
                 }}>
                   <Text style={styles.addActionHeader}>{
-                    !productid ? 
-                      steps.indexOf(setupType) == steps.length - 1 ? image.uri ? tr.t("buttons.done") : tr.t("buttons.skip") : tr.t("buttons.next") 
-                      : 
-                      steps.indexOf(setupType) == steps.length - 1 ? image.uri ? tr.t("buttons.update") : tr.t("buttons.skip") : tr.t("buttons.next")
+                    !productid ? // new meal
+                      steps.indexOf(setupType) < steps.length - 1 ? 
+                        setupType == "photo" ?
+                          image.uri ? 
+                            tr.t("buttons.next")
+                            :
+                            tr.t("buttons.skip")
+                          : 
+                          tr.t("buttons.next") 
+                        : 
+                        tr.t("buttons.done") 
+                      : // editing meal
+                      steps.indexOf(setupType) < steps.length - 1 ? 
+                        setupType == "photo" ? 
+                          image.uri ? 
+                            tr.t("buttons.next") 
+                            : 
+                            tr.t("buttons.skip") 
+                          : 
+                          tr.t("buttons.next") 
+                        :
+                        tr.t("buttons.done")
                   }</Text>
                 </TouchableOpacity>
               </View>

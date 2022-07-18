@@ -63,7 +63,11 @@ const info = {
     photo: "Take a picture of your face (Optional)",
     workingDays: {
       header: "What days do you work ?",
-      hour: "Set your working time for {day}"
+      hour: "Set your working time for {day}",
+      sameHours: {
+        some: "Set your working time for",
+        all: "Set your working time for everyday"
+      }
     },
     nameErrormsg: "Please enter a name you like",
     workingDaysErrormsg: "Please choose the days you work on"
@@ -72,7 +76,8 @@ const info = {
     navs: {
       myAppointments: "My\nAppointments(s)",
       allAppointments: "All\nAppointments(s)",
-      cartOrderers: "Cart orderer(s)"
+      cartOrderers: "Cart orderer(s)",
+      tableOrders: "Table Order(s)"
     },
     list: {
       header: "You will see your appointment(s) here",
@@ -96,6 +101,12 @@ const info = {
       customerName: "Customer:",
       orderNumber: "Order #:",
       seeOrders: "See Order(s)"
+    },
+    tableOrders: {
+      header: "There are no order(s) yet",
+      tableHeader: "Table #",
+      seeBill: "See Bill",
+      seeOrders: "See Orders"
     },
     bottomNavs: {
       changeInfo: "Change Info",
@@ -134,8 +145,10 @@ const info = {
       showMoreoptions: {
         changeMenu: "Change Menu",
         changeStaffinfo: "Change Staffs Info",
-        changeBusinessinfo: "Change Business's Info",
-        changeBusinesshours: "Change Business's Hour(s)",
+        changeBusinessinformation: "Change name/phonenumber",
+        changeBusinesslocation: "Change Address",
+        changeBusinesslogo: "Change Photo",
+        changeBusinesshours: "Change Hour(s)",
         moreBusinesses: "Your Business(es)",
         walkIn: "Client Walk-In",
         changeLanguage: "Change language",
@@ -154,19 +167,13 @@ const info = {
       workingDays: {
         header: "What days does new staff work on ?",
         hour: "Set new staff's working time",
-        sameHour: "Set new staff's working time for"
+        sameHours: "Set new staff's working time for"
       },
       alert: {
         schedulingConflict: "There is a scheduling conflict",
         unfinishedOrders: "There are some unfinished orders",
         noOrders: "There are no orders"
       },
-      languages: {
-        english: "English",
-        french: "French",
-        vietnamese: "Vietnamese",
-        chinese: "Chinese"
-      }
     },
     editInfo: {
       staff: {
@@ -189,15 +196,18 @@ const info = {
       changePassword: "Change your password",
       changeWorking: "Change your working days and hours"
     },
-    editingAddress: {
-      name: "Business name",
-      phoneNumber: "Business phone number",
-      addressOne: "Address #1",
-      addressTwo: "Address #2 (Optional)",
-      city: "City",
-      Province: "Province",
-      postalCode: "Postal code"
+    editingLanguage: {
+      english: "English",
+      french: "French",
+      vietnamese: "Vietnamese",
+      chinese: "Chinese"
     },
+    editingInformation: {
+      name: "Enter business name",
+      phonenumber: "Enter business phone number"
+    },
+    editingLocation: "Enter business address",
+    editingLogo: "Business's photo",
     editingHours: {
       header: "Edit business hours",
       openHeader: "Open on {day}",
@@ -248,6 +258,22 @@ const info = {
         change: "Change time to",
         appointmentChanged: "Appointment changed",
         leaveNote: "Leave a note if you want"
+      }
+    }
+  },
+  tables: {
+    addTable: "Add table",
+    table: "Table #",
+    showBarcode: "Show Barcode",
+    hidden: {
+      add: {
+        tableNumber: "Enter table #:",
+      },
+      remove: {
+        header: "Remove Table #"
+      },
+      qr: {
+        header: "Table #"
       }
     }
   },

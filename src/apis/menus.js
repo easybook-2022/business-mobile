@@ -1,12 +1,14 @@
 import axios from 'axios'
 import { url } from '../../assets/info'
 
+const beginUrl = `${url}/menus/`
+
 export const getMenus = id => {
-	return axios.get(`${url}/menus/get_menus/${id}`)
+	return axios.get(`${beginUrl}get_menus/${id}`)
 }
 
 export const getRequests = () => {
-	return axios.get(`${url}/menus/get_requests`)
+	return axios.get(`${beginUrl}get_requests`)
 }
 
 export const addNewMenu = (data) => {
@@ -24,17 +26,17 @@ export const addNewMenu = (data) => {
   }
 
   return axios.post(
-    `${url}/menus/add_menu`,
+    `${beginUrl}add_menu`,
     form
   )
 }
 
 export const removeMenu = id => {
-	return axios.get(`${url}/menus/remove_menu/${id}`)
+	return axios.get(`${beginUrl}remove_menu/${id}`)
 }
 
 export const getMenuInfo = id => {
-	return axios.get(`${url}/menus/get_menu_info/${id}`)
+	return axios.get(`${beginUrl}get_menu_info/${id}`)
 }
 
 export const saveMenu = data => {
@@ -50,7 +52,7 @@ export const saveMenu = data => {
 	}
 
 	return axios.post(
-		`${url}/menus/save_menu`,
+		`${beginUrl}save_menu`,
 		form
 	)
 }
@@ -64,14 +66,14 @@ export const uploadMenu = data => {
   form.append("size", JSON.stringify(data.size))
 
 	return axios.post(
-		`${url}/menus/upload_menu`,
+		`${beginUrl}upload_menu`,
 		form
 	)
 }
 
 export const deleteMenu = data => {
 	return axios.post(
-		`${url}/menus/delete_menu`,
+		`${beginUrl}delete_menu`,
 		data
 	)
 }

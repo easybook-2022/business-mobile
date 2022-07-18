@@ -240,7 +240,7 @@ export default function Addmenu(props) {
           PermissionsAndroid.PERMISSIONS.CAMERA,
           {
             title: "Camera Permission",
-            message: "EasyGO Business allows you to take a photo for menu",
+            message: "EasyBook Business allows you to take a photo for menu",
             buttonNegative: "Cancel",
             buttonPositive: "OK"
           }

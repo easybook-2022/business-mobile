@@ -258,7 +258,7 @@ export default function Addservice(props) {
           PermissionsAndroid.PERMISSIONS.CAMERA,
           {
             title: "Camera Permission",
-            message: "EasyGO Business allows you to take a photo for service",
+            message: "EasyBook Business allows you to take a photo for service",
             buttonNegative: "Cancel",
             buttonPositive: "OK"
           }
