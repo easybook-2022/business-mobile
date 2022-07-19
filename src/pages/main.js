@@ -817,8 +817,6 @@ export default function Main(props) {
       })
   }
   const showScheduleOption = (id, type, index, action) => {
-    setScheduleoption({ ...scheduleOption, show: true, showRebookHeader: true })
-
     getAppointmentInfo(id)
       .then((res) => {
         if (res.status == 200) {
@@ -847,11 +845,13 @@ export default function Main(props) {
               setScheduleoption({ ...scheduleOption, remove: false })
             }
           } else {
+            setScheduleoption({ ...scheduleOption, show: true, showRebookHeader: true })
+
             if (!scheduleOption.rebook) {
               setTimeout(function () {
                 setScheduleoption({ 
                   ...scheduleOption, 
-                  rebook: true, showRebookHeeader: false, id, type, index, 
+                  rebook: true, showRebookHeader: false, id, type, index, 
                   service: { id: serviceId ? serviceId : -1, name }, 
                   client, blocked, note, oldTime: unix, jsonDate: time
                 })
@@ -971,11 +971,13 @@ export default function Main(props) {
     }
   }
   const startVoice = async() => {
-    await Voice.start('en-US')
+    if (useVoice) {
+      await Voice.start('en-US')
 
-    setTimeout(function () {
-      stopSpeech()
-    }, 5000)
+      setTimeout(function () {
+        stopSpeech()
+      }, 5000)
+    }
   }
 
 	const getAllCartOrderers = async() => {
@@ -1332,9 +1334,11 @@ export default function Main(props) {
 		if (Constants.isDevice) getNotificationPermission()
 	}
   const stopSpeech = async() => {
-    await Voice.stop()
-    await Voice.cancel()
-    await Voice.destroy();
+    if (useVoice) {
+      await Voice.stop()
+      await Voice.cancel()
+      await Voice.destroy();
+    }
   }
   const pickLanguage = async(language) => {
     AsyncStorage.setItem("language", language)
@@ -2613,7 +2617,7 @@ export default function Main(props) {
                               >
                                 <TouchableOpacity
                                   disabled={timeStyle(item, worker.id, "disabled")}
-                                  onPress={() => {
+                                  onPress={(e) => {
                                     if (scheduleOption.rebook) {
                                       if (scheduleOption.id == chartInfo.workersHour[worker.id]["scheduled"][item.time + "-c"]) {
                                         setScheduleoption({ ...scheduleOption, show: false, rebook: false })
@@ -2657,9 +2661,15 @@ export default function Main(props) {
                                   </Text>
 
                                   {item.time + "-c" in workersHour[worker.id]["scheduled"] && (
-                                    <View style={styles.chartScheduledActions}>
+                                    <View 
+                                      style={styles.chartScheduledActions}
+                                      onStartShouldSetResponder={(event) => true}
+                                      onTouchEnd={(e) => e.stopPropagation()}
+                                    >
                                       <View style={styles.column}>
-                                         <TouchableOpacity style={styles.chartScheduledAction} onPress={() => showScheduleOption(chartInfo.workersHour[worker.id]["scheduled"][item.time + "-c"], "chart", index, "remove")}>
+                                         <TouchableOpacity style={styles.chartScheduledAction} onPress={() => {
+                                          showScheduleOption(chartInfo.workersHour[worker.id]["scheduled"][item.time + "-c"], "chart", index, "remove")
+                                         }}>
                                           <AntDesign color="white" name="closecircleo" size={30}/>
                                         </TouchableOpacity>
                                       </View>
