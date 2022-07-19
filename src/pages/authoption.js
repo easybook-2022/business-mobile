@@ -19,7 +19,7 @@ export default function Authoption({ navigation }) {
     socket.emit("socket/business/logout", ownerid, () => {
       AsyncStorage.clear()
 
-      navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "auth" }]}));
+      navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "auth" }]}));
     })
   }
   const initialize = async() => {

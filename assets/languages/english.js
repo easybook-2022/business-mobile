@@ -65,6 +65,7 @@ const info = {
       header: "What days do you work ?",
       hour: "Set your working time for {day}",
       sameHours: {
+        header: "Do you work the same hours on",
         some: "Set your working time for",
         all: "Set your working time for everyday"
       }

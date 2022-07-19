@@ -42,7 +42,7 @@ export default function Auth({ navigation }) {
           AsyncStorage.setItem("language", "")
           AsyncStorage.setItem("isOwner", res.isOwner ? "true" : "")
 
-          navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "picklanguage" }]}))
+          navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "picklanguage" }]}))
         }
       })
       .catch((err) => {
@@ -110,7 +110,7 @@ export default function Auth({ navigation }) {
           AsyncStorage.setItem("phase", "locationsetup")
           AsyncStorage.setItem("language", "")
 
-          navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "picklanguage" }]}));
+          navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "picklanguage" }]}));
         }
       })
       .catch((err) => {

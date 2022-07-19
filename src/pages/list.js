@@ -45,7 +45,7 @@ export default function Locationslist(props) {
     socket.emit("socket/business/logout", ownerid, () => {
       AsyncStorage.clear()
 
-      props.navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "auth" }]}));
+      props.navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "auth" }]}));
     })
   }
 
@@ -63,7 +63,7 @@ export default function Locationslist(props) {
                 AsyncStorage.setItem("phase", "locationsetup")
                 AsyncStorage.setItem("newBusiness", "true")
 
-                props.navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "locationsetup" }]}));
+                props.navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "locationsetup" }]}));
               }}>
                 <View style={styles.column}><Text style={styles.listAddHeader}>{tr.t("list.add")}</Text></View>
                 <View style={styles.column}><AntDesign name="pluscircleo" size={30}/></View>
@@ -80,10 +80,10 @@ export default function Locationslist(props) {
 
                     if (item.type == "hair" || item.type == "nail") {
                       AsyncStorage.setItem("phase", "authoption")
-                      props.navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "authoption" }]}))
+                      props.navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "authoption" }]}))
                     } else {
                       AsyncStorage.setItem("phase", "main")
-                      props.navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "main" }]}));
+                      props.navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "main" }]}));
                     }
                   }}>
                     <View style={styles.locationImageHolder}>

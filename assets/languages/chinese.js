@@ -65,6 +65,7 @@ const info = {
       header: "你几天工作 ?",
       hour: "把你的工作时间定在星期{day}",
       sameHours: {
+        header: "你的工作时间是一样的吗",
         some: "设置你的工作时间",
         all: "设定每天的工作时间"
       }

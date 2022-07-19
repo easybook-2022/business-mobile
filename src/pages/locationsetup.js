@@ -56,7 +56,7 @@ export default function Locationsetup({ navigation }) {
 	const [storeName, setStorename] = useState(registerLocationInfo.storeName)
 	const [phonenumber, setPhonenumber] = useState(registerLocationInfo.phonenumber)
 
-	const [type, setType] = useState('hair')
+	const [type, setType] = useState('restaurant')
 
 	const [logo, setLogo] = useState({ uri: '', name: '', size: { width: 0, height: 0 }})
 
@@ -156,16 +156,16 @@ export default function Locationsetup({ navigation }) {
               if (type == "restaurant" || type == "store") {
                 AsyncStorage.setItem("phase", "main")
 
-                navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "main", params: { firstTime: !newBusiness ? true : false }}]}));
+                navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "main", params: { firstTime: !newBusiness ? true : false }}]}));
               } else {
                 if (ownerProfile["name"] != undefined) {
                   AsyncStorage.setItem("phase", "main")
 
-                  navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "main" }]}));
+                  navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "main" }]}));
                 } else {
                   AsyncStorage.setItem("phase", "register")
 
-                  navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "register" }]}));
+                  navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "register" }]}));
                 }
               }
             }
@@ -478,7 +478,7 @@ export default function Locationsetup({ navigation }) {
               <>
                 {setupType == "location" && (
                   <View style={styles.locationContainer}>
-                    <Text style={styles.locationHeader}>Enter business address</Text>
+                    <Text style={styles.locationHeader}>{tr.t("locationsetup.location.addressHeader")}</Text>
 
                     <View style={{ flex: 1, width: '90%' }}>
                       <GooglePlacesAutocomplete
@@ -563,65 +563,183 @@ export default function Locationsetup({ navigation }) {
                             </View>
                           </>
                           :
-                          daysInfo.sameHours == null ? 
-                            <View style={styles.daysContainer}>
-                              <Text style={[styles.inputHeader, { marginBottom: 20, textAlign: 'center' }]}>{
-                                tr.t("locationsetup.location.sameOpen." + (
-                                  JSON.stringify(days).split("\"close\":false").length - 1 == 7 ? "all" : "some"
-                                ))
-                              }</Text>
+                          <View style={styles.daysContainer}>
+                            {daysInfo.sameHours == null ? 
+                              <>
+                                <Text style={[styles.inputHeader, { marginBottom: 20, textAlign: 'center' }]}>{
+                                  tr.t("locationsetup.location.sameOpen." + (
+                                    JSON.stringify(days).split("\"close\":false").length - 1 == 7 ? "all" : "some"
+                                  ))
+                                }</Text>
 
-                              <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-                                {days.map((info, index) => (
-                                  !info.close && (
-                                    <View key={index} style={styles.openDay}>
-                                      <Text style={styles.openDayHeader}>{tr.t("days." + info.header)}</Text>
-                                    </View>
-                                  )
-                                ))}
-                              </View>
+                                <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+                                  {days.map((info, index) => (
+                                    !info.close && (
+                                      <View key={index} style={styles.openDay}>
+                                        <Text style={styles.openDayHeader}>{tr.t("days." + info.header)}</Text>
+                                      </View>
+                                    )
+                                  ))}
+                                </View>
 
-                              <View style={styles.actions}>
-                                <TouchableOpacity style={styles.action} onPress={() => setDaysinfo({ ...daysInfo, sameHours: false })}>
-                                  <Text style={styles.actionHeader}>{tr.t("buttons.no")}</Text>
+                                <View style={styles.actions}>
+                                  <TouchableOpacity style={styles.action} onPress={() => setDaysinfo({ ...daysInfo, sameHours: false })}>
+                                    <Text style={styles.actionHeader}>{tr.t("buttons.no")}</Text>
+                                  </TouchableOpacity>
+
+                                  <TouchableOpacity style={styles.action} onPress={() => setDaysinfo({ ...daysInfo, sameHours: true })}>
+                                    <Text style={styles.actionHeader}>{tr.t("buttons.yes")}</Text>
+                                  </TouchableOpacity>
+                                </View>
+                              </>
+                              :
+                              <>
+                                <TouchableOpacity style={styles.daysBack} disabled={loading} onPress={() => setDaysinfo({ ...daysInfo, done: false, sameHours: null, step: 0 })}>
+                                  <Text style={styles.daysBackHeader}>{tr.t("buttons.changeDays")}</Text>
                                 </TouchableOpacity>
 
-                                <TouchableOpacity style={styles.action} onPress={() => setDaysinfo({ ...daysInfo, sameHours: true })}>
-                                  <Text style={styles.actionHeader}>{tr.t("buttons.yes")}</Text>
-                                </TouchableOpacity>
-                              </View>
-                            </View>
-                            :
-                            <View style={styles.daysContainer}>
-                              <TouchableOpacity style={styles.daysBack} disabled={loading} onPress={() => setDaysinfo({ ...daysInfo, done: false, sameHours: null, step: 0 })}>
-                                <Text style={styles.daysBackHeader}>{tr.t("buttons.changeDays")}</Text>
-                              </TouchableOpacity>
+                                {daysInfo.sameHours == false ? 
+                                  days.map((info, index) => (
+                                    !info.close &&
+                                      <View key={index} style={styles.day}>
+                                        <Text style={styles.dayHeader}>{
+                                          language == "chinese" ? 
+                                            tr.t("locationsetup.openDays.time." + info.header)
+                                            :
+                                            tr.t("locationsetup.openDays.time").replace("{day}", tr.t("days." + info.header))
+                                        }</Text>
 
-                              {daysInfo.sameHours == false ? 
-                                days.map((info, index) => (
-                                  !info.close &&
-                                    <View key={index} style={styles.day}>
-                                      <Text style={styles.dayHeader}>{
-                                        language == "chinese" ? 
-                                          tr.t("locationsetup.openDays.time." + info.header)
-                                          :
-                                          tr.t("locationsetup.openDays.time").replace("{day}", tr.t("days." + info.header))
-                                      }</Text>
+                                        <View style={styles.timeSelectionContainer}>
+                                          <View style={styles.timeSelection}>
+                                            <View style={styles.selection}>
+                                              <TouchableOpacity onPress={() => updateTime(index, "hour", "up", true)}>
+                                                <AntDesign name="up" size={wsize(7)}/>
+                                              </TouchableOpacity>
+                                              <TextInput style={styles.selectionHeader} onChangeText={(hour) => {
+                                                const newDays = [...days]
 
+                                                newDays[index].opentime["hour"] = hour.toString()
+
+                                                setDays(newDays)
+                                              }} keyboardType="numeric" maxLength={2} value={info.opentime.hour}/>
+                                              <TouchableOpacity onPress={() => updateTime(index, "hour", "down", true)}>
+                                                <AntDesign name="down" size={wsize(7)}/>
+                                              </TouchableOpacity>
+                                            </View>
+                                            <View style={styles.selectionDivHolder}>
+                                              <Text style={styles.selectionDiv}>:</Text>
+                                            </View>
+                                            <View style={styles.selection}>
+                                              <TouchableOpacity onPress={() => updateTime(index, "minute", "up", true)}>
+                                                <AntDesign name="up" size={wsize(7)}/>
+                                              </TouchableOpacity>
+                                              <TextInput style={styles.selectionHeader} onChangeText={(minute) => {
+                                                const newDays = [...days]
+
+                                                newDays[index].opentime["minute"] = minute.toString()
+
+                                                setDays(newDays)
+                                              }} keyboardType="numeric" maxLength={2} value={info.opentime.minute}/>
+                                              <TouchableOpacity onPress={() => updateTime(index, "minute", "down", true)}>
+                                                <AntDesign name="down" size={wsize(7)}/>
+                                              </TouchableOpacity>
+                                            </View>
+                                            <View style={styles.selection}>
+                                              <TouchableOpacity onPress={() => updateTime(index, "period", "up", true)}>
+                                                <AntDesign name="up" size={wsize(7)}/>
+                                              </TouchableOpacity>
+                                              <Text style={styles.selectionHeader}>{info.opentime.period}</Text>
+                                              <TouchableOpacity onPress={() => updateTime(index, "period", "down", true)}>
+                                                <AntDesign name="down" size={wsize(7)}/>
+                                              </TouchableOpacity>
+                                            </View>
+                                          </View>
+                                          <View style={styles.timeSelectionHeaderHolder}>
+                                            <Text style={styles.timeSelectionHeader}>To</Text>
+                                          </View>
+                                          <View style={styles.timeSelection}>
+                                            <View style={styles.selection}>
+                                              <TouchableOpacity onPress={() => updateTime(index, "hour", "up", false)}>
+                                                <AntDesign name="up" size={wsize(7)}/>
+                                              </TouchableOpacity>
+                                              <TextInput style={styles.selectionHeader} onChangeText={(hour) => {
+                                                const newDays = [...days]
+
+                                                newDays[index].closetime["hour"] = hour.toString()
+
+                                                setDays(newDays)
+                                              }} keyboardType="numeric" maxLength={2} value={info.closetime.hour}/>
+                                              <TouchableOpacity onPress={() => updateTime(index, "hour", "down", false)}>
+                                                <AntDesign name="down" size={wsize(7)}/>
+                                              </TouchableOpacity>
+                                            </View>
+                                            <View style={styles.selectionDivHolder}>
+                                              <Text style={styles.selectionDiv}>:</Text>
+                                            </View>
+                                            <View style={styles.selection}>
+                                              <TouchableOpacity onPress={() => updateTime(index, "minute", "up", false)}>
+                                                <AntDesign name="up" size={wsize(7)}/>
+                                              </TouchableOpacity>
+                                              <TextInput style={styles.selectionHeader} onChangeText={(minute) => {
+                                                const newDays = [...days]
+
+                                                newDays[index].closetime["minute"] = minute.toString()
+
+                                                setDays(newDays)
+                                              }} keyboardType="numeric" maxLength={2} value={info.closetime.minute}/>
+
+                                              <TouchableOpacity onPress={() => updateTime(index, "minute", "down", false)}>
+                                                <AntDesign name="down" size={wsize(7)}/>
+                                              </TouchableOpacity>
+                                            </View>
+                                            <View style={styles.selection}>
+                                              <TouchableOpacity onPress={() => updateTime(index, "period", "up", false)}>
+                                                <AntDesign name="up" size={wsize(7)}/>
+                                              </TouchableOpacity>
+                                              <Text style={styles.selectionHeader}>{info.closetime.period}</Text>
+                                              <TouchableOpacity onPress={() => updateTime(index, "period", "down", false)}>
+                                                <AntDesign name="down" size={wsize(7)}/>
+                                              </TouchableOpacity>
+                                            </View>
+                                          </View>
+                                        </View>
+                                      </View>
+                                  ))
+                                  :
+                                  <>
+                                    <Text style={styles.dayHeader}>{
+                                      tr.t("locationsetup.openDays.sameTime." + (
+                                        JSON.stringify(days).split("\"close\":false").length - 1 == 7 ? "all" : "some"
+                                      ))
+                                    }</Text>
+
+                                    {JSON.stringify(days).split("\"close\":false").length - 1 < 7 && (
+                                      <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+                                        {days.map((day, index) => (
+                                          !day.close && (
+                                            <View key={index} style={styles.openDay}>
+                                              <Text style={styles.openDayHeader}>{day.header}</Text>
+                                            </View>
+                                          )
+                                        ))}
+                                      </View>
+                                    )}
+                                      
+                                    <View style={styles.day}>
                                       <View style={styles.timeSelectionContainer}>
                                         <View style={styles.timeSelection}>
                                           <View style={styles.selection}>
-                                            <TouchableOpacity onPress={() => updateTime(index, "hour", "up", true)}>
+                                            <TouchableOpacity onPress={() => updateSameTime("hour", "up", true)}>
                                               <AntDesign name="up" size={wsize(7)}/>
                                             </TouchableOpacity>
                                             <TextInput style={styles.selectionHeader} onChangeText={(hour) => {
-                                              const newDays = [...days]
+                                              const newDaysamehours = {...daySamehours}
 
-                                              newDays[index].opentime["hour"] = hour.toString()
+                                              newDaysamehours.opentime["hour"] = hour.toString()
 
                                               setDays(newDays)
-                                            }} keyboardType="numeric" maxLength={2} value={info.opentime.hour}/>
-                                            <TouchableOpacity onPress={() => updateTime(index, "hour", "down", true)}>
+                                            }} keyboardType="numeric" maxLength={2} value={daySamehours.opentime.hour}/>
+                                            <TouchableOpacity onPress={() => updateSameTime("hour", "down", true)}>
                                               <AntDesign name="down" size={wsize(7)}/>
                                             </TouchableOpacity>
                                           </View>
@@ -629,26 +747,26 @@ export default function Locationsetup({ navigation }) {
                                             <Text style={styles.selectionDiv}>:</Text>
                                           </View>
                                           <View style={styles.selection}>
-                                            <TouchableOpacity onPress={() => updateTime(index, "minute", "up", true)}>
+                                            <TouchableOpacity onPress={() => updateSameTime("minute", "up", true)}>
                                               <AntDesign name="up" size={wsize(7)}/>
                                             </TouchableOpacity>
                                             <TextInput style={styles.selectionHeader} onChangeText={(minute) => {
-                                              const newDays = [...days]
+                                              const newDaysamehours = {...daySamehours}
 
-                                              newDays[index].opentime["minute"] = minute.toString()
+                                              newDaysamehours.opentime["minute"] = minute.toString()
 
                                               setDays(newDays)
-                                            }} keyboardType="numeric" maxLength={2} value={info.opentime.minute}/>
-                                            <TouchableOpacity onPress={() => updateTime(index, "minute", "down", true)}>
+                                            }} keyboardType="numeric" maxLength={2} value={daySamehours.opentime.minute}/>
+                                            <TouchableOpacity onPress={() => updateSameTime("minute", "down", true)}>
                                               <AntDesign name="down" size={wsize(7)}/>
                                             </TouchableOpacity>
                                           </View>
                                           <View style={styles.selection}>
-                                            <TouchableOpacity onPress={() => updateTime(index, "period", "up", true)}>
+                                            <TouchableOpacity onPress={() => updateSameTime("period", "up", true)}>
                                               <AntDesign name="up" size={wsize(7)}/>
                                             </TouchableOpacity>
-                                            <Text style={styles.selectionHeader}>{info.opentime.period}</Text>
-                                            <TouchableOpacity onPress={() => updateTime(index, "period", "down", true)}>
+                                            <Text style={styles.selectionHeader}>{daySamehours.opentime.period}</Text>
+                                            <TouchableOpacity onPress={() => updateSameTime("period", "down", true)}>
                                               <AntDesign name="down" size={wsize(7)}/>
                                             </TouchableOpacity>
                                           </View>
@@ -658,17 +776,17 @@ export default function Locationsetup({ navigation }) {
                                         </View>
                                         <View style={styles.timeSelection}>
                                           <View style={styles.selection}>
-                                            <TouchableOpacity onPress={() => updateTime(index, "hour", "up", false)}>
+                                            <TouchableOpacity onPress={() => updateSameTime("hour", "up", false)}>
                                               <AntDesign name="up" size={wsize(7)}/>
                                             </TouchableOpacity>
                                             <TextInput style={styles.selectionHeader} onChangeText={(hour) => {
-                                              const newDays = [...days]
+                                              const newDaysamehours = {...daySamehours}
 
-                                              newDays[index].closetime["hour"] = hour.toString()
+                                              newDaysamehours.closetime["hour"] = hour.toString()
 
                                               setDays(newDays)
-                                            }} keyboardType="numeric" maxLength={2} value={info.closetime.hour}/>
-                                            <TouchableOpacity onPress={() => updateTime(index, "hour", "down", false)}>
+                                            }} keyboardType="numeric" maxLength={2} value={daySamehours.closetime.hour}/>
+                                            <TouchableOpacity onPress={() => updateSameTime("hour", "down", false)}>
                                               <AntDesign name="down" size={wsize(7)}/>
                                             </TouchableOpacity>
                                           </View>
@@ -676,153 +794,38 @@ export default function Locationsetup({ navigation }) {
                                             <Text style={styles.selectionDiv}>:</Text>
                                           </View>
                                           <View style={styles.selection}>
-                                            <TouchableOpacity onPress={() => updateTime(index, "minute", "up", false)}>
+                                            <TouchableOpacity onPress={() => updateSameTime("minute", "up", false)}>
                                               <AntDesign name="up" size={wsize(7)}/>
                                             </TouchableOpacity>
                                             <TextInput style={styles.selectionHeader} onChangeText={(minute) => {
-                                              const newDays = [...days]
+                                              const newDaysamehours = {...daySamehours}
 
-                                              newDays[index].closetime["minute"] = minute.toString()
+                                              newDaysamehours.closetime["minute"] = minute.toString()
 
                                               setDays(newDays)
-                                            }} keyboardType="numeric" maxLength={2} value={info.closetime.minute}/>
+                                            }} keyboardType="numeric" maxLength={2} value={daySamehours.closetime.minute}/>
 
-                                            <TouchableOpacity onPress={() => updateTime(index, "minute", "down", false)}>
+                                            <TouchableOpacity onPress={() => updateSameTime("minute", "down", false)}>
                                               <AntDesign name="down" size={wsize(7)}/>
                                             </TouchableOpacity>
                                           </View>
                                           <View style={styles.selection}>
-                                            <TouchableOpacity onPress={() => updateTime(index, "period", "up", false)}>
+                                            <TouchableOpacity onPress={() => updateSameTime("period", "up", false)}>
                                               <AntDesign name="up" size={wsize(7)}/>
                                             </TouchableOpacity>
-                                            <Text style={styles.selectionHeader}>{info.closetime.period}</Text>
-                                            <TouchableOpacity onPress={() => updateTime(index, "period", "down", false)}>
+                                            <Text style={styles.selectionHeader}>{daySamehours.closetime.period}</Text>
+                                            <TouchableOpacity onPress={() => updateSameTime("period", "down", false)}>
                                               <AntDesign name="down" size={wsize(7)}/>
                                             </TouchableOpacity>
                                           </View>
                                         </View>
                                       </View>
                                     </View>
-                                ))
-                                :
-                                <>
-                                  <Text style={styles.dayHeader}>{
-                                    tr.t("locationsetup.openDays.sameTime." + (
-                                      JSON.stringify(days).split("\"close\":false").length - 1 == 7 ? "all" : "some"
-                                    ))
-                                  }</Text>
-
-                                  {JSON.stringify(days).split("\"close\":false").length - 1 < 7 && (
-                                    <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-                                      {days.map((day, index) => (
-                                        !day.close && (
-                                          <View key={index} style={styles.openDay}>
-                                            <Text style={styles.openDayHeader}>{day.header}</Text>
-                                          </View>
-                                        )
-                                      ))}
-                                    </View>
-                                  )}
-                                    
-                                  <View style={styles.day}>
-                                    <View style={styles.timeSelectionContainer}>
-                                      <View style={styles.timeSelection}>
-                                        <View style={styles.selection}>
-                                          <TouchableOpacity onPress={() => updateSameTime("hour", "up", true)}>
-                                            <AntDesign name="up" size={wsize(7)}/>
-                                          </TouchableOpacity>
-                                          <TextInput style={styles.selectionHeader} onChangeText={(hour) => {
-                                            const newDaysamehours = {...daySamehours}
-
-                                            newDaysamehours.opentime["hour"] = hour.toString()
-
-                                            setDays(newDays)
-                                          }} keyboardType="numeric" maxLength={2} value={daySamehours.opentime.hour}/>
-                                          <TouchableOpacity onPress={() => updateSameTime("hour", "down", true)}>
-                                            <AntDesign name="down" size={wsize(7)}/>
-                                          </TouchableOpacity>
-                                        </View>
-                                        <View style={styles.selectionDivHolder}>
-                                          <Text style={styles.selectionDiv}>:</Text>
-                                        </View>
-                                        <View style={styles.selection}>
-                                          <TouchableOpacity onPress={() => updateSameTime("minute", "up", true)}>
-                                            <AntDesign name="up" size={wsize(7)}/>
-                                          </TouchableOpacity>
-                                          <TextInput style={styles.selectionHeader} onChangeText={(minute) => {
-                                            const newDaysamehours = {...daySamehours}
-
-                                            newDaysamehours.opentime["minute"] = minute.toString()
-
-                                            setDays(newDays)
-                                          }} keyboardType="numeric" maxLength={2} value={daySamehours.opentime.minute}/>
-                                          <TouchableOpacity onPress={() => updateSameTime("minute", "down", true)}>
-                                            <AntDesign name="down" size={wsize(7)}/>
-                                          </TouchableOpacity>
-                                        </View>
-                                        <View style={styles.selection}>
-                                          <TouchableOpacity onPress={() => updateSameTime("period", "up", true)}>
-                                            <AntDesign name="up" size={wsize(7)}/>
-                                          </TouchableOpacity>
-                                          <Text style={styles.selectionHeader}>{daySamehours.opentime.period}</Text>
-                                          <TouchableOpacity onPress={() => updateSameTime("period", "down", true)}>
-                                            <AntDesign name="down" size={wsize(7)}/>
-                                          </TouchableOpacity>
-                                        </View>
-                                      </View>
-                                      <View style={styles.timeSelectionHeaderHolder}>
-                                        <Text style={styles.timeSelectionHeader}>To</Text>
-                                      </View>
-                                      <View style={styles.timeSelection}>
-                                        <View style={styles.selection}>
-                                          <TouchableOpacity onPress={() => updateSameTime("hour", "up", false)}>
-                                            <AntDesign name="up" size={wsize(7)}/>
-                                          </TouchableOpacity>
-                                          <TextInput style={styles.selectionHeader} onChangeText={(hour) => {
-                                            const newDaysamehours = {...daySamehours}
-
-                                            newDaysamehours.closetime["hour"] = hour.toString()
-
-                                            setDays(newDays)
-                                          }} keyboardType="numeric" maxLength={2} value={daySamehours.closetime.hour}/>
-                                          <TouchableOpacity onPress={() => updateSameTime("hour", "down", false)}>
-                                            <AntDesign name="down" size={wsize(7)}/>
-                                          </TouchableOpacity>
-                                        </View>
-                                        <View style={styles.selectionDivHolder}>
-                                          <Text style={styles.selectionDiv}>:</Text>
-                                        </View>
-                                        <View style={styles.selection}>
-                                          <TouchableOpacity onPress={() => updateSameTime("minute", "up", false)}>
-                                            <AntDesign name="up" size={wsize(7)}/>
-                                          </TouchableOpacity>
-                                          <TextInput style={styles.selectionHeader} onChangeText={(minute) => {
-                                            const newDaysamehours = {...daySamehours}
-
-                                            newDaysamehours.closetime["minute"] = minute.toString()
-
-                                            setDays(newDays)
-                                          }} keyboardType="numeric" maxLength={2} value={daySamehours.closetime.minute}/>
-
-                                          <TouchableOpacity onPress={() => updateSameTime("minute", "down", false)}>
-                                            <AntDesign name="down" size={wsize(7)}/>
-                                          </TouchableOpacity>
-                                        </View>
-                                        <View style={styles.selection}>
-                                          <TouchableOpacity onPress={() => updateSameTime("period", "up", false)}>
-                                            <AntDesign name="up" size={wsize(7)}/>
-                                          </TouchableOpacity>
-                                          <Text style={styles.selectionHeader}>{daySamehours.closetime.period}</Text>
-                                          <TouchableOpacity onPress={() => updateSameTime("period", "down", false)}>
-                                            <AntDesign name="down" size={wsize(7)}/>
-                                          </TouchableOpacity>
-                                        </View>
-                                      </View>
-                                    </View>
-                                  </View>
-                                </>
-                              }
-                            </View>
+                                  </>
+                                }
+                              </>
+                            }
+                          </View>
                         }
                       </View>
 
@@ -981,13 +984,13 @@ export default function Locationsetup({ navigation }) {
             {newBusiness && <TouchableOpacity style={styles.bottomNav} onPress={() => {
               AsyncStorage.removeItem("newBusiness")
 
-              navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "list" }]}));
+              navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "list" }]}));
             }}><Text style={styles.bottomNavHeader}>{tr.t("buttons.cancel")}</Text></TouchableOpacity>}
 
             <TouchableOpacity style={styles.bottomNav} onPress={() => {
               AsyncStorage.clear()
 
-              navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "auth" }]}));
+              navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "auth" }]}));
             }}>
               <Text style={styles.bottomNavHeader}>Log-Out</Text>
             </TouchableOpacity>

@@ -65,6 +65,7 @@ const info = {
       header: "Những ngày nào thì bạn làm việc ?",
       hour: "Đặt thời gian làm việc của bạn cho {day}",
       sameHours: {
+        header: "Bạn có làm việc cùng giờ vào không",
         some: "Đặt thời gian làm việc của bạn cho",
         all: "Đặt thời gian làm việc hàng ngày của bạn"
       }

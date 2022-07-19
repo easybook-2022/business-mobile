@@ -36,7 +36,7 @@ export default function Resetpassword(props) {
 					AsyncStorage.setItem("locationtype", locationtype ? locationtype : "")
 					AsyncStorage.setItem("phase", msg)
 
-          props.navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: msg }]}));
+          props.navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: msg }]}));
 				}
 			})
 			.catch((err) => {

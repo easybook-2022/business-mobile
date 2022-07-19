@@ -1281,7 +1281,7 @@ export default function Main(props) {
           socket.emit("socket/business/logout", ownerid, () => {
             AsyncStorage.clear()
 
-            props.navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "auth" }]}));
+            props.navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "auth" }]}));
           })
         }
       })
@@ -2331,13 +2331,12 @@ export default function Main(props) {
 
         if (params.cartorders) {
           getAllCartOrderers()
-          removeFromList(item.id, "cartOrderers")
         } else if (params.menu || params.initialize) {
           initialize()
         }
-      }
 
-      props.navigation.setParams({ cartorders: null, menu: null, initialize: null })
+        props.navigation.setParams({ cartorders: null, menu: null, initialize: null })
+      }
     }, [useIsFocused()])
   )
 
@@ -2502,7 +2501,6 @@ export default function Main(props) {
                           </View>
                           <View style={styles.column}>
                             <TouchableOpacity style={styles.scheduleAction} onPress={() => {
-                              props.navigation.setParams({ initialize: true })
                               props.navigation.navigate("booktime", { scheduleid: item.id, serviceid: item.serviceid, serviceinfo: item.name })
                             }}>
                               <Text style={styles.scheduleActionHeader}>{tr.t("main.list.changeTime")}</Text>
@@ -2712,8 +2710,11 @@ export default function Main(props) {
 
                           <View style={styles.cartorderActions}>
                             <TouchableOpacity style={styles.cartordererAction} onPress={() => {
-                              props.navigation.setParams({ cartorders: true })
-                              props.navigation.navigate("cartorders", { userid: item.adder, type: item.type, ordernumber: item.orderNumber })
+                              props.navigation.navigate("cartorders", { 
+                                userid: item.adder, 
+                                type: item.type, 
+                                ordernumber: item.orderNumber 
+                              })
                             }}>
                               <Text style={styles.cartordererActionHeader}>{tr.t("main.cartOrderers.seeOrders") + '\n'}({item.numOrders})</Text>
                             </TouchableOpacity>
@@ -3080,7 +3081,6 @@ export default function Main(props) {
                     <ScrollView showsVerticalScrollIndicator={false} style={{ width: '90%' }}>
                       <TouchableOpacity style={styles.moreOptionTouch} onPress={() => {
                         setShowmoreoptions({ ...showMoreoptions, show: false })
-                        props.navigation.setParams({ menu: true })
                         props.navigation.navigate("menu", { isOwner })
                       }}>
                         <Text style={styles.moreOptionTouchHeader}>{tr.t("main.hidden.showMoreoptions.changeMenu")}</Text>
@@ -3134,7 +3134,7 @@ export default function Main(props) {
                             setShowmoreoptions({ ...showMoreoptions, show: false })
 
                             setTimeout(function () {
-                              props.navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "list" }]}));
+                              props.navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "list" }]}));
                             }, 1000)
                           }}>
                             <Text style={styles.moreOptionTouchHeader}>{tr.t("main.hidden.showMoreoptions.moreBusinesses")}</Text>
@@ -3147,7 +3147,7 @@ export default function Main(props) {
                               setShowmoreoptions({ ...showMoreoptions, show: false })
 
                               setTimeout(function () {
-                                props.navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "walkin" }]}));
+                                props.navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "walkin" }]}));
                               }, 1000)
                             }}>
                               <Text style={styles.moreOptionTouchHeader}>{tr.t("main.hidden.showMoreoptions.walkIn")}</Text>

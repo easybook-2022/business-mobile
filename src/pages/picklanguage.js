@@ -14,7 +14,7 @@ export default function Picklanguage({ navigation }) {
 
     AsyncStorage.setItem("language", language)
 
-    navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: phase }]}))
+    navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: phase }]}))
   }
   const initialize = async() => {
     setNewbusiness(await AsyncStorage.getItem("newBusiness"))
@@ -48,13 +48,13 @@ export default function Picklanguage({ navigation }) {
             {newBusiness && <TouchableOpacity style={styles.bottomNav} onPress={() => {
               AsyncStorage.removeItem("newBusiness")
 
-              navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "list" }]}));
+              navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "list" }]}));
             }}><Text style={styles.bottomNavHeader}>{tr.t("buttons.cancel")}</Text></TouchableOpacity>}
 
             <TouchableOpacity style={styles.bottomNav} onPress={() => {
               AsyncStorage.clear()
 
-              navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "auth" }]}));
+              navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "auth" }]}));
             }}>
               <Text style={styles.bottomNavHeader}>Log-Out</Text>
             </TouchableOpacity>

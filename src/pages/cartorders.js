@@ -4,6 +4,7 @@ import {
   ScrollView, View, FlatList, Text, TextInput, Image, 
   TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet, Modal 
 } from 'react-native';
+import { CommonActions } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { resizePhoto } from 'geottuse-tools';
@@ -84,7 +85,12 @@ export default function Cartorders(props) {
           socket.emit("socket/orderDone", data, () => {
             if (refetch) refetch()
 
-            props.navigation.goBack()
+            props.navigation.dispatch(
+              CommonActions.reset({
+                index: 0,
+                routes: [{ name: "main", params: { cartorders: true }}]
+              })
+            )
           })
         }
       })
@@ -158,23 +164,6 @@ export default function Cartorders(props) {
 									<Text style={styles.itemName}>{item.name}</Text>
                   <Text style={styles.header}><Text style={{ fontWeight: 'bold' }}>Quantity:</Text> {item.quantity}</Text>
                   {item.cost && <Text style={styles.header}><Text style={{ fontWeight: 'bold' }}>Total cost:</Text> ${item.cost.toFixed(2)}</Text>}
-
-									{item.options.map((option, infoindex) => (
-										<Text key={option.key} style={styles.itemInfo}>
-											<Text style={{ fontWeight: 'bold' }}>{option.header}: </Text> 
-											{option.selected}
-											{option.type == 'percentage' && '%'}
-										</Text>
-									))}
-
-									{item.others.map((other, otherindex) => (
-										other.selected ? 
-											<Text key={other.key} style={styles.itemInfo}>
-												<Text style={{ fontWeight: 'bold' }}>{other.name}: </Text>
-												<Text>{other.input}</Text>
-											</Text>
-										: null
-									))}
 
 									{item.sizes.map((size, sizeindex) => (
 										size.selected ? 

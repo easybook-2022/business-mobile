@@ -261,7 +261,7 @@ export default function Register(props) {
               setLoading(false)
               AsyncStorage.setItem("phase", "main")
 
-              props.navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "main", params: { firstTime: true }}]}));
+              props.navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "main", params: { firstTime: true }}]}));
             }
           })
           .catch((err) => {
@@ -608,7 +608,7 @@ export default function Register(props) {
                   <>
                     {daysInfo.sameHours == null ? 
                       <View style={styles.workerHours}>
-                        <Text style={styles.workerDayHeader}>Do you work the same hours on</Text>
+                        <Text style={styles.workerDayHeader}>{tr.t("register.workingDays.sameHours.header")}</Text>
 
                         <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
                           {workerHours.map((info, index) => (
@@ -896,7 +896,7 @@ export default function Register(props) {
 							<TouchableOpacity style={styles.bottomNav} onPress={() => {
 								AsyncStorage.clear()
 
-                props.navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "auth" }]}));
+                props.navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "auth" }]}));
 							}}>
 								<Text style={styles.bottomNavHeader}>Log-Out</Text>
 							</TouchableOpacity>

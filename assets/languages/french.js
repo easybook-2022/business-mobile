@@ -65,6 +65,7 @@ const info = {
       header: "Quels jours travaillez-vous ?",
       hour: "Fixez votre temps de travail le {day}",
       sameHours: {
+        header: "Travaillez-vous les mêmes heures sur",
         some: "Définissez votre temps de travail pour",
         all: "Définissez votre temps de travail pour tous les jours"
       }

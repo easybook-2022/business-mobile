@@ -4,7 +4,7 @@ import {
   TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet, Modal 
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { CommonActions, StackActions } from '@react-navigation/native';
+import { CommonActions } from '@react-navigation/native';
 import { displayTime, resizePhoto } from 'geottuse-tools'
 import { tr } from '../../assets/translate'
 import { socket, logo_url } from '../../assets/info'
@@ -530,7 +530,12 @@ export default function Booktime(props) {
               setTimeout(function () {
                 setConfirm({ ...confirm, show: false, requested: false })
 
-                props.navigation.dispatch(StackActions.popToTop());
+                props.navigation.dispatch(
+                  CommonActions.reset({ 
+                    index: 0, 
+                    routes: [{ name: "main", params: { initialize: true }}]
+                  })
+                );
               }, 2000)
             })
           } else {
@@ -539,7 +544,12 @@ export default function Booktime(props) {
             setTimeout(function () {
               setConfirm({ ...confirm, show: false, requested: false })
 
-              props.navigation.dispatch(StackActions.popToTop());
+              props.navigation.dispatch(
+                CommonActions.reset({
+                  index: 0,
+                  routes: [{ name: "main", params: { initialize: true }}]
+                })
+              );
             }, 2000)
           }
         }
@@ -579,7 +589,7 @@ export default function Booktime(props) {
           socket.emit("socket/business/logout", ownerid, () => {
             AsyncStorage.clear()
 
-            props.navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "auth" }]}));
+            props.navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "auth" }]}));
           })
         }
       })
@@ -792,7 +802,12 @@ export default function Booktime(props) {
         <View style={styles.bottomNavs}>
           <View style={styles.bottomNavsRow}>
             <View style={styles.column}>
-              <TouchableOpacity style={styles.bottomNavButton} onPress={() => props.navigation.dispatch(StackActions.popToTop())}>
+              <TouchableOpacity style={styles.bottomNavButton} onPress={() => props.navigation.dispatch(
+                CommonActions.reset({
+                  index: 0,
+                  routes: [{ name: "main", params: { initialize: true }}]
+                })
+              )}>
                 <Text style={styles.bottomNavButtonHeader}>{tr.t("buttons.back")}</Text>
               </TouchableOpacity>
             </View>
@@ -801,7 +816,7 @@ export default function Booktime(props) {
               <TouchableOpacity style={styles.bottomNavButton} onPress={() => {
                 AsyncStorage.clear()
 
-                props.navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "auth" }]}));
+                props.navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "auth" }]}));
               }}>
                 <Text style={styles.bottomNavButtonHeader}>Log-Out</Text>
               </TouchableOpacity>
