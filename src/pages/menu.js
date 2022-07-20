@@ -151,7 +151,6 @@ export default function Menu(props) {
                 <View style={styles.column}>
                   <View style={styles.menuActions}>
                     <TouchableOpacity style={styles.menuAction} onPress={() => {
-                      props.navigation.setParams({ refetch: true })
                       props.navigation.navigate("addmenu", { parentMenuid: id, menuid: id })
                     }}>
                       <Text style={styles.menuActionHeader}>{tr.t("buttons.change")}</Text>
@@ -163,7 +162,7 @@ export default function Menu(props) {
                 </View>
               )}
 						</View>
-              
+
 						{list.length > 0 && (
 							list.map((info, index) => (
 								<View key={"list-" + index}>
@@ -171,23 +170,38 @@ export default function Menu(props) {
 										displayList({ id: info.id, name: info.name, image: info.image, list: info.list })
 										:
 										<View style={styles.item}>
-											<View style={{ flexDirection: 'row' }}>
-                        <View style={styles.itemImageHolder}>
-                          <Image 
-                            style={resizePhoto(info.image, wsize(30))} 
-                            source={info.image.name ? { uri: logo_url + info.image.name } : require("../../assets/noimage.jpeg")}
-                          />
+											<View>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                          <View style={{ flexDirection: 'row' }}>
+                            <View style={styles.itemImageHolder}>
+                              <Image 
+                                style={resizePhoto(info.image, wsize(15))} 
+                                source={info.image.name ? { uri: logo_url + info.image.name } : require("../../assets/noimage.jpeg")}
+                              />
+                            </View>
+                            <View style={styles.column}><Text style={styles.itemHeader}>{info.name}</Text></View>
+                          </View>
                         </View>
-  												
-                        <View style={styles.column}><Text style={styles.itemHeader}>{info.name}</Text></View>
-                        <View style={styles.column}><Text style={styles.itemHeader}>{info.price ? '$' + info.price : info.sizes.length + ' size(s)'}</Text></View>
+
+                        <View style={styles.column}>
+                          <View style={{ flexDirection: 'row'}}>
+                            {info.sizes.length > 0 ? 
+                              info.sizes.map((size, index) => (
+                                <View key={index} style={{ marginHorizontal: '5%' }}>
+                                  <Text style={{ fontWeight: 'bold' }}>{size.name}</Text>
+                                  <Text>$ {size.price}</Text>
+                                </View>
+                              ))
+                              :
+                              <View style={styles.column}><Text style={styles.itemHeader}>$ {info.price}</Text></View>
+                            }
+                          </View>
+                        </View>
 											</View>
                       {isOwner == true && (
                         <View style={styles.column}>
                           <View style={styles.itemActions}>
                             <TouchableOpacity style={styles.itemAction} onPress={() => {
-                              props.navigation.setParams({ refetch: true })
-
                               if ((locationType == "hair" || locationType == "nail")) {
                                 props.navigation.navigate("addservice", { parentMenuid: id, serviceid: info.id })
                               } else if (locationType == "restaurant") {
@@ -218,22 +232,64 @@ export default function Menu(props) {
 								:
                 <>
   								<View style={styles.item}>
-  									<View style={{ flexDirection: 'row', }}>
-    									<View style={styles.itemImageHolder}>
-                        <Image 
-                          style={resizePhoto(info.image, wsize(30))} 
-                          source={info.image.name ? { uri: logo_url + info.image.name } : require("../../assets/noimage.jpeg")}
-                        />
+  									<View>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                        <View style={{ flexDirection: 'row' }}>
+        									<View style={styles.itemImageHolder}>
+                            <Image 
+                              style={resizePhoto(info.image, wsize(15))} 
+                              source={info.image.name ? { uri: logo_url + info.image.name } : require("../../assets/noimage.jpeg")}
+                            />
+                          </View>
+      										<View style={styles.column}><Text style={styles.itemHeader}>{info.name}</Text></View>
+                        </View>
+
+                        <View style={styles.column}>
+                          <View style={{ flexDirection: 'row'}}>
+                            {info.sizes.length > 0 ? 
+                              info.sizes.length > 2 ? 
+                                <>
+                                  <View>
+                                    <View style={{ marginHorizontal: '5%' }}>
+                                      <Text style={{ fontSize: wsize(5), fontWeight: 'bold' }}>{info.sizes[0].name}</Text>
+                                      <Text style={{ fontSize: wsize(4.5) }}>$ {info.sizes[0].price}</Text>
+                                    </View>
+                                    <View style={{ marginHorizontal: '5%', marginTop: '5%' }}>
+                                      <Text style={{ fontSize: wsize(5), fontWeight: 'bold' }}>{info.sizes[1].name}</Text>
+                                      <Text style={{ fontSize: wsize(4.5) }}>$ {info.sizes[1].price}</Text>
+                                    </View>
+                                  </View>
+                                  <View>
+                                    <View style={{ marginHorizontal: '5%' }}>
+                                      <Text style={{ fontSize: wsize(5), fontWeight: 'bold' }}>{info.sizes[2].name}</Text>
+                                      <Text style={{ fontSize: wsize(4.5) }}>$ {info.sizes[2].price}</Text>
+                                    </View>
+                                    {info.sizes.length == 4 && (
+                                      <View style={{ marginHorizontal: '5%', marginTop: '5%' }}>
+                                        <Text style={{ fontSize: wsize(5), fontWeight: 'bold' }}>{info.sizes[3].name}</Text>
+                                        <Text style={{ fontSize: wsize(4.5) }}>$ {info.sizes[3].price}</Text>
+                                      </View>
+                                    )}
+                                  </View>
+                                </>
+                                :
+                                info.sizes.map((size, index) => (
+                                  <View key={index} style={{ marginHorizontal: '5%' }}>
+                                    <Text style={{ fontSize: wsize(5), fontWeight: 'bold' }}>{size.name}</Text>
+                                    <Text style={{ fontSize: wsize(4.5) }}>$ {size.price}</Text>
+                                  </View>
+                                ))
+                              :
+                              <View style={styles.column}><Text style={styles.itemHeader}>$ {info.price}</Text></View>
+                            }
+                          </View>
+                        </View>
                       </View>
-  										<View style={styles.column}><Text style={styles.itemHeader}>{info.name}</Text></View>
-  										<View style={styles.column}><Text style={styles.itemHeader}>{info.price ? '$' + info.price : info.sizes.length + ' size(s)'}</Text></View>
   									</View>
                     {isOwner == true && (
                       <View style={styles.column}>
                         <View style={styles.itemActions}>
                           <TouchableOpacity style={styles.itemAction} onPress={() => {
-                            props.navigation.setParams({ refetch: true })
-
                             if ((locationType == "hair" || locationType == "nail")) {
                               props.navigation.navigate("addservice", { parentMenuid: id, serviceid: info.id })
                             } else if (locationType == "restaurant") {
@@ -626,7 +682,7 @@ export default function Menu(props) {
                       }}>
                         <Text style={styles.menuStartHeader}>{tr.t("menu.photos.upload")}</Text>
                       </TouchableOpacity>
-                      <Text>({tr.t("menu.photos.easier")})</Text>
+                      <Text style={[styles.menuStartMessage, { marginBottom: '30%' }]}>({tr.t("menu.photos.easier")})</Text>
                     </View>
                   )}
                 </>
@@ -659,7 +715,7 @@ export default function Menu(props) {
                           tr.t("buttons.addmeal")
                     }</Text>
                   </TouchableOpacity>
-                  {(locationType == "hair" || locationType == "nail") && <Text>{tr.t("menu.lists.easier." + (header == "service" ? "salon" : "restaurant"))}</Text>}
+                  {(locationType == "hair" || locationType == "nail") && <Text style={styles.menuStartMessage}>{tr.t("menu.lists.easier." + (header == "service" ? "salon" : "restaurant"))}</Text>}
                 </View>
               )}
               {displayList({ id: "", name: "", image: "", list: menuInfo.list })}
@@ -971,6 +1027,7 @@ const styles = StyleSheet.create({
 	menuPhotoActionHeader: { fontSize: wsize(3), textAlign: 'center' },
 	menuStart: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5 },
 	menuStartHeader: { fontSize: wsize(7), textAlign: 'center' },
+  menuStartMessage: { fontSize: wsize(4), textAlign: 'center' },
   menuStartDiv: { fontSize: wsize(7), fontWeight: 'bold', marginVertical: 20 },
 
 	menu: { backgroundColor: 'black', marginBottom: 30, paddingTop: 3, width: '100%' },
@@ -982,8 +1039,8 @@ const styles = StyleSheet.create({
 	menuActionHeader: { fontSize: wsize(4), textAlign: 'center' },
   itemAdd: { borderColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, flexDirection: 'row', marginVertical: 10, padding: 5 },
 	itemAddHeader: { color: 'black', fontWeight: 'bold', marginRight: 5 },
-  item: { backgroundColor: 'white', marginBottom: 50 },
-	itemImageHolder: { borderRadius: wsize(30) / 2, height: wsize(30), overflow: 'hidden', width: wsize(30) },
+  item: { backgroundColor: 'rgba(0, 0, 0, 0.2)', borderRadius: 10, marginBottom: 10, marginHorizontal: '2%', padding: '2%' },
+	itemImageHolder: { borderRadius: wsize(15) / 2, height: wsize(15), overflow: 'hidden', width: wsize(15) },
 	itemHeader: { fontSize: wsize(5), fontWeight: 'bold', marginHorizontal: 10, textDecorationStyle: 'solid' },
 	itemActions: { flexDirection: 'row' },
 	itemAction: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, marginLeft: 10, padding: 3 },

@@ -49,28 +49,29 @@ export default function Addmeal(props) {
   const addTheNewMeal = async() => {
     const locationid = await AsyncStorage.getItem("locationid")
     const sizenames = { "small": false, "medium": false, "large": false, "extra large": false }
+    const newSize = [...sizes]
 
     setErrormsg("")
 
-    for (let k = 0; k < sizes.length; k++) {
-      if (!sizes[k].name) {
+    for (let k = 0; k < newSize.length; k++) {
+      if (!newSize[k].name) {
         setErrormsg("One of the size is not selected")
 
         return
       }
 
-      if (!sizes[k].price) {
+      if (!newSize[k].price) {
         setErrormsg("One of the size's price is not provided")
 
         return
-      } else if (isNaN(sizes[k].price)) {
+      } else if (isNaN(newSize[k].price)) {
         setErrormsg("One of the size's price is invalid")
 
         return
       }
 
-      if (!sizenames[sizes[k].name]) {
-        sizenames[sizes[k].name] = true
+      if (!sizenames[newSize[k].name]) {
+        sizenames[newSize[k].name] = true
       } else {
         setErrormsg("There are two or more similar sizes")
 
@@ -78,12 +79,12 @@ export default function Addmeal(props) {
       }
     }
 
-    if (name && (sizes.length > 0 || (price && !isNaN(price)))) {
-      sizes.forEach(function (size) {
+    if (name && (newSize.length > 0 || (price && !isNaN(price)))) {
+      newSize.forEach(function (size) {
         delete size['key']
       })
 
-      const data = { locationid, menuid: parentMenuid > -1 ? parentMenuid : "", name, image, sizes, price: sizes.length > 0 ? "" : price }
+      const data = { locationid, menuid: parentMenuid > -1 ? parentMenuid : "", name, image, sizes: newSize, price: sizes.length > 0 ? "" : price }
 
       setLoading(true)
 

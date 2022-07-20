@@ -398,6 +398,7 @@ const info = {
     update: "Mise à jour",
     begin: "Commencer",
     takePhoto: "Prends\ncette photo",
+    retakePhoto: "Reprendre\nla photo",
     choosePhoto: "Choisissez\nparmi le téléphone",
     markLocation: "Marquez votre emplacement",
     enterAddress: "Entrer l'adresse",

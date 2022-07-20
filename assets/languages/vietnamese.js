@@ -398,6 +398,7 @@ const info = {
     update: "cập nhật",
     begin: "Bắt đầu",
     takePhoto: "Chụp",
+    retakePhoto: "Chụp lại ảnh",
     choosePhoto: "Chọn từ điện thoại",
     markLocation: "đánh dấu vị trí của bạn",
     enterAddress: "Nhập địa chỉ",

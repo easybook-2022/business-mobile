@@ -10,6 +10,7 @@ import * as FileSystem from 'expo-file-system'
 import { Camera } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator'
 import * as ImagePicker from 'expo-image-picker';
+import { CommonActions } from '@react-navigation/native';
 import { getId, resizePhoto } from 'geottuse-tools';
 import { tr } from '../../assets/translate'
 import { logo_url } from '../../assets/info'
@@ -61,7 +62,12 @@ export default function Addmenu(props) {
 				if (res) {
           setLoading(false)
 
-					props.navigation.goBack()
+					props.navigation.dispatch(
+            CommonActions.reset({
+              index: 1,
+              routes: [{ name: "menu", params: { refetch: true }}]
+            })
+          )
 				}
 			})
 			.catch((err) => {
@@ -87,7 +93,12 @@ export default function Addmenu(props) {
 				if (res) {
           setLoading(false)
 
-					props.navigation.goBack()
+					props.navigation.dispatch(
+            CommonActions.reset({
+              index: 1,
+              routes: [{ name: "menu", params: { refetch: true }}]
+            })
+          )
 				}
 			})
 			.catch((err) => {
@@ -339,7 +350,12 @@ export default function Addmenu(props) {
 						<Text style={styles.errorMsg}>{errorMsg}</Text>
 
 						<View style={styles.addActions}>
-							<TouchableOpacity style={styles.addAction} disabled={loading} onPress={() => props.navigation.goBack()}>
+							<TouchableOpacity style={styles.addAction} disabled={loading} onPress={() => props.navigation.dispatch(
+                CommonActions.reset({
+                  index: 1,
+                  routes: [{ name: "menu", params: { refetch: true }}]
+                })
+              )}>
 								<Text style={styles.addActionHeader}>{tr.t("buttons.cancel")}</Text>
 							</TouchableOpacity>
 							<TouchableOpacity style={styles.addAction} disabled={loading} onPress={() => {

@@ -398,6 +398,7 @@ const info = {
     update: "更新",
     begin: "开始",
     takePhoto: "拍这张照片",
+    retakePhoto: "重拍照片",
     choosePhoto: "从手机中选择",
     markLocation: "标记您的位置",
     enterAddress: "输入地址",

@@ -11,6 +11,9 @@ expo-camera expo-google-fonts expo-image-manipulator expo-notifications expo-loc
 xcrun -k --sdk iphoneos --show-sdk-path
 sudo xcode-select --switch /Applications/Xcode.app
 
+# (rename organization)
+git remote set-url origin https://git-repo/new-repository.git
+
 # (android)
 expo credentials:manager, create keystore
 expo fetch:android:keystore, fetch keystore and its information from expo
