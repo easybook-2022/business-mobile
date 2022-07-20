@@ -14,4 +14,9 @@ sudo xcode-select --switch /Applications/Xcode.app
 # (android)
 expo credentials:manager, create keystore
 expo fetch:android:keystore, fetch keystore and its information from expo
-keytool -export -rfc -alias <alias_copy_from_fetch> -file upload_certificate.pem -keystore serviceapp-business.jks
+
+keytool -genkeypair -alias <keystore alias> -keyalg RSA -keysize 2048 -validity 9125 -keystore serviceapp-business.jks
+
+keytool -importkeystore -srckeystore serviceapp-business.jks -destkeystore serviceapp-business.jks -deststoretype pkcs12, migrate
+
+keytool -export -rfc -alias <keystore alias> -file upload_certificate.pem -keystore serviceapp-business.jks, get upload certificate.pem

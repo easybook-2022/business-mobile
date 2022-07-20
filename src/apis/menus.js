@@ -7,10 +7,6 @@ export const getMenus = id => {
 	return axios.get(`${beginUrl}get_menus/${id}`)
 }
 
-export const getRequests = () => {
-	return axios.get(`${beginUrl}get_requests`)
-}
-
 export const addNewMenu = (data) => {
 	const form = new FormData()
   const { uri, name, type = "image/jpeg", size } = data.image
