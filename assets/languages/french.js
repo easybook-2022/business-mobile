@@ -104,10 +104,12 @@ const info = {
       seeOrders: "Voir les commandes"
     },
     tableOrders: {
-      header: "Il n'y a pas encore de commande(s)",
       tableHeader: "Table #",
       seeBill: "Voir facture",
-      seeOrders: "Voir les commandes"
+      seeOrders: "Voir les commandes",
+      showCode: "Afficher le code",
+      deleteTable: "Supprimer le tableau",
+      addTable: "Ajouter un tableau",
     },
     bottomNavs: {
       changeInfo: "Modifier les\ninformations",
@@ -174,6 +176,21 @@ const info = {
         schedulingConflict: "Il y a un conflit d'horaire",
         unfinishedOrders: "Il y a des commandes inachevées",
         noOrders: "Il n'y a pas de commandes"
+      },
+      tables: {
+        table: "Tableau #",
+        showBarcode: "Afficher le code barre",
+        hidden: {
+          add: {
+            tableNumber: "Entrer le tableau #:",
+          },
+          remove: {
+            header: "Supprimer le tableau #"
+          },
+          qr: {
+            header: "Tableau #"
+          }
+        }
       }
     },
     editInfo: {
@@ -259,22 +276,6 @@ const info = {
         change: "Changer l'heure pour",
         appointmentChanged: "Rendez-vous modifié",
         leaveNote: "Laissez une note si vous voulez"
-      }
-    }
-  },
-  tables: {
-    addTable: "Ajouter un tableau",
-    table: "Tableau #",
-    showBarcode: "Afficher le code barre",
-    hidden: {
-      add: {
-        tableNumber: "Entrer le tableau #:",
-      },
-      remove: {
-        header: "Supprimer le tableau #"
-      },
-      qr: {
-        header: "Tableau #"
       }
     }
   },

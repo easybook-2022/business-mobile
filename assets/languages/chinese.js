@@ -104,10 +104,12 @@ const info = {
       seeOrders: "查看订单"
     },
     tableOrders: {
-      header: "还没有订单",
       tableHeader: "桌子 #",
       seeBill: "见比尔",
-      seeOrders: "查看订单"
+      seeOrders: "查看订单",
+      showCode: "显示代码",
+      deleteTable: "删除表",
+      addTable: "添加表"
     },
     bottomNavs: {
       changeInfo: "更改信息",
@@ -174,6 +176,21 @@ const info = {
         schedulingConflict: "存在调度冲突",
         unfinishedOrders: "有一些未完成的订单",
         noOrders: "没有订单"
+      },
+      tables: {
+        table: "桌子 #",
+        showBarcode: "显示条码",
+        hidden: {
+          add: {
+            tableNumber: "输入表 #:",
+          },
+          remove: {
+            header: "删除表# #"
+          },
+          qr: {
+            header: "桌子 #"
+          }
+        }
       }
     },
     editInfo: {
@@ -262,23 +279,7 @@ const info = {
       }
     }
   },
-  tables: {
-    addTable: "添加表",
-    table: "桌子 #",
-    showBarcode: "显示条码",
-    hidden: {
-      add: {
-        tableNumber: "输入表 #:",
-      },
-      remove: {
-        header: "删除表# #"
-      },
-      qr: {
-        header: "桌子 #"
-      }
-    }
-  },
-
+    
   // components
   menu: {
     header: {

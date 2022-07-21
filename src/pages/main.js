@@ -2813,45 +2813,43 @@ export default function Main(props) {
                   <Text style={styles.bodyResultHeader}>{tr.t("main.cartOrderers.header")}</Text>
                 </View>
             )}
-
+            
             {viewType == 'tableorders' && (
               <>
-                {tableOrders.length > 0 ? 
+                {tableOrders.length > 0 && ( 
                   <FlatList
                     data={tableOrders}
                     renderItem={({ item, index }) => 
                       <View key={item.key} style={styles.tableOrder}>
-                        <Text style={styles.tableOrderHeader}>{tr.t("main.tableOrders.tableHeader")}{item.name}</Text>
+                        <View>
+                          <Text style={styles.tableOrderHeader}>{tr.t("main.tableOrders.tableHeader")}{item.name}</Text>
+
+                          <TouchableOpacity style={styles.seeOrders} onPress={() => getTheTableOrders(item.key)}>
+                            <Text style={styles.seeOrdersHeader}>{tr.t("main.tableOrders.seeOrders") + '\n' + item.numOrders}</Text>
+                          </TouchableOpacity>
+                        </View>
 
                         <View>
                           <TouchableOpacity style={styles.tableOrderOption} onPress={() => viewThePayment(item.key)}>
                             <Text style={styles.tableOrderOptionHeader}>{tr.t("main.tableOrders.seeBill")}</Text>
                           </TouchableOpacity>
 
-                          <TouchableOpacity style={styles.tableOrderOption} onPress={() => getTheTableOrders(item.key)}>
-                            <Text style={styles.tableOrderOptionHeader}>{tr.t("main.tableOrders.seeOrders")} {item.numOrders}</Text>
-                          </TouchableOpacity>
-
                           <TouchableOpacity style={styles.tableOrderOption} onPress={() => showQrCode(item.tableid)}>
-                            <Text style={styles.tableOrderOptionHeader}>Show Code</Text> 
+                            <Text style={styles.tableOrderOptionHeader}>{tr.t("main.tableOrders.showCode")}</Text> 
                           </TouchableOpacity>
 
                           <TouchableOpacity style={styles.tableOrderOption} onPress={() => removeTheTable(item.key, item.name)}>
-                            <Text style={styles.tableOrderOptionHeader}>Delete Table</Text> 
+                            <Text style={styles.tableOrderOptionHeader}>{tr.t("main.tableOrders.deleteTable")}</Text> 
                           </TouchableOpacity>
                         </View>
                       </View>
                     }
                   />
-                  :
-                  <View style={styles.bodyResult}>
-                    <Text style={styles.bodyResultHeader}>There are no order(s) yet</Text>
-                  </View>
-                }
+                )}
 
                 <View style={{ alignItems: 'center' }}>
                   <TouchableOpacity style={styles.addTable} onPress={() => addATable()}>
-                    <Text style={styles.addTableHeader}>+ {tr.t("tables.addTable")}</Text>
+                    <Text style={styles.addTableHeader}>+ {tr.t("main.tableOrders.addTable")}</Text>
                   </TouchableOpacity>
                 </View>
               </>
@@ -4956,7 +4954,7 @@ export default function Main(props) {
             {showAddtable.show && (
               <View style={styles.addTableBox}>
                 <View style={styles.addTableContainer}>
-                  <Text style={styles.addTableHeader}>{tr.t("tables.hidden.add.tableNumber")}</Text>
+                  <Text style={styles.addTableHeader}>{tr.t("main.hidden.tables.hidden.add.tableNumber")}</Text>
 
                   <TextInput style={styles.addTableInput} keyboardType="numeric" onChangeText={name => setShowaddtable({ ...showAddtable, table: name })}/>
 
@@ -4976,7 +4974,7 @@ export default function Main(props) {
             {showRemovetable.show && (
               <View style={styles.removeTableBox}>
                 <View style={styles.removeTableContainer}>
-                  <Text style={styles.removeTableHeader}>{tr.t("tables.hidden.remove.header")}{showRemovetable.table.name} ?</Text>
+                  <Text style={styles.removeTableHeader}>{tr.t("main.hidden.tables.hidden.remove.header")}{showRemovetable.table.name} ?</Text>
 
                   <View style={styles.removeTableActions}>
                     <TouchableOpacity style={styles.removeTableAction} onPress={() => setShowremovetable({ ...showRemovetable, show: false, table: '' })}>
@@ -4997,7 +4995,7 @@ export default function Main(props) {
                   </TouchableOpacity>
 
                   <View style={{ alignItems: 'center', marginVertical: '50%' }}>
-                    <Text style={styles.qrHeader}>{tr.t("tables.hidden.qr.header")}{showQr.table}</Text>
+                    <Text style={styles.qrHeader}>{tr.t("main.hidden.tables.hidden.qr.header")}{showQr.table}</Text>
 
                     <QRCode size={wsize(80)} value={showQr.codeText}/>
                   </View>
@@ -5064,7 +5062,9 @@ const styles = StyleSheet.create({
 	cartordererActionHeader: { fontSize: wsize(4), textAlign: 'center' },
 
   tableOrder: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, flexDirection: 'row', justifyContent: 'space-between', marginTop: 20, marginHorizontal: '2%', padding: 10, width: '96%' },
-  tableOrderHeader: { fontSize: wsize(4), fontWeight: 'bold' },
+  tableOrderHeader: { fontSize: wsize(6), fontWeight: 'bold' },
+  seeOrders: { alignItems: 'center', backgroundColor: 'black', borderRadius: 10, flexDirection: 'row', justifyContent: 'space-around', marginVertical: 2, padding: 10 },
+  seeOrdersHeader: { color: 'white', fontSize: wsize(6), fontWeight: 'bold', textAlign: 'center' },
   tableOrderOption: { alignItems: 'center', backgroundColor: 'black', borderRadius: 10, flexDirection: 'row', justifyContent: 'space-around', marginVertical: 2, padding: 5 },
   tableOrderOptionHeader: { color: 'white', fontSize: wsize(4), fontWeight: 'bold', textAlign: 'center' },
   addTable: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginBottom: 20, padding: 5 },

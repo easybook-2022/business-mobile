@@ -50,7 +50,7 @@ export default function Addmenu(props) {
 
 		const ownerid = await AsyncStorage.getItem("ownerid")
 		const locationid = await AsyncStorage.getItem("locationid")
-		const data = { locationid, parentMenuid, name, image }
+		const data = { locationid, parentMenuid: parentMenuid > -1 ? parentMenuid : "", name, image }
 
 		addNewMenu(data)
 			.then((res) => {
@@ -62,12 +62,7 @@ export default function Addmenu(props) {
 				if (res) {
           setLoading(false)
 
-					props.navigation.dispatch(
-            CommonActions.reset({
-              index: 1,
-              routes: [{ name: "menu", params: { refetch: true }}]
-            })
-          )
+					props.navigation.goBack()
 				}
 			})
 			.catch((err) => {
@@ -81,7 +76,7 @@ export default function Addmenu(props) {
 	const saveTheMenu = () => {
     setLoading(true)
 
-		const data = { menuid, name, image, permission: cameraPermission && pickingPermission }
+		const data = { menuid: parentMenuid > -1 ? parentMenuid : "", name, image, permission: cameraPermission && pickingPermission }
 		
 		saveMenu(data)
 			.then((res) => {
@@ -93,12 +88,7 @@ export default function Addmenu(props) {
 				if (res) {
           setLoading(false)
 
-					props.navigation.dispatch(
-            CommonActions.reset({
-              index: 1,
-              routes: [{ name: "menu", params: { refetch: true }}]
-            })
-          )
+					props.navigation.goBack()
 				}
 			})
 			.catch((err) => {
@@ -280,7 +270,7 @@ export default function Addmenu(props) {
       setPickingpermission(true)
     }
 	}
-
+  
 	useEffect(() => {
 		getTheMenuInfo()
 	}, [])
@@ -350,12 +340,7 @@ export default function Addmenu(props) {
 						<Text style={styles.errorMsg}>{errorMsg}</Text>
 
 						<View style={styles.addActions}>
-							<TouchableOpacity style={styles.addAction} disabled={loading} onPress={() => props.navigation.dispatch(
-                CommonActions.reset({
-                  index: 1,
-                  routes: [{ name: "menu", params: { refetch: true }}]
-                })
-              )}>
+							<TouchableOpacity style={styles.addAction} disabled={loading} onPress={() => props.navigation.goBack()}>
 								<Text style={styles.addActionHeader}>{tr.t("buttons.cancel")}</Text>
 							</TouchableOpacity>
 							<TouchableOpacity style={styles.addAction} disabled={loading} onPress={() => {
@@ -374,10 +359,28 @@ export default function Addmenu(props) {
 								}
 							}}>
 								<Text style={styles.addActionHeader}>{
-									!menuid ? 
-										setupType == "photo" ? image.uri ? tr.t("buttons.update") : tr.t("buttons.skip") : tr.t("buttons.next")
-										:
-										setupType == "photo" ? image.uri ? tr.t("buttons.next") : tr.t("buttons.skip") : tr.t("buttons.next")
+									!menuid ? // new menu
+                    steps.indexOf(setupType) < steps.length - 1 ? 
+										  setupType == "photo" ? 
+                        image.uri ? 
+                          tr.t("buttons.next") 
+                          : 
+                          tr.t("buttons.skip") 
+                        : 
+                        tr.t("buttons.next")
+                      :
+                      tr.t("buttons.done")
+										: // editing menu
+                    steps.indexOf(setupType) < steps.length - 1 ? 
+                      setupType == "photo" ? 
+                        image.uri ? 
+                          tr.t("buttons.next") 
+                          : 
+                          tr.t("buttons.skip") 
+                        : 
+                        tr.t("buttons.next")
+                      :
+                      tr.t("buttons.done")
 								}</Text>
 							</TouchableOpacity>
 						</View>

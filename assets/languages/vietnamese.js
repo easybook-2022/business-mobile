@@ -104,10 +104,12 @@ const info = {
       seeOrders: "Xem đơn đặt hàng"
     },
     tableOrders: {
-      header: "Chưa có đơn đặt hàng nào",
       tableHeader: "Bàn #",
       seeBill: "Xem hóa đơn",
-      seeOrders: "Xem Đơn hàng"
+      seeOrders: "Xem Đơn hàng",
+      showCode: "Hiển thị mã",
+      deleteTable: "Xóa bảng",
+      addTable: "Thêm bảng"
     },
     bottomNavs: {
       changeInfo: "Thay đổi\nthông tin",
@@ -175,6 +177,21 @@ const info = {
         unfinishedOrders: "Có một số đơn hàng chưa hoàn thành",
         noOrders: "Không có đơn đặt hàng"
       },
+      tables: {
+        table: "Bàn #",
+        showBarcode: "Chương trình mã vạch",
+        hidden: {
+          add: {
+            tableNumber: "Nhập bảng #:",
+          },
+          remove: {
+            header: "Xóa bảng #"
+          },
+          qr: {
+            header: "Bàn #"
+          }
+        }
+      }
     },
     editInfo: {
       staff: {
@@ -259,22 +276,6 @@ const info = {
         change: "Thay đổi thời gian",
         appointmentChanged: "Cuộc hẹn đã thay đổi",
         leaveNote: "Để lại ghi chú nếu bạn muốn"
-      }
-    }
-  },
-  tables: {
-    addTable: "Thêm bảng",
-    table: "Bàn #",
-    showBarcode: "Chương trình mã vạch",
-    hidden: {
-      add: {
-        tableNumber: "Nhập bảng #:",
-      },
-      remove: {
-        header: "Xóa bảng #"
-      },
-      qr: {
-        header: "Bàn #"
       }
     }
   },
