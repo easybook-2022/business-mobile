@@ -179,7 +179,7 @@ export default function Menu(props) {
                   <Text style={{ fontWeight: 'bold' }}>({info.sizes.length}) sizes</Text>
                 </View>
                 :
-                info.sizes.map((size, index) => <Text style={{ fontSize: wsize(4.5) }}><Text style={{ fontWeight: 'bold' }}>{size.name}</Text>$ {size.price}</Text>)
+                info.sizes.map((size, index) => <Text key={index} style={{ fontSize: wsize(4.5) }}><Text style={{ fontWeight: 'bold' }}>{size.name}</Text>$ {size.price}</Text>)
               :
               <View style={styles.column}><Text style={styles.itemHeader}>$ {info.price} (1 size)</Text></View>
             }
@@ -189,7 +189,7 @@ export default function Menu(props) {
     )
   }
 	const displayList = info => {
-		let { id, image, name, list, show } = info
+		let { id, image, name, list, show = true } = info
     const header = ((locationType == "hair" || locationType == "nail") && "service") || 
                   (locationType == "restaurant" && "meal") || 
                   (locationType == "store" && "item")
@@ -208,21 +208,6 @@ export default function Menu(props) {
                 </View>
               )}
               <View style={styles.column}><Text style={styles.menuName}>{name} (Menu)</Text></View>
-              <View style={styles.column}>
-                <TouchableOpacity style={styles.menuShow} onPress={() => {
-                  const newList = [...menuInfo.list]
-
-                  newList.forEach(function (listInfo) {
-                    if (listInfo.id == id) {
-                      listInfo.show = !listInfo.show
-                    }
-                  })
-
-                  setMenuinfo({ ...menuInfo, list: newList })
-                }}>
-                  <Text style={styles.menuShowHeader}>{show ? "Hide" : "Show"}</Text>
-                </TouchableOpacity>
-              </View>
               {isOwner == true && (
                 <View style={styles.column}>
                   <View style={styles.menuActions}>
@@ -1062,7 +1047,7 @@ const styles = StyleSheet.create({
 	menuActionHeader: { fontSize: wsize(3), textAlign: 'center' },
   itemAdd: { borderColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, flexDirection: 'row', marginTop: 5, padding: 5 },
 	itemAddHeader: { color: 'black', fontWeight: 'bold', marginRight: 5 },
-  item: { borderRadius: 5, marginVertical: 10 },
+  item: { backgroundColor: 'white', borderRadius: 5, marginBottom: 10, paddingVertical: 10 },
 	itemImageHolder: { borderRadius: wsize(10) / 2, height: wsize(10), overflow: 'hidden', width: wsize(10) },
 	itemHeader: { fontSize: wsize(5), fontWeight: 'bold', marginHorizontal: 10, textDecorationStyle: 'solid' },
 	itemActions: { flexDirection: 'row' },

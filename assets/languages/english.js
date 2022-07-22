@@ -104,12 +104,11 @@ const info = {
       seeOrders: "See Order(s)"
     },
     tableOrders: {
+      header: "There are no table order(s) yet",
       tableHeader: "Table #",
       seeBill: "See Bill",
       seeOrders: "See Orders",
-      showCode: "Show code",
-      deleteTable: "Delete Table",
-      addTable: "Add table"
+      showCode: "Show code"
     },
     bottomNavs: {
       changeInfo: "Change Info",
@@ -276,6 +275,22 @@ const info = {
         change: "Change time to",
         appointmentChanged: "Appointment changed",
         leaveNote: "Leave a note if you want"
+      }
+    }
+  },
+  tables: {
+    addTable: "Add table",
+    table: "Table #",
+    showBarcode: "Show Barcode",
+    hidden: {
+      add: {
+        tableNumber: "Enter table #:",
+      },
+      remove: {
+        header: "Remove Table #"
+      },
+      qr: {
+        header: "Table #"
       }
     }
   },

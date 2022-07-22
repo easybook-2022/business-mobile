@@ -14,6 +14,7 @@ import Register from './src/pages/register'
 import Forgotpassword from './src/pages/forgotpassword'
 import Resetpassword from './src/pages/resetpassword'
 import Picklanguage from './src/pages/picklanguage'
+import Tables from './src/pages/tables'
 import List from './src/pages/list'
 import Authoption from './src/pages/authoption'
 import Walkin from './src/pages/walkin'
@@ -90,6 +91,16 @@ export default function App() {
             })}/>
             <Stack.Screen name="picklanguage" component={Picklanguage} options={({ navigation, route }) => ({
               headerTitle: () => <Text style={styles.header}>Pick a language</Text>
+            })}/>
+            <Stack.Screen name="tables" component={Tables} options={({ navigation, route }) => ({
+              headerTitle: () => <Text style={styles.header}>Edit Table(s)</Text>,
+              headerLeft: () => (
+                Platform.OS == 'ios' && (
+                  <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>
+                    <Text style={styles.backHeader}>Go Back</Text>
+                  </TouchableOpacity>
+                )
+              )
             })}/>
             <Stack.Screen name="list" component={List} options={{ headerShown: false }}/>
             <Stack.Screen name="authoption" component={Authoption} options={{ headerShown: false }}/>

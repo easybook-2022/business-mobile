@@ -28,7 +28,7 @@ import {
   getOtherWorkers, getAccounts, getOwnerInfo, logoutUser, getWorkersTime, getAllWorkersTime, 
   getWorkersHour, setUseVoice
 } from '../apis/owners'
-import { getTables, getTableOrders, finishOrder, viewPayment, finishDining, getTable, addTable, removeTable } from '../apis/dining_tables'
+import { getTables, getTableOrders, finishOrder, viewPayment, finishDining, getTable, addTable, removeTable, getOrderingTables } from '../apis/dining_tables'
 import { getLocationProfile, getLocationHours, setLocationHours, updateInformation, updateAddress, updateLogo, setReceiveType, getDayHours } from '../apis/locations'
 import { getMenus, removeMenu, addNewMenu } from '../apis/menus'
 import { 
@@ -1013,7 +1013,7 @@ export default function Main(props) {
   const getAllTables = async() => {
     const locationid = await AsyncStorage.getItem("locationid")
 
-    getTables(locationid)
+    getOrderingTables(locationid)
       .then((res) => {
         if (res.status == 200) {
           return res.data
@@ -1051,6 +1051,7 @@ export default function Main(props) {
           switch (status) {
             case "noOrders":
               setAlertinfo({ ...alertInfo, show: true, text: tr.t("main.hidden.alert.noOrders") })
+
               break;
             default:
           }
@@ -1100,7 +1101,7 @@ export default function Main(props) {
           newPaymentinfo.subTotalcost = res.subTotalCost
           newPaymentinfo.totalCost = res.totalCost
 
-          setShoworders({ ...showOrders, show: true, orders: res.orders, paymentInfo: newPaymentinfo })
+          setShoworders({ ...showOrders, show: true, id, orders: res.orders, paymentInfo: newPaymentinfo })
         }
       })
       .catch((err) => {
@@ -1132,68 +1133,9 @@ export default function Main(props) {
       .then((res) => {
         if (res) {
           setShoworders({ ...showOrders, show: false, orders: [], paymentInfo: { show: false, subTotalcost: "", totalCost: "" }})
+          getAllTables()
         }
       })
-  }
-  const addATable = async() => {
-    if (!showAddtable.show) {
-      setShowaddtable({ ...showAddtable, show: true })
-    } else {
-      const locationid = await AsyncStorage.getItem("locationid")
-      const { table } = showAddtable
-
-      if (table) {
-        const data = { locationid, table, tableid: getId() }
-
-        addTable(data)
-          .then((res) => {
-            if (res.status == 200) {
-              return res.data
-            }
-          })
-          .then((res) => {
-            if (res) {
-              setShowaddtable({ ...showAddtable, show: false, table: "", errorMsg: "" })
-              getAllTables()
-            }
-          })
-          .catch((err) => {
-            if (err.response && err.response.status == 400) {
-              const { errormsg, status } = err.response.data
-
-              switch(status) {
-                case "exist":
-                  setShowaddtable({ ...showAddtable, errorMsg: "Table number already exist" })
-
-                  break;
-                default:
-              }
-            }
-          })
-      } else {
-        setShowaddtable({ ...showAddtable, errorMsg: "Please enter a number" })
-      }
-    }
-  }
-  const removeTheTable = (id, name) => {
-    if (!showRemovetable.show) {
-      setShowremovetable({ ...showRemovetable, show: true, table: { id, name } })
-    } else {
-      const { id } = showRemovetable.table
-
-      removeTable(id)
-        .then((res) => {
-          if (res.status == 200) {
-            return res.data
-          }
-        })
-        .then((res) => {
-          if (res) {
-            setShowremovetable({ ...showRemovetable, show: false, table: { id: -1, name: "" } })
-            getAllTables()
-          }
-        })
-    }
   }
   const showQrCode = async(id) => {
     const locationid = await AsyncStorage.getItem("locationid")
@@ -2813,10 +2755,10 @@ export default function Main(props) {
                   <Text style={styles.bodyResultHeader}>{tr.t("main.cartOrderers.header")}</Text>
                 </View>
             )}
-            
+
             {viewType == 'tableorders' && (
               <>
-                {tableOrders.length > 0 && ( 
+                {tableOrders.length > 0 ?  
                   <FlatList
                     data={tableOrders}
                     renderItem={({ item, index }) => 
@@ -2837,21 +2779,15 @@ export default function Main(props) {
                           <TouchableOpacity style={styles.tableOrderOption} onPress={() => showQrCode(item.tableid)}>
                             <Text style={styles.tableOrderOptionHeader}>{tr.t("main.tableOrders.showCode")}</Text> 
                           </TouchableOpacity>
-
-                          <TouchableOpacity style={styles.tableOrderOption} onPress={() => removeTheTable(item.key, item.name)}>
-                            <Text style={styles.tableOrderOptionHeader}>{tr.t("main.tableOrders.deleteTable")}</Text> 
-                          </TouchableOpacity>
                         </View>
                       </View>
                     }
                   />
-                )}
-
-                <View style={{ alignItems: 'center' }}>
-                  <TouchableOpacity style={styles.addTable} onPress={() => addATable()}>
-                    <Text style={styles.addTableHeader}>+ {tr.t("main.tableOrders.addTable")}</Text>
-                  </TouchableOpacity>
-                </View>
+                  :
+                  <View style={styles.bodyResult}>
+                    <Text style={styles.bodyResultHeader}>{tr.t("main.tableOrders.header")}</Text>
+                  </View>
+                }
               </>
             )}
   				</View>
@@ -3275,6 +3211,13 @@ export default function Main(props) {
                           setEditinfo({ ...editInfo, show: true, type: 'changelanguage' })
                         }}>
                           <Text style={styles.moreOptionTouchHeader}>{tr.t("main.hidden.showMoreoptions.changeLanguage")}</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity style={styles.moreOptionTouch} onPress={() => {
+                          setShowmoreoptions({ ...showMoreoptions, show: false })
+                          props.navigation.navigate("tables")
+                        }}>
+                          <Text style={styles.moreOptionTouchHeader}>{tr.t("main.hidden.showMoreoptions.editTables")}</Text>
                         </TouchableOpacity>
 
                         <View style={styles.optionsBox}>
@@ -4948,42 +4891,6 @@ export default function Main(props) {
                       </TouchableOpacity>
                     </>
                   }
-                </View>
-              </View>
-            )}
-            {showAddtable.show && (
-              <View style={styles.addTableBox}>
-                <View style={styles.addTableContainer}>
-                  <Text style={styles.addTableHeader}>{tr.t("main.hidden.tables.hidden.add.tableNumber")}</Text>
-
-                  <TextInput style={styles.addTableInput} keyboardType="numeric" onChangeText={name => setShowaddtable({ ...showAddtable, table: name })}/>
-
-                  <Text style={styles.errorMsg}>{showAddtable.errorMsg}</Text>
-
-                  <View style={styles.addTableActions}>
-                    <TouchableOpacity style={styles.addTableAction} onPress={() => setShowaddtable({ ...showAddtable, show: false, errorMsg: "" })}>
-                      <Text style={styles.addTableActionHeader}>{tr.t("buttons.cancel")}</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.addTableAction} onPress={() => addATable()}>
-                      <Text style={styles.addTableActionHeader}>{tr.t("buttons.done")}</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </View>
-            )}
-            {showRemovetable.show && (
-              <View style={styles.removeTableBox}>
-                <View style={styles.removeTableContainer}>
-                  <Text style={styles.removeTableHeader}>{tr.t("main.hidden.tables.hidden.remove.header")}{showRemovetable.table.name} ?</Text>
-
-                  <View style={styles.removeTableActions}>
-                    <TouchableOpacity style={styles.removeTableAction} onPress={() => setShowremovetable({ ...showRemovetable, show: false, table: '' })}>
-                      <Text style={styles.removeTableActionHeader}>{tr.t("buttons.no")}</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.removeTableAction} onPress={() => removeTheTable()}>
-                      <Text style={styles.removeTableActionHeader}>{tr.t("buttons.yes")}</Text>
-                    </TouchableOpacity>
-                  </View>
                 </View>
               </View>
             )}

@@ -7,6 +7,10 @@ export const getTables = id => {
   return axios.get(`${beginUrl}get_tables/${id}`)
 }
 
+export const getOrderingTables = id => {
+  return axios.get(`${beginUrl}/get_ordering_tables/${id}`)
+}
+
 export const getTable = id => {
   return axios.get(`${beginUrl}get_table/${id}`)
 }
