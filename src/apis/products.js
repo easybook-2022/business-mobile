@@ -16,8 +16,6 @@ export const addNewProduct = data => {
 	form.append("menuid", data.menuid)
 	form.append("name", data.name)
 	form.append("options", JSON.stringify(data.options))
-	form.append("others", JSON.stringify(data.others))
-	form.append("sizes", JSON.stringify(data.sizes))
 	form.append("price", data.price)
 
 	if (data.image.uri.includes("file")) {
@@ -41,8 +39,6 @@ export const updateProduct = data => {
 	form.append("productid", data.productid)
 	form.append("name", data.name)
 	form.append("options", JSON.stringify(data.options))
-	form.append("others", JSON.stringify(data.others))
-	form.append("sizes", JSON.stringify(data.sizes))
 	form.append("price", data.price)
 
 	if (data.image.uri.includes("file")) {

@@ -104,12 +104,11 @@ const info = {
       seeOrders: "查看订单"
     },
     tableOrders: {
+      header: "还没有餐桌订单",
       tableHeader: "桌子 #",
       seeBill: "见比尔",
       seeOrders: "查看订单",
       showCode: "显示代码",
-      deleteTable: "删除表",
-      addTable: "添加表"
     },
     bottomNavs: {
       changeInfo: "更改信息",
@@ -276,6 +275,22 @@ const info = {
         change: "将时间更改为",
         appointmentChanged: "预约已更改",
         leaveNote: "如果需要，请留言"
+      }
+    }
+  },
+  tables: {
+    addTable: "添加表",
+    table: "桌子 #",
+    showBarcode: "显示条码",
+    hidden: {
+      add: {
+        tableNumber: "输入表 #:",
+      },
+      remove: {
+        header: "删除表# #"
+      },
+      qr: {
+        header: "桌子 #"
       }
     }
   },

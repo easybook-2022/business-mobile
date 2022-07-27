@@ -407,7 +407,7 @@ export default function Addproduct(props) {
 								/>
 							</View>
 						)}
-
+            
 						{setupType == "photo" && (
 							<View style={styles.cameraContainer}>
 								<Text style={styles.cameraHeader}>{tr.t("addproduct.photo")}</Text>

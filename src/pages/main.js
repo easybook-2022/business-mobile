@@ -133,7 +133,7 @@ export default function Main(props) {
   const [workersHoursinfo, setWorkershoursinfo] = useState({})
 
   const [getWorkersbox, setGetworkersbox] = useState({ show: false, day: '', workers: [] })
-  const [showOrders, setShoworders] = useState({ show: false, id: -1, orders: [], paymentInfo: { show: false, subTotalcost: "", totalCost: "" }})
+  const [showOrders, setShoworders] = useState({ show: false, tableId: "", id: -1, orders: [], paymentInfo: { show: false, subTotalcost: "", totalCost: "" }})
 
 	const getNotificationPermission = async() => {
 		const ownerid = await AsyncStorage.getItem("ownerid")
@@ -1041,7 +1041,7 @@ export default function Main(props) {
       })
       .then((res) => {
         if (res) {
-          setShoworders({ ...showOrders, show: true, id, orders: res.orders, paymentInfo: { show: false, subTotalcost: "", totalCost: "" }})
+          setShoworders({ ...showOrders, show: true, tableId: res.name, id, orders: res.orders, paymentInfo: { show: false, subTotalcost: "", totalCost: "" }})
         }
       })
       .catch((err) => {
@@ -4819,28 +4819,37 @@ export default function Main(props) {
                 <View style={styles.ordersContainer}>
                   <TouchableOpacity style={styles.ordersClose} onPress={() => setShoworders({ ...showOrders, show: false })}><AntDesign name="closecircleo" size={30}/></TouchableOpacity>
 
+                  <Text style={styles.ordersHeader}>Table #{showOrders.tableId}</Text>
+
                   {!showOrders.paymentInfo.show ? 
                     <FlatList
                       style={{ width: '100%' }}
                       data={showOrders.orders}
                       renderItem={({ item, index }) => 
                         <View style={styles.ordersItem}>
-                          <View style={styles.itemImage}>
-                            <Image 
-                              style={resizePhoto(item.image, wsize(20))} 
-                              source={item.image.name ? { uri: logo_url + item.image.name } : require("../../assets/noimage.jpeg")}
-                            />
-                          </View>
+                          {item.image.name && (
+                            <View style={styles.itemImage}>
+                              <Image 
+                                style={resizePhoto(item.image, wsize(20))} 
+                                source={{ uri: logo_url + item.image.name }}
+                              />
+                            </View>
+                          )}
 
                           <View style={styles.ordersItemInfo}>
-                            <Text style={styles.ordersItemInfoHeader}>{item.name}</Text>
-                            <Text style={styles.ordersItemInfoHeader}>${item.cost} {item.quantity > 1 && "(" + item.quantity + ")"}</Text>
-
+                            <Text style={[styles.ordersItemInfoHeader, { marginBottom: 20 }]}>{item.name}</Text>
+                            
                             {item.sizes.length > 0 && (
-                              item.sizes.map(size => (
-                                size["selected"] && <Text key={size.key} style={styles.ordersItemInfoHeader}>Size: {size["name"]}</Text>
-                              ))
+                              item.sizes.map(size => <Text key={size.key} style={styles.ordersItemInfoHeader}>{size["name"]} {"(" + item.quantity + ")"}</Text>)
                             )}
+                            {item.quantities.length > 0 && (
+                              item.quantities.map(quantity => <Text key={quantity.key} style={styles.ordersItemInfoHeader}>{quantity["input"]} {"(" + item.quantity + ")"}</Text>)
+                            )}
+                            {item.percents.length > 0 && (
+                              item.percents.map(percent => <Text key={percent.key} style={styles.ordersItemInfoHeader}>{percent["input"]}</Text>)
+                            )}
+
+                            <Text style={styles.ordersItemInfoHeader}>${item.cost}</Text>
                           </View>
 
                           <View style={styles.column}>
@@ -4860,21 +4869,42 @@ export default function Main(props) {
                         data={showOrders.orders}
                         renderItem={({ item, index }) => 
                           <View style={styles.ordersItem}>
-                            <View style={styles.itemImage}>
-                              <Image 
-                                style={resizePhoto(item.image, wsize(20))} 
-                                source={item.image.name ? { uri: logo_url + item.image.name } : require("../../assets/noimage.jpeg")}
-                              />
-                            </View>
+                            {item.image.name && (
+                              <View style={styles.itemImage}>
+                                <Image 
+                                  style={resizePhoto(item.image, wsize(20))} 
+                                  source={{ uri: logo_url + item.image.name }}
+                                />
+                              </View>
+                            )}
 
                             <View style={styles.ordersItemInfo}>
                               <Text style={styles.ordersItemInfoHeader}>{item.name}</Text>
                               <Text style={styles.ordersItemInfoHeader}>${item.cost} {item.quantity > 1 && "(" + item.quantity + ")"}</Text>
 
-                              {item.sizes.length > 0 && (
-                                item.sizes.map(size => (
-                                  size["selected"] && <Text key={size.key} style={styles.ordersItemInfoHeader}>Size: {size["name"]}</Text>
-                                ))
+                              {item.sizes.length > 0 && item.sizes.map(size => 
+                                <Text 
+                                  key={size.key} 
+                                  style={styles.ordersItemInfoHeader}
+                                >
+                                  Size: {size["name"]}
+                                </Text>
+                              )}
+                              {item.quantities.length > 0 && item.quantities.map(quantity => 
+                                <Text 
+                                  key={quantity.key} 
+                                  style={styles.ordersItemInfoHeader}
+                                >
+                                  {quantity["input"]}
+                                </Text>
+                              )}
+                              {item.percents.length > 0 && item.percents.map(percent => 
+                                <Text 
+                                  key={percent.key} 
+                                  style={styles.ordersItemInfoHeader}
+                                >
+                                  {percent["input"]}
+                                </Text>
                               )}
                             </View>
                           </View>
@@ -4917,6 +4947,21 @@ export default function Main(props) {
 }
 
 const styles = StyleSheet.create({
+  ordersBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
+  ordersContainer: { alignItems: 'center', backgroundColor: 'white', height: '90%', width: '90%' },
+  ordersClose: { marginVertical: 20 },
+  ordersHeader: { fontSize: wsize(6), fontWeight: 'bold', marginVertical: 20, textAlign: 'center' },
+  ordersItem: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, flexDirection: 'row', justifyContent: 'space-between', margin: '5%', padding: 10, width: '90%' },
+  ordersItemInfo: { width: '80%' },
+  ordersItemInfoHeader: { fontSize: wsize(4), fontWeight: 'bold' },
+  ordersItemDone: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, padding: 3, width: '100%' },
+  ordersItemDoneHeader: { textAlign: 'center' },
+  paymentHeader: { fontSize: wsize(6), fontWeight: 'bold' },
+  paymentInfos: {  },
+  paymentInfo: { fontSize: wsize(7), textAlign: 'center' },
+  paymentFinish: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 20, padding: 5 },
+  paymentFinishHeader: { fontSize: wsize(5), textAlign: 'center' },
+
 	main: { backgroundColor: 'white', height: '100%', width: '100%' },
 	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 
@@ -5125,19 +5170,12 @@ const styles = StyleSheet.create({
   alertContainer: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '30%', justifyContent: 'space-around', width: '100%' },
   alertHeader: { color: 'red', fontSize: wsize(6), fontWeight: 'bold', paddingHorizontal: 10 },
 
-  ordersBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
-  ordersContainer: { alignItems: 'center', backgroundColor: 'white', height: '90%', width: '90%' },
-  ordersClose: { marginVertical: 20 },
-  ordersHeader: { fontSize: wsize(6), marginVertical: 20, textAlign: 'center' },
-  ordersItem: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, flexDirection: 'row', justifyContent: 'space-between', margin: '5%', padding: 10, width: '90%' },
-  ordersItemInfoHeader: { fontSize: wsize(4), fontWeight: 'bold' },
-  ordersItemDone: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, padding: 3 },
-  ordersItemDoneHeader: { textAlign: 'center' },
-  paymentHeader: { fontSize: wsize(6), fontWeight: 'bold' },
-  paymentInfos: {  },
-  paymentInfo: { fontSize: wsize(7), textAlign: 'center' },
-  paymentFinish: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 20, padding: 10 },
-  paymentFinishHeader: { fontSize: wsize(5), textAlign: 'center' },
+  
+
+
+
+
+
 
   addTableBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
   addTableContainer: { alignItems: 'center', backgroundColor: 'white', height: '70%', width: '70%' },

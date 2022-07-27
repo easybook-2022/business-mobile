@@ -77,8 +77,8 @@ const info = {
     navs: {
       myAppointments: "Cuộc hẹn\ncủa tôi",
       allAppointments: "Tất cả các\ncuộc hẹn",
-      cartOrderers: "Người đặt hàng xe",
-      tableOrders: "(Các) Thứ tự Bảng"
+      cartOrderers: "Đơn hàng",
+      tableOrders: "Đơn hàng bảng"
     },
     list: {
       header: "Bạn sẽ thấy các cuộc hẹn của mình ở đây",
@@ -104,12 +104,11 @@ const info = {
       seeOrders: "Xem đơn đặt hàng"
     },
     tableOrders: {
+      header: "Không có (các) thứ tự bảng nào được nêu ra",
       tableHeader: "Bàn #",
       seeBill: "Xem hóa đơn",
       seeOrders: "Xem Đơn hàng",
-      showCode: "Hiển thị mã",
-      deleteTable: "Xóa bảng",
-      addTable: "Thêm bảng"
+      showCode: "Hiển thị mã"
     },
     bottomNavs: {
       changeInfo: "Thay đổi\nthông tin",
@@ -276,6 +275,22 @@ const info = {
         change: "Thay đổi thời gian",
         appointmentChanged: "Cuộc hẹn đã thay đổi",
         leaveNote: "Để lại ghi chú nếu bạn muốn"
+      }
+    }
+  },
+  tables: {
+    addTable: "Thêm bảng",
+    table: "Bàn #",
+    showBarcode: "Chương trình mã vạch",
+    hidden: {
+      add: {
+        tableNumber: "Nhập bảng #:",
+      },
+      remove: {
+        header: "Xóa bảng #"
+      },
+      qr: {
+        header: "Bàn #"
       }
     }
   },

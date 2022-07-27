@@ -156,7 +156,6 @@ export default function Tables() {
                   <AntDesign name="close" size={wsize(10)}/>
                 </TouchableOpacity>
               </View>
-                
             </View>
           }
         />

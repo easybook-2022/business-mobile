@@ -77,7 +77,7 @@ const info = {
     navs: {
       myAppointments: "My\nAppointments(s)",
       allAppointments: "All\nAppointments(s)",
-      cartOrderers: "Cart orderer(s)",
+      cartOrderers: "Cart Orderer(s)",
       tableOrders: "Table Order(s)"
     },
     list: {
@@ -368,13 +368,11 @@ const info = {
     },
     name: "Enter meal name",
     photo: "Take meal picture (Optional)",
-    options: {
-      addamount: "Add % or amount option",
-      addoption: "Add Specific Option"
-    },
     price: {
       size: "Enter one price",
-      sizes: "Add a size",
+      sizes: "Add size",
+      quantity: "Add quantity",
+      percent: "Add %"
     }
   },
 

@@ -104,12 +104,11 @@ const info = {
       seeOrders: "Voir les commandes"
     },
     tableOrders: {
+      header: "Il n'y a pas encore de commande(s) de table",
       tableHeader: "Table #",
       seeBill: "Voir facture",
       seeOrders: "Voir les commandes",
-      showCode: "Afficher le code",
-      deleteTable: "Supprimer le tableau",
-      addTable: "Ajouter un tableau",
+      showCode: "Afficher le code"
     },
     bottomNavs: {
       changeInfo: "Modifier les\ninformations",
@@ -276,6 +275,22 @@ const info = {
         change: "Changer l'heure pour",
         appointmentChanged: "Rendez-vous modifié",
         leaveNote: "Laissez une note si vous voulez"
+      }
+    }
+  },
+  tables: {
+    addTable: "Ajouter un tableau",
+    table: "Tableau #",
+    showBarcode: "Afficher le code barre",
+    hidden: {
+      add: {
+        tableNumber: "Entrer le tableau #:",
+      },
+      remove: {
+        header: "Supprimer le tableau #"
+      },
+      qr: {
+        header: "Tableau #"
       }
     }
   },
