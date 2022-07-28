@@ -209,7 +209,7 @@ export default function Tables() {
                     <AntDesign name="close" size={wsize(10)}/>
                   </TouchableOpacity>
 
-                  <View style={{ alignItems: 'center', marginVertical: '50%' }}>
+                  <View style={{ alignItems: 'center' }}>
                     <Text style={styles.qrHeader}>{tr.t("tables.hidden.qr.header")}{showQr.table}</Text>
 
                     <QRCode size={wsize(80)} value={showQr.codeText}/>
@@ -255,8 +255,8 @@ const styles = StyleSheet.create({
 
   // show qr barcode
   qrBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
-  qrContainer: { alignItems: 'center', backgroundColor: 'white', height: '100%', width: '100%' },
-  qrHeader: { fontSize: wsize(6), fontWeight: 'bold', marginBottom: 50, textAlign: 'center' },
+  qrContainer: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
+  qrHeader: { fontSize: wsize(6), fontWeight: 'bold', textAlign: 'center' },
 
   column: { flexDirection: 'column', justifyContent: 'space-around' },
   errorMsg: { color: 'darkred', fontWeight: 'bold', marginVertical: 20 },

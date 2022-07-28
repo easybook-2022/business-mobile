@@ -56,7 +56,7 @@ export default function Locationsetup({ navigation }) {
 	const [storeName, setStorename] = useState(registerLocationInfo.storeName)
 	const [phonenumber, setPhonenumber] = useState(registerLocationInfo.phonenumber)
 
-	const [type, setType] = useState('restaurant')
+	const [type, setType] = useState('hair')
 
 	const [logo, setLogo] = useState({ uri: '', name: '', size: { width: 0, height: 0 }})
 

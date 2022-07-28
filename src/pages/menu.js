@@ -164,57 +164,62 @@ export default function Menu(props) {
                 </TouchableOpacity>
               </View>
             )}
-            {info.sizes.length > 0 ? 
-              info.sizes.length > 2 ? 
-                <View style={styles.itemOptionBox}>
-                  <Text style={{ fontSize: wsize(4.5) }}><Text style={{ fontWeight: 'bold' }}>{info.sizes[0].name}</Text>: $ {info.sizes[0].price}</Text>
-                  <Text style={{ fontSize: wsize(4.5) }}><Text style={{ fontWeight: 'bold' }}>{info.sizes[1].name}</Text>: $ {info.sizes[1].price}</Text>
-                  <Text style={{ fontSize: wsize(4.5) }}><Text style={{ fontWeight: 'bold' }}>{info.sizes[2].name}</Text>: $ {info.sizes[2].price}</Text>
-                  
-                  {info.sizes.length == 4 && <Text style={{ fontSize: wsize(4.5) }}><Text style={{ fontWeight: 'bold' }}>{info.sizes[3].name}</Text>: $ {info.sizes[3].price}</Text>}
 
-                  <Text style={{ fontWeight: 'bold' }}>({info.sizes.length}) sizes</Text>
-                </View>
-                :
-                <View style={styles.itemOptionBox}>
-                  {info.sizes.map((size, index) => <Text key={"size-" + index} style={{ fontSize: wsize(4.5) }}><Text style={{ fontWeight: 'bold' }}>{size.name}</Text>$ {size.price}</Text>)}
+            {locationType == "restaurant" && (
+              <>
+                {info.sizes.length > 0 ? 
+                  info.sizes.length > 2 ? 
+                    <View style={styles.itemOptionBox}>
+                      <Text style={{ fontSize: wsize(4.5) }}><Text style={{ fontWeight: 'bold' }}>{info.sizes[0].name}</Text>: $ {info.sizes[0].price}</Text>
+                      <Text style={{ fontSize: wsize(4.5) }}><Text style={{ fontWeight: 'bold' }}>{info.sizes[1].name}</Text>: $ {info.sizes[1].price}</Text>
+                      <Text style={{ fontSize: wsize(4.5) }}><Text style={{ fontWeight: 'bold' }}>{info.sizes[2].name}</Text>: $ {info.sizes[2].price}</Text>
+                      
+                      {info.sizes.length == 4 && <Text style={{ fontSize: wsize(4.5) }}><Text style={{ fontWeight: 'bold' }}>{info.sizes[3].name}</Text>: $ {info.sizes[3].price}</Text>}
 
-                  <Text style={{ fontWeight: 'bold' }}>({info.sizes.length}) sizes</Text>
-                </View>
-              :
-              info.price && <View style={styles.column}><Text style={styles.itemHeader}>$ {info.price} (1 size)</Text></View>
-            }
-            {info.quantities.length > 0 && (
-              info.quantities.length > 2 ? 
-                <View style={styles.itemOptionBox}>
-                  <Text style={{ fontSize: wsize(4.5) }}><Text style={{ fontWeight: 'bold' }}>{info.quantities[0].name}</Text>: $ {info.quantities[0].price}</Text>
-                  <Text style={{ fontSize: wsize(4.5) }}><Text style={{ fontWeight: 'bold' }}>{info.quantities[1].name}</Text>: $ {info.quantities[1].price}</Text>
-                  <Text style={{ fontSize: wsize(4.5) }}><Text style={{ fontWeight: 'bold' }}>{info.quantities[2].name}</Text>: $ {info.quantities[2].price}</Text>
-                  
-                  {info.quantities.length == 4 && <Text style={{ fontSize: wsize(4.5) }}><Text style={{ fontWeight: 'bold' }}>{info.quantities[3].name}</Text>: $ {info.quantities[3].price}</Text>}
+                      <Text style={{ fontWeight: 'bold' }}>({info.sizes.length}) sizes</Text>
+                    </View>
+                    :
+                    <View style={styles.itemOptionBox}>
+                      {info.sizes.map((size, index) => <Text key={"size-" + index} style={{ fontSize: wsize(4.5) }}><Text style={{ fontWeight: 'bold' }}>{size.name}</Text>$ {size.price}</Text>)}
 
-                  <Text style={{ fontWeight: 'bold' }}>({info.quantities.length}) sizes</Text>
-                </View>
-                :
-                <View style={styles.itemOptionBox}>
-                  {info.quantities.map((quantity, index) => <Text key={"quantity-" + index} style={{ fontSize: wsize(4.5) }}><Text style={{ fontWeight: 'bold' }}>{quantity.input}</Text> $ {quantity.price}</Text>)}
+                      <Text style={{ fontWeight: 'bold' }}>({info.sizes.length}) sizes</Text>
+                    </View>
+                  :
+                  info.price && <View style={styles.column}><Text style={styles.itemHeader}>$ {info.price} (1 size)</Text></View>
+                }
+                {info.quantities.length > 0 && (
+                  info.quantities.length > 2 ? 
+                    <View style={styles.itemOptionBox}>
+                      <Text style={{ fontSize: wsize(4.5) }}><Text style={{ fontWeight: 'bold' }}>{info.quantities[0].name}</Text>: $ {info.quantities[0].price}</Text>
+                      <Text style={{ fontSize: wsize(4.5) }}><Text style={{ fontWeight: 'bold' }}>{info.quantities[1].name}</Text>: $ {info.quantities[1].price}</Text>
+                      <Text style={{ fontSize: wsize(4.5) }}><Text style={{ fontWeight: 'bold' }}>{info.quantities[2].name}</Text>: $ {info.quantities[2].price}</Text>
+                      
+                      {info.quantities.length == 4 && <Text style={{ fontSize: wsize(4.5) }}><Text style={{ fontWeight: 'bold' }}>{info.quantities[3].name}</Text>: $ {info.quantities[3].price}</Text>}
 
-                  <Text style={{ fontWeight: 'bold' }}>({info.quantities.length}) quantities</Text>
-                </View>
-            )}
-            {info.percents.length > 0 && (
-              info.percents.length > 2 ? 
-                <View style={styles.itemOptionBox}>
-                  <Text style={{ fontSize: wsize(4.5) }}><Text style={{ fontWeight: 'bold' }}>{info.percents[0].input}</Text>: $ {info.percents[0].price}</Text>
-                  <Text style={{ fontSize: wsize(4.5) }}><Text style={{ fontWeight: 'bold' }}>{info.percents[1].input}</Text>: $ {info.percents[1].price}</Text>
-                  <Text style={{ fontSize: wsize(4.5) }}><Text style={{ fontWeight: 'bold' }}>{info.percents[2].input}</Text>: $ {info.percents[2].price}</Text>
-                </View>
-                :
-                <View style={styles.itemOptionBox}>
-                  {info.percents.map((percent, index) => <Text key={"percent-" + index} style={{ fontSize: wsize(4.5) }}><Text style={{ fontWeight: 'bold' }}>{percent.input}</Text> $ {percent.price}</Text>)}
+                      <Text style={{ fontWeight: 'bold' }}>({info.quantities.length}) sizes</Text>
+                    </View>
+                    :
+                    <View style={styles.itemOptionBox}>
+                      {info.quantities.map((quantity, index) => <Text key={"quantity-" + index} style={{ fontSize: wsize(4.5) }}><Text style={{ fontWeight: 'bold' }}>{quantity.input}</Text> $ {quantity.price}</Text>)}
 
-                  <Text style={{ fontWeight: 'bold' }}>({info.percents.length}) percents</Text>
-                </View>
+                      <Text style={{ fontWeight: 'bold' }}>({info.quantities.length}) quantities</Text>
+                    </View>
+                )}
+                {info.percents.length > 0 && (
+                  info.percents.length > 2 ? 
+                    <View style={styles.itemOptionBox}>
+                      <Text style={{ fontSize: wsize(4.5) }}><Text style={{ fontWeight: 'bold' }}>{info.percents[0].input}</Text>: $ {info.percents[0].price}</Text>
+                      <Text style={{ fontSize: wsize(4.5) }}><Text style={{ fontWeight: 'bold' }}>{info.percents[1].input}</Text>: $ {info.percents[1].price}</Text>
+                      <Text style={{ fontSize: wsize(4.5) }}><Text style={{ fontWeight: 'bold' }}>{info.percents[2].input}</Text>: $ {info.percents[2].price}</Text>
+                    </View>
+                    :
+                    <View style={styles.itemOptionBox}>
+                      {info.percents.map((percent, index) => <Text key={"percent-" + index} style={{ fontSize: wsize(4.5) }}><Text style={{ fontWeight: 'bold' }}>{percent.input}</Text> $ {percent.price}</Text>)}
+
+                      <Text style={{ fontWeight: 'bold' }}>({info.percents.length}) percents</Text>
+                    </View>
+                )}
+              </>
             )}
           </View>
         </View>
@@ -261,7 +266,9 @@ export default function Menu(props) {
 
                     const toggleMenu = (list, parentId) => {
                       list.forEach(function (item) {
-                        item.show = false
+                        if (item.parentId == parentId) {
+                          item.show = false
+                        }
 
                         if (item.id == id) {
                           item.show = show ? false : true
@@ -735,7 +742,7 @@ export default function Menu(props) {
               )}
 
               {isOwner == true && (
-                <View style={{ alignItems: 'center', flexDirection: 'row', justifyContent: 'space-around' }}>
+                <View style={{ alignItems: 'center' }}>
                   <TouchableOpacity style={[styles.menuStart, { marginVertical: 10 }]} onPress={() => {
                     props.navigation.setParams({ refetch: true })
                     props.navigation.navigate(

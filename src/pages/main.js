@@ -1101,7 +1101,7 @@ export default function Main(props) {
           newPaymentinfo.subTotalcost = res.subTotalCost
           newPaymentinfo.totalCost = res.totalCost
 
-          setShoworders({ ...showOrders, show: true, id, orders: res.orders, paymentInfo: newPaymentinfo })
+          setShoworders({ ...showOrders, show: true, tableId: res.name, id, orders: res.orders, paymentInfo: newPaymentinfo })
         }
       })
       .catch((err) => {
@@ -1337,7 +1337,11 @@ export default function Main(props) {
 
       speakToWorker(data)
     })
-    socket.on("updateTableOrders", () => getAllTables())
+    socket.on("updateTableOrders", () => {
+      getAllTables()
+
+      if (showOrders.id > -1) getTheTableOrders(showOrders.id)
+    })
 		socket.io.on("open", () => {
 			if (ownerId != null) {
 				socket.emit("socket/business/login", ownerId, () => setShowdisabledscreen(false))
@@ -4817,7 +4821,7 @@ export default function Main(props) {
             {showOrders.show && (
               <View style={styles.ordersBox}>
                 <View style={styles.ordersContainer}>
-                  <TouchableOpacity style={styles.ordersClose} onPress={() => setShoworders({ ...showOrders, show: false })}><AntDesign name="closecircleo" size={30}/></TouchableOpacity>
+                  <TouchableOpacity style={styles.ordersClose} onPress={() => setShoworders({ ...showOrders, show: false })}><AntDesign name="closecircleo" size={wsize(10)}/></TouchableOpacity>
 
                   <Text style={styles.ordersHeader}>Table #{showOrders.tableId}</Text>
 
@@ -4837,22 +4841,38 @@ export default function Main(props) {
                           )}
 
                           <View style={styles.ordersItemInfo}>
-                            <Text style={[styles.ordersItemInfoHeader, { marginBottom: 20 }]}>{item.name}</Text>
+                            <Text style={styles.ordersItemInfoHeader}>{item.name}</Text>
+                            {item.note ? <Text style={[styles.ordersItemInfoHeader, { fontWeight: '500', marginBottom: 20 }]}>Customer's note: {item.note}</Text> : null}
                             
-                            {item.sizes.length > 0 && (
-                              item.sizes.map(size => <Text key={size.key} style={styles.ordersItemInfoHeader}>{size["name"]} {"(" + item.quantity + ")"}</Text>)
+                            {item.sizes.length > 0 && item.sizes.map(size => 
+                              <Text 
+                                key={size.key} 
+                                style={styles.ordersItemInfoHeader}
+                              >
+                                {size["name"]} {"(" + item.quantity + ")"}
+                              </Text>
                             )}
-                            {item.quantities.length > 0 && (
-                              item.quantities.map(quantity => <Text key={quantity.key} style={styles.ordersItemInfoHeader}>{quantity["input"]} {"(" + item.quantity + ")"}</Text>)
+                            {item.quantities.length > 0 && item.quantities.map(quantity => 
+                              <Text 
+                                key={quantity.key} 
+                                style={styles.ordersItemInfoHeader}
+                              >
+                                {quantity["input"]} {"(" + item.quantity + ")"}
+                              </Text>
                             )}
-                            {item.percents.length > 0 && (
-                              item.percents.map(percent => <Text key={percent.key} style={styles.ordersItemInfoHeader}>{percent["input"]}</Text>)
+                            {item.percents.length > 0 && item.percents.map(percent => 
+                              <Text 
+                                key={percent.key} 
+                                style={styles.ordersItemInfoHeader}
+                              >
+                                {percent["input"]}
+                              </Text>
                             )}
 
                             <Text style={styles.ordersItemInfoHeader}>${item.cost}</Text>
                           </View>
 
-                          <View style={styles.column}>
+                          <View style={[styles.column, { width: '25%' }]}>
                             <TouchableOpacity style={styles.ordersItemDone} onPress={() => finishTheOrder(item.key)}>
                               <Text style={styles.ordersItemDoneHeader}>{tr.t("buttons.done")}</Text>
                             </TouchableOpacity>
@@ -4879,15 +4899,14 @@ export default function Main(props) {
                             )}
 
                             <View style={styles.ordersItemInfo}>
-                              <Text style={styles.ordersItemInfoHeader}>{item.name}</Text>
-                              <Text style={styles.ordersItemInfoHeader}>${item.cost} {item.quantity > 1 && "(" + item.quantity + ")"}</Text>
+                              <Text style={[styles.ordersItemInfoHeader, { marginBottom: 20 }]}>{item.name}</Text>
 
                               {item.sizes.length > 0 && item.sizes.map(size => 
                                 <Text 
                                   key={size.key} 
                                   style={styles.ordersItemInfoHeader}
                                 >
-                                  Size: {size["name"]}
+                                  {size["name"]} {"(" + item.quantity + ")"}
                                 </Text>
                               )}
                               {item.quantities.length > 0 && item.quantities.map(quantity => 
@@ -4895,7 +4914,7 @@ export default function Main(props) {
                                   key={quantity.key} 
                                   style={styles.ordersItemInfoHeader}
                                 >
-                                  {quantity["input"]}
+                                  {quantity["input"]} {"(" + item.quantity + ")"}
                                 </Text>
                               )}
                               {item.percents.length > 0 && item.percents.map(percent => 
@@ -4906,6 +4925,8 @@ export default function Main(props) {
                                   {percent["input"]}
                                 </Text>
                               )}
+
+                              <Text style={styles.ordersItemInfoHeader}>${item.cost}</Text>
                             </View>
                           </View>
                         }
@@ -4931,7 +4952,7 @@ export default function Main(props) {
                     <AntDesign name="close" size={wsize(10)}/>
                   </TouchableOpacity>
 
-                  <View style={{ alignItems: 'center', marginVertical: '50%' }}>
+                  <View style={{ alignItems: 'center' }}>
                     <Text style={styles.qrHeader}>{tr.t("main.hidden.tables.hidden.qr.header")}{showQr.table}</Text>
 
                     <QRCode size={wsize(80)} value={showQr.codeText}/>
@@ -4947,21 +4968,6 @@ export default function Main(props) {
 }
 
 const styles = StyleSheet.create({
-  ordersBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
-  ordersContainer: { alignItems: 'center', backgroundColor: 'white', height: '90%', width: '90%' },
-  ordersClose: { marginVertical: 20 },
-  ordersHeader: { fontSize: wsize(6), fontWeight: 'bold', marginVertical: 20, textAlign: 'center' },
-  ordersItem: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, flexDirection: 'row', justifyContent: 'space-between', margin: '5%', padding: 10, width: '90%' },
-  ordersItemInfo: { width: '80%' },
-  ordersItemInfoHeader: { fontSize: wsize(4), fontWeight: 'bold' },
-  ordersItemDone: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, padding: 3, width: '100%' },
-  ordersItemDoneHeader: { textAlign: 'center' },
-  paymentHeader: { fontSize: wsize(6), fontWeight: 'bold' },
-  paymentInfos: {  },
-  paymentInfo: { fontSize: wsize(7), textAlign: 'center' },
-  paymentFinish: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 20, padding: 5 },
-  paymentFinishHeader: { fontSize: wsize(5), textAlign: 'center' },
-
 	main: { backgroundColor: 'white', height: '100%', width: '100%' },
 	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 
@@ -5170,12 +5176,25 @@ const styles = StyleSheet.create({
   alertContainer: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '30%', justifyContent: 'space-around', width: '100%' },
   alertHeader: { color: 'red', fontSize: wsize(6), fontWeight: 'bold', paddingHorizontal: 10 },
 
-  
+  ordersBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
+  ordersContainer: { alignItems: 'center', backgroundColor: 'white', height: '95%', width: '95%' },
+  ordersClose: { marginVertical: 20 },
+  ordersHeader: { fontSize: wsize(6), fontWeight: 'bold', marginVertical: 5, textAlign: 'center' },
+  ordersItem: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, flexDirection: 'row', justifyContent: 'space-between', margin: '2%', padding: 5 },
+  itemImage: { width: '25%' },
 
+  ordersItemInfo: { width: '50%' },
+  ordersItemInfoHeader: { fontSize: wsize(5), fontWeight: 'bold' },
 
+  ordersItemDone: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, padding: 3, width: '100%' },
+  ordersItemDoneHeader: { fontSize: wsize(6), textAlign: 'center' },
 
+  paymentHeader: { fontSize: wsize(6), fontWeight: 'bold' },
+  paymentInfos: {  },
+  paymentInfo: { fontSize: wsize(5), textAlign: 'center' },
 
-
+  paymentFinish: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 20, padding: 5 },
+  paymentFinishHeader: { fontSize: wsize(5), textAlign: 'center' },
 
   addTableBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
   addTableContainer: { alignItems: 'center', backgroundColor: 'white', height: '70%', width: '70%' },
@@ -5193,8 +5212,8 @@ const styles = StyleSheet.create({
   removeTableActionHeader: { fontSize: wsize(6), textAlign: 'center' },
 
   qrBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
-  qrContainer: { alignItems: 'center', backgroundColor: 'white', height: '100%', width: '100%' },
-  qrHeader: { fontSize: wsize(6), fontWeight: 'bold', marginBottom: 50, textAlign: 'center' },
+  qrContainer: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
+  qrHeader: { fontSize: wsize(6), fontWeight: 'bold', textAlign: 'center' },
 
   loading: { alignItems: 'center', flexDirection: 'column', height: '90%', justifyContent: 'space-around', width: '100%' },
   row: { flexDirection: 'row', justifyContent: 'space-around' },
