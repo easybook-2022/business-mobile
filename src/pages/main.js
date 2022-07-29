@@ -2492,13 +2492,10 @@ export default function Main(props) {
                 </View>
                 :
                 <View style={styles.viewTypes}>
-                  <TouchableOpacity style={[styles.viewType, { width: '30%' }]} onPress={() => getAllCartOrderers()}>
+                  <TouchableOpacity style={styles.viewType} onPress={() => getAllCartOrderers()}>
                     <Text style={styles.viewTypeHeader}>{tr.t("main.navs.cartOrderers")}</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={[styles.viewType, { width: '30%' }]} onPress={() => getTableBills()}>
-                    <Text style={styles.viewTypeHeader}>{tr.t("main.navs.tableBills")}</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={[styles.viewType, { width: '30%' }]} onPress={() => getAllTables()}>
+                  <TouchableOpacity style={styles.viewType} onPress={() => getAllTables()}>
                     <Text style={styles.viewTypeHeader}>{tr.t("main.navs.tableOrders")}</Text>
                   </TouchableOpacity>
                 </View>

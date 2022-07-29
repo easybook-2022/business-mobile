@@ -78,6 +78,7 @@ const info = {
       myAppointments: "我的约会",
       allAppointments: "所有约会",
       cartOrderers: "购物车订购者",
+      tableBills: "表账单",
       tableOrders: "表顺序"
     },
     list: {

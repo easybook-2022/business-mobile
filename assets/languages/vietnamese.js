@@ -78,6 +78,7 @@ const info = {
       myAppointments: "Cuộc hẹn\ncủa tôi",
       allAppointments: "Tất cả các\ncuộc hẹn",
       cartOrderers: "Đơn hàng",
+      tableBills: "Bảng hóa đơn",
       tableOrders: "Đơn hàng bảng"
     },
     list: {
