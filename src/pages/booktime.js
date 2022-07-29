@@ -620,13 +620,6 @@ export default function Booktime(props) {
   return (
     <SafeAreaView style={styles.booktime}>
       <View style={styles.box}>
-        <View style={styles.header}>
-          <Text style={styles.serviceHeader}>
-            <Text style={{ fontSize: wsize(5) }}>for </Text>
-            {name ? name : serviceinfo}
-          </Text>
-        </View>
-
         {loaded ? 
           <>
             {step == 0 && (
@@ -679,7 +672,7 @@ export default function Booktime(props) {
                     </View>
                     <View style={styles.days}>
                       <View style={styles.daysHeaderRow}>
-                        {days.map((day, index) => <Text key={"day-header-" + index} style={styles.daysHeader}>{tr.t("days." + day)}</Text>)}
+                        {days.map((day, index) => <Text key={"day-header-" + index} style={styles.daysHeader}>{tr.t("days." + day).substr(0, 3)}</Text>)}
                       </View>
                       {calendar.data.map((info, rowindex) => (
                         <View key={info.key} style={styles.daysDataRow}>
@@ -892,9 +885,6 @@ export default function Booktime(props) {
 const styles = StyleSheet.create({
   booktime: { backgroundColor: 'white', height: '100%', width: '100%' },
   box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
-
-  headers: { height: '10%' },
-  serviceHeader: { fontSize: wsize(8), fontWeight: 'bold', paddingVertical: 10, textAlign: 'center' },
 
   workerSelection: { alignItems: 'center', marginTop: 20 },
   workerSelectionHeader: { fontSize: wsize(8), fontWeight: 'bold', textAlign: 'center' },

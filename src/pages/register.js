@@ -922,7 +922,7 @@ const styles = StyleSheet.create({
 	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(10), paddingHorizontal: 5, width: '100%' },
 
 	cameraContainer: { alignItems: 'center', width: '100%' },
-	camera: { height: width, width },
+	camera: { height: height * 0.6, width },
 	cameraActions: { flexDirection: 'row' },
 	cameraAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: wsize(30) },
 	cameraActionHeader: { fontSize: wsize(4), textAlign: 'center' },

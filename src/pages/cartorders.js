@@ -166,12 +166,12 @@ export default function Cartorders(props) {
                   {item.cost && <Text style={styles.header}><Text style={{ fontWeight: 'bold' }}>Total cost:</Text> ${item.cost.toFixed(2)}</Text>}
 
 									{item.sizes.map((size, sizeindex) => (
-										size.selected ? 
+										size.selected && ( 
 											<Text key={size.key} style={styles.itemInfo}>
 												<Text style={{ fontWeight: 'bold' }}>Size: </Text>
 												<Text>{size.name}</Text>
 											</Text>
-										: null
+									 )
 									))}
 								</View>
 							</View>

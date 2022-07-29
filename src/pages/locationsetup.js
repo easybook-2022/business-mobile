@@ -31,7 +31,7 @@ const { height, width } = Dimensions.get('window')
 const wsize = p => {return width * (p / 100)}
 const hsize = p => {return height * (p / 100)}
 
-const steps = ['name', 'location', 'phonenumber', 'logo', 'hours']
+const steps = ['type', 'name', 'location', 'phonenumber', 'logo', 'hours']
 const daysArr = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
 export default function Locationsetup({ navigation }) {
@@ -56,7 +56,7 @@ export default function Locationsetup({ navigation }) {
 	const [storeName, setStorename] = useState(registerLocationInfo.storeName)
 	const [phonenumber, setPhonenumber] = useState(registerLocationInfo.phonenumber)
 
-	const [type, setType] = useState('hair')
+	const [type, setType] = useState('')
 
 	const [logo, setLogo] = useState({ uri: '', name: '', size: { width: 0, height: 0 }})
 
@@ -203,19 +203,19 @@ export default function Locationsetup({ navigation }) {
 		let msg = "", skip = false
 
 		switch (index) {
-			case 0:
+			case 1:
 				if (!storeName) {
           msg = "Please enter the name of your " + type
         }
 
         break
-			case 2:
+			case 3:
 				if (!phonenumber) {
 					msg = "Please provide the " + type + " phone number"
 				}
 
 				break
-      case 4:
+      case 5:
         if (!daysInfo.done) {
           const newDays = []
           const newDaysamehours = {}
@@ -251,7 +251,7 @@ export default function Locationsetup({ navigation }) {
 
 		if (!skip) {
 			if (msg == "") {
-				const nextStep = index == 4 ? "done" : steps[index + 1]
+				const nextStep = index == steps[steps.length - 1] ? "done" : steps[index + 1]
 
 				if (nextStep == "logo") {
 					allowCamera()
@@ -886,6 +886,65 @@ export default function Locationsetup({ navigation }) {
                   </View>
                 )}
 
+                {setupType == "type" && (
+                  <View style={styles.typeSelections}>
+                    <Text style={styles.introHeader}>{tr.t("locationsetup.type.question")}</Text>
+
+                    <TouchableOpacity style={[styles.typeSelection, { backgroundColor: type == 'hair' ? 'rgba(0, 0, 0, 0.5)' : null }]} onPress={() => setType('hair')}>
+                      <View style={styles.typeSelectionRow}>
+                        <View style={styles.column}>
+                          <Text style={styles.typeSelectionHeader}>{tr.t("Hair salon")}</Text>
+                        </View>
+                        <View style={styles.column}>
+                          <Image source={require("../../assets/hairsalon.png")} style={styles.typeSelectionIcon}/>
+                        </View>
+                        <View style={styles.column}>
+                          <Text style={styles.typeSelectionAction}>{tr.t("locationsetup.type.buttonHeaders.tapChoose")}</Text>
+                        </View>
+                      </View>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={[styles.typeSelection, { backgroundColor: type == 'nail' ? 'rgba(0, 0, 0, 0.5)' : null }]} onPress={() => setType('nail')}>
+                      <View style={styles.typeSelectionRow}>
+                        <View style={styles.column}>
+                          <Text style={styles.typeSelectionHeader}>{tr.t("Nail salon")}</Text>
+                        </View>
+                        <View style={styles.column}>
+                          <Image source={require("../../assets/nailsalon.png")} style={styles.typeSelectionIcon}/>
+                        </View>
+                        <View style={styles.column}>
+                          <Text style={styles.typeSelectionAction}>{tr.t("locationsetup.type.buttonHeaders.tapChoose")}</Text>
+                        </View>
+                      </View>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={[styles.typeSelection, { backgroundColor: type == 'restaurant' ? 'rgba(0, 0, 0, 0.5)' : null }]} onPress={() => setType('restaurant')}>
+                      <View style={styles.typeSelectionRow}>
+                        <View style={styles.column}>
+                          <Text style={styles.typeSelectionHeader}>{tr.t("Restaurant")}</Text>
+                        </View>
+                        <View style={styles.column}>
+                          <Image source={require("../../assets/food.png")} style={styles.typeSelectionIcon}/>
+                        </View>
+                        <View style={styles.column}>
+                          <Text style={styles.typeSelectionAction}>{tr.t("locationsetup.type.buttonHeaders.tapChoose")}</Text>
+                        </View>
+                      </View>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={[styles.typeSelection, { backgroundColor: type == 'store' ? 'rgba(0, 0, 0, 0.5)' : null }]} onPress={() => setType('store')}>
+                      <View style={styles.typeSelectionRow}>
+                        <View style={styles.column}>
+                          <Text style={styles.typeSelectionHeader}>{tr.t("Store")}</Text>
+                        </View>
+                        <View style={styles.column}>
+                          <Image source={require("../../assets/shopping-cart.png")} style={styles.typeSelectionIcon}/>
+                        </View>
+                        <View style={styles.column}>
+                          <Text style={styles.typeSelectionAction}>{tr.t("locationsetup.type.buttonHeaders.tapChoose")}</Text>
+                        </View>
+                      </View>
+                    </TouchableOpacity>
+                  </View>
+                )}
+
                 {setupType == "name" && (
                   <View style={styles.inputContainer}>
                     <Text style={styles.inputHeader}>{tr.t("locationsetup.name." + header)}</Text>
@@ -1012,6 +1071,13 @@ const styles = StyleSheet.create({
   inputsBox: { alignItems: 'center', height: '80%', width: '100%' },
   introHeader: { fontSize: wsize(6), fontWeight: 'bold', paddingHorizontal: 30, textAlign: 'center' },
 
+  typeSelections: { flexDirection: 'column', justifyContent: 'space-between', width: '90%' },
+  typeSelection: { backgroundColor: 'rgba(127, 127, 127, 0.05)', borderStyle: 'solid', borderWidth: 2, flexDirection: 'column', height: hsize(10), justifyContent: 'space-around', marginBottom: 10, padding: 5, width: '100%' },
+  typeSelectionRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  typeSelectionHeader: { fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
+  typeSelectionIcon: { height: wsize(15), width: wsize(15) },
+  typeSelectionAction: { fontSize: wsize(5), textAlign: 'center' },
+
   inputContainer: { width: '80%' },
   inputHeader: { fontSize: wsize(5), fontWeight: 'bold', marginTop: 20 },
   input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), padding: 5, width: '100%' },
@@ -1021,7 +1087,7 @@ const styles = StyleSheet.create({
 
   cameraContainer: { alignItems: 'center', width: '100%' },
   cameraHeader: { fontFamily: 'Chilanka_400Regular', fontWeight: 'bold', paddingVertical: 5 },
-  camera: { height: width, width },
+  camera: { height: height * 0.6, width },
   cameraActions: { flexDirection: 'row' },
   cameraAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: wsize(30) },
   cameraActionHeader: { fontSize: wsize(4), textAlign: 'center' },

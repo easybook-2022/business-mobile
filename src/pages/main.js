@@ -1009,7 +1009,11 @@ export default function Main(props) {
 				}
 			})
 	}
+  const getAllTableBills = async() => {
+    const locationid = await AsyncStorage.getItem("locationid")
 
+
+  }
   const getAllTables = async() => {
     const locationid = await AsyncStorage.getItem("locationid")
 
@@ -2488,10 +2492,13 @@ export default function Main(props) {
                 </View>
                 :
                 <View style={styles.viewTypes}>
-                  <TouchableOpacity style={styles.viewType} onPress={() => getAllCartOrderers()}>
+                  <TouchableOpacity style={[styles.viewType, { width: '30%' }]} onPress={() => getAllCartOrderers()}>
                     <Text style={styles.viewTypeHeader}>{tr.t("main.navs.cartOrderers")}</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={styles.viewType} onPress={() => getAllTables()}>
+                  <TouchableOpacity style={[styles.viewType, { width: '30%' }]} onPress={() => getTableBills()}>
+                    <Text style={styles.viewTypeHeader}>{tr.t("main.navs.tableBills")}</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={[styles.viewType, { width: '30%' }]} onPress={() => getAllTables()}>
                     <Text style={styles.viewTypeHeader}>{tr.t("main.navs.tableOrders")}</Text>
                   </TouchableOpacity>
                 </View>
@@ -2507,12 +2514,14 @@ export default function Main(props) {
                     renderItem={({ item, index }) => 
                       <View key={item.key} style={styles.schedule}>
                         <Text style={styles.scheduleHeader}>{item.name}</Text>
-                        <View style={styles.scheduleImageHolder}>
-                          <Image 
-                            style={resizePhoto(item.image, wsize(20))} 
-                            source={item.image.name ? { uri: logo_url + item.image.name } : require("../../assets/noimage.jpeg")}
-                          />
-                        </View>
+                        {item.image.name && (
+                          <View style={styles.scheduleImageHolder}>
+                            <Image 
+                              style={resizePhoto(item.image, wsize(20))} 
+                              source={{ uri: logo_url + item.image.name }}
+                            />
+                          </View>
+                        )}
                           
                         <Text style={styles.scheduleHeader}>
                           {tr.t("main.list.clientName") + ': ' + item.client.username}

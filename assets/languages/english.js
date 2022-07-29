@@ -78,6 +78,7 @@ const info = {
       myAppointments: "My\nAppointments(s)",
       allAppointments: "All\nAppointments(s)",
       cartOrderers: "Cart Orderer(s)",
+      tableBills: "Table Bill(s)",
       tableOrders: "Table Order(s)"
     },
     list: {
