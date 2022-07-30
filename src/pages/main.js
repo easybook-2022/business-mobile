@@ -749,7 +749,7 @@ export default function Main(props) {
             }
 
             schedules.forEach(function (info) {
-              unix = parseInt(info.time) + pushMilli
+              unix = Date.parse(info["day"] + " " + info["month"] + " " + info["date"] + " " + info["year"] + " " + info["hour"] + ":" + info["minute"]) + pushMilli
 
               newDate = new Date(unix)
               day = days[newDate.getDay()]
@@ -764,8 +764,7 @@ export default function Main(props) {
               info.blockedSchedules.forEach(function (info) {
                 time = JSON.parse(info.time)
 
-                unix = Date.parse(time["day"] + " " + time["month"] + " " + time["date"] + " " + time["year"] + " " + time["hour"] + ":" + time["minute"])
-                unix += pushMilli
+                unix = Date.parse(time["day"] + " " + time["month"] + " " + time["date"] + " " + time["year"] + " " + time["hour"] + ":" + time["minute"]) + pushMilli
 
                 newDate = new Date(unix)
                 day = days[newDate.getDay()]

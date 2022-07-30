@@ -75,8 +75,8 @@ const info = {
   },
   main: {
     navs: {
-      myAppointments: "My\nAppointments(s)",
-      allAppointments: "All\nAppointments(s)",
+      myAppointments: "Appointments(s)\n(List)",
+      allAppointments: "Appointments(s)\n(Table)",
       cartOrderers: "Cart Orderer(s)",
       tableBills: "Table Bill(s)",
       tableOrders: "Table Order(s)"
