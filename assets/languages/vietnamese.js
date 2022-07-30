@@ -369,13 +369,11 @@ const info = {
     },
     name: "Nhập tên của bữa ăn này:",
     photo: "Chụp ảnh bữa ăn này (Tùy chọn)",
-    options: {
-      addamount: "Thêm số lượng",
-      addoption: "Thêm tùy chọn"
-    },
     price: {
       size: "Nhập giá cho bữa ăn này",
       sizes: "Thêm kích thước",
+      quantity: "Thêm số lượng",
+      percent: "Cộng %"
     }
   },
 

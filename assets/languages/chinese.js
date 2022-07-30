@@ -369,13 +369,11 @@ const info = {
     },
     name: "输入这顿饭的名字",
     photo: "给这顿饭拍照（可选)",
-    options: {
-      addamount: "添加百分比或金额选项",
-      addoption: "添加特定选项"
-    },
     price: {
       size: "添加尺寸",
       sizes: "输入价格",
+      quantity: "添加数量",
+      percent: "添加 %"
     }
   },
 

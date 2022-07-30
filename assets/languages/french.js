@@ -369,13 +369,11 @@ const info = {
     },
     name: "Saisissez un nom pour ce repas",
     photo: "Prendre une photo de ce repas (facultatif)",
-    options: {
-      addamount: "Option d'ajout de % ou de montant",
-      addoption: "Ajouter une option spécifique"
-    },
     price: {
       size: "Ajouter une taille",
       sizes: "Entrez un prix",
+      quantity: "Ajouter la quantité",
+      percent: "Ajouter %"
     }
   },
 

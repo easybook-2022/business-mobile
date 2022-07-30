@@ -82,7 +82,6 @@ export default function Main(props) {
   const [tableBills, setTablebills] = useState([])
   const [showAddtable, setShowaddtable] = useState({ show: false, table: "", errorMsg: "" })
   const [showRemovetable, setShowremovetable] = useState({ show: false, table: { id: -1, name: "" } })
-  const [showQr, setShowqr] = useState({ show: false, table: "", codeText: "" })
 
   const [speakInfo, setSpeakinfo] = useState({ orderNumber: "" })
 
@@ -1151,26 +1150,6 @@ export default function Main(props) {
         if (res) {
           setShowpayment({ ...showPayment, show: false, orders: [], paymentInfo: { show: false, subTotalcost: "", totalCost: "" }})
           getAllOrderingTables()
-        }
-      })
-  }
-  const showQrCode = async(id) => {
-    const locationid = await AsyncStorage.getItem("locationid")
-
-    getQrCode(id)
-      .then((res) => {
-        if (res.status == 200) {
-          return res.data
-        }
-      })
-      .then((res) => {
-        if (res) {
-          setShowqr({ ...showQr, show: true, table: res.name, codeText: tableUrl + id })
-        }
-      })
-      .catch((err) => {
-        if (err.response && err.response.status == 400) {
-          const { errormsg, status } = err.response.data
         }
       })
   }
@@ -2863,10 +2842,6 @@ export default function Main(props) {
                             <TouchableOpacity style={styles.tableOrderOption} onPress={() => viewThePayment(item.key)}>
                               <Text style={styles.tableOrderOptionHeader}>{tr.t("main.tableOrders.seeBill")}</Text>
                             </TouchableOpacity>
-
-                            <TouchableOpacity style={styles.tableOrderOption} onPress={() => showQrCode(item.tableid)}>
-                              <Text style={styles.tableOrderOptionHeader}>{tr.t("main.tableOrders.showCode")}</Text> 
-                            </TouchableOpacity>
                           </View>
                         </View>
                       }
@@ -2914,7 +2889,7 @@ export default function Main(props) {
         </View>
       }
 
-      {(scheduleOption.show || showInfo.show || showMoreoptions.show || showDisabledscreen || alertInfo.show || showPayment.show || showAddtable.show || showRemovetable.show || showQr.show) && (
+      {(scheduleOption.show || showInfo.show || showMoreoptions.show || showDisabledscreen || alertInfo.show || showPayment.show || showAddtable.show || showRemovetable.show) && (
         <Modal transparent={true}>
           <SafeAreaView style={{ flex: 1 }}>
             {scheduleOption.show && (
@@ -4970,21 +4945,6 @@ export default function Main(props) {
                 </View>
               </View>
             )}
-            {showQr.show && (
-              <View style={styles.qrBox}>
-                <View style={styles.qrContainer}>
-                  <TouchableOpacity style={styles.qrClose} onPress={() => setShowqr({ ...showQr, show: false, table: "" })}>
-                    <AntDesign name="close" size={wsize(10)}/>
-                  </TouchableOpacity>
-
-                  <View style={{ alignItems: 'center' }}>
-                    <Text style={styles.qrHeader}>{tr.t("main.hidden.tables.hidden.qr.header")}{showQr.table}</Text>
-
-                    <QRCode size={wsize(80)} value={showQr.codeText}/>
-                  </View>
-                </View>
-              </View>
-            )}
           </SafeAreaView>
         </Modal>
       )}
@@ -5053,8 +5013,8 @@ const styles = StyleSheet.create({
   tableOrderDoneHeader: { fontSize: wsize(4), textAlign: 'center' },
   seeOrders: { alignItems: 'center', backgroundColor: 'black', borderRadius: 10, flexDirection: 'row', justifyContent: 'space-around', marginVertical: 2, padding: 10 },
   seeOrdersHeader: { color: 'white', fontSize: wsize(6), fontWeight: 'bold', textAlign: 'center' },
-  tableOrderOption: { alignItems: 'center', backgroundColor: 'black', borderRadius: 10, flexDirection: 'row', justifyContent: 'space-around', marginVertical: 2, padding: 5 },
-  tableOrderOptionHeader: { color: 'white', fontSize: wsize(4), fontWeight: 'bold', textAlign: 'center' },
+  tableOrderOption: { alignItems: 'center', backgroundColor: 'black', borderRadius: 10, flexDirection: 'row', justifyContent: 'space-around', marginVertical: 2, padding: 10 },
+  tableOrderOptionHeader: { color: 'white', fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
   addTable: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginBottom: 20, padding: 5 },
   addTableHeader: { fontSize: wsize(5), textAlign: 'center' },
 
@@ -5232,10 +5192,6 @@ const styles = StyleSheet.create({
   removeTableActions: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
   removeTableAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: '40%' },
   removeTableActionHeader: { fontSize: wsize(6), textAlign: 'center' },
-
-  qrBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
-  qrContainer: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
-  qrHeader: { fontSize: wsize(6), fontWeight: 'bold', textAlign: 'center' },
 
   loading: { alignItems: 'center', flexDirection: 'column', height: '90%', justifyContent: 'space-around', width: '100%' },
   row: { flexDirection: 'row', justifyContent: 'space-around' },
