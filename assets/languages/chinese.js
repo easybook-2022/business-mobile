@@ -90,6 +90,7 @@ const info = {
     chart: {
       stillBusy: "还在忙",
       booked: "预订",
+      walkIn: "步入",
       editTime: "点击时间重新预订",
       reschedule: {
         all: "重新安排所有",
@@ -271,8 +272,8 @@ const info = {
 
     hidden: {
       confirm: {
-        client: "客户:",
-        service: "服务:",
+        client: "客户",
+        service: "服务",
         change: "将时间更改为",
         appointmentChanged: "预约已更改",
         leaveNote: "如果需要，请留言"

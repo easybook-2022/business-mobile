@@ -89,7 +89,8 @@ const info = {
     },
     chart: {
       stillBusy: "Still busy",
-      booked: "Booked",
+      booked: "App",
+      walkIn: "Walk in",
       editTime: "Tap time to rebook",
       reschedule: {
         all: "Reschedule All",
@@ -271,8 +272,8 @@ const info = {
 
     hidden: {
       confirm: {
-        client: "Client:",
-        service: "Service:",
+        client: "Client",
+        service: "Service",
         change: "Change time to",
         appointmentChanged: "Appointment changed",
         leaveNote: "Leave a note if you want"

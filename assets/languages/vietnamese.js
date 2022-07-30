@@ -90,6 +90,7 @@ const info = {
     chart: {
       stillBusy: "vẫn bận",
       booked: "đã đặt trước",
+      walkIn: "Đi vào",
       editTime: "Nhấn vào thời gian để đăng ký lại",
       reschedule: {
         all: "Lên lịch lại tất cả",
@@ -271,8 +272,8 @@ const info = {
 
     hidden: {
       confirm: {
-        client: "khách hàng:",
-        service: "Dịch vụ:",
+        client: "khách hàng",
+        service: "Dịch vụ",
         change: "Thay đổi thời gian",
         appointmentChanged: "Cuộc hẹn đã thay đổi",
         leaveNote: "Để lại ghi chú nếu bạn muốn"

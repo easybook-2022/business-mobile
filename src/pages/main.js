@@ -657,8 +657,12 @@ export default function Main(props) {
         break;
       case "header":
         if (rebook) {
-          if (time + "-c" in scheduled) {
-            header = "(" + tr.t("main.chart.booked") + ")"
+          if (time + "-c" in scheduled || time + "-w" in scheduled) {
+            if (time + "-c" in scheduled) {
+              header = "(" + tr.t("main.chart.booked") + ")"
+            } else {
+              header = "(" + tr.t("main.chart.walkIn") + ")"
+            }
           } else if (time + "-b" in scheduled) {
             if (JSON.stringify(blocked).includes("\"id\":" + scheduled[time + "-b"])) { // time blocked belongs to schedule
 
@@ -1032,7 +1036,7 @@ export default function Main(props) {
         }
       })
   }
-  const getAllOrderingTables = async() => {
+  const getAllOrderingTables = async(show) => {
     const locationid = await AsyncStorage.getItem("locationid")
 
     getOrderingTables(locationid)
@@ -1045,7 +1049,9 @@ export default function Main(props) {
         if (res) {
           setTableorders(res.tables)
           setViewtype('tableorders')
-          setTableviewtype('orders')
+          
+          if (show) setTableviewtype('orders')
+
           setLoaded(true)
         }
       })
@@ -1098,7 +1104,7 @@ export default function Main(props) {
       })
       .then((res) => {
         if (res) {
-          getAllOrderingTables()
+          getAllOrderingTables(false)
         }
       })
   }
@@ -1149,7 +1155,7 @@ export default function Main(props) {
       .then((res) => {
         if (res) {
           setShowpayment({ ...showPayment, show: false, orders: [], paymentInfo: { show: false, subTotalcost: "", totalCost: "" }})
-          getAllOrderingTables()
+          getAllOrderingTables(false)
         }
       })
   }
@@ -1335,7 +1341,7 @@ export default function Main(props) {
       speakToWorker(data)
     })
     socket.on("updateTableOrders", () => {
-      getAllOrderingTables()
+      getAllOrderingTables(false)
 
       if (showPayment.id > -1) getTheTableOrders()
     })
@@ -2489,10 +2495,10 @@ export default function Main(props) {
                     <TouchableOpacity style={[styles.viewType, { width: '30%' }]} onPress={() => getAllCartOrderers()}>
                       <Text style={styles.viewTypeHeader}>{tr.t("main.navs.cartOrderers")}</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={[styles.viewType, { width: '30%' }]} onPress={() => getAllTableBills()}>
+                    <TouchableOpacity style={[styles.viewType, { width: '30%' }]} onPress={() => getAllTableBills(true)}>
                       <Text style={styles.viewTypeHeader}>{tr.t("main.navs.tableBills")}</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={[styles.viewType, { width: '30%' }]} onPress={() => getAllOrderingTables()}>
+                    <TouchableOpacity style={[styles.viewType, { width: '30%' }]} onPress={() => getAllOrderingTables(true)}>
                       <Text style={styles.viewTypeHeader}>{tr.t("main.navs.tableOrders")}</Text>
                     </TouchableOpacity>
                   </>
@@ -2526,6 +2532,7 @@ export default function Main(props) {
                               .replace("today at", tr.t("headers.todayAt"))
                               .replace("tomorrow at", tr.t("headers.tomorrowAt"))
                           }
+                          {'\n'}({(item.type == "confirmed" ? "app booked" : "walk-in booked")})
                         </Text>
 
                         <View style={styles.scheduleActions}>
@@ -2634,9 +2641,17 @@ export default function Main(props) {
                                 style={[
                                   styles.chartTime,
                                   { width: workers.length < 5 ? (width / workers.length) : 200 },
-                                  item.time + "-c" in chartInfo.workersHour[worker.id]["scheduled"] 
+                                  (
+                                    item.time + "-c" in chartInfo.workersHour[worker.id]["scheduled"] 
+                                    || 
+                                    item.time + "-w" in chartInfo.workersHour[worker.id]["scheduled"]
+                                  ) 
                                   && 
-                                  scheduleOption.selectedIds.includes(chartInfo.workersHour[worker.id]["scheduled"][item.time + "-c"].toString()) ? 
+                                  (
+                                    (item.time + "-c" in chartInfo.workersHour[worker.id]["scheduled"] && scheduleOption.selectedIds.includes(chartInfo.workersHour[worker.id]["scheduled"][item.time + "-c"].toString()))
+                                    ||
+                                    (item.time + "-w" in chartInfo.workersHour[worker.id]["scheduled"] && scheduleOption.selectedIds.includes(chartInfo.workersHour[worker.id]["scheduled"][item.time + "-w"].toString()))
+                                  ) ? 
                                     { 
                                       backgroundColor: 'rgba(0, 0, 0, 0.8)'
                                     }
@@ -2656,7 +2671,7 @@ export default function Main(props) {
                                       } else {
                                         rebookSchedule(item.time, item.jsonDate, worker.id)
                                       }
-                                    } else if (!(item.time + "-c" in workersHour[worker.id]["scheduled"])) {
+                                    } else if (!(item.time + "-c" in workersHour[worker.id]["scheduled"] || item.time + "-w" in workersHour[worker.id]["scheduled"])) {
                                       blockTheTime(worker.id, item.jsonDate)
                                     } else {
                                       if (scheduleOption.select) {
@@ -2667,7 +2682,11 @@ export default function Main(props) {
 
                                         setScheduleoption({ ...scheduleOption, selectedIds })
                                       } else {
-                                        showScheduleOption(chartInfo.workersHour[worker.id]["scheduled"][item.time + "-c"], "chart", index, "change")
+                                        if (item.time + "-c" in chartInfo.workersHour[worker.id]["scheduled"]) {
+                                          showScheduleOption(chartInfo.workersHour[worker.id]["scheduled"][item.time + "-c"], "chart", index, "change")
+                                        } else if (item.time + "-w" in chartInfo.workersHour[worker.id]["scheduled"]) {
+                                          showScheduleOption(chartInfo.workersHour[worker.id]["scheduled"][item.time + "-w"], "chart", index, "change")
+                                        }
                                       }
                                     }
                                   }}
@@ -2675,16 +2694,24 @@ export default function Main(props) {
                                 >
                                   <Text style={[
                                     styles.chartTimeHeader, 
-                                    item.time + "-c" in chartInfo.workersHour[worker.id]["scheduled"] 
+                                    (
+                                      item.time + "-c" in chartInfo.workersHour[worker.id]["scheduled"] 
+                                      ||
+                                      item.time + "-w" in chartInfo.workersHour[worker.id]["scheduled"]
+                                    ) 
                                     && 
-                                    scheduleOption.selectedIds.includes(chartInfo.workersHour[worker.id]["scheduled"][item.time + "-c"].toString()) ? 
+                                    (
+                                      (item.time + "-c" in chartInfo.workersHour[worker.id]["scheduled"] && scheduleOption.selectedIds.includes(chartInfo.workersHour[worker.id]["scheduled"][item.time + "-c"].toString()))
+                                      ||
+                                      (item.time + "-w" in chartInfo.workersHour[worker.id]["scheduled"] && scheduleOption.selectedIds.includes(chartInfo.workersHour[worker.id]["scheduled"][item.time + "-w"].toString()))
+                                    ) ? 
                                       { color: 'white' }
                                       :
                                       { color: timeStyle(item, worker.id, "fontColor") }
                                   ]}>
                                     {item.timeDisplay + '\n'}
                                     {(
-                                      item.time + "-c" in workersHour[worker.id]["scheduled"]
+                                      (item.time + "-c" in workersHour[worker.id]["scheduled"] || item.time + "-w" in workersHour[worker.id]["scheduled"])
                                       ||
                                       (item.time + "-b" in workersHour[worker.id]["scheduled"])
                                     ) && (
@@ -2692,7 +2719,7 @@ export default function Main(props) {
                                     )}
                                   </Text>
 
-                                  {item.time + "-c" in workersHour[worker.id]["scheduled"] && (
+                                  {(item.time + "-c" in workersHour[worker.id]["scheduled"] || item.time + "-w" in workersHour[worker.id]["scheduled"]) && (
                                     <View 
                                       style={styles.chartScheduledActions}
                                       onStartShouldSetResponder={(event) => true}
@@ -2700,7 +2727,11 @@ export default function Main(props) {
                                     >
                                       <View style={styles.column}>
                                          <TouchableOpacity style={styles.chartScheduledAction} onPress={() => {
-                                          showScheduleOption(chartInfo.workersHour[worker.id]["scheduled"][item.time + "-c"], "chart", index, "remove")
+                                          if (item.time + "-c" in chartInfo.workersHour[worker.id]["scheduled"]) {
+                                            showScheduleOption(chartInfo.workersHour[worker.id]["scheduled"][item.time + "-c"], "chart", index, "remove")
+                                          } else {
+                                            showScheduleOption(chartInfo.workersHour[worker.id]["scheduled"][item.time + "-w"], "chart", index, "remove")
+                                          }
                                          }}>
                                           <AntDesign color="white" name="closecircleo" size={30}/>
                                         </TouchableOpacity>
@@ -4976,7 +5007,7 @@ const styles = StyleSheet.create({
 	scheduleRow: { flexDirection: 'row', justifyContent: 'space-between' },
 	scheduleImageHolder: { borderRadius: wsize(20) / 2, margin: 5, overflow: 'hidden', width: wsize(20) },
 	scheduleImage: { height: wsize(20), width: wsize(20) },
-	scheduleHeader: { fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
+	scheduleHeader: { fontSize: wsize(4.5), fontWeight: 'bold', textAlign: 'center' },
   scheduleInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(6), padding: 5, width: '90%' },
 	scheduleActions: { flexDirection: 'row', justifyContent: 'space-around' },
   column: { flexDirection: 'column', justifyContent: 'space-around' },

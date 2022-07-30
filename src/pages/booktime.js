@@ -136,7 +136,7 @@ export default function Booktime(props) {
 
         if (rowindex == 0) {
           if (dayindex >= firstDay) {
-            datetime = Date.parse(timeStr)
+            datetime = Date.parse(timeStr + " 23:00")
 
             day.passed = now > datetime
             day.noservice = selectedWorkerinfo.id > -1 ? 
@@ -152,9 +152,15 @@ export default function Booktime(props) {
               } else {
                 let timeInfos = allWorkerstime[days[dayindex].substr(0, 3)]
 
-                timeInfos.forEach(function (timeInfo) {
+                for (let k = 0; k < timeInfos.length; k++) {
+                  let timeInfo = timeInfos[k]
+
                   day.noservice = !(Date.now() < Date.parse(timeStr + " " + timeInfo.end))
-                })
+
+                  if (!day.noservice) {
+                    break;
+                  }
+                }
               }
             }
             
@@ -162,7 +168,7 @@ export default function Booktime(props) {
             daynum++
           }
         } else if (daynum <= numDays) {
-          datetime = Date.parse(timeStr)
+          datetime = Date.parse(timeStr + " 23:00")
 
           day.passed = now > datetime
           day.noservice = selectedWorkerinfo.id > -1 ? 
@@ -178,9 +184,15 @@ export default function Booktime(props) {
             } else {
               let timeInfos = allWorkerstime[days[dayindex].substr(0, 3)]
 
-              timeInfos.forEach(function (timeInfo) {
+              for (let k = 0; k < timeInfos.length; k++) {
+                let timeInfo = timeInfos[k]
+
                 day.noservice = !(Date.now() < Date.parse(timeStr + " " + timeInfo.end))
-              })
+
+                if (!day.noservice) {
+                  break;
+                }
+              }
             }
           }
           
@@ -219,130 +231,6 @@ export default function Booktime(props) {
       year 
     })
     setCalendar({ ...calendar, data, firstDay, numDays })
-  }
-  const selectDate = () => {
-    const { date, day, month, year } = selectedDateinfo, { blocked } = bookedDateinfo
-    const { openHour, openMinute, closeHour, closeMinute } = hoursInfo[day]
-    const numBlockTaken = scheduleid ? 1 + blocked.length : 0
-    let start = day in allWorkerstime ? allWorkerstime[day][0]["start"] : openHour + ":" + openMinute
-    let end = day in allWorkerstime ? allWorkerstime[day][0]["end"] : closeHour + ":" + closeMinute
-    let timeStr = month + " " + date + " " + year + " "
-    let openDateStr = Date.parse(timeStr + start), closeDateStr = Date.parse(timeStr + end), calcDateStr = openDateStr
-    let currenttime = Date.now(), newTimes = [], timesRow = [], timesNum = 0
-
-    while (calcDateStr <= (closeDateStr - pushtime)) {
-      calcDateStr += pushtime
-
-      let timestr = new Date(calcDateStr)
-      let hour = timestr.getHours()
-      let minute = timestr.getMinutes()
-      let period = hour < 12 ? "am" : "pm"
-      let timedisplay = (
-        hour <= 12 ? 
-          hour == 0 ? 12 : hour
-          : 
-          hour - 12
-        ) 
-        + ":" + 
-        (minute < 10 ? '0' + minute : minute) + " " + period
-      let timepassed = currenttime > calcDateStr
-      let timetaken = false, timeBlocked = false
-
-      if (selectedWorkerinfo.id > -1) { // worker is selected
-        const workerid = selectedWorkerinfo.id
-
-        timetaken = calcDateStr + "-" + workerid in scheduled[workerid]["scheduled"]
-      } else {
-        let numWorkers = Object.keys(scheduled).length
-        let occur = JSON.stringify(scheduled).split("\"" + calcDateStr + "-").length - 1
-
-        timetaken = occur == numWorkers
-      }
-
-      let availableService = false, workerIds = []
-
-      if (selectedWorkerinfo.id > -1 && day in selectedWorkerinfo.hours) {
-        let startTime = selectedWorkerinfo.hours[day]["start"]
-        let endTime = selectedWorkerinfo.hours[day]["end"]
-
-        if (
-          calcDateStr >= Date.parse(timeStr + startTime) 
-          && 
-          calcDateStr <= Date.parse(timeStr + endTime)
-        ) {
-          availableService = true
-          workerIds = [selectedWorkerinfo.hours[day]["workerId"]]
-        }
-      } else {
-        if (day in allWorkerstime) {
-          let times = allWorkerstime[day]
-          let startTime = "", endTime = ""
-
-          times.forEach(function (info) {
-            startTime = info.start
-            endTime = info.end
-
-            if (
-              calcDateStr >= Date.parse(timeStr + startTime) 
-              && 
-              calcDateStr <= Date.parse(timeStr + endTime)
-            ) {              
-              availableService = true
-              workerIds.push(info.workerId)
-            }
-          })
-        }
-      }
-
-      if (!timepassed && !timetaken && availableService == true) {
-        let startCalc = calcDateStr
-
-        for (let k = 1; k <= numBlockTaken; k++) {
-          if (selectedWorkerinfo.id > -1) { // stylist is picked by client
-            let { start, end } = selectedWorkerinfo.hours[day]
-
-            if (startCalc + "-" + selectedWorkerinfo.id + "-b" in scheduled[selectedWorkerinfo.id]["scheduled"]) { // time is blocked
-              if (!JSON.stringify(blocked).includes("\"unix\":" + startCalc)) {
-                timeBlocked = true
-              }
-            } else if (startCalc + "-" + selectedWorkerinfo.id + "-c" in scheduled[selectedWorkerinfo.id]["scheduled"]) { // time is taken
-              if (scheduled[selectedWorkerinfo.id]["scheduled"][startCalc + "-" + selectedWorkerinfo.id + "-c"] != scheduleId) {
-                timeBlocked = true
-              }
-            } else if (startCalc >= Date.parse(timeStr + end)) { // stylist is off
-              timeBlocked = true
-            }
-          }
-
-          startCalc += pushtime
-        }
-
-        if (!timeBlocked) {
-          timesRow.push({
-            key: timesNum.toString(), header: timedisplay, 
-            time: calcDateStr, workerIds
-          })
-          timesNum++
-
-          if (timesRow.length == 3) {
-            newTimes.push({ key: newTimes.length, row: timesRow })
-            timesRow = []
-          }
-        }
-      }
-    }
-
-    if (timesRow.length > 0) {
-      for (let k = 0; k < (3 - timesRow.length); k++) {
-        timesRow.push({ key: timesNum.toString() })
-      }
-
-      newTimes.push({ key: newTimes.length, row: timesRow })
-    }
-
-    setSelecteddateinfo({ ...selectedDateinfo, date, day })
-    setTimes(newTimes)
-    setStep(2)
   }
   const getTheLocationHours = async(time) => {
     const locationid = await AsyncStorage.getItem("locationid")
@@ -479,6 +367,130 @@ export default function Booktime(props) {
     }
 
     getCalendar(month, year)
+  }
+  const selectDate = () => {
+    const { date, day, month, year } = selectedDateinfo, { blocked } = bookedDateinfo
+    const { openHour, openMinute, closeHour, closeMinute } = hoursInfo[day]
+    const numBlockTaken = scheduleid ? 1 + blocked.length : 0
+    let start = day in allWorkerstime ? allWorkerstime[day][0]["start"] : openHour + ":" + openMinute
+    let end = day in allWorkerstime ? allWorkerstime[day][0]["end"] : closeHour + ":" + closeMinute
+    let timeStr = month + " " + date + " " + year + " "
+    let openDateStr = Date.parse(timeStr + start), closeDateStr = Date.parse(timeStr + end), calcDateStr = openDateStr
+    let currenttime = Date.now(), newTimes = [], timesRow = [], timesNum = 0
+
+    while (calcDateStr <= (closeDateStr - pushtime)) {
+      calcDateStr += pushtime
+
+      let timestr = new Date(calcDateStr)
+      let hour = timestr.getHours()
+      let minute = timestr.getMinutes()
+      let period = hour < 12 ? "am" : "pm"
+      let timedisplay = (
+        hour <= 12 ? 
+          hour == 0 ? 12 : hour
+          : 
+          hour - 12
+        ) 
+        + ":" + 
+        (minute < 10 ? '0' + minute : minute) + " " + period
+      let timepassed = currenttime > calcDateStr
+      let timetaken = false, timeBlocked = false
+
+      if (selectedWorkerinfo.id > -1) { // worker is selected
+        const workerid = selectedWorkerinfo.id
+
+        timetaken = calcDateStr + "-" + workerid in scheduled[workerid]["scheduled"]
+      } else {
+        let numWorkers = Object.keys(scheduled).length
+        let occur = JSON.stringify(scheduled).split("\"" + calcDateStr + "-").length - 1
+
+        timetaken = occur == numWorkers
+      }
+
+      let availableService = false, workerIds = []
+
+      if (selectedWorkerinfo.id > -1 && day in selectedWorkerinfo.hours) {
+        let startTime = selectedWorkerinfo.hours[day]["start"]
+        let endTime = selectedWorkerinfo.hours[day]["end"]
+
+        if (
+          calcDateStr >= Date.parse(timeStr + startTime) 
+          && 
+          calcDateStr <= Date.parse(timeStr + endTime)
+        ) {
+          availableService = true
+          workerIds = [selectedWorkerinfo.hours[day]["workerId"]]
+        }
+      } else {
+        if (day in allWorkerstime) {
+          let times = allWorkerstime[day]
+          let startTime = "", endTime = ""
+
+          times.forEach(function (info) {
+            startTime = info.start
+            endTime = info.end
+
+            if (
+              calcDateStr >= Date.parse(timeStr + startTime) 
+              && 
+              calcDateStr <= Date.parse(timeStr + endTime)
+            ) {              
+              availableService = true
+              workerIds.push(info.workerId)
+            }
+          })
+        }
+      }
+
+      if (!timepassed && !timetaken && availableService == true) {
+        let startCalc = calcDateStr
+
+        for (let k = 1; k <= numBlockTaken; k++) {
+          if (selectedWorkerinfo.id > -1) { // stylist is picked by client
+            let { start, end } = selectedWorkerinfo.hours[day]
+
+            if (startCalc + "-" + selectedWorkerinfo.id + "-b" in scheduled[selectedWorkerinfo.id]["scheduled"]) { // time is blocked
+              if (!JSON.stringify(blocked).includes("\"unix\":" + startCalc)) {
+                timeBlocked = true
+              }
+            } else if (startCalc + "-" + selectedWorkerinfo.id + "-c" in scheduled[selectedWorkerinfo.id]["scheduled"]) { // time is taken
+              if (scheduled[selectedWorkerinfo.id]["scheduled"][startCalc + "-" + selectedWorkerinfo.id + "-c"] != scheduleId) {
+                timeBlocked = true
+              }
+            } else if (startCalc >= Date.parse(timeStr + end)) { // stylist is off
+              timeBlocked = true
+            }
+          }
+
+          startCalc += pushtime
+        }
+
+        if (!timeBlocked) {
+          timesRow.push({
+            key: timesNum.toString(), header: timedisplay, 
+            time: calcDateStr, workerIds
+          })
+          timesNum++
+
+          if (timesRow.length == 3) {
+            newTimes.push({ key: newTimes.length, row: timesRow })
+            timesRow = []
+          }
+        }
+      }
+    }
+
+    if (timesRow.length > 0) {
+      for (let k = 0; k < (3 - timesRow.length); k++) {
+        timesRow.push({ key: timesNum.toString() })
+      }
+
+      newTimes.push({ key: newTimes.length, row: timesRow })
+    }
+
+    setSelecteddateinfo({ ...selectedDateinfo, date, day })
+    setTimes(newTimes)
+    setStep(2)
   }
   const selectTime = info => {
     const { time, workerIds } = info
@@ -829,7 +841,8 @@ export default function Booktime(props) {
                   <>
                     <Text style={styles.confirmHeader}>
                       Name: {clientInfo.name}
-                      {'\n' + tr.t("booktime.hidden.confirm.client") + ': ' + confirm.service + '\n\n'}
+                      {'\n' + tr.t("booktime.hidden.confirm.client") + ": " + clientInfo.name}
+                      {'\n' + tr.t("booktime.hidden.confirm.service") + ": " + confirm.service + '\n\n'}
                       {tr.t("booktime.hidden.confirm.change")}
                       {'\n' + 
                         displayTime(confirm.time)

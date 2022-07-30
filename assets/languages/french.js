@@ -89,7 +89,8 @@ const info = {
     },
     chart: {
       stillBusy: "toujours occupé",
-      booked: "réservé",
+      booked: "Réservé",
+      walkIn: "Entrer",
       editTime: "Appuyez sur l'heure pour réserver à nouveau",
       reschedule: {
         all: "Tout reprogrammer",
@@ -271,8 +272,8 @@ const info = {
 
     hidden: {
       confirm: {
-        client: "Cliente:",
-        service: "Service:",
+        client: "Cliente",
+        service: "Service",
         change: "Changer l'heure pour",
         appointmentChanged: "Rendez-vous modifié",
         leaveNote: "Laissez une note si vous voulez"
