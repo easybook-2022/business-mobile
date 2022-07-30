@@ -312,12 +312,11 @@ export default function Booktime(props) {
       .then((res) => {
         if (res) {
           const { workersHour } = res
+          const newScheduled = {}
 
           for (let worker in workersHour) {
             for (let info in workersHour[worker]) {
               if (info == "scheduled") {
-                const newScheduled = {}
-
                 for (let info in workersHour[worker]["scheduled"]) {
                   let splitTime = info.split("-")
                   let time = splitTime[0]
@@ -399,7 +398,9 @@ export default function Booktime(props) {
       if (selectedWorkerinfo.id > -1) { // worker is selected
         const workerid = selectedWorkerinfo.id
 
-        timetaken = calcDateStr + "-" + workerid in scheduled[workerid]["scheduled"]
+        if (calcDateStr + "-" + workerid + "-c" in scheduled[workerid]["scheduled"]) {
+          timetaken = true
+        }
       } else {
         let numWorkers = Object.keys(scheduled).length
         let occur = JSON.stringify(scheduled).split("\"" + calcDateStr + "-").length - 1
@@ -454,7 +455,7 @@ export default function Booktime(props) {
                 timeBlocked = true
               }
             } else if (startCalc + "-" + selectedWorkerinfo.id + "-c" in scheduled[selectedWorkerinfo.id]["scheduled"]) { // time is taken
-              if (scheduled[selectedWorkerinfo.id]["scheduled"][startCalc + "-" + selectedWorkerinfo.id + "-c"] != scheduleId) {
+              if (scheduled[selectedWorkerinfo.id]["scheduled"][startCalc + "-" + selectedWorkerinfo.id + "-c"] != scheduleid) {
                 timeBlocked = true
               }
             } else if (startCalc >= Date.parse(timeStr + end)) { // stylist is off
