@@ -7,12 +7,16 @@ export const getTables = id => {
   return axios.get(`${beginUrl}get_tables/${id}`)
 }
 
-export const getOrderingTables = id => {
-  return axios.get(`${beginUrl}/get_ordering_tables/${id}`)
+export const getTableBills = id => {
+  return axios.get(`${beginUrl}get_table_bills/${id}`)
 }
 
-export const getTable = id => {
-  return axios.get(`${beginUrl}get_table/${id}`)
+export const getOrderingTables = id => {
+  return axios.get(`${beginUrl}get_ordering_tables/${id}`)
+}
+
+export const getQrCode = id => {
+  return axios.get(`${beginUrl}get_qr_code/${id}`)
 }
 
 export const addTable = data => {
@@ -24,10 +28,6 @@ export const addTable = data => {
 
 export const removeTable = id => {
   return axios.get(`${beginUrl}remove_table/${id}`)
-}
-
-export const getTableOrders = id => {
-  return axios.get(`${beginUrl}get_table_orders/${id}`)
 }
 
 export const finishOrder = data => {

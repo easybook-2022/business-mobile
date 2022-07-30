@@ -28,7 +28,7 @@ import {
   getOtherWorkers, getAccounts, getOwnerInfo, logoutUser, getWorkersTime, getAllWorkersTime, 
   getWorkersHour, setUseVoice
 } from '../apis/owners'
-import { getTables, getTableOrders, finishOrder, viewPayment, finishDining, getTable, addTable, removeTable, getOrderingTables } from '../apis/dining_tables'
+import { getTables, getTableOrders, finishOrder, viewPayment, finishDining, getQrCode, addTable, removeTable, getTableBills, getOrderingTables } from '../apis/dining_tables'
 import { getLocationProfile, getLocationHours, setLocationHours, updateInformation, updateAddress, updateLogo, setReceiveType, getDayHours } from '../apis/locations'
 import { getMenus, removeMenu, addNewMenu } from '../apis/menus'
 import { 
@@ -77,7 +77,9 @@ export default function Main(props) {
   })
 	const [cartOrderers, setCartorderers] = useState([])
 
+  const [tableViewtype, setTableviewtype] = useState('')
   const [tableOrders, setTableorders] = useState([])
+  const [tableBills, setTablebills] = useState([])
   const [showAddtable, setShowaddtable] = useState({ show: false, table: "", errorMsg: "" })
   const [showRemovetable, setShowremovetable] = useState({ show: false, table: { id: -1, name: "" } })
   const [showQr, setShowqr] = useState({ show: false, table: "", codeText: "" })
@@ -133,7 +135,7 @@ export default function Main(props) {
   const [workersHoursinfo, setWorkershoursinfo] = useState({})
 
   const [getWorkersbox, setGetworkersbox] = useState({ show: false, day: '', workers: [] })
-  const [showOrders, setShoworders] = useState({ show: false, tableId: "", id: -1, orders: [], paymentInfo: { show: false, subTotalcost: "", totalCost: "" }})
+  const [showPayment, setShowpayment] = useState({ show: false, tableId: "", id: -1, orders: [], paymentInfo: { show: false, subTotalcost: "", totalCost: "" }})
 
 	const getNotificationPermission = async() => {
 		const ownerid = await AsyncStorage.getItem("ownerid")
@@ -1012,9 +1014,27 @@ export default function Main(props) {
   const getAllTableBills = async() => {
     const locationid = await AsyncStorage.getItem("locationid")
 
-
+    getTableBills(locationid)
+      .then((res) => {
+        if (res.status == 200) {
+          return res.data
+        }
+      })
+      .then((res) => {
+        if (res) {
+          setTablebills(res.tables)
+          setViewtype('tableorders')
+          setTableviewtype('bills')
+          setLoaded(true)
+        }
+      })
+      .catch((err) => {
+        if (err.response && err.response.status == 400) {
+          const { errormsg, status } = err.response.data
+        }
+      })
   }
-  const getAllTables = async() => {
+  const getAllOrderingTables = async() => {
     const locationid = await AsyncStorage.getItem("locationid")
 
     getOrderingTables(locationid)
@@ -1027,6 +1047,7 @@ export default function Main(props) {
         if (res) {
           setTableorders(res.tables)
           setViewtype('tableorders')
+          setTableviewtype('orders')
           setLoaded(true)
         }
       })
@@ -1036,8 +1057,10 @@ export default function Main(props) {
         }
       })
   }
-  const getTheTableOrders = id => {
-    getTableOrders(id)
+  const getTheTableOrders = async() => {
+    const locationid = await AsyncStorage.getItem("locationid")
+
+    getTableOrders(locationid)
       .then((res) => {
         if (res.status == 200) {
           return res.data
@@ -1045,7 +1068,7 @@ export default function Main(props) {
       })
       .then((res) => {
         if (res) {
-          setShoworders({ ...showOrders, show: true, tableId: res.name, id, orders: res.orders, paymentInfo: { show: false, subTotalcost: "", totalCost: "" }})
+          setShowpayment({ ...showPayment, show: true, tableId: res.name, id, orders: res.orders, paymentInfo: { show: false, subTotalcost: "", totalCost: "" }})
         }
       })
       .catch((err) => {
@@ -1066,9 +1089,7 @@ export default function Main(props) {
         }
       })
   }
-  const finishTheOrder = orderid => {
-    const newOrders = [...showOrders.orders]
-    const { id } = showOrders
+  const finishTheOrder = (orderid, id) => {
     const data = { orderid, id }
 
     finishOrder(data)
@@ -1079,14 +1100,7 @@ export default function Main(props) {
       })
       .then((res) => {
         if (res) {
-          newOrders.forEach(function (order, index) {
-            if (orderid == order.key) {
-              newOrders.splice(index, 1)
-            }
-          })
-
-          setShoworders({ ...showOrders, show: newOrders.length == 0 ? false : true, orders: newOrders })
-          getAllTables()
+          getAllOrderingTables()
         }
       })
   }
@@ -1099,13 +1113,13 @@ export default function Main(props) {
       })
       .then((res) => {
         if (res) {
-          const newPaymentinfo = {...showOrders.paymentInfo}
+          const newPaymentinfo = {...showPayment.paymentInfo}
 
           newPaymentinfo.show = true
           newPaymentinfo.subTotalcost = res.subTotalCost
           newPaymentinfo.totalCost = res.totalCost
 
-          setShoworders({ ...showOrders, show: true, tableId: res.name, id, orders: res.orders, paymentInfo: newPaymentinfo })
+          setShowpayment({ ...showPayment, show: true, tableId: res.name, id, orders: res.orders, paymentInfo: newPaymentinfo })
         }
       })
       .catch((err) => {
@@ -1128,7 +1142,7 @@ export default function Main(props) {
       })
   }
   const finishTheDining = () => {
-    finishDining(showOrders.id)
+    finishDining(showPayment.id)
       .then((res) => {
         if (res.status == 200) {
           return res.data
@@ -1136,15 +1150,15 @@ export default function Main(props) {
       })
       .then((res) => {
         if (res) {
-          setShoworders({ ...showOrders, show: false, orders: [], paymentInfo: { show: false, subTotalcost: "", totalCost: "" }})
-          getAllTables()
+          setShowpayment({ ...showPayment, show: false, orders: [], paymentInfo: { show: false, subTotalcost: "", totalCost: "" }})
+          getAllOrderingTables()
         }
       })
   }
   const showQrCode = async(id) => {
     const locationid = await AsyncStorage.getItem("locationid")
 
-    getTable(id)
+    getQrCode(id)
       .then((res) => {
         if (res.status == 200) {
           return res.data
@@ -1224,7 +1238,7 @@ export default function Main(props) {
               default:
             }
 
-            setScheduleoption({ ...scheduleOption, show: false, type: "", reason: "", id: 0, index: 0 })
+            setScheduleoption({ ...scheduleOption, show: false, remove: false, type: "", reason: "", id: 0, index: 0 })
             getTheWorkersHour(false)
           })        
         }
@@ -1325,7 +1339,8 @@ export default function Main(props) {
       if (
         data.type == "makeAppointment" || 
         data.type == "cancelRequest" || 
-        data.type == "remakeAppointment"
+        data.type == "remakeAppointment" || 
+        data.type == "bookWalkIn"
       ) {
         getTheWorkersHour(false)
 
@@ -1333,7 +1348,7 @@ export default function Main(props) {
           getListAppointments()
         }
           
-        speakToWorker(data)
+        if (data.type != "bookWalkIn") speakToWorker(data)
       }
 		})
 		socket.on("updateOrders", data => {
@@ -1342,9 +1357,9 @@ export default function Main(props) {
       speakToWorker(data)
     })
     socket.on("updateTableOrders", () => {
-      getAllTables()
+      getAllOrderingTables()
 
-      if (showOrders.id > -1) getTheTableOrders(showOrders.id)
+      if (showPayment.id > -1) getTheTableOrders()
     })
 		socket.io.on("open", () => {
 			if (ownerId != null) {
@@ -2222,10 +2237,10 @@ export default function Main(props) {
         }
       }
 
-      newOpentime.hour = parseInt(openhour)
-      newOpentime.minute = parseInt(newOpentime.minute)
-      newClosetime.hour = parseInt(closehour)
-      newClosetime.minute = parseInt(newClosetime.minute)
+      newOpentime.hour = openhour
+      newOpentime.minute = newOpentime.minute
+      newClosetime.hour = closehour
+      newClosetime.minute = newClosetime.minute
 
       delete newOpentime.period
       delete newClosetime.period
@@ -2481,25 +2496,30 @@ export default function Main(props) {
   			<View style={styles.box}>
   				<View style={styles.body}>
             <View style={{ flexDirection: 'column', height: '10%', justifyContent: 'space-around' }}>
-              {(locationType == "hair" || locationType == "nail") ? 
-                <View style={styles.viewTypes}>
-                  <TouchableOpacity style={[styles.viewType, { backgroundColor: viewType == "appointments_list" ? "black" : "transparent" }]} onPress={() => getListAppointments()}>
-                    <Text style={[styles.viewTypeHeader, { color: viewType == "appointments_list" ? "white": "black" }]}>{tr.t("main.navs.myAppointments")}</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={[styles.viewType, { backgroundColor: viewType == "appointments_chart" ? "black" : "transparent" }]} onPress={() => getTheWorkersHour(true)}>
-                    <Text style={[styles.viewTypeHeader, { color: viewType == "appointments_chart" ? "white" : "black" }]}>{tr.t("main.navs.allAppointments")}</Text>
-                  </TouchableOpacity>
-                </View>
-                :
-                <View style={styles.viewTypes}>
-                  <TouchableOpacity style={styles.viewType} onPress={() => getAllCartOrderers()}>
-                    <Text style={styles.viewTypeHeader}>{tr.t("main.navs.cartOrderers")}</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.viewType} onPress={() => getAllTables()}>
-                    <Text style={styles.viewTypeHeader}>{tr.t("main.navs.tableOrders")}</Text>
-                  </TouchableOpacity>
-                </View>
-              }
+              <View style={styles.viewTypes}>
+                {(locationType == "hair" || locationType == "nail") ? 
+                  <>
+                    <TouchableOpacity style={[styles.viewType, { backgroundColor: viewType == "appointments_list" ? "black" : "transparent" }]} onPress={() => getListAppointments()}>
+                      <Text style={[styles.viewTypeHeader, { color: viewType == "appointments_list" ? "white": "black" }]}>{tr.t("main.navs.myAppointments")}</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={[styles.viewType, { backgroundColor: viewType == "appointments_chart" ? "black" : "transparent" }]} onPress={() => getTheWorkersHour(true)}>
+                      <Text style={[styles.viewTypeHeader, { color: viewType == "appointments_chart" ? "white" : "black" }]}>{tr.t("main.navs.allAppointments")}</Text>
+                    </TouchableOpacity>
+                  </>
+                  :
+                  <>
+                    <TouchableOpacity style={[styles.viewType, { width: '30%' }]} onPress={() => getAllCartOrderers()}>
+                      <Text style={styles.viewTypeHeader}>{tr.t("main.navs.cartOrderers")}</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={[styles.viewType, { width: '30%' }]} onPress={() => getAllTableBills()}>
+                      <Text style={styles.viewTypeHeader}>{tr.t("main.navs.tableBills")}</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={[styles.viewType, { width: '30%' }]} onPress={() => getAllOrderingTables()}>
+                      <Text style={styles.viewTypeHeader}>{tr.t("main.navs.tableOrders")}</Text>
+                    </TouchableOpacity>
+                  </>
+                }
+              </View>
             </View>
 
             {viewType == "appointments_list" && ( 
@@ -2609,7 +2629,6 @@ export default function Main(props) {
                           </>
                         }
                       </View>
-                      <Text style={{ fontSize: wsize(5), fontWeight: 'bold' }}>{tr.t("main.chart.rebook")}</Text>
                     </View>
                     <View style={styles.chartRow}>
                       {chartInfo.workers.map(worker => (
@@ -2767,38 +2786,98 @@ export default function Main(props) {
             )}
 
             {viewType == 'tableorders' && (
-              <>
-                {tableOrders.length > 0 ?  
-                  <FlatList
-                    data={tableOrders}
-                    renderItem={({ item, index }) => 
-                      <View key={item.key} style={styles.tableOrder}>
-                        <View>
-                          <Text style={styles.tableOrderHeader}>{tr.t("main.tableOrders.tableHeader")}{item.name}</Text>
+              tableViewtype == "orders" ? 
+                <>
+                  {tableOrders.length > 0 ?  
+                    <FlatList
+                      data={tableOrders}
+                      renderItem={({ item, index }) => 
+                        <View key={item.key} style={styles.tableOrder}>
+                          <View style={styles.column}><Text style={styles.tableOrderHeader}>#{item.tableName}</Text></View>
+                          {item.image.name && (
+                            <View style={styles.tableOrderItemImage}>
+                              <Image 
+                                style={resizePhoto(item.image, wsize(20))} 
+                                source={{ uri: logo_url + item.image.name }}
+                              />
+                            </View>
+                          )}
 
-                          <TouchableOpacity style={styles.seeOrders} onPress={() => getTheTableOrders(item.key)}>
-                            <Text style={styles.seeOrdersHeader}>{tr.t("main.tableOrders.seeOrders") + '\n' + item.numOrders}</Text>
-                          </TouchableOpacity>
+                          <View style={styles.tableOrderInfo}>
+                            <Text style={styles.tableOrderInfoHeader}>{item.name}</Text>
+                            {item.note ? <Text style={[styles.tableOrderInfoHeader, { fontWeight: '500' }]}>Customer's note: {item.note}</Text> : null}
+                            
+                            <View style={{ marginTop: 30 }}>
+                              {item.sizes.length > 0 && item.sizes.map(size => 
+                                <Text 
+                                  key={size.key} 
+                                  style={styles.tableOrderInfoHeader}
+                                >
+                                  {size["name"]} {"(" + item.quantity + ")"}
+                                </Text>
+                              )}
+                              {item.quantities.length > 0 && item.quantities.map(quantity => 
+                                <Text 
+                                  key={quantity.key} 
+                                  style={styles.tableOrderInfoHeader}
+                                >
+                                  {quantity["input"]} {"(" + item.quantity + ")"}
+                                </Text>
+                              )}
+                              {item.percents.length > 0 && item.percents.map(percent => 
+                                <Text 
+                                  key={percent.key} 
+                                  style={styles.tableOrderInfoHeader}
+                                >
+                                  {percent["input"]}
+                                </Text>
+                              )}
+                            </View>
+                          </View>
+
+                          <View style={[styles.column, { width: '25%' }]}>
+                            <TouchableOpacity style={styles.tableOrderDone} onPress={() => finishTheOrder(item.key, item.tableName)}>
+                              <Text style={styles.tableOrderDoneHeader}>{tr.t("buttons.done")}</Text>
+                            </TouchableOpacity>
+                          </View>
                         </View>
+                      }
+                    />
+                    :
+                    <View style={styles.bodyResult}>
+                      <Text style={styles.bodyResultHeader}>{tr.t("main.tableOrders.header")}</Text>
+                    </View>
+                  }
+                </>
+                :
+                <>
+                  {tableBills.length > 0 ? 
+                    <FlatList
+                      data={tableBills}
+                      renderItem={({ item, index }) => 
+                        <View key={item.key} style={styles.tableOrder}>
+                          <View>
+                            <Text style={styles.tableOrderHeader}>{tr.t("main.tableOrders.tableHeader")}{item.name}</Text>
+                          </View>
 
-                        <View>
-                          <TouchableOpacity style={styles.tableOrderOption} onPress={() => viewThePayment(item.key)}>
-                            <Text style={styles.tableOrderOptionHeader}>{tr.t("main.tableOrders.seeBill")}</Text>
-                          </TouchableOpacity>
+                          <View>
+                            <TouchableOpacity style={styles.tableOrderOption} onPress={() => viewThePayment(item.key)}>
+                              <Text style={styles.tableOrderOptionHeader}>{tr.t("main.tableOrders.seeBill")}</Text>
+                            </TouchableOpacity>
 
-                          <TouchableOpacity style={styles.tableOrderOption} onPress={() => showQrCode(item.tableid)}>
-                            <Text style={styles.tableOrderOptionHeader}>{tr.t("main.tableOrders.showCode")}</Text> 
-                          </TouchableOpacity>
+                            <TouchableOpacity style={styles.tableOrderOption} onPress={() => showQrCode(item.tableid)}>
+                              <Text style={styles.tableOrderOptionHeader}>{tr.t("main.tableOrders.showCode")}</Text> 
+                            </TouchableOpacity>
+                          </View>
                         </View>
-                      </View>
-                    }
-                  />
-                  :
-                  <View style={styles.bodyResult}>
-                    <Text style={styles.bodyResultHeader}>{tr.t("main.tableOrders.header")}</Text>
-                  </View>
-                }
-              </>
+                      }
+                    />
+                    :
+                    <View style={styles.bodyResult}>
+                      <Text style={styles.bodyResultHeader}>{tr.t("main.tableOrders.header")}</Text>
+                    </View>
+                  }
+                </>
             )}
   				</View>
 
@@ -2836,7 +2915,7 @@ export default function Main(props) {
         </View>
       }
 
-      {(scheduleOption.show || showInfo.show || showMoreoptions.show || showDisabledscreen || alertInfo.show || showOrders.show || showAddtable.show || showRemovetable.show || showQr.show) && (
+      {(scheduleOption.show || showInfo.show || showMoreoptions.show || showDisabledscreen || alertInfo.show || showPayment.show || showAddtable.show || showRemovetable.show || showQr.show) && (
         <Modal transparent={true}>
           <SafeAreaView style={{ flex: 1 }}>
             {scheduleOption.show && (
@@ -4824,130 +4903,71 @@ export default function Main(props) {
                 </View>
               </SafeAreaView>
             )}
-            {showOrders.show && (
+            {showPayment.show && (
               <View style={styles.ordersBox}>
                 <View style={styles.ordersContainer}>
-                  <TouchableOpacity style={styles.ordersClose} onPress={() => setShoworders({ ...showOrders, show: false })}><AntDesign name="closecircleo" size={wsize(10)}/></TouchableOpacity>
+                  <TouchableOpacity style={styles.ordersClose} onPress={() => setShowpayment({ ...showPayment, show: false })}><AntDesign name="closecircleo" size={wsize(10)}/></TouchableOpacity>
 
-                  <Text style={styles.ordersHeader}>Table #{showOrders.tableId}</Text>
+                  <Text style={styles.ordersHeader}>Table #{showPayment.tableId}</Text>
 
-                  {!showOrders.paymentInfo.show ? 
-                    <FlatList
-                      style={{ width: '100%' }}
-                      data={showOrders.orders}
-                      renderItem={({ item, index }) => 
-                        <View style={styles.ordersItem}>
-                          {item.image.name && (
-                            <View style={styles.itemImage}>
-                              <Image 
-                                style={resizePhoto(item.image, wsize(20))} 
-                                source={{ uri: logo_url + item.image.name }}
-                              />
-                            </View>
+                  <Text style={styles.paymentHeader}>Payment Detail</Text>
+
+                  <FlatList
+                    style={{ width: '100%' }}
+                    data={showPayment.orders}
+                    renderItem={({ item, index }) => 
+                      <View style={styles.tableOrder}>
+                        {item.image.name && (
+                          <View style={styles.itemImage}>
+                            <Image 
+                              style={resizePhoto(item.image, wsize(20))} 
+                              source={{ uri: logo_url + item.image.name }}
+                            />
+                          </View>
+                        )}
+
+                        <View style={styles.tableOrderInfo}>
+                          <Text style={[styles.tableOrderInfoHeader, { marginBottom: 20 }]}>{item.name}</Text>
+
+                          {item.sizes.length > 0 && item.sizes.map(size => 
+                            <Text 
+                              key={size.key} 
+                              style={styles.tableOrderInfoHeader}
+                            >
+                              {size["name"]} {"(" + item.quantity + ")"}
+                            </Text>
+                          )}
+                          {item.quantities.length > 0 && item.quantities.map(quantity => 
+                            <Text 
+                              key={quantity.key} 
+                              style={styles.tableOrderInfoHeader}
+                            >
+                              {quantity["input"]} {"(" + item.quantity + ")"}
+                            </Text>
+                          )}
+                          {item.percents.length > 0 && item.percents.map(percent => 
+                            <Text 
+                              key={percent.key} 
+                              style={styles.tableOrderInfoHeader}
+                            >
+                              {percent["input"]}
+                            </Text>
                           )}
 
-                          <View style={styles.ordersItemInfo}>
-                            <Text style={styles.ordersItemInfoHeader}>{item.name}</Text>
-                            {item.note ? <Text style={[styles.ordersItemInfoHeader, { fontWeight: '500', marginBottom: 20 }]}>Customer's note: {item.note}</Text> : null}
-                            
-                            {item.sizes.length > 0 && item.sizes.map(size => 
-                              <Text 
-                                key={size.key} 
-                                style={styles.ordersItemInfoHeader}
-                              >
-                                {size["name"]} {"(" + item.quantity + ")"}
-                              </Text>
-                            )}
-                            {item.quantities.length > 0 && item.quantities.map(quantity => 
-                              <Text 
-                                key={quantity.key} 
-                                style={styles.ordersItemInfoHeader}
-                              >
-                                {quantity["input"]} {"(" + item.quantity + ")"}
-                              </Text>
-                            )}
-                            {item.percents.length > 0 && item.percents.map(percent => 
-                              <Text 
-                                key={percent.key} 
-                                style={styles.ordersItemInfoHeader}
-                              >
-                                {percent["input"]}
-                              </Text>
-                            )}
-
-                            <Text style={styles.ordersItemInfoHeader}>${item.cost}</Text>
-                          </View>
-
-                          <View style={[styles.column, { width: '25%' }]}>
-                            <TouchableOpacity style={styles.ordersItemDone} onPress={() => finishTheOrder(item.key)}>
-                              <Text style={styles.ordersItemDoneHeader}>{tr.t("buttons.done")}</Text>
-                            </TouchableOpacity>
-                          </View>
+                          <Text style={styles.tableOrderInfoHeader}>${item.cost}</Text>
                         </View>
-                      }
-                    />
-                    :
-                    <>
-                      <Text style={styles.paymentHeader}>Payment Detail</Text>
-
-                      <FlatList
-                        style={{ width: '100%' }}
-                        data={showOrders.orders}
-                        renderItem={({ item, index }) => 
-                          <View style={styles.ordersItem}>
-                            {item.image.name && (
-                              <View style={styles.itemImage}>
-                                <Image 
-                                  style={resizePhoto(item.image, wsize(20))} 
-                                  source={{ uri: logo_url + item.image.name }}
-                                />
-                              </View>
-                            )}
-
-                            <View style={styles.ordersItemInfo}>
-                              <Text style={[styles.ordersItemInfoHeader, { marginBottom: 20 }]}>{item.name}</Text>
-
-                              {item.sizes.length > 0 && item.sizes.map(size => 
-                                <Text 
-                                  key={size.key} 
-                                  style={styles.ordersItemInfoHeader}
-                                >
-                                  {size["name"]} {"(" + item.quantity + ")"}
-                                </Text>
-                              )}
-                              {item.quantities.length > 0 && item.quantities.map(quantity => 
-                                <Text 
-                                  key={quantity.key} 
-                                  style={styles.ordersItemInfoHeader}
-                                >
-                                  {quantity["input"]} {"(" + item.quantity + ")"}
-                                </Text>
-                              )}
-                              {item.percents.length > 0 && item.percents.map(percent => 
-                                <Text 
-                                  key={percent.key} 
-                                  style={styles.ordersItemInfoHeader}
-                                >
-                                  {percent["input"]}
-                                </Text>
-                              )}
-
-                              <Text style={styles.ordersItemInfoHeader}>${item.cost}</Text>
-                            </View>
-                          </View>
-                        }
-                      />
-
-                      <View style={styles.paymentInfos}>
-                        <Text style={styles.paymentInfo}>Subtotal: $ {showOrders.paymentInfo.subTotalcost}</Text>
-                        <Text style={styles.paymentInfo}>Total: $ {showOrders.paymentInfo.totalCost}</Text>
                       </View>
+                    }
+                  />
 
-                      <TouchableOpacity style={styles.paymentFinish} onPress={() => finishTheDining()}>
-                        <Text style={styles.paymentFinishHeader}>Finish Dining</Text>
-                      </TouchableOpacity>
-                    </>
-                  }
+                  <View style={styles.paymentInfos}>
+                    <Text style={styles.paymentInfo}>Subtotal: $ {showPayment.paymentInfo.subTotalcost}</Text>
+                    <Text style={styles.paymentInfo}>Total: $ {showPayment.paymentInfo.totalCost}</Text>
+                  </View>
+
+                  <TouchableOpacity style={styles.paymentFinish} onPress={() => finishTheDining()}>
+                    <Text style={styles.paymentFinishHeader}>Finish Dining</Text>
+                  </TouchableOpacity>
                 </View>
               </View>
             )}
@@ -5025,8 +5045,13 @@ const styles = StyleSheet.create({
 	cartordererAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: wsize(30) },
 	cartordererActionHeader: { fontSize: wsize(4), textAlign: 'center' },
 
-  tableOrder: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, flexDirection: 'row', justifyContent: 'space-between', marginTop: 20, marginHorizontal: '2%', padding: 10, width: '96%' },
+  tableOrder: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, flexDirection: 'row', justifyContent: 'space-between', margin: '2%', padding: 5 },
   tableOrderHeader: { fontSize: wsize(6), fontWeight: 'bold' },
+  tableOrderitemImage: { width: '25%' },
+  tableOrderInfo: { width: '50%' },
+  tableOrderInfoHeader: { fontSize: wsize(4), fontWeight: 'bold' },
+  tableOrderDone: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, padding: 3, width: '100%' },
+  tableOrderDoneHeader: { fontSize: wsize(4), textAlign: 'center' },
   seeOrders: { alignItems: 'center', backgroundColor: 'black', borderRadius: 10, flexDirection: 'row', justifyContent: 'space-around', marginVertical: 2, padding: 10 },
   seeOrdersHeader: { color: 'white', fontSize: wsize(6), fontWeight: 'bold', textAlign: 'center' },
   tableOrderOption: { alignItems: 'center', backgroundColor: 'black', borderRadius: 10, flexDirection: 'row', justifyContent: 'space-around', marginVertical: 2, padding: 5 },
@@ -5186,14 +5211,6 @@ const styles = StyleSheet.create({
   ordersContainer: { alignItems: 'center', backgroundColor: 'white', height: '95%', width: '95%' },
   ordersClose: { marginVertical: 20 },
   ordersHeader: { fontSize: wsize(6), fontWeight: 'bold', marginVertical: 5, textAlign: 'center' },
-  ordersItem: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, flexDirection: 'row', justifyContent: 'space-between', margin: '2%', padding: 5 },
-  itemImage: { width: '25%' },
-
-  ordersItemInfo: { width: '50%' },
-  ordersItemInfoHeader: { fontSize: wsize(5), fontWeight: 'bold' },
-
-  ordersItemDone: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, padding: 3, width: '100%' },
-  ordersItemDoneHeader: { fontSize: wsize(6), textAlign: 'center' },
 
   paymentHeader: { fontSize: wsize(6), fontWeight: 'bold' },
   paymentInfos: {  },

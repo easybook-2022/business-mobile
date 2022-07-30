@@ -38,8 +38,8 @@ export default function Walkin({ navigation }) {
   const getAllTheWorkingStylists = async() => {
     const locationid = await AsyncStorage.getItem("locationid")
     const locationtype = await AsyncStorage.getItem("locationtype")
-    const date = new Date(Date.now()), day = days[date.getDay()].substr(0, 3), hour = date.getHours().toString(), minute = date.getMinutes().toString()
-    const data = { locationid, day, hour, minute }
+    const date = new Date(Date.now()), day = days[date.getDay()].substr(0, 3), hour = date.getHours().toString(), minute = date.getMinutes()
+    const data = { locationid, day, hour, minute: minute < 10 ? "0" + minute : minute.toString() }
 
     getAllWorkingStylists(data)
       .then((res) => {
@@ -193,66 +193,90 @@ export default function Walkin({ navigation }) {
         }
       })
   }
+  const displayListItem = info => {
+    return (
+      <View style={styles.item}>
+        <View style={{ flexDirection: 'row', width: '100%' }}>
+          {info.image.name && (
+            <View style={{ width: '25%' }}>
+              <View style={styles.itemImageHolder}>
+                <Image 
+                  style={resizePhoto(info.image, wsize(20))} 
+                  source={{ uri: logo_url + info.image.name }}
+                />
+              </View>
+            </View>
+          )}
+          <View style={{ width: '80%' }}>
+            <Text style={styles.itemHeader}>{info.name}</Text>
+            <Text style={styles.itemMiniHeader}>{info.description}</Text>
+            <Text style={styles.itemHeader}>$ {info.price}</Text>
+            <TouchableOpacity style={styles.itemAction} onPress={() => bookTheWalkIn(info)}>
+              <Text style={styles.itemActionHeader}>Pick</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    )
+  }
   const displayList = info => {
-    let { id, image, name, list, listType } = info
+    let { id, image, name, list, listType, show = true, parentId = "" } = info
 
     return (
       <View>
         {name ?
           <View style={styles.menu}>
-            <View style={{ flexDirection: 'row' }}>
-              <View style={styles.menuImageHolder}>
-                <Image 
-                  style={resizePhoto(image, wsize(10))} 
-                  source={image.name ? { uri: logo_url + image.name } : require("../../assets/noimage.jpeg")}
-                />
-              </View>
+            <TouchableOpacity style={{ flexDirection: 'row' }} onPress={() => {
+              const newList = [...menuInfo.list]
+
+              const toggleMenu = list => {
+                list.forEach(function (item) {
+                  if (item.parentId == parentId) {
+                    item.show = false
+                  }
+
+                  if (item.id == id) {
+                    item.show = show ? false : true
+                  } else if (item.list) {
+                    toggleMenu(item.list)
+                  }
+                })
+              }
+
+              toggleMenu(newList)
+
+              setMenuinfo({ ...menuInfo, list: newList })
+            }}>
+              {image.name && (
+                <View style={styles.menuImageHolder}>
+                  <Image 
+                    style={resizePhoto(image, wsize(10))} 
+                    source={image.name ? { uri: logo_url + image.name } : require("../../assets/noimage.jpeg")}
+                  />
+                </View>
+              )}
               <View style={styles.column}><Text style={styles.menuName}>{name} (Menu)</Text></View>
-            </View>
+            </TouchableOpacity>
             {list.length > 0 && list.map((info, index) => (
               <View key={"list-" + index}>
-                {info.listType == "list" ? 
-                  displayList({ id: info.id, name: info.name, image: info.image, list: info.list, listType: info.listType })
-                  :
-                  <View style={styles.item}>
-                    <View style={styles.itemImageHolder}>
-                      <Image 
-                        style={resizePhoto(info.image, wsize(10))} 
-                        source={info.image.name ? { uri: logo_url + info.image.name } : require("../../assets/noimage.jpeg")}
-                      />
-                    </View>
-                    <View style={styles.column}><Text style={styles.itemHeader}>{info.price ? '$' + info.price : info.sizes.length + ' size(s)'}</Text></View>
-                    <View style={styles.column}>
-                      <TouchableOpacity style={styles.itemAction} onPress={() => bookTheWalkIn(info)}>
-                        <Text style={styles.itemActionHeader}>Pick <Text style={{ fontWeight: 'bold' }}>{info.name}</Text></Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                }
+                {show && (
+                  info.listType == "list" ? 
+                    displayList({ id: info.id, name: info.name, image: info.image, list: info.list, listType: info.listType, show: info.show, parentId: info.parentId })
+                    :
+                    displayListItem(info)
+                )}
               </View>
             ))}
           </View>
           :
           list.map((info, index) => (
             <View key={"list-" + index}>
-              {info.listType == "list" ? 
-                displayList({ id: info.id, name: info.name, image: info.image, list: info.list, listType: info.listType })
-                :
-                <View style={styles.item}>
-                  <View style={styles.itemImageHolder}>
-                    <Image 
-                      style={resizePhoto(info.image, wsize(10))} 
-                      source={info.image.name ? { uri: logo_url + info.image.name } : require("../../assets/noimage.jpeg")}
-                    />
-                  </View>
-                  <View style={styles.column}><Text style={styles.itemHeader}>{info.price ? '$' + info.price : info.sizes.length + ' size(s)'}</Text></View>
-                  <View style={styles.column}>
-                    <TouchableOpacity style={styles.itemAction} onPress={() => bookTheWalkIn(info)}>
-                      <Text style={styles.itemActionHeader}>Pick <Text style={{ fontWeight: 'bold' }}>{info.name}</Text></Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              }
+              {show && (
+                info.listType == "list" ? 
+                  displayList({ id: info.id, name: info.name, image: info.image, list: info.list, listType: info.listType, show: info.show, parentId: info.parentId })
+                  :
+                  displayListItem(info)
+              )}
             </View>
           ))
         }
@@ -298,7 +322,7 @@ export default function Walkin({ navigation }) {
       jsonDate["hour"] = bH
       jsonDate["minute"] = eMone
 
-      const data = { 
+      let data = { 
         workerid: worker.id, locationid: locationId, 
         time: jsonDate, bTime, eTime,
         unix: jsonDateToUnix(jsonDate),
@@ -319,13 +343,17 @@ export default function Walkin({ navigation }) {
         })
         .then((res) => {
           if (res) {
-            setConfirm({ ...confirm, showClientInput: false, timeDisplay: res.timeDisplay })
+            data = { ...data, receiver: res.receiver }
 
-            setTimeout(function () {
-              setConfirm({ ...confirm, show: false, client: { name: "", cellnumber: "" }, confirm: false })
-              setSelectedworkerinfo({ ...selectedWorkerinfo, id: -1, hours: {} })
-              setStep(0)
-            }, 3000)
+            socket.emit("socket/business/bookWalkIn", data, () => {
+              setConfirm({ ...confirm, showClientInput: false, timeDisplay: res.timeDisplay })
+
+              setTimeout(function () {
+                setConfirm({ ...confirm, show: false, client: { name: "", cellnumber: "" }, confirm: false })
+                setSelectedworkerinfo({ ...selectedWorkerinfo, id: -1, hours: {} })
+                setStep(0)
+              }, 3000)
+            })
           }
         })
         .catch((err) => {
@@ -364,50 +392,54 @@ export default function Walkin({ navigation }) {
 
   return (
     <SafeAreaView style={styles.walkin}>
-      <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
-        <View style={styles.box}>
-          {step == 0 && (
-            <View style={styles.headers}>
-              <Text style={styles.header}>
-                Hi Client{':)\n'}
-                Welcome to {name}
-              </Text>
-              <Text style={styles.header}>Easily pick the stylist and service{'\n'}(you want){'\n'}and have a seat</Text>
+      <View style={styles.box}>
+        {step == 0 && (
+          <View style={styles.headers}>
+            <Text style={styles.header}>
+              Hi Client{':)\n'}
+              Welcome to {name}
+            </Text>
+            <Text style={styles.header}>
+              Easily pick the stylist and service{'\n'}
+              <Text style={{ fontSize: wsize(8), fontWeight: 'bold' }}>(you want)</Text>
+              {'\n'}and have a seat
+            </Text>
 
-              <TouchableOpacity style={styles.action} onPress={() => setStep(1)}>
-                <Text style={styles.actionHeader}>Begin</Text>
-              </TouchableOpacity>
+            <TouchableOpacity style={styles.action} onPress={() => setStep(1)}>
+              <Text style={styles.actionHeader}>Begin</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {step == 1 && (
+          <View style={styles.workerSelection}>
+            <Text style={styles.workerSelectionHeader}>Pick a stylist (Optional)</Text>
+
+            <View style={styles.workersList}>
+              <FlatList
+                data={allStylists.stylists}
+                renderItem={({ item, index }) => 
+                  <View key={item.key} style={styles.workersRow}>
+                    {item.row.map(info => (
+                      info.id ? 
+                        <TouchableOpacity key={info.key} style={[styles.worker, { backgroundColor: (selectedWorkerinfo.id == info.id) ? 'rgba(0, 0, 0, 0.3)' : null }]} disabled={selectedWorkerinfo.loading} onPress={() => selectWorker(info.id)}>
+                          <View style={styles.workerProfile}>
+                            <Image 
+                              source={info.profile.name ? { uri: logo_url + info.profile.name } : require("../../assets/profilepicture.jpeg")} 
+                              style={resizePhoto(info.profile, wsize(20))}
+                            />
+                          </View>
+                          <Text style={styles.workerHeader}>{info.username}</Text>
+                        </TouchableOpacity>
+                        :
+                        <View key={info.key} style={styles.worker}></View>
+                    ))}
+                  </View>
+                }
+              />
             </View>
-          )}
 
-          {step == 1 && (
-            <View style={styles.workerSelection}>
-              <Text style={styles.workerSelectionHeader}>Pick a stylist (Optional)</Text>
-
-              <View style={styles.workersList}>
-                <FlatList
-                  data={allStylists.stylists}
-                  renderItem={({ item, index }) => 
-                    <View key={item.key} style={styles.workersRow}>
-                      {item.row.map(info => (
-                        info.id ? 
-                          <TouchableOpacity key={info.key} style={[styles.worker, { backgroundColor: (selectedWorkerinfo.id == info.id) ? 'rgba(0, 0, 0, 0.3)' : null }]} disabled={selectedWorkerinfo.loading} onPress={() => selectWorker(info.id)}>
-                            <View style={styles.workerProfile}>
-                              <Image 
-                                source={info.profile.name ? { uri: logo_url + info.profile.name } : require("../../assets/profilepicture.jpeg")} 
-                                style={resizePhoto(info.profile, wsize(20))}
-                              />
-                            </View>
-                            <Text style={styles.workerHeader}>{info.username}</Text>
-                          </TouchableOpacity>
-                          :
-                          <View key={info.key} style={styles.worker}></View>
-                      ))}
-                    </View>
-                  }
-                />
-              </View>
-
+            {allStylists.numStylists > 1 && (
               <View style={styles.actions}>
                 <TouchableOpacity style={styles.action} onPress={() => {
                   const { ids } = allStylists
@@ -417,37 +449,33 @@ export default function Walkin({ navigation }) {
                   <Text style={styles.actionHeader}>Random</Text>
                 </TouchableOpacity>
               </View>
-            </View>
-          )}
+            )}
+          </View>
+        )}
 
-          {(step == 2 && (menuInfo.photos.length > 0 || menuInfo.list.length > 0)) && (
-            <>
-              <TouchableOpacity style={styles.openInput} onPress={() => setRequestinfo({ ...requestInfo, show: true })}>
-                <Text style={styles.openInputHeader}>Type in service</Text>
+        {(step == 2 && (menuInfo.photos.length > 0 || menuInfo.list.length > 0)) && (
+          <>
+            <ScrollView style={{ height: '90%', width: '100%' }}>
+              <View style={{ marginHorizontal: width * 0.025 }}>{displayList({ id: "", name: "", image: "", list: menuInfo.list })}</View>
+            </ScrollView>
+
+            <View style={styles.actions}>
+              <TouchableOpacity style={styles.action} onPress={() => setStep(step - 1)}>
+                <Text style={styles.actionHeader}>Go back</Text>
               </TouchableOpacity>
-              <ScrollView style={{ height: '90%', width: '100%' }}>
-                <View style={{ marginHorizontal: width * 0.025 }}>{displayList({ id: "", name: "", image: "", list: menuInfo.list })}</View>
-              </ScrollView>
-
-              <View style={styles.actions}>
-                <TouchableOpacity style={styles.action} onPress={() => setStep(step - 1)}>
-                  <Text style={styles.actionHeader}>Go back</Text>
-                </TouchableOpacity>
-              </View>
-            </>
-          )}
-
-          <View style={styles.bottomNavs}>
-            <View style={styles.bottomNavsRow}>
-              <View style={styles.column}>
-                <TouchableOpacity style={styles.bottomNav} onPress={() => logout()}>
-                  <Text style={styles.bottomNavHeader}>Log-Out</Text>
-                </TouchableOpacity>
-              </View>
             </View>
+          </>
+        )}
+      </View>
+      <View style={styles.bottomNavs}>
+        <View style={styles.bottomNavsRow}>
+          <View style={styles.column}>
+            <TouchableOpacity style={styles.bottomNav} onPress={() => logout()}>
+              <Text style={styles.bottomNavHeader}>Log-Out</Text>
+            </TouchableOpacity>
           </View>
         </View>
-      </TouchableWithoutFeedback>
+      </View>
 
       {(confirm.show || requestInfo.show) && (
         <Modal transparent={true}>
@@ -571,7 +599,7 @@ export default function Walkin({ navigation }) {
 
 const styles = StyleSheet.create({
   walkin: { backgroundColor: 'white', height: '100%', width: '100%' },
-  box: { alignItems: 'center', backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
+  box: { alignItems: 'center', backgroundColor: '#EAEAEA', flexDirection: 'column', height: '90%', justifyContent: 'space-between', width: '100%' },
 
   headers: { alignItems: 'center', flexDirection: 'column', height: '90%', justifyContent: 'space-around', width: '100%' },
   header: { fontSize: wsize(6), textAlign: 'center' },
@@ -608,15 +636,16 @@ const styles = StyleSheet.create({
   menuPhotos: { height: '80%', width: '100%' },
   menuPhoto: { marginBottom: 10, marginHorizontal: width * 0.025 },
 
-  menu: { backgroundColor: 'white', borderTopLeftRadius: 3, borderTopRightRadius: 3, padding: 3 },
+  menu: { borderTopLeftRadius: 3, borderTopRightRadius: 3, marginVertical: 10 },
   menuImageHolder: { borderRadius: wsize(10) / 2, flexDirection: 'column', height: wsize(10), justifyContent: 'space-around', overflow: 'hidden' },
-  menuName: { fontSize: wsize(6), fontWeight: 'bold', marginLeft: 5, marginTop: wsize(4) / 2, textDecorationLine: 'underline' },
+  menuName: { fontSize: wsize(6), fontWeight: 'bold', marginLeft: 5, marginTop: wsize(4) / 2 },
   itemInfo: { fontSize: wsize(5), marginLeft: 10, marginVertical: 10 },
-  item: { backgroundColor: 'white', flexDirection: 'row', justifyContent: 'space-between', marginVertical: 3, width: '100%' },
+  item: { backgroundColor: 'white', flexDirection: 'row', justifyContent: 'space-between', marginVertical: 3, padding: 5, width: '100%' },
   itemImageHolder: { borderRadius: wsize(20) / 2, flexDirection: 'column', height: wsize(20), justifyContent: 'space-around', margin: 5, overflow: 'hidden', width: wsize(20) },
   itemHeader: { fontSize: wsize(6), fontWeight: 'bold' },
+  itemMiniHeader: { fontSize: wsize(4) },
   itemActions: { flexDirection: 'row', marginTop: 0 },
-  itemAction: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, padding: 5 },
+  itemAction: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, padding: 5, width: '50%' },
   itemActionHeader: { fontSize: wsize(5), textAlign: 'center' },
 
   bottomNavs: { backgroundColor: 'white', flexDirection: 'column', height: '10%', justifyContent: 'space-around', width: '100%' },

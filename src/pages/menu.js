@@ -203,7 +203,7 @@ export default function Menu(props) {
                   />
                 </View>
               )}
-              <View style={styles.column}><Text style={styles.menuName}>({list.length}) {name} (Menu)</Text></View>
+              <View style={styles.column}><Text style={styles.menuName}>{name} (Menu)</Text></View>
               <View style={styles.column}>
                 <View style={styles.menuActions}>
                   {isOwner == true && (
@@ -1051,7 +1051,7 @@ const styles = StyleSheet.create({
 	menu: { backgroundColor: 'white', marginBottom: 30, paddingVertical: 10, width: '100%' },
   menuRow: {  },
 	menuImageHolder: { borderRadius: wsize(20) / 2, height: wsize(20), overflow: 'hidden', width: wsize(20) },
-	menuName: { color: 'black', fontSize: wsize(6), fontWeight: 'bold', marginLeft: 5, textDecorationLine: 'underline' },
+	menuName: { color: 'black', fontSize: wsize(6), fontWeight: 'bold', marginLeft: 5 },
 	menuActions: { flexDirection: 'row' },
 	menuAction: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, marginLeft: 10, padding: 3 },
 	menuActionHeader: { fontSize: wsize(6), textAlign: 'center' },

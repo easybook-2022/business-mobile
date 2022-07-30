@@ -5,7 +5,7 @@ import { BarCodeScanner } from 'expo-barcode-scanner';
 import QRCode from 'react-native-qrcode-svg';
 import { tr } from '../../assets/translate'
 import { getId } from 'geottuse-tools';
-import { getTables, getTable, addTable, removeTable } from '../apis/dining_tables'
+import { getTables, getQrCode, addTable, removeTable } from '../apis/dining_tables'
 import { tableUrl } from '../../assets/info'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
@@ -85,7 +85,7 @@ export default function Tables() {
   const showQrCode = async(id) => {
     const locationid = await AsyncStorage.getItem("locationid")
 
-    getTable(id)
+    getQrCode(id)
       .then((res) => {
         if (res.status == 200) {
           return res.data
@@ -127,7 +127,6 @@ export default function Tables() {
   }
 
   useEffect(() => {
-
     getTheTables()
   }, [])
 
