@@ -454,7 +454,7 @@ export default function Booktime(props) {
           if (selectedWorkerinfo.id > -1) { // stylist is picked by client
             let { start, end } = selectedWorkerinfo.hours[day]
 
-            if (startCalc + "-" + selectedWorkerinfo.id + "-b" in scheduled[selectedWorkerinfo.id]["scheduled"]) { // time is blocked
+            if (startCalc + "-" + selectedWorkerinfo.id + "-bl" in scheduled[selectedWorkerinfo.id]["scheduled"]) { // time is blocked
               if (!JSON.stringify(blocked).includes("\"unix\":" + startCalc)) {
                 timeBlocked = true
               }
