@@ -560,9 +560,9 @@ export default function Main(props) {
       case "bg":
         if (timepassed || !(time >= beginWork && time <= endWork && working)) {
           if (rebook) { // in rebook mode
-            if (time + "-c" in scheduled) { // time is confirmed
+            if (time + "-co" in scheduled) { // time is confirmed
               bgColor = 'black'
-            } else if (time + "-b" in scheduled) { // time is blocked
+            } else if (time + "-bl" in scheduled) { // time is blocked
               if (JSON.stringify(blocked).includes(JSON.stringify(jsonDate))) { // time blocked belongs to schedule
 
               } else {
@@ -570,27 +570,27 @@ export default function Main(props) {
               }
             }
           } else {
-            if (time + "-b" in scheduled) {
+            if (time + "-bl" in scheduled) {
               bgColor = 'grey'
-            } else if (time + "-c" in scheduled) {
+            } else if (time + "-co" in scheduled) {
               bgColor = 'black'
             }
           }
         } else {
           if (rebook) {
-            if (time + "-c" in scheduled) {
+            if (time + "-co" in scheduled) {
               bgColor = "black"
-            } else if (time + "-b" in scheduled) {
-              if (JSON.stringify(blocked).includes("\"id\":" + scheduled[time + "-b"])) { // time blocked belongs to schedule
+            } else if (time + "-bl" in scheduled) {
+              if (JSON.stringify(blocked).includes("\"id\":" + scheduled[time + "-bl"])) { // time blocked belongs to schedule
 
               } else {
                 bgColor = "grey"
               }
             }
           } else {
-            if (time + "-c" in scheduled) {
+            if (time + "-co" in scheduled) {
               bgColor = "black"
-            } else if (time + "-b" in scheduled) {
+            } else if (time + "-bl" in scheduled) {
               bgColor = "grey"
             }
           }
@@ -600,9 +600,9 @@ export default function Main(props) {
       case "opacity":
         if (timepassed || !(time >= beginWork && time <= endWork && working)) {
           if (rebook) { // in rebook mode
-            if (time + "-c" in scheduled) { // time is confirmed
+            if (time + "-co" in scheduled) { // time is confirmed
 
-            } else if (time + "-b" in scheduled) { // time is blocked
+            } else if (time + "-bl" in scheduled) { // time is blocked
               if (JSON.stringify(blocked).includes(JSON.stringify(jsonDate))) {
                 opacity = 0.3
               } else {
@@ -612,7 +612,7 @@ export default function Main(props) {
               opacity = 0.3
             }
           } else {
-            if (!(time + "-c" in scheduled) && !(time + "-b" in scheduled)) {
+            if (!(time + "-co" in scheduled) && !(time + "-bl" in scheduled)) {
               opacity = 0.3
             }
           }
@@ -624,18 +624,18 @@ export default function Main(props) {
       case "fontColor":
         if (timepassed || !(time >= beginWork && time <= endWork && working)) {
           if (rebook) { // in rebook mode
-            if (time + "-c" in scheduled) { // time is confirmed
+            if (time + "-co" in scheduled) { // time is confirmed
               fontColor = 'white'
-            } else if (time + "-b" in scheduled) { // time is blocked
+            } else if (time + "-bl" in scheduled) { // time is blocked
 
             }
           } else {
-            if (time + "-c" in scheduled) {
+            if (time + "-co" in scheduled) {
               fontColor = 'white'
             }
           }
         } else {
-          if (time + "-c" in scheduled) {
+          if (time + "-co" in scheduled) {
             fontColor = 'white'
           }
         }
@@ -649,7 +649,7 @@ export default function Main(props) {
             !(time >= beginWork && time <= endWork && working)
           ) 
           && 
-          !(time + "-c" in scheduled || time + "-b" in scheduled)
+          !(time + "-co" in scheduled || time + "-bl" in scheduled)
         ) {
           disabled = true
         }
@@ -657,23 +657,23 @@ export default function Main(props) {
         break;
       case "header":
         if (rebook) {
-          if (time + "-c" in scheduled || time + "-w" in scheduled) {
-            if (time + "-c" in scheduled) {
+          if (time + "-co" in scheduled || time + "-w" in scheduled) {
+            if (time + "-co" in scheduled) {
               header = "(" + tr.t("main.chart.booked") + ")"
             } else {
               header = "(" + tr.t("main.chart.walkIn") + ")"
             }
-          } else if (time + "-b" in scheduled) {
-            if (JSON.stringify(blocked).includes("\"id\":" + scheduled[time + "-b"])) { // time blocked belongs to schedule
+          } else if (time + "-bl" in scheduled) {
+            if (JSON.stringify(blocked).includes("\"id\":" + scheduled[time + "-bl"])) { // time blocked belongs to schedule
 
             } else {
               header = "(" + tr.t("main.chart.stillBusy") + ")"
             }
           }
         } else {
-          if (time + "-c" in scheduled) {
+          if (time + "-co" in scheduled) {
             header = "(" + tr.t("main.chart.booked") + ")"
-          } else if (time + "-b" in scheduled) {
+          } else if (time + "-bl" in scheduled) {
             header = "(" + tr.t("main.chart.stillBusy") + ")"
           }
         }
@@ -2642,15 +2642,15 @@ export default function Main(props) {
                                   styles.chartTime,
                                   { width: workers.length < 5 ? (width / workers.length) : 200 },
                                   (
-                                    item.time + "-c" in chartInfo.workersHour[worker.id]["scheduled"] 
+                                    item.time + "-co" in chartInfo.workersHour[worker.id]["scheduled"] 
                                     || 
-                                    item.time + "-w" in chartInfo.workersHour[worker.id]["scheduled"]
+                                    item.time + "-w_" in chartInfo.workersHour[worker.id]["scheduled"]
                                   ) 
                                   && 
                                   (
-                                    (item.time + "-c" in chartInfo.workersHour[worker.id]["scheduled"] && scheduleOption.selectedIds.includes(chartInfo.workersHour[worker.id]["scheduled"][item.time + "-c"].toString()))
+                                    (item.time + "-co" in chartInfo.workersHour[worker.id]["scheduled"] && scheduleOption.selectedIds.includes(chartInfo.workersHour[worker.id]["scheduled"][item.time + "-co"].toString()))
                                     ||
-                                    (item.time + "-w" in chartInfo.workersHour[worker.id]["scheduled"] && scheduleOption.selectedIds.includes(chartInfo.workersHour[worker.id]["scheduled"][item.time + "-w"].toString()))
+                                    (item.time + "-w_" in chartInfo.workersHour[worker.id]["scheduled"] && scheduleOption.selectedIds.includes(chartInfo.workersHour[worker.id]["scheduled"][item.time + "-w_"].toString()))
                                   ) ? 
                                     { 
                                       backgroundColor: 'rgba(0, 0, 0, 0.8)'
@@ -2666,26 +2666,26 @@ export default function Main(props) {
                                   disabled={timeStyle(item, worker.id, "disabled")}
                                   onPress={(e) => {
                                     if (scheduleOption.rebook) {
-                                      if (scheduleOption.id == chartInfo.workersHour[worker.id]["scheduled"][item.time + "-c"]) {
+                                      if (scheduleOption.id == chartInfo.workersHour[worker.id]["scheduled"][item.time + "-co"]) {
                                         setScheduleoption({ ...scheduleOption, show: false, rebook: false })
                                       } else {
                                         rebookSchedule(item.time, item.jsonDate, worker.id)
                                       }
-                                    } else if (!(item.time + "-c" in workersHour[worker.id]["scheduled"] || item.time + "-w" in workersHour[worker.id]["scheduled"])) {
+                                    } else if (!(item.time + "-co" in workersHour[worker.id]["scheduled"] || item.time + "-w_" in workersHour[worker.id]["scheduled"])) {
                                       blockTheTime(worker.id, item.jsonDate)
                                     } else {
                                       if (scheduleOption.select) {
                                         const { selectedIds } = scheduleOption
-                                        const scheduleId = chartInfo.workersHour[worker.id]["scheduled"][item.time + "-c"].toString()
+                                        const scheduleId = chartInfo.workersHour[worker.id]["scheduled"][item.time + "-co"].toString()
 
                                         selectedIds.push(scheduleId)
 
                                         setScheduleoption({ ...scheduleOption, selectedIds })
                                       } else {
-                                        if (item.time + "-c" in chartInfo.workersHour[worker.id]["scheduled"]) {
-                                          showScheduleOption(chartInfo.workersHour[worker.id]["scheduled"][item.time + "-c"], "chart", index, "change")
-                                        } else if (item.time + "-w" in chartInfo.workersHour[worker.id]["scheduled"]) {
-                                          showScheduleOption(chartInfo.workersHour[worker.id]["scheduled"][item.time + "-w"], "chart", index, "change")
+                                        if (item.time + "-co" in chartInfo.workersHour[worker.id]["scheduled"]) {
+                                          showScheduleOption(chartInfo.workersHour[worker.id]["scheduled"][item.time + "-co"], "chart", index, "change")
+                                        } else if (item.time + "-w_" in chartInfo.workersHour[worker.id]["scheduled"]) {
+                                          showScheduleOption(chartInfo.workersHour[worker.id]["scheduled"][item.time + "-w_"], "chart", index, "change")
                                         }
                                       }
                                     }
@@ -2695,15 +2695,15 @@ export default function Main(props) {
                                   <Text style={[
                                     styles.chartTimeHeader, 
                                     (
-                                      item.time + "-c" in chartInfo.workersHour[worker.id]["scheduled"] 
+                                      item.time + "-co" in chartInfo.workersHour[worker.id]["scheduled"] 
                                       ||
-                                      item.time + "-w" in chartInfo.workersHour[worker.id]["scheduled"]
+                                      item.time + "-w_" in chartInfo.workersHour[worker.id]["scheduled"]
                                     ) 
                                     && 
                                     (
-                                      (item.time + "-c" in chartInfo.workersHour[worker.id]["scheduled"] && scheduleOption.selectedIds.includes(chartInfo.workersHour[worker.id]["scheduled"][item.time + "-c"].toString()))
+                                      (item.time + "-co" in chartInfo.workersHour[worker.id]["scheduled"] && scheduleOption.selectedIds.includes(chartInfo.workersHour[worker.id]["scheduled"][item.time + "-co"].toString()))
                                       ||
-                                      (item.time + "-w" in chartInfo.workersHour[worker.id]["scheduled"] && scheduleOption.selectedIds.includes(chartInfo.workersHour[worker.id]["scheduled"][item.time + "-w"].toString()))
+                                      (item.time + "-w_" in chartInfo.workersHour[worker.id]["scheduled"] && scheduleOption.selectedIds.includes(chartInfo.workersHour[worker.id]["scheduled"][item.time + "-w_"].toString()))
                                     ) ? 
                                       { color: 'white' }
                                       :
@@ -2711,15 +2711,15 @@ export default function Main(props) {
                                   ]}>
                                     {item.timeDisplay + '\n'}
                                     {(
-                                      (item.time + "-c" in workersHour[worker.id]["scheduled"] || item.time + "-w" in workersHour[worker.id]["scheduled"])
+                                      (item.time + "-co" in workersHour[worker.id]["scheduled"] || item.time + "-w_" in workersHour[worker.id]["scheduled"])
                                       ||
-                                      (item.time + "-b" in workersHour[worker.id]["scheduled"])
+                                      (item.time + "-bl" in workersHour[worker.id]["scheduled"])
                                     ) && (
                                       <Text style={styles.chartScheduledInfo}>{timeStyle(item, worker.id, "header")}</Text>
                                     )}
                                   </Text>
 
-                                  {(item.time + "-c" in workersHour[worker.id]["scheduled"] || item.time + "-w" in workersHour[worker.id]["scheduled"]) && (
+                                  {(item.time + "-co" in workersHour[worker.id]["scheduled"] || item.time + "-w_" in workersHour[worker.id]["scheduled"]) && (
                                     <View 
                                       style={styles.chartScheduledActions}
                                       onStartShouldSetResponder={(event) => true}
@@ -2727,10 +2727,10 @@ export default function Main(props) {
                                     >
                                       <View style={styles.column}>
                                          <TouchableOpacity style={styles.chartScheduledAction} onPress={() => {
-                                          if (item.time + "-c" in chartInfo.workersHour[worker.id]["scheduled"]) {
-                                            showScheduleOption(chartInfo.workersHour[worker.id]["scheduled"][item.time + "-c"], "chart", index, "remove")
+                                          if (item.time + "-co" in chartInfo.workersHour[worker.id]["scheduled"]) {
+                                            showScheduleOption(chartInfo.workersHour[worker.id]["scheduled"][item.time + "-co"], "chart", index, "remove")
                                           } else {
-                                            showScheduleOption(chartInfo.workersHour[worker.id]["scheduled"][item.time + "-w"], "chart", index, "remove")
+                                            showScheduleOption(chartInfo.workersHour[worker.id]["scheduled"][item.time + "-w_"], "chart", index, "remove")
                                           }
                                          }}>
                                           <AntDesign color="white" name="closecircleo" size={30}/>

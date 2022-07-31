@@ -398,7 +398,11 @@ export default function Booktime(props) {
       if (selectedWorkerinfo.id > -1) { // worker is selected
         const workerid = selectedWorkerinfo.id
 
-        if (calcDateStr + "-" + workerid + "-c" in scheduled[workerid]["scheduled"]) {
+        if (
+          calcDateStr + "-" + workerid + "-co" in scheduled[workerid]["scheduled"]
+          ||
+          calcDateStr + "-" + workerid + "-ca" in scheduled[workerid]["scheduled"]
+        ) {
           timetaken = true
         }
       } else {
@@ -454,8 +458,16 @@ export default function Booktime(props) {
               if (!JSON.stringify(blocked).includes("\"unix\":" + startCalc)) {
                 timeBlocked = true
               }
-            } else if (startCalc + "-" + selectedWorkerinfo.id + "-c" in scheduled[selectedWorkerinfo.id]["scheduled"]) { // time is taken
-              if (scheduled[selectedWorkerinfo.id]["scheduled"][startCalc + "-" + selectedWorkerinfo.id + "-c"] != scheduleid) {
+            } else if (
+              startCalc + "-" + selectedWorkerinfo.id + "-co" in scheduled[selectedWorkerinfo.id]["scheduled"]
+              ||
+              startCalc + "-" + selectedWorkerinfo.id + "-ca" in scheduled[selectedWorkerinfo.id]["scheduled"]
+            ) { // time is taken
+              if (
+                scheduled[selectedWorkerinfo.id]["scheduled"][startCalc + "-" + selectedWorkerinfo.id + "-co"] != scheduleid
+                ||
+                scheduled[selectedWorkerinfo.id]["scheduled"][startCalc + "-" + selectedWorkerinfo.id + "-ca"] != scheduleid
+              ) {
                 timeBlocked = true
               }
             } else if (startCalc >= Date.parse(timeStr + end)) { // stylist is off
