@@ -2773,7 +2773,7 @@ export default function Main(props) {
                           {item.image.name && (
                             <View style={styles.tableOrderItemImage}>
                               <Image 
-                                style={resizePhoto(item.image, wsize(20))} 
+                                style={resizePhoto(item.image, wsize(15))} 
                                 source={{ uri: logo_url + item.image.name }}
                               />
                             </View>
@@ -2811,7 +2811,7 @@ export default function Main(props) {
                             </View>
                           </View>
 
-                          <View style={[styles.column, { width: '25%' }]}>
+                          <View style={[styles.column, { width: '20%' }]}>
                             <TouchableOpacity style={styles.tableOrderDone} onPress={() => finishTheOrder(item.key, item.tableId)}>
                               <Text style={styles.tableOrderDoneHeader}>{tr.t("buttons.done")}</Text>
                             </TouchableOpacity>
@@ -3364,6 +3364,7 @@ export default function Main(props) {
 
                                 <View style={{ flex: 1, width: '90%' }}>
                                   <GooglePlacesAutocomplete
+                                    listUnderlayColor={"#c8c7cc"}
                                     placeholder="Type in address"
                                     minLength={2} 
                                     fetchDetails={true}
@@ -5004,7 +5005,7 @@ const styles = StyleSheet.create({
 
   tableOrder: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, flexDirection: 'row', justifyContent: 'space-between', margin: '2%', padding: 5 },
   tableOrderHeader: { fontSize: wsize(6), fontWeight: 'bold' },
-  tableOrderitemImage: { width: '25%' },
+  tableOrderItemImage: { width: '15%' },
   tableOrderInfo: { width: '50%' },
   tableOrderInfoHeader: { fontSize: wsize(4), fontWeight: 'bold' },
   tableOrderDone: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, padding: 3, width: '100%' },
