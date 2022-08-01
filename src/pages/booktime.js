@@ -120,7 +120,7 @@ export default function Booktime(props) {
   const getCalendar = (month, year) => {
     let currTime = new Date(), currDate = 0, currDay = ''
     let firstDay = (new Date(year, month)).getDay(), numDays = 32 - new Date(year, month, 32).getDate(), daynum = 1
-    let data = calendar.data, datetime = 0, hourInfo, closedtime, now = Date.parse(
+    let data = calendar.data, datetime = 0, hourInfo, closedtime, finishworktime, now = Date.parse(
       days[currTime.getDay()] + " " + 
       months[currTime.getMonth()] + " " + 
       currTime.getDate() + " " + 
@@ -210,7 +210,19 @@ export default function Booktime(props) {
             now = Date.now()
 
             if (now < closedtime) {
-              currDate = day.num
+              if (selectedWorkerinfo.id > -1) {
+                if (currDay in selectedWorkerinfo.hours) {
+                  const { start, end } = selectedWorkerinfo.hours[currDay]
+
+                  finishworktime = Date.parse(timeStr + " " + end)
+
+                  if (now < finishworktime) { // before stylist finishes work
+                    currDate = day.num
+                  }
+                }
+              } else {
+                currDate = day.num
+              }
             } else {
               day.passed = true
             }

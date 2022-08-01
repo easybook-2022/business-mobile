@@ -892,7 +892,7 @@ export default function Main(props) {
       time: jsonDate, note, 
       timeDisplay: displayTime(jsonDate), 
       type: "salonChangeAppointment",
-      blocked, unix: time
+      blocked
     }
 
     salonChangeAppointment(data)
@@ -1061,38 +1061,6 @@ export default function Main(props) {
         }
       })
   }
-  const getTheTableOrders = async() => {
-    const locationid = await AsyncStorage.getItem("locationid")
-
-    getTableOrders(locationid)
-      .then((res) => {
-        if (res.status == 200) {
-          return res.data
-        }
-      })
-      .then((res) => {
-        if (res) {
-          setShowpayment({ ...showPayment, show: true, tableId: res.name, id, orders: res.orders, paymentInfo: { show: false, subTotalcost: "", totalCost: "" }})
-        }
-      })
-      .catch((err) => {
-        if (err.response && err.response.status == 400) {
-          const { errormsg, status } = err.response.data
-
-          switch (status) {
-            case "noOrders":
-              setAlertinfo({ ...alertInfo, show: true, text: tr.t("main.hidden.alert.noOrders") })
-
-              break;
-            default:
-          }
-
-          setTimeout(function () {
-            setAlertinfo({ ...alertInfo, show: false, text: '' })
-          }, 1000)
-        }
-      })
-  }
   const finishTheOrder = (orderid, id) => {
     const data = { orderid, id }
 
@@ -1155,7 +1123,7 @@ export default function Main(props) {
       .then((res) => {
         if (res) {
           setShowpayment({ ...showPayment, show: false, orders: [], paymentInfo: { show: false, subTotalcost: "", totalCost: "" }})
-          getAllOrderingTables(false)
+          getAllTableBills(false)
         }
       })
   }
@@ -1342,8 +1310,6 @@ export default function Main(props) {
     })
     socket.on("updateTableOrders", () => {
       getAllOrderingTables(false)
-
-      if (showPayment.id > -1) getTheTableOrders()
     })
 		socket.io.on("open", () => {
 			if (ownerId != null) {
@@ -2845,7 +2811,7 @@ export default function Main(props) {
                           </View>
 
                           <View style={[styles.column, { width: '25%' }]}>
-                            <TouchableOpacity style={styles.tableOrderDone} onPress={() => finishTheOrder(item.key, item.tableName)}>
+                            <TouchableOpacity style={styles.tableOrderDone} onPress={() => finishTheOrder(item.key, item.tableId)}>
                               <Text style={styles.tableOrderDoneHeader}>{tr.t("buttons.done")}</Text>
                             </TouchableOpacity>
                           </View>
@@ -3333,7 +3299,7 @@ export default function Main(props) {
                       {editInfo.show && (
                         <View style={styles.editInfoBox}>
                           <View style={styles.editInfoContainer}>
-                            <View style={{ alignItems: 'center', marginVertical: 30 }}>
+                            <View style={{ marginTop: 5 }}>
                               <TouchableOpacity style={styles.editInfoClose} onPress={() => {
                                 setShowmoreoptions({ ...showMoreoptions, infoType: '' })
                                 setEditinfo({ ...editInfo, show: false, type: '' })
@@ -3426,7 +3392,7 @@ export default function Main(props) {
                             )}
 
                             {editInfo.type == 'logo' && (
-                              <View style={[styles.cameraContainer, { marginVertical: 20 }]}>
+                              <View style={[styles.cameraContainer]}>
                                 <Text style={styles.header}>{tr.t("main.editingLogo")}</Text>
 
                                 {logo.uri ? (
