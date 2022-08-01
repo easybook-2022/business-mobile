@@ -109,8 +109,8 @@ export default function Main(props) {
 
   const [locationInfo, setLocationinfo] = useState('')
   const [locationCoords, setLocationcoords] = useState({ longitude: null, latitude: null, longitudeDelta: null, latitudeDelta: null })
-  const [storeName, setStorename] = useState(loginInfo.storeName)
-  const [phonenumber, setPhonenumber] = useState(loginInfo.phonenumber)
+  const [storeName, setStorename] = useState('')
+  const [phonenumber, setPhonenumber] = useState('')
   const [logo, setLogo] = useState({ uri: '', name: '', size: { width: 0, height: 0 }, loading: false })
   const [locationReceivetype, setLocationreceivetype] = useState('')
   const [useVoice, setUsevoice] = useState(false)
@@ -236,6 +236,7 @@ export default function Main(props) {
 
 						setOwnerid(ownerid)
 						setStorename(name)
+            setPhonenumber(res.info.phonenumber)
             setLogo({ ...logo, uri: logo.name ? logo_url + logo.name : "", size: { width: logo.width, height: logo.height }})
             setLocationtype(type)
             setLocationreceivetype(receiveType)
