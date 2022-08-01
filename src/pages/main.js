@@ -2846,7 +2846,7 @@ export default function Main(props) {
                     />
                     :
                     <View style={styles.bodyResult}>
-                      <Text style={styles.bodyResultHeader}>{tr.t("main.tableOrders.header")}</Text>
+                      <Text style={styles.bodyResultHeader}>There are {tableOrders.length} order(s)</Text>
                     </View>
                   }
                 </>
@@ -5005,7 +5005,7 @@ const styles = StyleSheet.create({
 
   tableOrder: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, flexDirection: 'row', justifyContent: 'space-between', margin: '2%', padding: 5 },
   tableOrderHeader: { fontSize: wsize(6), fontWeight: 'bold' },
-  tableOrderItemImage: { width: '15%' },
+  tableOrderItemImage: { width: '20%' },
   tableOrderInfo: { width: '50%' },
   tableOrderInfoHeader: { fontSize: wsize(4), fontWeight: 'bold' },
   tableOrderDone: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, padding: 3, width: '100%' },
