@@ -113,7 +113,7 @@ const info = {
       showCode: "Hiển thị mã"
     },
     bottomNavs: {
-      changeInfo: "Thay đổi\nthông tin",
+      info: "Thông\ntin",
       hours: "Xem giờ",
     },
     hidden: {
@@ -149,6 +149,7 @@ const info = {
       showMoreoptions: {
         changeMenu: "Thay đổi menu",
         changeStaffinfo: "Thay đổi thông tin nhân viên",
+        changeLogininfo: "Thay đổi thông tin đăng nhập",
         changeBusinessinformation: "Thay đổi tên / số điện thoại",
         changeBusinesslocation: "Thay đổi địa chỉ",
         changeBusinesslogo: "Thay đổi ảnh",
@@ -166,7 +167,8 @@ const info = {
           header: "Sử dụng giọng nói",
           yes: "Đúng",
           no: "Không"
-        }
+        },
+        paymentRecords: "Xem thu nhập"
       },
       workingDays: {
         header: "Nhân viên mới làm việc vào những ngày nào?",
@@ -223,7 +225,12 @@ const info = {
     },
     editingInformation: {
       name: "Nhập tên doanh nghiệp",
-      phonenumber: "Nhập số điện thoại doanh nghiệp"
+      phonenumber: "Nhập số điện thoại doanh nghiệp",
+      cellnumber: "Entrez votre numéro de téléphone portable",
+      verifyCode: "Entrez le code envoyé à votre message",
+      currentPassword: "Entrer le mot de passe actuel",
+      newPassword: "Entrer un nouveau mot de passe",
+      confirmPassword: "Confirmez votre nouveau mot de passe"
     },
     editingLocation: "Nhập địa chỉ doanh nghiệp",
     editingLogo: "Ảnh của doanh nghiệp",

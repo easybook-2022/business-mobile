@@ -11,7 +11,6 @@ export const addNewProduct = data => {
 	const form = new FormData()
 	const { uri, name, type = "image/jpeg", size } = data.image
 
-	form.append("ownerid", data.ownerid)
 	form.append("locationid", data.locationid)
 	form.append("menuid", data.menuid)
 	form.append("name", data.name)
@@ -31,20 +30,37 @@ export const addNewProduct = data => {
 
 export const updateProduct = data => {
 	const form = new FormData()
-	const { uri, name, type = "image/jpeg", size } = data.image
 
-	form.append("ownerid", data.ownerid)
 	form.append("locationid", data.locationid)
+  form.append("type", data.type)
 	form.append("menuid", data.menuid)
 	form.append("productid", data.productid)
-	form.append("name", data.name)
-	form.append("options", JSON.stringify(data.options))
-	form.append("price", data.price)
 
-	if (data.image.uri.includes("file")) {
-		form.append("image", { uri, name, type })
-    form.append("size", JSON.stringify(size))
-	}
+  switch (data.type) {
+    case "name":
+      form.append("name", data.name)
+
+      break;
+    case "photo":
+      const { uri, name, type = "image/jpeg", size } = data.image
+      
+      if (data.image.uri.includes("file")) {
+        form.append("image", { uri, name, type })
+        form.append("size", JSON.stringify(size))
+      } else if (data.image.remove == true) {
+        form.append("removeImage", true)
+      }
+
+      break;
+    case "price":
+      form.append("price", data.price)
+
+      break;
+    case "options":
+      form.append("options", JSON.stringify(data.options))
+
+      break;
+  }
 
 	return axios.post(
 		`${beginUrl}update_product`,

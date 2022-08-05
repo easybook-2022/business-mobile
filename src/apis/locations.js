@@ -89,9 +89,9 @@ export const fetchNumorders = id => {
 	return axios.get(`${beginUrl}fetch_num_orders/${id}`)
 }
 
-export const setLocationHours = data => {
+export const updateLocationHours = data => {
 	return axios.post(
-		`${beginUrl}set_location_hours`,
+		`${beginUrl}update_location_hours`,
 		data
 	)
 }
@@ -123,4 +123,8 @@ export const getLocationProfile = data => {
     `${url}/locations/get_location_profile`,
     data
   )
+}
+
+export const getIncome = id => {
+  return axios.get(`${beginUrl}/get_income/${id}`)
 }

@@ -113,7 +113,7 @@ const info = {
       showCode: "Show code"
     },
     bottomNavs: {
-      changeInfo: "Change Info",
+      info: "Info",
       hours: "Hour(s)"
     },
     hidden: {
@@ -149,6 +149,7 @@ const info = {
       showMoreoptions: {
         changeMenu: "Change Menu",
         changeStaffinfo: "Change Staffs Info",
+        changeLogininfo: "Change Login Info",
         changeBusinessinformation: "Change name/phonenumber",
         changeBusinesslocation: "Change Address",
         changeBusinesslogo: "Change Photo",
@@ -166,7 +167,8 @@ const info = {
           header: "Use voice",
           yes: "Yes",
           no: "No"
-        }
+        },
+        paymentRecords: "See Income"
       },
       workingDays: {
         header: "What days does new staff work on ?",
@@ -223,7 +225,12 @@ const info = {
     },
     editingInformation: {
       name: "Enter business name",
-      phonenumber: "Enter business phone number"
+      phonenumber: "Enter business phone number",
+      cellnumber: "Enter your cell phone number",
+      verifyCode: "Enter code sent to your message",
+      currentPassword: "Enter current password",
+      newPassword: "Enter a new password",
+      confirmPassword: "Confirm your new password"
     },
     editingLocation: "Enter business address",
     editingLogo: "Business's photo",

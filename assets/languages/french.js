@@ -113,7 +113,7 @@ const info = {
       showCode: "Afficher le code"
     },
     bottomNavs: {
-      changeInfo: "Modifier les\ninformations",
+      info: "Info",
       hours: "Heures"
     },
     hidden: {
@@ -149,6 +149,7 @@ const info = {
       showMoreoptions: {
         changeMenu: "Changer de menu",
         changeStaffinfo: "Modifier les informations du personnel",
+        changeLogininfo: "Modifier les informations de connexion",
         changeBusinessinformation: "Changer de nom/numéro de téléphone",
         changeBusinesslocation: "Changement d'adresse",
         changeBusinesslogo: "Changer la photo",
@@ -166,7 +167,8 @@ const info = {
           header: "Utiliser la voix",
           yes: "Oui",
           no: "Non"
-        }
+        },
+        paymentRecords: "Voir les revenus"
       },
       workingDays: {
         header: "Quels jours les nouveaux employés travaillent-ils ?",
@@ -223,7 +225,12 @@ const info = {
     },
     editingInformation: {
       name: "Entrez le nom de l'entreprise",
-      phonenumber: "Entrez le numéro de téléphone professionnel"
+      phonenumber: "Entrez le numéro de téléphone professionnel",
+      cellnumber: "Entrez votre numéro de téléphone portable",
+      verifyCode: "Entrez le code envoyé à votre message",
+      currentPassword: "Entrer le mot de passe actuel",
+      newPassword: "Entrer un nouveau mot de passe",
+      confirmPassword: "Confirmez votre nouveau mot de passe"
     },
     editingLocation: "Entrez l'adresse de l'entreprise",
     editingLogo: "Photo de l'entreprise",

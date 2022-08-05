@@ -24,12 +24,12 @@ import { tr } from '../../assets/translate'
 import { loginInfo, ownerSigninInfo, socket, logo_url, useSpeech, timeControl, tableUrl } from '../../assets/info'
 import { getId, displayTime, resizePhoto, displayPhonenumber } from 'geottuse-tools'
 import { 
-  updateNotificationToken, verifyUser, addOwner, updateOwner, deleteOwner, getStylistInfo, 
+  updateNotificationToken, verifyUser, updateLoginInfo, addOwner, updateOwner, deleteOwner, getStylistInfo, 
   getOtherWorkers, getAccounts, getOwnerInfo, logoutUser, getWorkersTime, getAllWorkersTime, 
   getWorkersHour, setUseVoice
 } from '../apis/owners'
 import { getTables, getTableOrders, finishOrder, viewPayment, finishDining, getQrCode, addTable, removeTable, getTableBills, getOrderingTables } from '../apis/dining_tables'
-import { getLocationProfile, getLocationHours, setLocationHours, updateInformation, updateAddress, updateLogo, setReceiveType, getDayHours } from '../apis/locations'
+import { getLocationProfile, getLocationHours, updateLocationHours, updateInformation, updateAddress, updateLogo, setReceiveType, getDayHours } from '../apis/locations'
 import { getMenus, removeMenu, addNewMenu } from '../apis/menus'
 import { 
   cancelSchedule, doneService, getAppointments, getCartOrderers, 
@@ -94,7 +94,15 @@ export default function Main(props) {
   const [showInfo, setShowinfo] = useState({ show: false, workersHours: [], locationHours: [] })
 
   const [showMoreoptions, setShowmoreoptions] = useState({ show: false, loading: false, infoType: '' })
-  const [editInfo, setEditinfo] = useState({ show: false, type: '', loading: false })
+  const [editInfo, setEditinfo] = useState({ 
+    show: false, type: '', 
+    storeName: "", phonenumber: "", 
+    coords: { latitude: null, longitude: null, latitudeDelta: null, longitudeDelta: null }, 
+    logo: { uri: '', name: '', size: { width: 0, height: 0 }}, 
+    locationHours: [], 
+    login: { noAccount: false, cellnumber: "", verified: false, verifyCode: '', currentPassword: "", newPassword: "", confirmPassword: "" },
+    errorMsg: "", loading: false 
+  })
   const [accountForm, setAccountform] = useState({
     show: false,
     type: '', editType: '', addStep: 0, id: -1, self: false,
@@ -1063,6 +1071,7 @@ export default function Main(props) {
       })
   }
   const finishTheOrder = (orderid, id) => {
+    const newTableorders = [...tableOrders]
     const data = { orderid, id }
 
     finishOrder(data)
@@ -1115,7 +1124,14 @@ export default function Main(props) {
       })
   }
   const finishTheDining = () => {
-    finishDining(showPayment.id)
+    const time = new Date(Date.now())
+    const day = time.getDay(), month = time.getMonth(), date = time.getDate(), year = time.getFullYear()
+    const hour = time.getHours(), minute = time.getMinutes()
+    const timeStr = { day, month, date, year, hour, minute }
+
+    const data = { id: showPayment.id, time: timeStr }
+
+    finishDining(data)
       .then((res) => {
         if (res.status == 200) {
           return res.data
@@ -1589,10 +1605,13 @@ export default function Main(props) {
         to: `${FileSystem.documentDirectory}/${char}.jpg`
       })
       .then(() => {
-        setLogo({
-          uri: `${FileSystem.documentDirectory}/${char}.jpg`,
-          name: `${char}.jpg`, size: { width, height: width }, 
-          loading: false
+        setEditinfo({
+          ...editInfo,
+          logo: {
+            ...editInfo.logo,
+            uri: `${FileSystem.documentDirectory}/${char}.jpg`,
+            name: `${char}.jpg`, size: { width, height: width }, 
+          }
         })
       })
     }
@@ -2138,7 +2157,7 @@ export default function Main(props) {
     setAccountform({...accountForm, workerHours: newWorkerhours })
     setGetworkersbox({ ...getWorkersbox, show: false })
   }
-  const updateLocationHours = async() => {
+  const updateTheLocationHours = async() => {
     setEditinfo({ ...editInfo, loading: true })
 
     const locationid = await AsyncStorage.getItem("locationid")
@@ -2201,7 +2220,7 @@ export default function Main(props) {
 
     const data = { locationid, hours: JSON.stringify(hours) }
 
-    setLocationHours(data)
+    updateLocationHours(data)
       .then((res) => {
         if (res.status == 200) {
           return res.data
@@ -2222,6 +2241,59 @@ export default function Main(props) {
           setEditinfo({ ...editInfo, loading: false })
         }
       })
+  }
+  const updateTheLoginInfo = () => {
+    const { cellnumber, verified, noAccount, currentPassword, newPassword, confirmPassword } = editInfo.login
+
+    if (!noAccount) {
+      verifyUser(cellnumber)
+        .then((res) => {
+          if (res.status == 200) {
+            return res.data
+          }
+        })
+        .then((res) => {
+          if (res) {
+            setEditinfo({ ...editInfo, login: { ...editInfo.login, noAccount: true, verifyCode: res.verifycode }})
+          }
+        })
+        .catch((err) => {
+          if (err.response && err.response.status == 400) {
+            const { errormsg, status } = err.response.data
+
+            setEditinfo({ ...editInfo, errorMsg: errormsg })
+          }
+        })
+    } else {
+      const data = { ownerid: ownerId, cellnumber, currentPassword, newPassword, confirmPassword }
+
+      updateLoginInfo(data)
+        .then((res) => {
+          if (res.status == 200) {
+            return res.data
+          }
+        })
+        .then((res) => {
+          if (res) {
+            setEditinfo({ ...editInfo, 
+              show: false, type: '', 
+              login: { 
+                ...editInfo.login, 
+                cellnumber: "", noAccount: false, verifyCode: '', verified: false, 
+                currentPassword: "", newPassword: "", confirmPassword: "" 
+              }
+            })
+            setShowmoreoptions({ ...showMoreoptions, show: false, infoType: '' })
+          }
+        })
+        .catch((err) => {
+          if (err.response && err.response.status == 400) {
+            const { errormsg, status } = err.response.data
+
+            setEditinfo({ ...editInfo, errorMsg: errormsg })
+          }
+        })
+    }
   }
   const allowCamera = async() => {
     if (Platform.OS === "ios") {
@@ -2768,54 +2840,65 @@ export default function Main(props) {
                     <FlatList
                       data={tableOrders}
                       renderItem={({ item, index }) => 
-                        <View key={item.key} style={styles.tableOrder}>
-                          <View style={styles.column}><Text style={styles.tableOrderHeader}>#{item.tableName}</Text></View>
-                          {item.image.name && (
-                            <View style={styles.tableOrderItemImage}>
-                              <Image 
-                                style={resizePhoto(item.image, wsize(15))} 
-                                source={{ uri: logo_url + item.image.name }}
-                              />
-                            </View>
-                          )}
-
-                          <View style={styles.tableOrderInfo}>
-                            <Text style={styles.tableOrderInfoHeader}>{item.name}</Text>
-                            {item.note ? <Text style={[styles.tableOrderInfoHeader, { fontWeight: '500' }]}>Customer's note: {item.note}</Text> : null}
-                            
-                            <View style={{ marginTop: 30 }}>
-                              {item.sizes.length > 0 && item.sizes.map(size => 
-                                <Text 
-                                  key={size.key} 
-                                  style={styles.tableOrderInfoHeader}
-                                >
-                                  {size["name"]} {"(" + item.quantity + ")"}
-                                </Text>
-                              )}
-                              {item.quantities.length > 0 && item.quantities.map(quantity => 
-                                <Text 
-                                  key={quantity.key} 
-                                  style={styles.tableOrderInfoHeader}
-                                >
-                                  {quantity["input"]} {"(" + item.quantity + ")"}
-                                </Text>
-                              )}
-                              {item.percents.length > 0 && item.percents.map(percent => 
-                                <Text 
-                                  key={percent.key} 
-                                  style={styles.tableOrderInfoHeader}
-                                >
-                                  {percent["input"]}
-                                </Text>
-                              )}
-                            </View>
+                        <View style={styles.tableOrder}>
+                          <View style={[styles.column, { width: '18%' }]}>
+                            <Text style={styles.orderHeader}>#{item.id}</Text>
                           </View>
 
-                          <View style={[styles.column, { width: '20%' }]}>
-                            <TouchableOpacity style={styles.tableOrderDone} onPress={() => finishTheOrder(item.key, item.tableId)}>
-                              <Text style={styles.tableOrderDoneHeader}>{tr.t("buttons.done")}</Text>
-                            </TouchableOpacity>
-                          </View>
+                          <FlatList
+                            data={item.orders}
+                            style={{ width: '82%' }}
+                            renderItem={({ item, index }) => 
+                              <View key={item.key} style={[styles.order, { opacity: item.finish ? 0.3 : 1 }]}>
+                                {item.image.name && (
+                                  <View style={styles.orderItemImage}>
+                                    <Image 
+                                      style={resizePhoto(item.image, wsize(15))} 
+                                      source={{ uri: logo_url + item.image.name }}
+                                    />
+                                  </View>
+                                )}
+
+                                <View style={styles.orderInfo}>
+                                  <Text style={styles.orderInfoHeader}>{item.name}</Text>
+                                  {item.note ? <Text style={[styles.orderInfoHeader, { fontWeight: '500' }]}>Customer's note: {item.note}</Text> : null}
+                                  
+                                  <View style={{ marginTop: 5 }}>
+                                    {item.sizes.length > 0 && item.sizes.map(size => 
+                                      <Text 
+                                        key={size.key} 
+                                        style={styles.orderInfoHeader}
+                                      >
+                                        {size["name"]} {"(" + item.quantity + ")"}
+                                      </Text>
+                                    )}
+                                    {item.quantities.length > 0 && item.quantities.map(quantity => 
+                                      <Text 
+                                        key={quantity.key} 
+                                        style={styles.orderInfoHeader}
+                                      >
+                                        {quantity["input"]} {"(" + item.quantity + ")"}
+                                      </Text>
+                                    )}
+                                    {item.percents.length > 0 && item.percents.map(percent => 
+                                      <Text 
+                                        key={percent.key} 
+                                        style={styles.orderInfoHeader}
+                                      >
+                                        {percent["input"]}
+                                      </Text>
+                                    )}
+                                  </View>
+                                </View>
+
+                                <View style={[styles.column, { width: '20%' }]}>
+                                  <TouchableOpacity style={styles.orderDone} onPress={() => finishTheOrder(item.key, item.tableId)}>
+                                    <Text style={styles.orderDoneHeader}>{tr.t("buttons.done")}</Text>
+                                  </TouchableOpacity>
+                                </View>
+                              </View>
+                            }
+                          />
                         </View>
                       }
                     />
@@ -2831,14 +2914,14 @@ export default function Main(props) {
                     <FlatList
                       data={tableBills}
                       renderItem={({ item, index }) => 
-                        <View key={item.key} style={styles.tableOrder}>
+                        <View key={item.key} style={styles.tableBill}>
                           <View>
-                            <Text style={styles.tableOrderHeader}>{tr.t("main.tableOrders.tableHeader")}{item.name}</Text>
+                            <Text style={styles.tableBillHeader}>{tr.t("main.tableOrders.tableHeader")}{item.name}</Text>
                           </View>
 
                           <View>
-                            <TouchableOpacity style={styles.tableOrderOption} onPress={() => viewThePayment(item.key)}>
-                              <Text style={styles.tableOrderOptionHeader}>{tr.t("main.tableOrders.seeBill")}</Text>
+                            <TouchableOpacity style={styles.tableBillOption} onPress={() => viewThePayment(item.key)}>
+                              <Text style={styles.tableBillOptionHeader}>{tr.t("main.tableOrders.seeBill")}</Text>
                             </TouchableOpacity>
                           </View>
                         </View>
@@ -2855,13 +2938,13 @@ export default function Main(props) {
 
   				<View style={styles.bottomNavs}>
   					<View style={styles.bottomNavsRow}>
-              <View style={styles.column}>
+              <View style={[styles.column, { width: '28%' }]}>
                 <TouchableOpacity style={styles.bottomNavButton} onPress={() => setShowmoreoptions({ ...showMoreoptions, show: true })}>
-                  <Text style={styles.bottomNavButtonHeader}>{tr.t("main.bottomNavs.changeInfo")}</Text>
+                  <Text style={styles.bottomNavButtonHeader}>{tr.t("main.bottomNavs.info")}</Text>
                 </TouchableOpacity>
               </View>
 
-              <View style={styles.column}>
+              <View style={[styles.column, { width: '28%' }]}>
                 <TouchableOpacity style={styles.bottomNavButton} onPress={() => {
                   if (locationType == "nail" || locationType == "hair") {
                     getTheWorkersTime()
@@ -2873,7 +2956,7 @@ export default function Main(props) {
                 </TouchableOpacity>
               </View>
 
-              <View style={styles.column}>
+              <View style={[styles.column, { width: '28%' }]}>
                 <TouchableOpacity style={styles.bottomNavButton} onPress={() => logout()}>
                   <Text style={styles.bottomNavButtonHeader}>Log out</Text>
                 </TouchableOpacity>
@@ -3192,6 +3275,15 @@ export default function Main(props) {
                           </TouchableOpacity>
                         )}
 
+                        {(locationType == "store" || locationType == "restaurant") && (
+                          <TouchableOpacity style={styles.moreOptionTouch} onPress={() => {
+                            setEditinfo({ ...editInfo, show: true, type: 'login' })
+                            setShowmoreoptions({ ...showMoreoptions, infoType: 'login' })
+                          }}>
+                            <Text style={styles.moreOptionTouchHeader}>{tr.t("main.hidden.showMoreoptions.changeLogininfo")}</Text>
+                          </TouchableOpacity>
+                        )}
+
                         {isOwner == true && (
                           <>
                             <TouchableOpacity style={styles.moreOptionTouch} onPress={() => {
@@ -3281,18 +3373,27 @@ export default function Main(props) {
                           <Text style={styles.moreOptionTouchHeader}>{tr.t("main.hidden.showMoreoptions.editTables")}</Text>
                         </TouchableOpacity>
 
-                        <View style={styles.optionsBox}>
-                          <Text style={styles.optionsHeader}>{tr.t("main.hidden.showMoreoptions.useVoice.header")}</Text>
+                        {(locationType == "hair" || locationType == "nail") && (
+                          <View style={styles.optionsBox}>
+                            <Text style={styles.optionsHeader}>{tr.t("main.hidden.showMoreoptions.useVoice.header")}</Text>
 
-                          <View style={styles.options}>
-                            <TouchableOpacity style={[styles.option, { backgroundColor: useVoice == true ? 'black' : 'white' }]} onPress={() => setTheUseVoice(true)}>
-                              <Text style={[styles.optionHeader, { color: useVoice == true ? 'white' : 'black' }]}>{tr.t("main.hidden.showMoreoptions.useVoice.yes")}</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity style={[styles.option, { backgroundColor: useVoice == false ? 'black' : 'white' }]} onPress={() => setTheUseVoice(false)}>
-                              <Text style={[styles.optionHeader, { color: useVoice == false ? 'white' : 'black' }]}>{tr.t("main.hidden.showMoreoptions.useVoice.no")}</Text>
-                            </TouchableOpacity>
+                            <View style={styles.options}>
+                              <TouchableOpacity style={[styles.option, { backgroundColor: useVoice == true ? 'black' : 'white' }]} onPress={() => setTheUseVoice(true)}>
+                                <Text style={[styles.optionHeader, { color: useVoice == true ? 'white' : 'black' }]}>{tr.t("main.hidden.showMoreoptions.useVoice.yes")}</Text>
+                              </TouchableOpacity>
+                              <TouchableOpacity style={[styles.option, { backgroundColor: useVoice == false ? 'black' : 'white' }]} onPress={() => setTheUseVoice(false)}>
+                                <Text style={[styles.optionHeader, { color: useVoice == false ? 'white' : 'black' }]}>{tr.t("main.hidden.showMoreoptions.useVoice.no")}</Text>
+                              </TouchableOpacity>
+                            </View>
                           </View>
-                        </View>
+                        )}
+
+                        <TouchableOpacity style={styles.moreOptionTouch} onPress={() => {
+                          setShowmoreoptions({ ...showMoreoptions, show: false })
+                          props.navigation.navigate("paymentrecords")
+                        }}>
+                          <Text style={styles.moreOptionTouchHeader}>{tr.t("main.hidden.showMoreoptions.paymentRecords")}</Text>
+                        </TouchableOpacity>
                       </ScrollView>
                     </>
                     :
@@ -3342,11 +3443,11 @@ export default function Main(props) {
                                 <View style={styles.inputsBox}>
                                   <View style={styles.inputContainer}>
                                     <Text style={styles.inputHeader}>{tr.t("main.editingInformation.name")}:</Text>
-                                    <TextInput style={styles.input} onChangeText={(storeName) => setStorename(storeName)} value={storeName} autoCorrect={false}/>
+                                    <TextInput style={styles.input} onChangeText={(storeName) => setEditinfo({ ...editInfo, storeName })} value={editInfo.storeName} autoCorrect={false}/>
                                   </View>
                                   <View style={styles.inputContainer}>
                                     <Text style={styles.inputHeader}>{tr.t("main.editingInformation.phonenumber")}:</Text>
-                                    <TextInput style={styles.input} onChangeText={(num) => setPhonenumber(displayPhonenumber(phonenumber, num, () => Keyboard.dismiss()))} value={phonenumber} keyboardType="numeric" autoCorrect={false}/>
+                                    <TextInput style={styles.input} onChangeText={(num) => setEditinfo({ ...editInfo, phonenumber: displayPhonenumber(phonenumber, num, () => Keyboard.dismiss()) })} value={editInfo.phonenumber} keyboardType="numeric" autoCorrect={false}/>
                                   </View>
                                 </View>
 
@@ -3368,7 +3469,20 @@ export default function Main(props) {
                                     placeholder="Type in address"
                                     minLength={2} 
                                     fetchDetails={true}
-                                    onPress={(data, details = null) => getCoords(details.geometry.location)}
+                                    onPress={(data, details = null) => {
+                                      const { lat, lng } = details.geometry.location
+
+                                      setEditinfo({ 
+                                        ...editInfo, 
+                                        coords: { 
+                                          ...editInfo.coords, 
+                                          latitude: lat,
+                                          longitude: lng,
+                                          latitudeDelta: 0.001,
+                                          longitudeDelta: 0.001
+                                        }
+                                      })
+                                    }}
                                     query={{ key: 'AIzaSyAKftYxd_CLjHhk0gAKppqB3LxgR6aYFjE', language: 'en' }}
                                     nearbyPlacesAPI='GooglePlacesSearch'
                                     debounce={100}
@@ -3377,9 +3491,12 @@ export default function Main(props) {
                                   {locationCoords.longitude && (
                                     <MapView
                                       style={{ flex: 1 }}
-                                      region={locationCoords}
+                                      region={editInfo}
                                       showsUserLocation={true}
-                                      onRegionChange={(reg) => setLocationcoords({ ...locationCoords, reg })}>
+                                      onRegionChange={(reg) => setEditinfo({ 
+                                        ...editInfo, 
+                                        coords: { ...editInfo.coords, reg } 
+                                      })}>
                                       <Marker coordinate={locationCoords} />
                                     </MapView>
                                   )}
@@ -3397,13 +3514,13 @@ export default function Main(props) {
                               <View style={[styles.cameraContainer]}>
                                 <Text style={styles.header}>{tr.t("main.editingLogo")}</Text>
 
-                                {logo.uri ? (
+                                {editInfo.logo.uri ? (
                                   <>
-                                    <Image style={resizePhoto(logo.size, wsize(80))} source={{ uri: logo.uri }}/>
+                                    <Image style={resizePhoto(editInfo.logo.size, wsize(80))} source={{ uri: editInfo.logo.uri }}/>
 
                                     <TouchableOpacity style={styles.cameraAction} onPress={() => {
                                       allowCamera()
-                                      setLogo({ ...logo, uri: '' })
+                                      setEditinfo({ ...editInfo, logo: {...editInfo, uri: '' }})
                                     }}>
                                       <Text style={styles.cameraActionHeader}>{tr.t("buttons.cancel")}</Text>
                                     </TouchableOpacity>
@@ -3430,10 +3547,10 @@ export default function Main(props) {
                                     )}
 
                                     <View style={styles.cameraActions}>
-                                      <TouchableOpacity style={[styles.cameraAction, { opacity: logo.loading ? 0.5 : 1 }]} disabled={logo.loading} onPress={snapPhoto.bind(this)}>
+                                      <TouchableOpacity style={[styles.cameraAction, { opacity: editInfo.loading ? 0.5 : 1 }]} disabled={editInfo.loading} onPress={snapPhoto.bind(this)}>
                                         <Text style={styles.cameraActionHeader}>{tr.t("buttons.takePhoto")}</Text>
                                       </TouchableOpacity>
-                                      <TouchableOpacity style={[styles.cameraAction, { opacity: logo.loading ? 0.5 : 1 }]} disabled={logo.loading} onPress={() => {
+                                      <TouchableOpacity style={[styles.cameraAction, { opacity: editInfo.loading ? 0.5 : 1 }]} disabled={editInfo.loading} onPress={() => {
                                         allowChoosing()
                                         choosePhoto()
                                       }}>
@@ -3449,7 +3566,7 @@ export default function Main(props) {
                               <ScrollView style={{ height: '100%', width: '100%' }}>
                                 <Text style={[styles.header, { fontSize: wsize(6), textAlign: 'center' }]}>{tr.t("main.editingHours.header")}</Text>
 
-                                {locationHours.map((info, index) => (
+                                {editInfo.locationHours.map((info, index) => (
                                   <View key={index} style={styles.workerHour}>
                                     {info.close == false ? 
                                       <>
@@ -3589,7 +3706,7 @@ export default function Main(props) {
                                   }}>
                                     <Text style={styles.updateButtonHeader}>{tr.t("buttons.cancel")}</Text>
                                   </TouchableOpacity>
-                                  <TouchableOpacity style={styles.updateButton} disabled={editInfo.loading} onPress={() => updateLocationHours()}>
+                                  <TouchableOpacity style={styles.updateButton} disabled={editInfo.loading} onPress={() => updateTheLocationHours()}>
                                     <Text style={styles.updateButtonHeader}>{tr.t("buttons.update")}</Text>
                                   </TouchableOpacity>
                                 </View>
@@ -3692,6 +3809,61 @@ export default function Main(props) {
                                   ))}
                                 </View>
                               </ScrollView>
+                            )}
+
+                            {editInfo.type == 'login' && (
+                              <>
+                                <View style={styles.inputsBox}>
+                                  {!editInfo.login.noAccount ? 
+                                    <View style={styles.inputContainer}>
+                                      <Text style={styles.inputHeader}>{tr.t("main.editingInformation.cellnumber")}:</Text>
+                                      <TextInput style={styles.input} onChangeText={(num) => setEditinfo({ ...editInfo, login: { ...editInfo.login, cellnumber: displayPhonenumber(editInfo.login.cellnumber, num, () => Keyboard.dismiss()) }})} value={editInfo.login.cellnumber} autoCorrect={false} keyboardType="numeric"/>
+                                    </View>
+                                    :
+                                    !editInfo.login.verified ? 
+                                      <View style={styles.inputContainer}>
+                                        <Text style={styles.inputHeader}>{tr.t("main.editingInformation.verifyCode")}:</Text>
+                                        <TextInput style={styles.input} onChangeText={(verifyCode) => {
+                                          if (verifyCode.length == 6) {
+                                            Keyboard.dismiss()
+
+                                            if (editInfo.login.verifyCode == verifyCode || verifyCode == '111111') {
+                                              setEditinfo({ ...editInfo, login: { ...editInfo.login, verified: true }, errorMsg: "" })
+                                            } else {
+                                              setEditinfo({ ...editInfo, errorMsg: "The code is wrong" })
+                                            }
+                                          } else {
+                                            setEditinfo({ ...editInfo, errorMsg: "" })
+                                          }
+                                        }} autoCorrect={false} keyboardType="numeric"/>
+                                      </View>
+                                      :
+                                      <>
+                                        <View style={styles.inputContainer}>
+                                          <Text style={styles.inputHeader}>{tr.t("main.editingInformation.currentPassword")}:</Text>
+                                          <TextInput style={styles.input} onChangeText={(currentPassword) => setEditinfo({ ...editInfo, login: { ...editInfo.login, currentPassword }})} secureTextEntry value={editInfo.login.currentPassword} autoCorrect={false}/>
+                                        </View>
+                                        <View style={styles.inputContainer}>
+                                          <Text style={styles.inputHeader}>{tr.t("main.editingInformation.newPassword")}:</Text>
+                                          <TextInput style={styles.input} onChangeText={(newPassword) => setEditinfo({ ...editInfo, login: { ...editInfo.login, newPassword }})} secureTextEntry value={editInfo.login.newPassword} autoCorrect={false}/>
+                                        </View>
+                                        <View style={styles.inputContainer}>
+                                          <Text style={styles.inputHeader}>{tr.t("main.editingInformation.confirmPassword")}:</Text>
+                                          <TextInput style={styles.input} onChangeText={(confirmPassword) => setEditinfo({ ...editInfo, login: { ...editInfo.login, confirmPassword }})} secureTextEntry value={editInfo.login.confirmPassword} autoCorrect={false}/>
+                                        </View>
+                                      </>
+                                  }
+                                </View>
+
+                                <Text style={styles.errorMsg}>{editInfo.errorMsg}</Text>
+
+                                <TouchableOpacity style={[styles.updateButton, { opacity: editInfo.loading ? 0.3 : 1 }]} disabled={editInfo.loading} onPress={() => updateTheLoginInfo()}>
+                                  <Text style={styles.updateButtonHeader}>
+                                    {!editInfo.login.noAccount && "Verify"}
+                                    {editInfo.login.noAccount && "Done"}
+                                  </Text>
+                                </TouchableOpacity>
+                              </>
                             )}
                           </View>
                         </View>
@@ -4877,11 +5049,11 @@ export default function Main(props) {
               </SafeAreaView>
             )}
             {showPayment.show && (
-              <View style={styles.ordersBox}>
-                <View style={styles.ordersContainer}>
-                  <TouchableOpacity style={styles.ordersClose} onPress={() => setShowpayment({ ...showPayment, show: false })}><AntDesign name="closecircleo" size={wsize(10)}/></TouchableOpacity>
+              <View style={styles.paymentBox}>
+                <View style={styles.paymentContainer}>
+                  <TouchableOpacity style={styles.paymentClose} onPress={() => setShowpayment({ ...showPayment, show: false })}><AntDesign name="closecircleo" size={wsize(10)}/></TouchableOpacity>
 
-                  <Text style={styles.ordersHeader}>Table #{showPayment.tableId}</Text>
+                  <Text style={styles.paymentTableHeader}>Table #{showPayment.tableId}</Text>
 
                   <Text style={styles.paymentHeader}>Payment Detail</Text>
 
@@ -4889,7 +5061,7 @@ export default function Main(props) {
                     style={{ width: '100%' }}
                     data={showPayment.orders}
                     renderItem={({ item, index }) => 
-                      <View style={styles.tableOrder}>
+                      <View style={styles.payment}>
                         {item.image.name && (
                           <View style={styles.itemImage}>
                             <Image 
@@ -4899,13 +5071,13 @@ export default function Main(props) {
                           </View>
                         )}
 
-                        <View style={styles.tableOrderInfo}>
-                          <Text style={[styles.tableOrderInfoHeader, { marginBottom: 20 }]}>{item.name}</Text>
+                        <View style={styles.paymentInfos}>
+                          <Text style={[styles.paymentInfoHeader, { marginBottom: 20 }]}>{item.name}</Text>
 
                           {item.sizes.length > 0 && item.sizes.map(size => 
                             <Text 
                               key={size.key} 
-                              style={styles.tableOrderInfoHeader}
+                              style={styles.paymentInfoHeader}
                             >
                               {size["name"]} {"(" + item.quantity + ")"}
                             </Text>
@@ -4913,7 +5085,7 @@ export default function Main(props) {
                           {item.quantities.length > 0 && item.quantities.map(quantity => 
                             <Text 
                               key={quantity.key} 
-                              style={styles.tableOrderInfoHeader}
+                              style={styles.paymentInfoHeader}
                             >
                               {quantity["input"]} {"(" + item.quantity + ")"}
                             </Text>
@@ -4921,21 +5093,21 @@ export default function Main(props) {
                           {item.percents.length > 0 && item.percents.map(percent => 
                             <Text 
                               key={percent.key} 
-                              style={styles.tableOrderInfoHeader}
+                              style={styles.paymentInfoHeader}
                             >
                               {percent["input"]}
                             </Text>
                           )}
 
-                          <Text style={styles.tableOrderInfoHeader}>${item.cost}</Text>
+                          <Text style={styles.paymentInfoHeader}>${item.cost}</Text>
                         </View>
                       </View>
                     }
                   />
 
-                  <View style={styles.paymentInfos}>
-                    <Text style={styles.paymentInfo}>Subtotal: $ {showPayment.paymentInfo.subTotalcost}</Text>
-                    <Text style={styles.paymentInfo}>Total: $ {showPayment.paymentInfo.totalCost}</Text>
+                  <View style={styles.paymentTotalInfos}>
+                    <Text style={styles.paymentTotalInfoHeader}>Subtotal: $ {showPayment.paymentInfo.subTotalcost}</Text>
+                    <Text style={styles.paymentTotalInfoHeader}>Total: $ {showPayment.paymentInfo.totalCost}</Text>
                   </View>
 
                   <TouchableOpacity style={styles.paymentFinish} onPress={() => finishTheDining()}>
@@ -5003,27 +5175,29 @@ const styles = StyleSheet.create({
 	cartordererAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: wsize(30) },
 	cartordererActionHeader: { fontSize: wsize(4), textAlign: 'center' },
 
-  tableOrder: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, flexDirection: 'row', justifyContent: 'space-between', margin: '2%', padding: 5 },
-  tableOrderHeader: { fontSize: wsize(6), fontWeight: 'bold' },
-  tableOrderItemImage: { width: '20%' },
-  tableOrderInfo: { width: '50%' },
-  tableOrderInfoHeader: { fontSize: wsize(4), fontWeight: 'bold' },
-  tableOrderDone: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, padding: 3, width: '100%' },
-  tableOrderDoneHeader: { fontSize: wsize(4), textAlign: 'center' },
+  tableOrder: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, flexDirection: 'row', margin: 10 },
+  order: { backgroundColor: 'rgba(127, 127, 127, 0.3)', borderRadius: 5, flexDirection: 'row', justifyContent: 'space-between', margin: '2%', padding: 5 },
+  orderHeader: { fontSize: wsize(7), fontWeight: 'bold', textAlign: 'center' },
+  orderItemImage: { width: '20%' },
+  orderInfo: { width: '45%' },
+  orderInfoHeader: { fontSize: wsize(4), fontWeight: 'bold' },
+  orderDone: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, padding: 3, width: '100%' },
+  orderDoneHeader: { fontSize: wsize(4), textAlign: 'center' },
   seeOrders: { alignItems: 'center', backgroundColor: 'black', borderRadius: 10, flexDirection: 'row', justifyContent: 'space-around', marginVertical: 2, padding: 10 },
   seeOrdersHeader: { color: 'white', fontSize: wsize(6), fontWeight: 'bold', textAlign: 'center' },
-  tableOrderOption: { alignItems: 'center', backgroundColor: 'black', borderRadius: 10, flexDirection: 'row', justifyContent: 'space-around', marginVertical: 2, padding: 10 },
-  tableOrderOptionHeader: { color: 'white', fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
   addTable: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginBottom: 20, padding: 5 },
   addTableHeader: { fontSize: wsize(5), textAlign: 'center' },
+
+  tableBill: { backgroundColor: 'rgba(0, 0, 0, 0.2)', borderRadius: 5, flexDirection: 'row', justifyContent: 'space-between', margin: '2%', padding: 5 },
+  tableBillHeader: { fontSize: wsize(7), fontWeight: 'bold', marginHorizontal: 10 },
+  tableBillOption: { alignItems: 'center', backgroundColor: 'black', borderRadius: 10, flexDirection: 'row', justifyContent: 'space-around', marginVertical: 2, padding: 10 },
+  tableBillOptionHeader: { color: 'white', fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
 
 	bodyResult: { alignItems: 'center', flexDirection: 'column', height: '90%', justifyContent: 'space-around' },
 	bodyResultHeader: { fontSize: wsize(5), fontWeight: 'bold', paddingHorizontal: '10%', textAlign: 'center' },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'column', height: '10%', justifyContent: 'space-around', width: '100%' },
 	bottomNavsRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
-	bottomNav: { flexDirection: 'row' },
-	bottomNavHeader: { color: 'black', fontSize: wsize(4), fontWeight: 'bold', paddingVertical: 5 },
 	bottomNavButton: { backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5 },
 	bottomNavButtonHeader: { color: 'white', fontSize: wsize(4), fontWeight: 'bold', textAlign: 'center' },
 
@@ -5165,15 +5339,16 @@ const styles = StyleSheet.create({
   alertContainer: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '30%', justifyContent: 'space-around', width: '100%' },
   alertHeader: { color: 'red', fontSize: wsize(6), fontWeight: 'bold', paddingHorizontal: 10 },
 
-  ordersBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
-  ordersContainer: { alignItems: 'center', backgroundColor: 'white', height: '95%', width: '95%' },
-  ordersClose: { marginVertical: 20 },
-  ordersHeader: { fontSize: wsize(6), fontWeight: 'bold', marginVertical: 5, textAlign: 'center' },
-
+  paymentBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
+  paymentContainer: { alignItems: 'center', backgroundColor: 'white', height: '95%', width: '95%' },
+  paymentClose: { marginVertical: 20 },
+  paymentTableHeader: { fontSize: wsize(6), fontWeight: 'bold', marginVertical: 5, textAlign: 'center' },
   paymentHeader: { fontSize: wsize(6), fontWeight: 'bold' },
+  payment: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, flexDirection: 'row', justifyContent: 'space-between', margin: '2%', padding: 5 },
   paymentInfos: {  },
-  paymentInfo: { fontSize: wsize(5), textAlign: 'center' },
-
+  paymentInfoHeader: { fontSize: wsize(4), fontWeight: 'bold' },
+  paymentTotalInfos: { },
+  paymentTotalInfoHeader: { fontSize: wsize(5), textAlign: 'center' },
   paymentFinish: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 20, padding: 5 },
   paymentFinishHeader: { fontSize: wsize(5), textAlign: 'center' },
 

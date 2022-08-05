@@ -21,6 +21,7 @@ import Walkin from './src/pages/walkin'
 import Locationsetup from './src/pages/locationsetup'
 import Main from './src/pages/main'
 import Booktime from './src/pages/booktime'
+import Paymentrecords from './src/pages/paymentrecords'
 import Cartorders from './src/pages/cartorders'
 
 // salons' components
@@ -121,6 +122,16 @@ export default function App() {
                 )
               )
             })}/>
+            <Stack.Screen name="paymentrecords" component={Paymentrecords} options={({ navigation, route }) => ({
+              headerTitle: () => <Text style={styles.header}>Daily/Monthly Income</Text>,
+              headerLeft: () => (
+                Platform.OS == 'ios' && (
+                  <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>
+                    <Text style={styles.backHeader}>Go Back</Text>
+                  </TouchableOpacity>
+                )
+              )
+            })}/>
             <Stack.Screen name="cartorders" component={Cartorders} options={({ navigation, route }) => ({
               headerTitle: () => <Text style={styles.header}>#{route.params.ordernumber} {tr.t("orders.header")}</Text>,
               headerLeft: () => (
@@ -157,7 +168,7 @@ export default function App() {
               )
             })}/>
             <Stack.Screen name="addmeal" component={Addmeal} options={({ navigation, route }) => ({
-              headerTitle: () => <Text style={styles.header}>{tr.t("addmeal.header." + (route.params.id ? 'edit' : 'add'))}</Text>,
+              headerTitle: () => <Text style={styles.header}>{tr.t("addmeal.header." + (route.params.productid ? 'edit' : 'add'))}</Text>,
               headerLeft: () => (
                 Platform.OS == 'ios' && (
                   <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>

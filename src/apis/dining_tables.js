@@ -41,6 +41,9 @@ export const viewPayment = id => {
   return axios.get(`${beginUrl}view_payment/${id}`)
 }
 
-export const finishDining = id => {
-  return axios.get(`${beginUrl}finish_dining/${id}`)
+export const finishDining = data => {
+  return axios.post(
+    `${beginUrl}finish_dining`,
+    data
+  )
 }

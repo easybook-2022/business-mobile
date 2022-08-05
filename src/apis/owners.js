@@ -7,6 +7,13 @@ export const verifyUser = cellnumber => {
 	return axios.get(`${beginUrl}owner_verify/${cellnumber}`)
 }
 
+export const updateLoginInfo = data => {
+  return axios.post(
+    `${beginUrl}update_login_info`,
+    data
+  )
+}
+
 export const loginUser = data => {
 	return axios.post(
 		`${beginUrl}owner_login`,

@@ -49,7 +49,7 @@ export default function Menu(props) {
 		index: -1, name: '', info: '', 
 		image: { uri: '', name: '' }, errormsg: '' 
 	})
-
+  
 	const [createMenuoptionbox, setCreatemenuoptionbox] = useState({ show: false, id: -1, allow: null })
 	const [uploadMenubox, setUploadmenubox] = useState({ show: false, action: '', uri: '', size: { width: 0, height: 0 }, choosing: false, name: '', loading: false })
 	const [menuPhotooption, setMenuphotooption] = useState({ show: false, action: '', photo: '', loading: false })
@@ -171,12 +171,12 @@ export default function Menu(props) {
                   <View style={styles.column}><Text style={styles.itemHeader}>$ {info.price} (1 size)</Text></View>
                   :
                   <>
-                    {info.sizes.map(size => <Text style={{ fontSize: wsize(4.5) }}><Text style={{ fontWeight: 'bold' }}>{size.name}</Text>: $ {size.price}</Text>)}
-                    {info.quantities.map(quantity => <Text style={{ fontSize: wsize(4.5) }}><Text style={{ fontWeight: 'bold' }}>{quantity.input}</Text>: ${quantity.price}</Text>)}
+                    {info.sizes.map(size => <Text key={size.key} style={{ fontSize: wsize(4.5) }}><Text style={{ fontWeight: 'bold' }}>{size.name}</Text>: $ {size.price}</Text>)}
+                    {info.quantities.map(quantity => <Text key={quantity.key} style={{ fontSize: wsize(4.5) }}><Text style={{ fontWeight: 'bold' }}>{quantity.input}</Text>: ${quantity.price}</Text>)}
                   </>
                 }
 
-                {info.percents.map(percent => <Text style={{ fontSize: wsize(4.5) }}><Text style={{ fontWeight: 'bold' }}>{percent.input}</Text>: $ {percent.price}</Text>)}
+                {info.percents.map(percent => <Text key={percent.key} style={{ fontSize: wsize(4.5) }}><Text style={{ fontWeight: 'bold' }}>{percent.input}</Text>: $ {percent.price}</Text>)}
               </>
             )}
           </View>
@@ -619,7 +619,7 @@ export default function Menu(props) {
       setPickingpermission(true)
     }
 	}
-	
+
 	useEffect(() => {
     if (!loaded) {
       getTheLocationProfile()
@@ -766,7 +766,7 @@ export default function Menu(props) {
               </View>
 						</View>
 					</View>
-          
+
 					{createMenuoptionbox.show && (
 						<Modal transparent={true}>
 							<SafeAreaView style={styles.createOptionContainer}>

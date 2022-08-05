@@ -137,7 +137,7 @@ export default function Auth({ navigation }) {
 
             <Text style={styles.boxHeader}>Welcome to EasyBook Business</Text>
           </View>
-          
+
           <View style={styles.inputsBox}>
             {!noAccount ? 
               <>

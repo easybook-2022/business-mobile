@@ -113,7 +113,7 @@ const info = {
       showCode: "显示代码",
     },
     bottomNavs: {
-      changeInfo: "更改信息",
+      info: "信息",
       hours: "小时"
     },
     hidden: {
@@ -149,6 +149,7 @@ const info = {
       showMoreoptions: {
         changeMenu: "更改菜单",
         changeStaffinfo: "更改员工信息",
+        changeLogininfo: "更改登录信息",
         changeBusinessinformation: "更改姓名/电话号码",
         changeBusinesslocation: "更换地址",
         changeBusinesslogo: "更改照片",
@@ -166,7 +167,8 @@ const info = {
           header: "使用语音",
           yes: "是的",
           no: "不"
-        }
+        },
+        paymentRecords: "查看收入"
       },
       workingDays: {
         header: "新造型师在哪几天上班 ?",
@@ -223,7 +225,12 @@ const info = {
     },
     editingInformation: {
       name: "输入企业名称",
-      phonenumber: "输入企业电话号码"
+      phonenumber: "输入企业电话号码",
+      cellnumber: "输入您的手机号码",
+      verifyCode: "输入发送到您的消息的代码",
+      currentPassword: "输入当前密码",
+      newPassword: "输入新的密码",
+      confirmPassword: "确认您的新密码"
     },
     editingLocation: "输入公司地址",
     editingLogo: "商家合影",
