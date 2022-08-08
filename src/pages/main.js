@@ -2860,35 +2860,37 @@ export default function Main(props) {
                                 )}
 
                                 <View style={styles.orderInfo}>
-                                  <Text style={styles.orderInfoHeader}>{item.name}</Text>
+                                  <Text style={styles.orderInfoHeader}>{item.name} {(item.sizes.length == 0 && item.quantities.length == 0 && item.percents.length == 0) && "(" + item.quantity + ")"}</Text>
                                   {item.note ? <Text style={[styles.orderInfoHeader, { fontWeight: '500' }]}>Customer's note: {item.note}</Text> : null}
-                                  
-                                  <View style={{ marginTop: 5 }}>
-                                    {item.sizes.length > 0 && item.sizes.map(size => 
-                                      <Text 
-                                        key={size.key} 
-                                        style={styles.orderInfoHeader}
-                                      >
-                                        {size["name"]} {"(" + item.quantity + ")"}
-                                      </Text>
-                                    )}
-                                    {item.quantities.length > 0 && item.quantities.map(quantity => 
-                                      <Text 
-                                        key={quantity.key} 
-                                        style={styles.orderInfoHeader}
-                                      >
-                                        {quantity["input"]} {"(" + item.quantity + ")"}
-                                      </Text>
-                                    )}
-                                    {item.percents.length > 0 && item.percents.map(percent => 
-                                      <Text 
-                                        key={percent.key} 
-                                        style={styles.orderInfoHeader}
-                                      >
-                                        {percent["input"]}
-                                      </Text>
-                                    )}
-                                  </View>
+                                
+                                  {(item.sizes.length > 0 || item.quantities.length > 0 || item.percents.length > 0) && (
+                                    <View style={{ marginTop: 5 }}>
+                                      {item.sizes.length > 0 && item.sizes.map(size => 
+                                        <Text 
+                                          key={size.key} 
+                                          style={styles.orderInfoHeader}
+                                        >
+                                          {size["name"]} {"(" + item.quantity + ")"}
+                                        </Text>
+                                      )}
+                                      {item.quantities.length > 0 && item.quantities.map(quantity => 
+                                        <Text 
+                                          key={quantity.key} 
+                                          style={styles.orderInfoHeader}
+                                        >
+                                          {quantity["input"]} {"(" + item.quantity + ")"}
+                                        </Text>
+                                      )}
+                                      {item.percents.length > 0 && item.percents.map(percent => 
+                                        <Text 
+                                          key={percent.key} 
+                                          style={styles.orderInfoHeader}
+                                        >
+                                          {percent["input"]}
+                                        </Text>
+                                      )}
+                                    </View>
+                                  )}
                                 </View>
 
                                 <View style={[styles.column, { width: '20%' }]}>
@@ -5176,13 +5178,13 @@ const styles = StyleSheet.create({
 	cartordererActionHeader: { fontSize: wsize(4), textAlign: 'center' },
 
   tableOrder: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, flexDirection: 'row', margin: 10 },
-  order: { backgroundColor: 'rgba(127, 127, 127, 0.3)', borderRadius: 5, flexDirection: 'row', justifyContent: 'space-between', margin: '2%', padding: 5 },
-  orderHeader: { fontSize: wsize(7), fontWeight: 'bold', textAlign: 'center' },
+  order: { backgroundColor: 'black', borderRadius: 5, flexDirection: 'row', justifyContent: 'space-between', margin: '2%', padding: 5 },
+  orderHeader: { color: 'black', fontSize: wsize(7), fontWeight: 'bold', textAlign: 'center' },
   orderItemImage: { width: '20%' },
   orderInfo: { width: '45%' },
-  orderInfoHeader: { fontSize: wsize(4), fontWeight: 'bold' },
-  orderDone: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, padding: 3, width: '100%' },
-  orderDoneHeader: { fontSize: wsize(4), textAlign: 'center' },
+  orderInfoHeader: { color: 'white', fontSize: wsize(4), fontWeight: 'bold' },
+  orderDone: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, padding: 3, width: '100%' },
+  orderDoneHeader: { color: 'black', fontSize: wsize(4), textAlign: 'center' },
   seeOrders: { alignItems: 'center', backgroundColor: 'black', borderRadius: 10, flexDirection: 'row', justifyContent: 'space-around', marginVertical: 2, padding: 10 },
   seeOrdersHeader: { color: 'white', fontSize: wsize(6), fontWeight: 'bold', textAlign: 'center' },
   addTable: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginBottom: 20, padding: 5 },
