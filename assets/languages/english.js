@@ -291,6 +291,7 @@ const info = {
     addTable: "Add table",
     table: "Table #",
     showBarcode: "Show Barcode",
+    selectTable: "Select table",
     hidden: {
       add: {
         tableNumber: "Enter table #:",

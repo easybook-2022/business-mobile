@@ -19,6 +19,17 @@ export const getQrCode = id => {
   return axios.get(`${beginUrl}get_qr_code/${id}`)
 }
 
+export const orderMeal = data => {
+  return axios.post(
+    `${beginUrl}order_meal`,
+    data
+  )
+}
+
+export const viewTableOrders = id => {
+  return axios.get(`${beginUrl}view_table_orders/${id}`)
+}
+
 export const addTable = data => {
   return axios.post(
     `${beginUrl}add_table`,

@@ -96,6 +96,10 @@ export const updateLocationHours = data => {
 	)
 }
 
+export const getLogins = id => { // for restaurants only
+  return axios.get(`${beginUrl}/get_logins/${id}`)
+}
+
 export const setReceiveType = data => {
   return axios.post(
     `${beginUrl}set_receive_type`,

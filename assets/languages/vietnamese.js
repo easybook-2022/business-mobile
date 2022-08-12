@@ -291,6 +291,7 @@ const info = {
     addTable: "Thêm bảng",
     table: "Bàn #",
     showBarcode: "Chương trình mã vạch",
+    selectTable: "Chọn bảng",
     hidden: {
       add: {
         tableNumber: "Nhập bảng #:",

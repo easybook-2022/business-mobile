@@ -291,6 +291,7 @@ const info = {
     addTable: "Ajouter un tableau",
     table: "Tableau #",
     showBarcode: "Afficher le code barre",
+    selectTable: "Sélectionnez le tableau",
     hidden: {
       add: {
         tableNumber: "Entrer le tableau #:",

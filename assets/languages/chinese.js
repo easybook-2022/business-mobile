@@ -291,6 +291,7 @@ const info = {
     addTable: "添加表",
     table: "桌子 #",
     showBarcode: "显示条码",
+    selectTable: "选择表",
     hidden: {
       add: {
         tableNumber: "输入表 #:",
