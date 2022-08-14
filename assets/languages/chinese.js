@@ -156,6 +156,12 @@ const info = {
         changeBusinesshours: "更改营业时间",
         moreBusinesses: "您的企业",
         walkIn: "客户上门",
+        switchAccount: {
+          header: "将帐户切换到",
+          owner: "所有者",
+          kitchen: "厨房",
+          tableOrderers: "表排序器"
+        },
         changeLanguage: "改变语言",
         editTables: "编辑表格",
         getAppointmentsby: {

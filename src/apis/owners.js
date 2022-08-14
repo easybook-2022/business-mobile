@@ -158,6 +158,20 @@ export const setUseVoice = data => {
   )
 }
 
+export const switchAccount = data => {
+  return axios.post(
+    `${beginUrl}/switch_account`,
+    data
+  )
+}
+
+export const verifySwitchAccount = data => {
+  return axios.post(
+    `${beginUrl}/verify_switch_account`,
+    data
+  )
+}
+
 export const getOtherWorkers = data => {
   return axios.post(
     `${beginUrl}get_other_workers`,

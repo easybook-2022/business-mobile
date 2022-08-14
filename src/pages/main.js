@@ -25,7 +25,8 @@ import { loginInfo, ownerSigninInfo, socket, logo_url, useSpeech, timeControl, t
 import { getId, displayTime, resizePhoto, displayPhonenumber } from 'geottuse-tools'
 import { 
   updateNotificationToken, verifyUser, updateLogins, addOwner, updateOwner, deleteOwner, getStylistInfo, 
-  getOtherWorkers, getAccounts, getOwnerInfo, logoutUser, getWorkersTime, getAllWorkersTime, getWorkersHour, setUseVoice
+  getOtherWorkers, getAccounts, getOwnerInfo, logoutUser, getWorkersTime, getAllWorkersTime, getWorkersHour, setUseVoice, 
+  switchAccount, verifySwitchAccount
 } from '../apis/owners'
 import { getTables, getTableOrders, finishOrder, viewPayment, finishDining, getQrCode, orderMeal, viewTableOrders, addTable, removeTable, getTableBills, getOrderingTables } from '../apis/dining_tables'
 import { getLocationProfile, getLocationHours, updateLocationHours, updateInformation, getLogins, updateAddress, updateLogo, setReceiveType, getDayHours } from '../apis/locations'
@@ -79,7 +80,6 @@ export default function Main(props) {
 
   const [tableViewtype, setTableviewtype] = useState('')
   const [tableOrders, setTableorders] = useState([])
-  const [orders, setOrders] = useState([])
   const [numTableorders, setNumtableorders] = useState(0)
   const [table, setTable] = useState({ id: '', name: '' })
   const [tables, setTables] = useState([])
@@ -163,9 +163,11 @@ export default function Main(props) {
     errorMsg: "",
     loading: false
   })
-  const [showOrders, setShoworders] = useState({ show: false, orders: [] })
+  const [showCurrentorders, setShowcurrentorders] = useState({ show: false, orders: [] })
   const [showTableorders, setShowtableorders] = useState({ show: false, orders: [] })
+  const [orderSentalert, setOrdersentalert] = useState(false)
   const [showQr, setShowqr] = useState({ show: false, table: "", codeText: "" })
+  const [switchAccountauth, setSwitchaccountauth] = useState({ show: false, type: '', password: '' })
 
 	const getNotificationPermission = async() => {
 		const ownerid = await AsyncStorage.getItem("ownerid")
@@ -207,9 +209,12 @@ export default function Main(props) {
 
   const getTheLocationProfile = async() => {
 		const ownerid = await AsyncStorage.getItem("ownerid")
+    const usertype = await AsyncStorage.getItem("userType")
 		const locationid = await AsyncStorage.getItem("locationid")
     const tableInfo = JSON.parse(await AsyncStorage.getItem("table"))
 		const data = { locationid }
+
+    setUsertype(usertype)
 
 		getLocationProfile(data)
 			.then((res) => {
@@ -280,7 +285,7 @@ export default function Main(props) {
               if (type == 'store') {
                 getAllCartOrderers()
               } else {
-                switch (userType) {
+                switch (usertype) {
                   case "orderer":
                     if (tableInfo) {
                       setTable({ ...table, id: tableInfo.id, name: tableInfo.name })
@@ -348,7 +353,6 @@ export default function Main(props) {
       })
       .then((res) => {
         if (res) {
-          setUsertype(res.userType)
           setUsevoice(res.useVoice)
         }
       })
@@ -1129,6 +1133,7 @@ export default function Main(props) {
       .then((res) => {
         if (res) {
           setMenuinfo({ ...menuInfo, list: res.list })
+          getTheTable()
           setLoaded(true)
         }
       })
@@ -1144,7 +1149,24 @@ export default function Main(props) {
       })
       .then((res) => {
         if (res) {
-          setTables(res.tables)
+          const tablesList = res.tables
+          const newTables = []
+          let row = []
+
+          tablesList.forEach(function (tableInfo) {
+            row.push(tableInfo)
+
+            if (row.length == 3) {
+              newTables.push({ key: "table-" + newTables.length, row })
+              row = []
+            }
+          })
+
+          if (row.length > 0) {
+            newTables.push({ key: "table-" + newTables.length, row })
+          }
+
+          setTables(newTables)
           setLoaded(true)
         }
       })
@@ -1173,6 +1195,21 @@ export default function Main(props) {
           const { errormsg, status } = err.response.data
 
           
+        }
+      })
+  }
+  const getTheTable = async() => {
+    const tableInfo = JSON.parse(await AsyncStorage.getItem("table"))
+
+    getQrCode(tableInfo.name)
+      .then((res) => {
+        if (res.status == 200) {
+          return res.data
+        }
+      })
+      .then((res) => {
+        if (res) {
+          setNumtableorders(res.numOrders)
         }
       })
   }
@@ -1373,16 +1410,11 @@ export default function Main(props) {
         }
       })
   }
-  const viewTheOrders = () => {
-    const newOrders = [...orders]
-
-    setShoworders({ ...showOrders, show: true, orders: newOrders })
-  }
   const addToOrders = () => {
     setShowproductinfo({ ...showProductinfo, loading: true })
 
     let { id, name, cost, price, sizes, quantities, percents, image, quantity, note } = showProductinfo
-    const newOrders = [...orders]
+    const newOrders = [...showCurrentorders.orders]
     let sizeRequired = sizes.length > 0, quantityRequired = quantities.length > 0, sizeSelected = "", quantitySelected = ""
     let specialChars = /[`!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~]/, orderKey = ""
 
@@ -1432,16 +1464,16 @@ export default function Main(props) {
       })
 
       AsyncStorage.setItem("orders", JSON.stringify(newOrders))
-      setOrders(newOrders)
 
+      setShowcurrentorders({ ...showCurrentorders, orders: newOrders })
       setShowproductinfo({ ...showProductinfo, show: false, id: -1, loading: false })
     } else {
       setShowproductinfo({ ...showProductinfo, errorMsg: "Please select a " + (sizeRequired ? "size" : "quantity") })
     }
   }
   const sendOrders = async() => {
-    const tableId = await AsyncStorage.getItem("tableId")
-    const newOrders = [...orders]
+    const tableInfo = JSON.parse(await AsyncStorage.getItem("table"))
+    const newOrders = [...showCurrentorders.orders]
     let sizes = [], quantities = [], percents = []
 
     newOrders.forEach(function (order) {
@@ -1472,7 +1504,7 @@ export default function Main(props) {
       percents = []
     })
 
-    let data = { orders: JSON.stringify(newOrders), tableid: tableId }
+    let data = { orders: JSON.stringify(newOrders), tableid: tableInfo.name }
 
     orderMeal(data)
       .then((res) => {
@@ -1484,11 +1516,11 @@ export default function Main(props) {
         if (res) {
           data = { ...data, receiver: res.receiver }
           socket.emit("socket/orderMeal", data, () => {
-            setShoworders({ ...showOrders, show: false, orders: [] })
-            setShowalert(true)
+            setShowcurrentorders({ ...showCurrentorders, show: false, orders: [] })
+            setOrdersentalert(true)
 
             setTimeout(function () {
-              setShowalert(false)
+              setOrdersentalert(false)
 
               AsyncStorage.setItem("orders", "[]")
               getTheTable()
@@ -1503,15 +1535,14 @@ export default function Main(props) {
       })
   }
   const deleteOrder = index => {
-    const newOrders = [...orders]
+    const newOrders = [...showCurrentorders.orders]
 
     newOrders.splice(index, 1)
 
-    setOrders(newOrders)
-    AsyncStorage.setItem("orders", JSON.stringify(orders))
+    AsyncStorage.setItem("orders", JSON.stringify(newOrders))
 
-    setShoworders({ 
-      ...showOrders, 
+    setShowcurrentorders({ 
+      ...showCurrentorders, 
       show: newOrders.length > 0,
       orders: newOrders 
     })
@@ -1857,6 +1888,7 @@ export default function Main(props) {
     setLanguage(await AsyncStorage.getItem("language"))
 
     getTheOwnerInfo()
+    getTheLocationProfile()
     getTheLocationHours()
 
 		if (Constants.isDevice) getNotificationPermission()
@@ -2317,6 +2349,19 @@ export default function Main(props) {
               break;
             default:
           }
+        }
+      })
+  }
+  const deleteTheLogin = id => {
+    deleteOwner(id)
+      .then((res) => {
+        if (res.status == 200) {
+          return res.data
+        }
+      })
+      .then((res) => {
+        if (res) {
+          getTheLogins()
         }
       })
   }
@@ -2842,6 +2887,116 @@ export default function Main(props) {
         }
       })
   }
+  const switchTheAccount = async type => {
+    const locationid = await AsyncStorage.getItem("locationid")
+    const data = { locationid, type }
+    let askPassword = false
+
+    switch (userType) { // initial
+      case "owner":
+
+        break;
+      case "kitchen":
+        askPassword = true
+
+        break;
+      case "orderer":
+        askPassword = true
+
+        break;
+      default:
+
+    }
+
+    if (askPassword == true) {
+      setShowmoreoptions({ ...showMoreoptions, show: false })
+      setSwitchaccountauth({ ...switchAccountauth, show: true, type, password: '' })
+    } else {
+      switchAccount(data)
+        .then((res) => {
+          if (res.status == 200) {
+            return res.data
+          }
+        })
+        .then((res) => {
+          if (res) {
+            setOwnerid(res.id)
+            setUsertype(type)
+
+            AsyncStorage.setItem("ownerid", res.id)
+            AsyncStorage.setItem("userType", type)
+
+            if (type == "orderer") {
+              getAllTables()
+            }
+
+            setShowmoreoptions({ ...showMoreoptions, show: false })
+            setSwitchaccountauth({ ...switchAccountauth, show: false, type: '', password: '', errorMsg: '' })
+          }
+        })
+        .catch((err) => {
+          if (err.response && err.response.status == 400) {
+            const { errormsg, status } = err.response.data
+          }
+        })
+    }
+  }
+  const verifyTheSwitchAccount = async() => {
+    const { type, password } = switchAccountauth
+    const locationid = await AsyncStorage.getItem("locationid")
+    const data = { locationid, type, password }
+
+    verifySwitchAccount(data)
+      .then((res) => {
+        if (res.status == 200) {
+          return res.data
+        }
+      })
+      .then((res) => {
+        if (res) {
+          switchAccount(data)
+            .then((res) => {
+              if (res.status == 200) {
+                return res.data
+              }
+            })
+            .then((res) => {
+              if (res) {
+                setOwnerid(res.id)
+                setUsertype(type)
+
+                AsyncStorage.setItem("ownerid", res.id)
+                AsyncStorage.setItem("userType", type)
+
+                setShowmoreoptions({ ...showMoreoptions, show: false })
+                setSwitchaccountauth({ ...switchAccountauth, show: false, type: '', password: '', errorMsg: '' })
+
+                if (type == "orderer") {
+                  getAllTables()
+                }
+              }
+            })
+            .catch((err) => {
+              if (err.response && err.response.status == 400) {
+                const { errormsg, status } = err.response.data
+              }
+            })
+        }
+      })
+      .catch((err) => {
+        if (err.response && err.response.status == 400) {
+          const { errormsg, status } = err.response.data
+
+          switch (status) {
+            case "passwordMismatch":
+              setSwitchaccountauth({ ...switchAccountauth, errorMsg: "Password is incorrect" })
+
+              break;
+            default:
+          }
+        }
+      })
+  }
   const allowCamera = async() => {
     if (Platform.OS === "ios") {
       const { status } = await Camera.getCameraPermissionsAsync()
@@ -3008,12 +3163,6 @@ export default function Main(props) {
 			socket.off("updateOrders")
 		}
 	}, [viewType, chartInfo.workersHour, appointments.list.length, cartOrderers.length])
-
-  useEffect(() => {
-    if (userType) {
-      getTheLocationProfile()
-    }
-  }, [userType])
 
   useEffect(() => {
     if (Constants.isDevice) {
@@ -3374,6 +3523,18 @@ export default function Main(props) {
 
             {locationType == "restaurant" && (
               <>
+                {userType == "owner" && (
+                  <View style={{ alignItems: 'center' }}>
+                    <Text style={[styles.viewTypeHeader, { fontWeight: 'bold' }]}>This is {storeName}</Text>
+
+                    {logo.uri && (
+                      <View style={{ height: wsize(90), width: wsize(90) }}>
+                        <Image style={resizePhoto(logo.size, wsize(90))} source={{ uri: logo.uri }}/>
+                      </View>
+                    )}
+                  </View>
+                )}
+
                 {userType == "kitchen" && (
                   <>
                     {viewType == "cartorderers" && (
@@ -3467,7 +3628,7 @@ export default function Main(props) {
 
                                           <View style={styles.column}>
                                             <TouchableOpacity style={styles.orderDone} onPress={() => finishTheOrder(order.key, order.tableId)}>
-                                              <Text style={styles.orderDoneHeader}>{tr.t("buttons.done")}</Text>
+                                              <Text style={styles.orderDoneHeader}>{tr.t("buttons.done").toUpperCase()}</Text>
                                             </TouchableOpacity>
                                           </View>
                                         </View>
@@ -3518,13 +3679,13 @@ export default function Main(props) {
                   table.id ? 
                     <>
                       <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-                        {orders.length > 0 && (
-                          <TouchableOpacity style={styles.ordererTouch} onPress={() => viewTheOrders()}>
-                            <Text style={styles.ordererTouchHeader}>{orders.length + '\nSee / Send'}</Text>
+                        {showCurrentorders.orders.length > 0 && (
+                          <TouchableOpacity style={styles.ordererTouch} onPress={() => setShowcurrentorders({ ...showCurrentorders, show: true })}>
+                            <Text style={styles.ordererTouchHeader}>{showCurrentorders.orders.length + '\nSee / Send'}</Text>
                           </TouchableOpacity>
                         )}
 
-                        <TouchableOpacity style={styles.ordererTouch} onPress={() => viewTheTableOrders()}>
+                        <TouchableOpacity style={styles.ordererTouch} disabled={numTableorders == 0} onPress={() => viewTheTableOrders()}>
                           <Text style={styles.ordererTouchHeader}>{numTableorders + '\nOrdered'}</Text>
                         </TouchableOpacity>
                       </View>
@@ -3539,21 +3700,25 @@ export default function Main(props) {
                     <FlatList
                       data={tables}
                       renderItem={({ item, index }) => 
-                        <View key={item.key} style={styles.table}>
-                          <View style={styles.column}><Text style={styles.tableHeader}>{tr.t("tables.table")}{item.name}</Text></View>
+                        <View key={item.key} style={{ flexDirection: 'row', justifyContent: 'space-around', width: '100%' }}>
+                          {item.row.map(info => (
+                            <View key={info.key} style={styles.table}>
+                              <View style={styles.column}><Text style={styles.tableHeader}>{tr.t("tables.table")}{info.name}</Text></View>
 
-                          <View style={styles.tableActions}>
-                            <View style={styles.column}>
-                              <TouchableOpacity style={[styles.tableAction, { padding: 10 }]} onPress={() => showQrCode(item.tableid)}>
-                                <Text style={{ fontSize: wsize(3) }}>{tr.t("tables.showBarcode")}</Text>
-                              </TouchableOpacity>
+                              <View style={styles.tableActions}>
+                                <View style={styles.column}>
+                                  <TouchableOpacity style={[styles.tableAction, { padding: 10 }]} onPress={() => showQrCode(info.tableid)}>
+                                    <Text style={styles.tableActionHeader}>{tr.t("tables.showBarcode")}</Text>
+                                  </TouchableOpacity>
+                                </View>
+                                <View style={styles.column}>
+                                  <TouchableOpacity style={[styles.tableAction, { padding: 10 }]} onPress={() => selectDiningTable(info.tableid)}>
+                                    <Text style={styles.tableActionHeader}>{tr.t("tables.selectTable")}</Text>
+                                  </TouchableOpacity>
+                                </View>
+                              </View>
                             </View>
-                            <View style={styles.column}>
-                              <TouchableOpacity style={[styles.tableAction, { padding: 10 }]} onPress={() => selectDiningTable(item.tableid)}>
-                                <Text style={{ fontSize: wsize(3) }}>{tr.t("tables.selectTable")}</Text>
-                              </TouchableOpacity>
-                            </View>
-                          </View>
+                          ))}
                         </View>
                       }
                     />
@@ -3564,27 +3729,23 @@ export default function Main(props) {
 
   				<View style={styles.bottomNavs}>
   					<View style={styles.bottomNavsRow}>
-              {userType == "owner" && (
-                <>
-                  <View style={[styles.column, { width: '28%' }]}>
-                    <TouchableOpacity style={styles.bottomNavButton} onPress={() => setShowmoreoptions({ ...showMoreoptions, show: true })}>
-                      <Text style={styles.bottomNavButtonHeader}>{tr.t("main.bottomNavs.info")}</Text>
-                    </TouchableOpacity>
-                  </View>
+              <View style={[styles.column, { width: '28%' }]}>
+                <TouchableOpacity style={styles.bottomNavButton} onPress={() => setShowmoreoptions({ ...showMoreoptions, show: true })}>
+                  <Text style={styles.bottomNavButtonHeader}>{tr.t("main.bottomNavs.info")}</Text>
+                </TouchableOpacity>
+              </View>
 
-                  <View style={[styles.column, { width: '28%' }]}>
-                    <TouchableOpacity style={styles.bottomNavButton} onPress={() => {
-                      if (locationType == "nail" || locationType == "hair") {
-                        getTheWorkersTime()
-                      } else {
-                        setShowinfo({ ...showInfo, show: true })
-                      }
-                    }}>
-                      <Text style={styles.bottomNavButtonHeader}>{tr.t("main.bottomNavs.hours")}</Text>
-                    </TouchableOpacity>
-                  </View>
-                </>
-              )}
+              <View style={[styles.column, { width: '28%' }]}>
+                <TouchableOpacity style={styles.bottomNavButton} onPress={() => {
+                  if (locationType == "nail" || locationType == "hair") {
+                    getTheWorkersTime()
+                  } else {
+                    setShowinfo({ ...showInfo, show: true })
+                  }
+                }}>
+                  <Text style={styles.bottomNavButtonHeader}>{tr.t("main.bottomNavs.hours")}</Text>
+                </TouchableOpacity>
+              </View>
 
               <View style={[styles.column, { width: '28%' }]}>
                 <TouchableOpacity style={styles.bottomNavButton} onPress={() => logout()}>
@@ -3603,7 +3764,8 @@ export default function Main(props) {
       {(
         scheduleOption.show || showInfo.show || showMoreoptions.show || showDisabledscreen || 
         alertInfo.show || showPayment.show || showAddtable.show || showRemovetable.show || 
-        showProductinfo.show || showOrders.show || showTableorders.show || showQr.show
+        showProductinfo.show || showCurrentorders.show || orderSentalert || showTableorders.show || showQr.show || 
+        switchAccountauth.show
       ) && (
         <Modal transparent={true}>
           <SafeAreaView style={{ flex: 1 }}>
@@ -3883,73 +4045,73 @@ export default function Main(props) {
               </View>
             )}
             {showMoreoptions.show && (
-              <View style={styles.moreOptionsContainer}>
-                <View style={styles.moreOptionsBox}>
+              <View style={styles.moreInfosContainer}>
+                <View style={styles.moreInfosBox}>
                   {showMoreoptions.infoType == '' ? 
                     <>
-                      <TouchableOpacity style={styles.moreOptionsClose} onPress={() => setShowmoreoptions({ ...showMoreoptions, show: false })}>
+                      <TouchableOpacity style={styles.moreInfosClose} onPress={() => setShowmoreoptions({ ...showMoreoptions, show: false })}>
                         <AntDesign name="close" size={wsize(7)}/>
                       </TouchableOpacity>
 
                       <ScrollView showsVerticalScrollIndicator={false} style={{ width: '90%' }}>
-                        <TouchableOpacity style={styles.moreOptionTouch} onPress={() => {
-                          setShowmoreoptions({ ...showMoreoptions, show: false })
-                          props.navigation.navigate("menu", { userType })
-                        }}>
-                          <Text style={styles.moreOptionTouchHeader}>{tr.t("main.hidden.showMoreoptions.changeMenu")}</Text>
-                        </TouchableOpacity>
-
-                        {(locationType == "hair" || locationType == "nail") && (
-                          <TouchableOpacity style={styles.moreOptionTouch} onPress={() => {
-                            setEditinfo({ ...editInfo, show: true, type: 'users' })
-                            setShowmoreoptions({ ...showMoreoptions, infoType: 'users' })
-                            getAllAccounts()
-                          }}>
-                            <Text style={styles.moreOptionTouchHeader}>{tr.t("main.hidden.showMoreoptions.changeStaffinfo")}</Text>
-                          </TouchableOpacity>
-                        )}
-
-                        {(locationType == "store" || locationType == "restaurant") && (
-                          <TouchableOpacity style={styles.moreOptionTouch} onPress={() => {
-                            getTheLogins()
-                            setEditinfo({ ...editInfo, show: true, type: 'login' })
-                            setShowmoreoptions({ ...showMoreoptions, infoType: 'login' })
-                          }}>
-                            <Text style={styles.moreOptionTouchHeader}>{tr.t("main.hidden.showMoreoptions.changeLogininfo")}</Text>
-                          </TouchableOpacity>
-                        )}
-
-                        {userType == true && (
+                        {userType == "owner" && (
                           <>
-                            <TouchableOpacity style={styles.moreOptionTouch} onPress={() => {
+                            <TouchableOpacity style={styles.moreInfoTouch} onPress={() => {
+                              setShowmoreoptions({ ...showMoreoptions, show: false })
+                              props.navigation.navigate("menu", { userType })
+                            }}>
+                              <Text style={styles.moreInfoTouchHeader}>{tr.t("main.hidden.showMoreoptions.changeMenu")}</Text>
+                            </TouchableOpacity>
+
+                            {(locationType == "hair" || locationType == "nail") && (
+                              <TouchableOpacity style={styles.moreInfoTouch} onPress={() => {
+                                setEditinfo({ ...editInfo, show: true, type: 'users' })
+                                setShowmoreoptions({ ...showMoreoptions, infoType: 'users' })
+                                getAllAccounts()
+                              }}>
+                                <Text style={styles.moreInfoTouchHeader}>{tr.t("main.hidden.showMoreoptions.changeStaffinfo")}</Text>
+                              </TouchableOpacity>
+                            )}
+
+                            {(locationType == "store" || locationType == "restaurant") && (
+                              <TouchableOpacity style={styles.moreInfoTouch} onPress={() => {
+                                getTheLogins()
+                                setEditinfo({ ...editInfo, show: true, type: 'login' })
+                                setShowmoreoptions({ ...showMoreoptions, infoType: 'login' })
+                              }}>
+                                <Text style={styles.moreInfoTouchHeader}>{tr.t("main.hidden.showMoreoptions.changeLogininfo")}</Text>
+                              </TouchableOpacity>
+                            )}
+
+                            <TouchableOpacity style={styles.moreInfoTouch} onPress={() => {
                               setShowmoreoptions({ ...showMoreoptions, infoType: 'information' })
                               setEditinfo({ ...editInfo, show: true, type: 'information' })
                             }}>
-                              <Text style={styles.moreOptionTouchHeader}>{tr.t("main.hidden.showMoreoptions.changeBusinessinformation")}</Text>
+                              <Text style={styles.moreInfoTouchHeader}>{tr.t("main.hidden.showMoreoptions.changeBusinessinformation")}</Text>
                             </TouchableOpacity>
 
-                            <TouchableOpacity style={styles.moreOptionTouch} onPress={() => {
+                            <TouchableOpacity style={styles.moreInfoTouch} onPress={() => {
                               setShowmoreoptions({ ...showMoreoptions, infoType: 'location' })
                               setEditinfo({ ...editInfo, show: true, type: 'location' })
                             }}>
-                              <Text style={styles.moreOptionTouchHeader}>{tr.t("main.hidden.showMoreoptions.changeBusinesslocation")}</Text>
+                              <Text style={styles.moreInfoTouchHeader}>{tr.t("main.hidden.showMoreoptions.changeBusinesslocation")}</Text>
                             </TouchableOpacity>
 
-                            <TouchableOpacity style={styles.moreOptionTouch} onPress={() => {
+                            <TouchableOpacity style={styles.moreInfoTouch} onPress={() => {
                               setShowmoreoptions({ ...showMoreoptions, infoType: 'logo' })
                               setEditinfo({ ...editInfo, show: true, type: 'logo' })
                             }}>
-                              <Text style={styles.moreOptionTouchHeader}>{tr.t("main.hidden.showMoreoptions.changeBusinesslogo")}</Text>
+                              <Text style={styles.moreInfoTouchHeader}>{tr.t("main.hidden.showMoreoptions.changeBusinesslogo")}</Text>
                             </TouchableOpacity>
 
-                            <TouchableOpacity style={styles.moreOptionTouch} onPress={() => {
+                            <TouchableOpacity style={styles.moreInfoTouch} onPress={() => {
                               setShowmoreoptions({ ...showMoreoptions, infoType: 'hours' })
                               setEditinfo({ ...editInfo, show: true, type: 'hours' })
                             }}>
-                              <Text style={styles.moreOptionTouchHeader}>{tr.t("main.hidden.showMoreoptions.changeBusinesshours")}</Text>
+                              <Text style={styles.moreInfoTouchHeader}>{tr.t("main.hidden.showMoreoptions.changeBusinesshours")}</Text>
                             </TouchableOpacity>
 
-                            <TouchableOpacity style={styles.moreOptionTouch} onPress={() => {
+                            <TouchableOpacity style={styles.moreInfoTouch} onPress={() => {
                               AsyncStorage.removeItem("locationid")
                               AsyncStorage.removeItem("locationtype")
                               AsyncStorage.setItem("phase", "list")
@@ -3960,11 +4122,11 @@ export default function Main(props) {
                                 props.navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "list" }]}));
                               }, 1000)
                             }}>
-                              <Text style={styles.moreOptionTouchHeader}>{tr.t("main.hidden.showMoreoptions.moreBusinesses")}</Text>
+                              <Text style={styles.moreInfoTouchHeader}>{tr.t("main.hidden.showMoreoptions.moreBusinesses")}</Text>
                             </TouchableOpacity>
 
                             {(locationType == "hair" || locationType == "nail") && (
-                              <TouchableOpacity style={styles.moreOptionTouch} onPress={() => {
+                              <TouchableOpacity style={styles.moreInfoTouch} onPress={() => {
                                 AsyncStorage.setItem("phase", "walkin")
 
                                 setShowmoreoptions({ ...showMoreoptions, show: false })
@@ -3973,7 +4135,7 @@ export default function Main(props) {
                                   props.navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "walkin" }]}));
                                 }, 1000)
                               }}>
-                                <Text style={styles.moreOptionTouchHeader}>{tr.t("main.hidden.showMoreoptions.walkIn")}</Text>
+                                <Text style={styles.moreInfoTouchHeader}>{tr.t("main.hidden.showMoreoptions.walkIn")}</Text>
                               </TouchableOpacity>
                             )}
 
@@ -3991,43 +4153,69 @@ export default function Main(props) {
                                 </View>
                               </View>
                             )}
+
+                            <TouchableOpacity style={styles.moreInfoTouch} onPress={() => {
+                              setShowmoreoptions({ ...showMoreoptions, show: false })
+                              props.navigation.navigate("tables")
+                            }}>
+                              <Text style={styles.moreInfoTouchHeader}>{tr.t("main.hidden.showMoreoptions.editTables")}</Text>
+                            </TouchableOpacity>
+
+                            {(locationType == "hair" || locationType == "nail") && (
+                              <View style={styles.moreOptionsBox}>
+                                <Text style={styles.moreOptionsHeader}>{tr.t("main.hidden.showMoreoptions.useVoice.header")}</Text>
+
+                                <View style={styles.moreOptions}>
+                                  <TouchableOpacity style={[styles.moreOption, { backgroundColor: useVoice == true ? 'black' : 'white' }]} onPress={() => setTheUseVoice(true)}>
+                                    <Text style={[styles.moreOptionHeader, { color: useVoice == true ? 'white' : 'black' }]}>{tr.t("main.hidden.showMoreoptions.useVoice.yes")}</Text>
+                                  </TouchableOpacity>
+                                  <TouchableOpacity style={[styles.moreOption, { backgroundColor: useVoice == false ? 'black' : 'white' }]} onPress={() => setTheUseVoice(false)}>
+                                    <Text style={[styles.moreOptionHeader, { color: useVoice == false ? 'white' : 'black' }]}>{tr.t("main.hidden.showMoreoptions.useVoice.no")}</Text>
+                                  </TouchableOpacity>
+                                </View>
+                              </View>
+                            )}
+
+                            <TouchableOpacity style={styles.moreInfoTouch} onPress={() => {
+                              setShowmoreoptions({ ...showMoreoptions, show: false })
+                              props.navigation.navigate("paymentrecords")
+                            }}>
+                              <Text style={styles.moreInfoTouchHeader}>{tr.t("main.hidden.showMoreoptions.paymentRecords")}</Text>
+                            </TouchableOpacity>
                           </>
                         )}
 
-                        <TouchableOpacity style={styles.moreOptionTouch} onPress={() => {
-                          setShowmoreoptions({ ...showMoreoptions, infoType: 'changelanguage' })
-                          setEditinfo({ ...editInfo, show: true, type: 'changelanguage' })
-                        }}>
-                          <Text style={styles.moreOptionTouchHeader}>{tr.t("main.hidden.showMoreoptions.changeLanguage")}</Text>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity style={styles.moreOptionTouch} onPress={() => {
-                          setShowmoreoptions({ ...showMoreoptions, show: false })
-                          props.navigation.navigate("tables")
-                        }}>
-                          <Text style={styles.moreOptionTouchHeader}>{tr.t("main.hidden.showMoreoptions.editTables")}</Text>
-                        </TouchableOpacity>
-
-                        {(locationType == "hair" || locationType == "nail") && (
+                        {locationType == "restaurant" && (
                           <View style={styles.moreOptionsBox}>
-                            <Text style={styles.moreOptionsHeader}>{tr.t("main.hidden.showMoreoptions.useVoice.header")}</Text>
+                            <Text style={styles.moreOptionsHeader}>{tr.t("main.hidden.showMoreoptions.switchAccount.header")}</Text>
 
                             <View style={styles.moreOptions}>
-                              <TouchableOpacity style={[styles.moreOption, { backgroundColor: useVoice == true ? 'black' : 'white' }]} onPress={() => setTheUseVoice(true)}>
-                                <Text style={[styles.moreOptionHeader, { color: useVoice == true ? 'white' : 'black' }]}>{tr.t("main.hidden.showMoreoptions.useVoice.yes")}</Text>
-                              </TouchableOpacity>
-                              <TouchableOpacity style={[styles.moreOption, { backgroundColor: useVoice == false ? 'black' : 'white' }]} onPress={() => setTheUseVoice(false)}>
-                                <Text style={[styles.moreOptionHeader, { color: useVoice == false ? 'white' : 'black' }]}>{tr.t("main.hidden.showMoreoptions.useVoice.no")}</Text>
-                              </TouchableOpacity>
+                              {userType != 'kitchen' && (
+                                <TouchableOpacity style={styles.moreOption} onPress={() => switchTheAccount('kitchen')}>
+                                  <Text style={styles.moreOptionHeader}>{tr.t("main.hidden.showMoreoptions.switchAccount.kitchen")}</Text>
+                                </TouchableOpacity>
+                              )}
+
+                              {userType != 'owner' && (
+                                <TouchableOpacity style={styles.moreOption} onPress={() => switchTheAccount('owner')}>
+                                  <Text style={styles.moreOptionHeader}>{tr.t("main.hidden.showMoreoptions.switchAccount.owner")}</Text>
+                                </TouchableOpacity>
+                              )}
+                              
+                              {userType != 'orderer' && (
+                                <TouchableOpacity style={styles.moreOption} onPress={() => switchTheAccount('orderer')}>
+                                  <Text style={styles.moreOptionHeader}>{tr.t("main.hidden.showMoreoptions.switchAccount.tableOrderers")}</Text>
+                                </TouchableOpacity>
+                              )}
                             </View>
                           </View>
                         )}
 
-                        <TouchableOpacity style={styles.moreOptionTouch} onPress={() => {
-                          setShowmoreoptions({ ...showMoreoptions, show: false })
-                          props.navigation.navigate("paymentrecords")
+                        <TouchableOpacity style={styles.moreInfoTouch} onPress={() => {
+                          setShowmoreoptions({ ...showMoreoptions, infoType: 'changelanguage' })
+                          setEditinfo({ ...editInfo, show: true, type: 'changelanguage' })
                         }}>
-                          <Text style={styles.moreOptionTouchHeader}>{tr.t("main.hidden.showMoreoptions.paymentRecords")}</Text>
+                          <Text style={styles.moreInfoTouchHeader}>{tr.t("main.hidden.showMoreoptions.changeLanguage")}</Text>
                         </TouchableOpacity>
                       </ScrollView>
                     </>
@@ -4465,7 +4653,7 @@ export default function Main(props) {
 
                                     <FlatList
                                       data={logins.owners}
-                                      style={{ height: '80%' }}
+                                      style={{ height: '80%', width: '100%' }}
                                       renderItem={({ item, index }) => 
                                         <View key={item.key} style={styles.login}>
                                           <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
@@ -4473,22 +4661,30 @@ export default function Main(props) {
                                             <View style={styles.column}><Text style={styles.loginHeader}>{item.cellnumber}</Text></View>
                                           </View>
 
-                                          <View style={{ backgroundColor: 'rgba(0, 0, 0, 0.2)', flexDirection: 'row', justifyContent: 'space-around', width: '100%' }}>
+                                          <View style={{ alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.2)', width: '100%' }}>
                                             <View style={styles.column}>
                                               <TouchableOpacity style={styles.loginChange} onPress={() => setLogins({ ...logins, type: 'usertype', info: {...logins.info, id: item.id, userType: item.userType }})}>
                                                 <Text style={styles.loginChangeHeader}>Change User Type{'\n(' + item.userType + ')'}</Text>
                                               </TouchableOpacity>
                                             </View>
 
-                                            <View style={styles.column}>
-                                              <TouchableOpacity style={styles.loginChange} onPress={() => setLogins({ ...logins, type: 'cellnumber', info: {...logins.info, id: item.id }})}>
-                                                <Text style={styles.loginChangeHeader}>Change #</Text>
-                                              </TouchableOpacity>
+                                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginVertical: 5 }}>
+                                              <View style={[styles.column, { width: '48%' }]}>
+                                                <TouchableOpacity style={styles.loginChange} onPress={() => setLogins({ ...logins, type: 'cellnumber', info: {...logins.info, id: item.id, noAccount: false, verifyCode: "", verified: false }})}>
+                                                  <Text style={styles.loginChangeHeader}>Change number</Text>
+                                                </TouchableOpacity>
+                                              </View>
+
+                                              <View style={[styles.column, { width: '48%' }]}>
+                                                <TouchableOpacity style={styles.loginChange} onPress={() => setLogins({ ...logins, type: 'password', info: {...logins.info, id: item.id }})}>
+                                                  <Text style={styles.loginChangeHeader}>Change Password</Text>
+                                                </TouchableOpacity>
+                                              </View>
                                             </View>
 
                                             <View style={styles.column}>
-                                              <TouchableOpacity style={styles.loginChange} onPress={() => setLogins({ ...logins, type: 'password', info: {...logins.info, id: item.id }})}>
-                                                <Text style={styles.loginChangeHeader}>Change Password</Text>
+                                              <TouchableOpacity style={styles.loginRemove} onPress={() => deleteTheLogin(item.id)}>
+                                                <AntDesign name="closecircleo" size={wsize(10)}/>
                                               </TouchableOpacity>
                                             </View>
                                           </View>
@@ -4584,10 +4780,30 @@ export default function Main(props) {
                                       )}
 
                                       {logins.type == "cellnumber" && (
-                                        <View style={styles.inputContainer}>
-                                          <Text style={styles.inputHeader}>{tr.t("main.editingInformation.cellnumber")}:</Text>
-                                          <TextInput style={styles.input} onChangeText={(num) => setLogins({ ...logins, info: { ...logins.info, cellnumber: displayPhonenumber(logins.info.cellnumber, num, () => Keyboard.dismiss()) }})} value={logins.info.cellnumber} autoCorrect={false} keyboardType="numeric"/>
-                                        </View>
+                                        !logins.info.noAccount ? 
+                                          <View style={styles.inputContainer}>
+                                            <Text style={styles.inputHeader}>{tr.t("main.editingInformation.cellnumber").replace(" your", " new")}:</Text>
+                                            <TextInput style={styles.input} onChangeText={(num) => setLogins({ ...logins, info: { ...logins.info, cellnumber: displayPhonenumber(logins.info.cellnumber, num, () => Keyboard.dismiss()) }})} value={logins.info.cellnumber} autoCorrect={false} keyboardType="numeric"/>
+                                          </View>
+                                          :
+                                          !logins.info.verified && ( 
+                                            <View style={styles.inputContainer}>
+                                              <Text style={styles.inputHeader}>{tr.t("main.editingInformation.verifyCode")}:</Text>
+                                              <TextInput style={styles.input} onChangeText={(verifyCode) => {
+                                                if (verifyCode.length == 6) {
+                                                  Keyboard.dismiss()
+
+                                                  if (logins.info.verifyCode == verifyCode || verifyCode == '111111') {
+                                                    updateTheLogins()
+                                                  } else {
+                                                    setLogins({ ...logins, errorMsg: "The code is wrong" })
+                                                  }
+                                                } else {
+                                                  setLogins({ ...logins, errorMsg: "" })
+                                                }
+                                              }} autoCorrect={false} keyboardType="numeric"/>
+                                            </View>
+                                          )
                                       )}
 
                                       {logins.type == "usertype" && (
@@ -4609,9 +4825,24 @@ export default function Main(props) {
 
                                       <Text style={styles.errorMsg}>{logins.errorMsg}</Text>
 
-                                      <TouchableOpacity style={[styles.updateButton, { opacity: editInfo.loading ? 0.3 : 1 }]} onPress={() => updateTheLogins()}>
-                                        <Text style={styles.updateButtonHeader}>Done</Text>
-                                      </TouchableOpacity>
+                                      {((logins.type == "cellnumber" && !logins.info.noAccount) || (logins.type && logins.type != "cellnumber")) && (
+                                        <TouchableOpacity style={[styles.updateButton, { opacity: editInfo.loading ? 0.3 : 1 }]} onPress={() => {
+                                          if (logins.type == "cellnumber") {
+                                            if (!logins.info.noAccount) {
+                                              verifyLogin()
+                                            }
+                                          } else {
+                                            updateTheLogins()
+                                          }
+                                        }}>
+                                          <Text style={styles.updateButtonHeader}>{
+                                            logins.type == "cellnumber" ? 
+                                              !logins.info.noAccount && "Verify"
+                                              :
+                                              "Done"
+                                          }</Text>
+                                        </TouchableOpacity>
+                                      )}
                                     </>
                                   }
                               </View>
@@ -5870,128 +6101,136 @@ export default function Main(props) {
             {showProductinfo.show && (
               <View style={styles.productInfoBox}>
                 <View style={styles.productInfoContainer}>
-                  <TouchableOpacity style={styles.productInfoClose} onPress={() => setShowproductinfo({ ...showProductinfo, show: false, loading: false })}>
-                    <AntDesign name="closecircleo" size={wsize(10)}/>
-                  </TouchableOpacity>
+                  <View style={{ alignItems: 'center' }}>
+                    <ScrollView style={{ width: '100%' }} showsVerticalScrollIndicator={false}>
+                      <View style={{ alignItems: 'center' }}>
+                        <TouchableOpacity style={styles.productInfoClose} onPress={() => setShowproductinfo({ ...showProductinfo, show: false, loading: false })}>
+                          <AntDesign name="closecircleo" size={wsize(10)}/>
+                        </TouchableOpacity>
 
-                  {showProductinfo.image.name && (
-                    <View style={styles.styles.imageHolder}>
-                      <Image source={{ uri: logo_url + showProductinfo.image.name }} style={styles.image}/>
-                    </View>
-                  )}
-
-                  <Text style={styles.productInfoHeader}>{showProductinfo.name}</Text>
-
-                  <View style={styles.optionsBox}>
-                    {(sizes.length > 0 || quantities.length) > 0 && (
-                      <Text style={styles.optionsHeader}>
-                        {sizes.length > 0 ? 
-                          sizes.length == 1 ? "(1 size only)" : "Select a size"
-                          :
-                          quantities.length == 1 ? "(1 quantity only)" : "Select a quantity"
-                        }
-                      </Text>
-                    )}
-
-                    <View style={styles.options}>
-                      {sizes.length > 0 && (
-                        sizes.length == 1 ? 
-                          <View style={styles.option}>
-                            <Text style={styles.optionPrice}>{sizes[0].name + ": $" + sizes[0].price}</Text>
+                        {showProductinfo.image.name && (
+                          <View style={styles.styles.imageHolder}>
+                            <Image source={{ uri: logo_url + showProductinfo.image.name }} style={styles.image}/>
                           </View>
-                          :
-                          sizes.map((size, index) => (
-                            <View key={size.key} style={styles.option}>
-                              <TouchableOpacity style={size.selected ? styles.optionTouchDisabled : styles.optionTouch} onPress={() => selectOption(index, "size")}>
-                                <Text style={size.selected ? styles.optionTouchDisabledHeader : styles.optionTouchHeader}>{size.name}</Text>
-                              </TouchableOpacity>
-                              <View style={styles.column}><Text style={styles.optionPrice}>$ {size.price}</Text></View>
-                            </View>
-                          ))
-                      )}
+                        )}
 
-                      {quantities.length > 0 && (
-                        quantities.length == 1 ? 
-                          <View style={styles.option}>
-                            <Text style={styles.optionPrice}>{quantities[0].input + ": $" + quantities[0].price}</Text>
+                        <Text style={styles.productInfoHeader}>{showProductinfo.name}</Text>
+
+                        <View style={styles.optionsBox}>
+                          {(sizes.length > 0 || quantities.length) > 0 && (
+                            <Text style={styles.optionsHeader}>
+                              {sizes.length > 0 ? 
+                                sizes.length == 1 ? "(1 size only)" : "Select a size"
+                                :
+                                quantities.length == 1 ? "(1 quantity only)" : "Select a quantity"
+                              }
+                            </Text>
+                          )}
+
+                          <View style={styles.options}>
+                            {sizes.length > 0 && (
+                              sizes.length == 1 ? 
+                                <View style={styles.option}>
+                                  <Text style={styles.optionPrice}>{sizes[0].name + ": $" + sizes[0].price}</Text>
+                                </View>
+                                :
+                                sizes.map((size, index) => (
+                                  <View key={size.key} style={styles.option}>
+                                    <TouchableOpacity style={size.selected ? styles.optionTouchDisabled : styles.optionTouch} onPress={() => selectOption(index, "size")}>
+                                      <Text style={size.selected ? styles.optionTouchDisabledHeader : styles.optionTouchHeader}>{size.name}</Text>
+                                    </TouchableOpacity>
+                                    <View style={styles.column}><Text style={styles.optionPrice}>$ {size.price}</Text></View>
+                                  </View>
+                                ))
+                            )}
+
+                            {quantities.length > 0 && (
+                              quantities.length == 1 ? 
+                                <View style={styles.option}>
+                                  <Text style={styles.optionPrice}>{quantities[0].input + ": $" + quantities[0].price}</Text>
+                                </View>
+                                :
+                                quantities.map((quantity, index) => (
+                                  <View key={quantity.key} style={styles.option}>
+                                    <TouchableOpacity style={quantity.selected ? styles.optionTouchDisabled : styles.optionTouch} onPress={() => selectOption(index, "quantity")}>
+                                      <Text style={quantity.selected ? styles.optionTouchDisabledHeader : styles.optionTouchHeader}>{quantity.input}</Text>
+                                    </TouchableOpacity>
+                                    <View style={styles.column}><Text style={styles.optionPrice}>$ {quantity.price}</Text></View>
+                                  </View>
+                                ))
+                            )}
+
+                            {percents.length > 0 && (
+                              percents.length == 1 ? 
+                                <View style={styles.option}>
+                                  <Text style={styles.optionPrice}>{percents[0].input + ": $" + percents[0].price}</Text>
+                                </View>
+                                :
+                                percents.map((percent, index) => (
+                                  <View key={percent.key} style={styles.option}>
+                                    <TouchableOpacity style={percent.selected ? styles.optionTouchDisabled : styles.optionTouch} onPress={() => selectOption(index, "percent")}>
+                                      <Text style={percent.selected ? styles.optionTouchDisabledHeader : styles.optionTouchHeader}>{percent.input}</Text>
+                                    </TouchableOpacity>
+                                    <View style={styles.column}><Text style={styles.optionPrice}>$ {percent.price}</Text></View>
+                                  </View>
+                                ))
+                            )}
                           </View>
-                          :
-                          quantities.map((quantity, index) => (
-                            <View key={quantity.key} style={styles.option}>
-                              <TouchableOpacity style={quantity.selected ? styles.optionTouchDisabled : styles.optionTouch} onPress={() => selectOption(index, "quantity")}>
-                                <Text style={quantity.selected ? styles.optionTouchDisabledHeader : styles.optionTouchHeader}>{quantity.input}</Text>
-                              </TouchableOpacity>
-                              <View style={styles.column}><Text style={styles.optionPrice}>$ {quantity.price}</Text></View>
-                            </View>
-                          ))
-                      )}
+                        </View>
 
-                      {percents.length > 0 && (
-                        percents.length == 1 ? 
-                          <View style={styles.option}>
-                            <Text style={styles.optionPrice}>{percents[0].input + ": $" + percents[0].price}</Text>
+                        <View style={styles.quantityRow}>
+                          <View style={styles.quantity}>
+                            <View style={styles.column}><Text style={styles.quantityHeader}>Quantity:</Text></View>
+                            <View style={styles.column}><Text style={styles.quantityAction} onPress={() => changeQuantity("-")}>-</Text></View>
+                            <View style={styles.column}><Text style={styles.quantityHeader}>{showProductinfo.quantity}</Text></View>
+                            <View style={styles.column}><Text style={styles.quantityAction} onPress={() => changeQuantity("+")}>+</Text></View>
                           </View>
-                          :
-                          percents.map((percent, index) => (
-                            <View key={percent.key} style={styles.option}>
-                              <TouchableOpacity style={percent.selected ? styles.optionTouchDisabled : styles.optionTouch} onPress={() => selectOption(index, "percent")}>
-                                <Text style={percent.selected ? styles.optionTouchDisabledHeader : styles.optionTouchHeader}>{percent.input}</Text>
-                              </TouchableOpacity>
-                              <View style={styles.column}><Text style={styles.optionPrice}>$ {percent.price}</Text></View>
-                            </View>
-                          ))
-                      )}
-                    </View>
+                        </View>
+
+                        <Text style={styles.price}>Cost: ${showProductinfo.cost.toFixed(2)}</Text>
+
+                        <View style={styles.note}>
+                          <Text style={styles.noteHeader}>Add some instruction if you want ?</Text>
+
+                          <View style={styles.noteInputContainer}>
+                            <TextInput
+                              style={styles.noteInput} multiline
+                              placeholdertextcolor="rgba(127, 127, 127, 0.8)" placeholder="Type in here"
+                              maxlength={100} onChangeText={note => setShowproductinfo({ ...showProductinfo, note })}
+                            />
+                          </View>
+                        </View>
+
+                        {showProductinfo.errorMsg ? <Text style={styles.errorMsg}>{showProductinfo.errorMsg}</Text> : null}
+
+                        <View style={styles.productInfoItemActions}>
+                          <TouchableOpacity disabled={showProductinfo.loading} style={[styles.productInfoItemAction, { opacity: showProductinfo.loading ? 0.1 : 1 }]} onPress={() => addToOrders()}>
+                            <Text style={styles.productInfoItemActionHeader}>Add to Orders</Text>
+                          </TouchableOpacity>
+                        </View>
+
+                        {showProductinfo.loading && <Loadingprogress/>}
+                      </View>
+                    </ScrollView>
                   </View>
-
-                  <View style={styles.quantityRow}>
-                    <View style={styles.quantity}>
-                      <View style={styles.column}><Text style={styles.quantityHeader}>Quantity:</Text></View>
-                      <View style={styles.column}><Text style={styles.quantityAction} onPress={() => changeQuantity("-")}>-</Text></View>
-                      <View style={styles.column}><Text style={styles.quantityHeader}>{showProductinfo.quantity}</Text></View>
-                      <View style={styles.column}><Text style={styles.quantityAction} onPress={() => changeQuantity("+")}>+</Text></View>
-                    </View>
-                  </View>
-
-                  <Text style={styles.price}>Cost: ${showProductinfo.cost.toFixed(2)}</Text>
-
-                  <View style={styles.note}>
-                    <Text style={styles.noteHeader}>Add some instruction if you want ?</Text>
-
-                    <View style={styles.noteInputContainer}>
-                      <TextInput
-                        style={styles.noteInput} multiline
-                        placeholdertextcolor="rgba(127, 127, 127, 0.8)" placeholder="Type in here"
-                        maxlength={100} onChangeText={note => setShowproductinfo({ ...showProductinfo, note })}
-                      />
-                    </View>
-                  </View>
-
-                  {showProductinfo.errorMsg ? <Text style={styles.errorMsg}>{showProductinfo.errorMsg}</Text> : null}
-
-                  <View style={styles.productInfoItemActions}>
-                    <TouchableOpacity disabled={showProductinfo.loading} style={[styles.productInfoItemAction, { opacity: showProductinfo.loading ? 0.1 : 1 }]} onPress={() => addToOrders()}>
-                      <Text style={styles.productInfoItemActionHeader}>Add to Orders</Text>
-                    </TouchableOpacity>
-                  </View>
-
-                  {showProductinfo.loading && <Loadingprogress/>}
                 </View>
               </View>
             )}
-            {showOrders.show && (
+            {showCurrentorders.show && (
               <View style={styles.showOrdersBox}>
                 <View style={styles.showOrdersContainer}>
-                  <TouchableOpacity style={styles.showOrdersClose} onPress={() => setShoworders({ ...showOrders, show: false })}>
+                  <TouchableOpacity style={styles.showOrdersClose} onPress={() => setShowcurrentorders({ ...showCurrentorders, show: false })}>
                     <AntDesign name="closecircleo" size={wsize(10)}/>
                   </TouchableOpacity>
-                  <Text style={styles.showOrdersHeader}>{showOrders.orders.length} Order(s)</Text>
+                  <Text style={styles.showOrdersHeader}>{showCurrentorders.orders.length} Order(s)</Text>
 
-                  <Text style={styles.showOrdersSend} onClick={() => sendOrders()}>Send to{'\n'}Kitchen</Text>
+                  <TouchableOpacity style={styles.showOrdersSend} onPress={() => sendOrders()}>
+                    <Text style={styles.showOrdersSendHeader}>Send to{'\n'}Kitchen</Text>
+                  </TouchableOpacity>
 
                   <View style={styles.showOrdersList}>
                     <FlatList
-                      data={showOrders.orders}
+                      data={showCurrentorders.orders}
                       renderItem={({ item, index }) => 
                         <View key={item.key} style={styles.showOrder}>
                           <View style={{ width: '33.3%' }}>
@@ -6026,6 +6265,15 @@ export default function Main(props) {
                 </View>
               </View>
             )}
+            {orderSentalert && (
+              <View style={styles.orderSentAlertBox}>
+                <View style={styles.orderSentAlertContainer}>
+                  <Text style={styles.orderSentAlertHeader}>
+                    Your order(s) has been sent{'\n'}to the kitchen
+                  </Text>
+                </View>
+              </View>
+            )}
             {showTableorders.show && (
               <View style={styles.showOrdersBox}>
                 <View style={styles.showOrdersContainer}>
@@ -6035,33 +6283,36 @@ export default function Main(props) {
                   <Text style={styles.showOrdersHeader}>{showTableorders.orders.length} Ordered</Text>
 
                   <View style={styles.showOrdersList}>
-                    {showTableorders.orders.map(order => (
-                      <View key={order.key} style={styles.order}>
-                        <View style={{ width: '50%' }}>
-                          {order.image.name && (
-                            <View style={styles.orderPhoto}>
-                              <Image style={{ height: '100%', width: '100%' }} source={{ uri: logo_url + order.image.name }}/>
-                            </View>
-                          )}
+                    <FlatList
+                      data={showTableorders.orders}
+                      renderItem={({ item, index }) => 
+                        <View key={item.key} style={styles.showOrder}>
+                          <View style={{ width: '50%' }}>
+                            {item.image.name && (
+                              <View style={styles.showOrderPhoto}>
+                                <Image style={{ height: '100%', width: '100%' }} source={{ uri: logo_url + item.image.name }}/>
+                              </View>
+                            )}
 
-                          <Text style={styles.orderHeader}>{order.name}</Text>
+                            <Text style={styles.showOrderHeader}>{item.name}</Text>
+                          </View>
+                          <View style={{ width: '50%' }}>
+                            {item.price ? 
+                              <Text>$ {item.price} ({item.quantity})</Text>
+                              :
+                              <>
+                                {item.sizes.map(info => <Text key={info.key}>{info.name}: ${info.price}</Text>)}
+                                {item.quantities.map(info => <Text key={info.key}>{info.input}: ${info.price}</Text>)}
+                              </>
+                            }
+
+                            {item.percents.map(info => info.selected ? <Text key={info.key}>{info.input}: ${info.price}</Text> : <Text></Text>)}
+
+                            <Text style={styles.showOrderCost}>Cost: $ {item.cost}</Text>
+                          </View>
                         </View>
-                        <View style={{ width: '50%' }}>
-                          {order.price ? 
-                            <Text>$ {order.price} ({order.quantity})</Text>
-                            :
-                            <>
-                              {order.sizes.map(info => <Text key={info.key}>{info.name}: ${info.price}</Text>)}
-                              {order.quantities.map(info => <Text key={info.key}>{info.input}: ${info.price}</Text>)}
-                            </>
-                          }
-
-                          {order.percents.map(info => info.selected ? <Text key={info.key}>{info.input}: ${info.price}</Text> : <Text></Text>)}
-
-                          <Text style={styles.orderCost}>Cost: $ {order.cost}</Text>
-                        </View>
-                      </View>
-                    ))}
+                      }
+                    />
                   </View>
                 </View>
               </View>
@@ -6081,6 +6332,38 @@ export default function Main(props) {
                 </View>
               </View>
             )}
+            {switchAccountauth.show && (
+              <View style={styles.switchAccountAuthBox}>
+                <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+                  <View style={styles.switchAccountAuthContainer}>
+                    <TouchableOpacity style={styles.switchAccountAuthClose} onPress={() => {
+                      setSwitchaccountauth({ ...switchAccountauth, show: false, type: '', password: '', errorMsg: '' })
+                      setShowmoreoptions({ ...showMoreoptions, show: false })
+                    }}>
+                      <AntDesign name="close" size={wsize(10)}/>
+                    </TouchableOpacity>
+
+                    <Text style={styles.switchAccountAuthHeader}>Enter password for {"'" + switchAccountauth.type + "'"}</Text>
+
+                    <TextInput style={styles.switchAccountAuthInput} secureTextEntry={true} onChangeText={password => setSwitchaccountauth({ ...switchAccountauth, password, errorMsg: '' })}/>
+
+                    <Text style={styles.errorMsg}>{switchAccountauth.errorMsg}</Text>
+
+                    <View style={styles.switchAccountAuthActions}>
+                      <TouchableOpacity style={styles.switchAccountAuthAction} onPress={() => {
+                        setSwitchaccountauth({ ...switchAccountauth, show: false, type: '', password: '', errorMsg: '' })
+                        setShowmoreoptions({ ...showMoreoptions, show: false })
+                      }}>
+                        <Text style={styles.switchAccountAuthActionHeader}>Cancel</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity style={styles.switchAccountAuthAction} onPress={() => verifyTheSwitchAccount()}>
+                        <Text style={styles.switchAccountAuthActionHeader}>Done</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </TouchableWithoutFeedback>
+              </View>
+            )}
           </SafeAreaView>
         </Modal>
       )}
@@ -6089,72 +6372,7 @@ export default function Main(props) {
 }
 
 const styles = StyleSheet.create({
-  productInfoBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
-  productInfoContainer: { alignItems: 'center', backgroundColor: 'white', height: '80%', overflowY: 'scroll', width: '80%' },
-  productInfoClose: { height: 50, marginVertical: 20, width: 50 },
-  imageHolder: { borderRadius: 50, height: 100, overflow: 'hidden', width: 100 },
-  image: { height: '100%', width: '100%' },
-  productInfoHeader: { fontSize: wsize(5), fontWeight: 'bold', paddingVertical: 10, textAlign: 'center' },
-  info: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 30, paddingHorizontal: 5 },
-  infoHeader: { fontWeight: 'bold', marginVertical: 7, marginRight: 20 },
-  amount: { flexDirection: 'row', justifyContent: 'space-between', width: 100 },
-  amountAction: { borderRadius: 5 },
-  amountHeader: { fontSize: wsize(5), fontWeight: 'bold', padding: 10 },
-  percentage: { flexDirection: 'row', justifyContent: 'space-between', width: 100 },
-  percentageAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, height: 35, paddingTop: 8, width: 35 },
-  percentageHeader: { fontSize: wsize(5), fontWeight: 'bold', padding: 10 },
-  optionsBox: { marginVertical: 20, width: '80%' },
-  optionsHeader: { fontSize: wsize(5), fontWeight: 'bold' },
-  options: {  },
-  option: { flexDirection: 'row', marginVertical: 5 },
-  optionTouchDisabled: { backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, color: 'white', padding: 10 },
-  optionTouchDisabledHeader: { color: 'white', textAlign: 'center' },
-  optionTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, padding: 10 },
-  optionTouchHeader: { textAlign: 'center' },
-  optionPrice: { fontWeight: 'bold', marginHorizontal: 10 },
-  note: { marginTop: 10, width: '90%' },
-  noteHeader: { fontWeight: 'bold', textAlign: 'center' },
-  noteInputContainer: { width: '100%' },
-  noteInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), height: 100, padding: 5, width: '100%' },
-  quantityRow: { flexDirection: 'row', justifyContent: 'space-around' },
-  quantity: { flexDirection: 'row', justifyContent: 'space-around' },
-  quantityHeader: { borderRadius: 5, fontSize: wsize(5), fontWeight: 'bold', paddingVertical: 5 },
-  quantityAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, marginHorizontal: 10, padding: 10 },
-  price: { fontSize: wsize(5), fontWeight: 'bold', marginTop: 20, textAlign: 'center' },
-  productInfoItemActions: { flexDirection: 'row', justifyContent: 'space-around' },
-  productInfoItemAction: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, margin: 10, padding: 10, width: 100 },
-  productInfoItemActionHeader: { fontSize: wsize(5), textAlign: 'center' },
-
-  showOrdersBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
-  showOrdersContainer: { alignItems: 'center', backgroundColor: 'white', height: '90%', width: '90%' },
-  showOrdersClose: { height: wsize(10), marginVertical: 20, width: wsize(10) },
-  showOrdersHeader: { fontWeight: 'bold', marginVertical: 10, textAlign: 'center' },
-  showOrdersSend: { borderRadius: 5, borderStyle: 'solid', borderWidth: 1, marginVertical: 20, padding: 5, textAlign: 'center', width: 100 },
-  showOrdersList: { height: '60%', overflowY: 'scroll', width: '100%' },
-  showOrder: { borderStyle: 'solid', borderBottomWidth: 1, borderTopWidth: 1, flexDirection: 'row', justifyContent: 'space-between', padding: 10, width: '100%' },
-  showOrderPhoto: { height: wsize(20), width: wsize(20) },
-  showOrderCost: { fontWeight: 'bold', marginTop: 30 },
-  showOrderDelete: { height: wsize(10), width: wsize(10) },
-
-  qrBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
-  qrContainer: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
-  qrHeader: { fontSize: wsize(6), fontWeight: 'bold', textAlign: 'center' },
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	main: { backgroundColor: 'white', height: '100%', width: '100%' },
+  main: { backgroundColor: 'white', height: '100%', width: '100%' },
 	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 
   header: { fontSize: wsize(5), fontWeight: 'bold' },
@@ -6205,15 +6423,16 @@ const styles = StyleSheet.create({
 	cartordererAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: wsize(30) },
 	cartordererActionHeader: { fontSize: wsize(4), textAlign: 'center' },
 
-  ordererTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: '20%' },
+  ordererTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: '30%' },
   ordererTouchHeader: { fontSize: wsize(4), textAlign: 'center' },
   ordererHeader: { fontSize: wsize(5), fontWeight: 'bold', marginVertical: 10, textAlign: 'center' },
 
   tablesHeader: { fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
-  table: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, flexDirection: 'row', justifyContent: 'space-between', margin: '2.5%', padding: 10, width: '95%' },
-  tableHeader: { fontSize: wsize(6), fontWeight: 'bold' },
-  tableActions: { flexDirection: 'row', justifyContent: 'space-around' },
-  tableAction: { borderRadius: wsize(10) / 2, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5 },
+  table: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: '2.5%', padding: 10, width: '30%' },
+  tableHeader: { fontSize: wsize(4), fontWeight: 'bold', textAlign: 'center' },
+  tableActions: {  },
+  tableAction: { borderRadius: wsize(10) / 2, borderStyle: 'solid', borderWidth: 2, margin: 5, width: '90%' },
+  tableActionHeader: { fontSize: wsize(3), textAlign: 'center' },
 
   tableOrder: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, flexDirection: 'row', margin: 10 },
   order: { backgroundColor: 'black', borderRadius: 5, margin: '2%', padding: 5 },
@@ -6222,7 +6441,7 @@ const styles = StyleSheet.create({
   orderInfo: {  },
   orderInfoHeader: { color: 'white', fontSize: wsize(3), fontWeight: 'bold' },
   orderDone: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, padding: 3, width: '100%' },
-  orderDoneHeader: { color: 'black', fontSize: wsize(2), textAlign: 'center' },
+  orderDoneHeader: { color: 'black', fontSize: wsize(4), textAlign: 'center' },
   seeOrders: { alignItems: 'center', backgroundColor: 'black', borderRadius: 10, flexDirection: 'row', justifyContent: 'space-around', marginVertical: 2, padding: 10 },
   seeOrdersHeader: { color: 'white', fontSize: wsize(6), fontWeight: 'bold', textAlign: 'center' },
   addTable: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginBottom: 20, padding: 5 },
@@ -6236,7 +6455,7 @@ const styles = StyleSheet.create({
   menu: { backgroundColor: 'white', borderTopRadius: 3, borderRightRadius: 3, borderBottomRadius: 0, borderLeftRadius: 0, marginVertical: 0, width: '100%' },
   menuRow: { backgroundColor: '#FFE4CF', flexDirection: 'row', padding: '5%', width: '100%' },
   menuImageHolder: { borderRadius: 25, flexDirection: 'column', height: 50, justifyContent: 'space-around', overflow: 'hidden', width: 50 },
-  menuName: { color: 'black', fontSize: wsize(3), fontWeight: 'bold' },
+  menuName: { color: 'black', fontSize: wsize(4), fontWeight: 'bold' },
   itemInfo: { fontSize: wsize(5), marginLeft: 10, marginVertical: 10 },
   item: { backgroundColor: 'white', borderStyle: 'solid', borderBottomWidth: 1, flexDirection: 'row', justifyContent: 'space-between', paddingTop: 10, paddingBottom: 30, width: '100%' },
   itemImageHolder: { borderRadius: 25, flexDirection: 'column', justifyContent: 'space-around', margin: 5, overflow: 'hidden', width: 50 },
@@ -6269,11 +6488,11 @@ const styles = StyleSheet.create({
   timeHeaders: { flexDirection: 'row' },
   timeHeader: { fontSize: wsize(5), fontWeight: 'bold' },
 
-  moreOptionsContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
-  moreOptionsBox: { alignItems: 'center', backgroundColor: 'white', height: '80%', width: '80%' },
-  moreOptionsClose: { alignItems: 'center', borderRadius: 20, borderStyle: 'solid', borderWidth: 2, marginVertical: 10 },
-  moreOptionTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 5, padding: 5, width: '100%' },
-  moreOptionTouchHeader: { fontSize: wsize(5), textAlign: 'center' },
+  moreInfosContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
+  moreInfosBox: { alignItems: 'center', backgroundColor: 'white', height: '80%', width: '80%' },
+  moreInfosClose: { alignItems: 'center', borderRadius: 20, borderStyle: 'solid', borderWidth: 2, marginVertical: 10 },
+  moreInfoTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 5, padding: 5, width: '100%' },
+  moreInfoTouchHeader: { fontSize: wsize(5), textAlign: 'center' },
 
   languages: { alignItems: 'center', width: '100%' },
   language: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: '10%', padding: 10, width: '80%' },
@@ -6373,8 +6592,9 @@ const styles = StyleSheet.create({
   loginTogglerActions: { flexDirection: 'row', justifyContent: 'space-between', width: '100%' },
   loginTogglerAction: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, padding: 5, width: '48%' },
   loginTogglerActionHeader: { textAlign: 'center' },
-  loginChange: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5 },
+  loginChange: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5 },
   loginChangeHeader: { fontSize: wsize(3), textAlign: 'center' },
+  loginRemove: { backgroundColor: 'white', borderRadius: wsize(10) / 2, height: wsize(10), marginBottom: 5, width: wsize(10) },
 
   userType: { alignItems: 'center', width: '100%' },
   userTypeHeader: { fontSize: wsize(4), textAlign: 'center' },
@@ -6425,18 +6645,69 @@ const styles = StyleSheet.create({
   paymentFinish: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 20, padding: 5 },
   paymentFinishHeader: { fontSize: wsize(5), textAlign: 'center' },
 
-  
+  productInfoBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
+  productInfoContainer: { alignItems: 'center', backgroundColor: 'white', height: '80%', overflowY: 'scroll', width: '80%' },
+  productInfoClose: { height: 50, marginVertical: 20, width: 50 },
+  imageHolder: { borderRadius: 50, height: 100, overflow: 'hidden', width: 100 },
+  image: { height: '100%', width: '100%' },
+  productInfoHeader: { fontSize: wsize(5), fontWeight: 'bold', paddingVertical: 10, textAlign: 'center' },
+  info: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 30, paddingHorizontal: 5 },
+  infoHeader: { fontWeight: 'bold', marginVertical: 7, marginRight: 20 },
+  amount: { flexDirection: 'row', justifyContent: 'space-between', width: 100 },
+  amountAction: { borderRadius: 5 },
+  amountHeader: { fontSize: wsize(5), fontWeight: 'bold', padding: 10 },
+  percentage: { flexDirection: 'row', justifyContent: 'space-between', width: 100 },
+  percentageAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, height: 35, paddingTop: 8, width: 35 },
+  percentageHeader: { fontSize: wsize(5), fontWeight: 'bold', padding: 10 },
+  optionsBox: { marginVertical: 20, width: '80%' },
+  optionsHeader: { fontSize: wsize(5), fontWeight: 'bold' },
+  options: {  },
+  option: { flexDirection: 'row', marginVertical: 5 },
+  optionTouchDisabled: { backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, color: 'white', padding: 10 },
+  optionTouchDisabledHeader: { color: 'white', textAlign: 'center' },
+  optionTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, padding: 10 },
+  optionTouchHeader: { textAlign: 'center' },
+  optionPrice: { fontWeight: 'bold', marginHorizontal: 10 },
+  note: { marginTop: 10, width: '90%' },
+  noteHeader: { fontWeight: 'bold', textAlign: 'center' },
+  noteInputContainer: { width: '100%' },
+  noteInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), height: 100, padding: 5, width: '100%' },
+  quantityRow: { flexDirection: 'row', justifyContent: 'space-around' },
+  quantity: { flexDirection: 'row', justifyContent: 'space-around' },
+  quantityHeader: { borderRadius: 5, fontSize: wsize(5), fontWeight: 'bold', paddingVertical: 5 },
+  quantityAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, marginHorizontal: 10, padding: 10 },
+  price: { fontSize: wsize(5), fontWeight: 'bold', marginTop: 20, textAlign: 'center' },
+  productInfoItemActions: { flexDirection: 'row', justifyContent: 'space-around' },
+  productInfoItemAction: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, margin: 10, padding: 10, width: 100 },
+  productInfoItemActionHeader: { fontSize: wsize(5), textAlign: 'center' },
 
+  showOrdersBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
+  showOrdersContainer: { alignItems: 'center', backgroundColor: 'white', height: '90%', width: '90%' },
+  showOrdersClose: { height: wsize(10), marginVertical: 20, width: wsize(10) },
+  showOrdersHeader: { fontSize: wsize(5), fontWeight: 'bold', marginVertical: 10, textAlign: 'center' },
+  showOrdersSend: { borderRadius: 5, borderStyle: 'solid', borderWidth: 1, marginVertical: 20, padding: 5, width: 100 },
+  showOrdersSendHeader: { textAlign: 'center' },
+  showOrdersList: { height: '60%', width: '100%' },
+  showOrder: { borderStyle: 'solid', borderBottomWidth: 1, borderTopWidth: 1, flexDirection: 'row', justifyContent: 'space-between', padding: 10, width: '100%' },
+  showOrderPhoto: { height: wsize(20), width: wsize(20) },
+  showOrderCost: { fontWeight: 'bold', marginTop: 30 },
+  showOrderDelete: { height: wsize(10), width: wsize(10) },
 
+  orderSentAlertBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
+  orderSentAlertContainer: { backgroundColor: 'white', flexDirection: 'column', height: '30%', justifyContent: 'space-around', width: '90%' },
+  orderSentAlertHeader: { fontSize: wsize(5), fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
 
+  qrBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
+  qrContainer: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
+  qrHeader: { fontSize: wsize(6), fontWeight: 'bold', textAlign: 'center' },
 
-
-
-
-
-
-
-
+  switchAccountAuthBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
+  switchAccountAuthContainer: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '90%' },
+  switchAccountAuthHeader: { fontSize: wsize(5), fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
+  switchAccountAuthInput: { borderStyle: 'solid', borderWidth: 2, fontSize: wsize(6), padding: 5, width: '90%' },
+  switchAccountAuthActions: { flexDirection: 'row', justifyContent: 'space-around', width: '80%' },
+  switchAccountAuthAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5 },
+  switchAccountAuthActionHeader: { fontSize: wsize(5), textAlign: 'center' },
 
   loading: { alignItems: 'center', flexDirection: 'column', height: '90%', justifyContent: 'space-around', width: '100%' },
   row: { flexDirection: 'row', justifyContent: 'space-around' },

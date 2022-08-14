@@ -156,6 +156,12 @@ const info = {
         changeBusinesshours: "Change Hour(s)",
         moreBusinesses: "Your Business(es)",
         walkIn: "Client Walk-In",
+        switchAccount: {
+          header: "Switch account to",
+          owner: "Owner",
+          kitchen: "Kitchen",
+          tableOrderers: "Table orderers"
+        },
         changeLanguage: "Change language",
         editTables: "Edit Table(s)",
         getAppointmentsby: {

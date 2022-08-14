@@ -40,7 +40,7 @@ export default function Auth({ navigation }) {
           AsyncStorage.setItem("locationtype", locationtype ? locationtype : "")
           AsyncStorage.setItem("phase", msg)
           AsyncStorage.setItem("language", "")
-          AsyncStorage.setItem("isOwner", res.isOwner ? "true" : "")
+          AsyncStorage.setItem("userType", res.userType)
 
           navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "picklanguage" }]}))
         }

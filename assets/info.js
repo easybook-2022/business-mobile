@@ -23,7 +23,7 @@ const testOwners = [
 	{ id: 1, username: 'owner2', cellnumber: "(111) 111-1111", password: "qqqqqq" },
 	{ id: 2, username: 'owner3', cellnumber: "(222) 222-2222", password: "qqqqqq" },
 	{ id: 3, username: 'owner4', cellnumber: "(333) 333-3333", password: "qqqqqq" },
-	{ id: 4, username: 'owner5', cellnumber: "(444) 444-4444", password: "Aaaaaa" },
+	{ id: 4, username: 'owner5', cellnumber: "(444) 444-4444", password: "qqqqqq" },
 	{ id: 5, username: 'owner6', cellnumber: "(555) 555-5555", password: "qqqqqq" },
 	{ id: 6, username: 'owner7', cellnumber: "(666) 666-6666", password: "qqqqqq" },
 	{ id: 7, username: 'owner8', cellnumber: "(777) 777-7777", password: "qqqqqq" },
@@ -35,7 +35,7 @@ const emptyOwner = { username: "", cellnumber: "", password: "" }
 const useInput = true
 
 const loginLocation = test_input ? testStores[0] : useInput ? realStores[0] : emptyStore
-const ownerSignin = test_input ? testOwners[4] : useInput ? realOwner : emptyOwner
+const ownerSignin = test_input ? testOwners[1] : useInput ? realOwner : emptyOwner
 const registerLocation = test_input ? testStores[1] : useInput ? realStores[0] : emptyStore
 
 const host = "10.0.0.60"

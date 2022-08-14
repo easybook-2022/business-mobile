@@ -188,7 +188,7 @@ export default function App() {
               )
             })}/>
             <Stack.Screen name="menu" component={Menu} disableMode={false} options={({ navigation, route }) => ({
-              headerTitle: () => <Text style={styles.header}>{tr.t("menu.header." + (route.params.isOwner ? "edit" : "view"))}</Text>,
+              headerTitle: () => <Text style={styles.header}>{tr.t("menu.header." + (route.params.userType == "owner" ? "edit" : "view"))}</Text>,
               headerLeft: () => (
                 Platform.OS == 'ios' && (
                   <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>

@@ -156,6 +156,12 @@ const info = {
         changeBusinesshours: "Changer les heures d'ouverture",
         moreBusinesses: "Vos entreprises",
         walkIn: "Client sans rendez-vous",
+        switchAccount: {
+          header: "Changer de compte pour",
+          owner: "Propriétaire",
+          kitchen: "Cuisine",
+          tableOrderers: "Commandes de table"
+        },
         changeLanguage: "Changer de langue",
         editTables: "Modifier les tableaux",
         getAppointmentsby: {

@@ -150,6 +150,7 @@ export default function Locationsetup({ navigation }) {
 
               AsyncStorage.setItem("locationid", id.toString())
               AsyncStorage.setItem("locationtype", type)
+              AsyncStorage.setItem("userType", "owner")
 
               setLoading(false)
 

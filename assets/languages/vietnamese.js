@@ -156,6 +156,12 @@ const info = {
         changeBusinesshours: "Thay đổi Giờ làm việc",
         moreBusinesses: "Doanh nghiệp của bạn",
         walkIn: "Khách hàng bước vào",
+        switchAccount: {
+          header: "Chuyển tài khoản sang",
+          owner: "Người sở hữu",
+          kitchen: "Phòng bếp",
+          tableOrderers: "Người đặt bàn"
+        },
         changeLanguage: "Thay đổi ngôn ngữ",
         editTables: "Chỉnh sửa bảng",
         getAppointmentsby: {

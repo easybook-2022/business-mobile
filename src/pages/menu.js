@@ -38,7 +38,7 @@ export default function Menu(props) {
 	const [camComp, setCamcomp] = useState(null)
 
 	const [locationType, setLocationtype] = useState('')
-  const [isOwner, setIsowner] = useState(false)
+  const [userType, setUsertype] = useState('')
 
 	const [menuInfo, setMenuinfo] = useState({ list: [], photos: [] })
 
@@ -88,6 +88,7 @@ export default function Menu(props) {
 	}
   const getTheOwnerInfo = async() => {
     const ownerid = await AsyncStorage.getItem("ownerid")
+    const usertype = await AsyncStorage.getItem("userType")
 
     getOwnerInfo(ownerid)
       .then((res) => {
@@ -97,7 +98,7 @@ export default function Menu(props) {
       })
       .then((res) => {
         if (res) {
-          setIsowner(res.isOwner)
+          setUsertype(usertype)
         }
       })
       .catch((err) => {
@@ -146,7 +147,7 @@ export default function Menu(props) {
             <View style={styles.column}><Text style={styles.itemMiniHeader}>{info.description}</Text></View>
           </View>
           <View style={[styles.column, { width: '50%' }]}>
-            {isOwner == true && (
+            {userType == "owner" && (
               <View style={styles.itemActions}>
                 <TouchableOpacity style={styles.itemAction} onPress={() => {
                   if ((locationType == "hair" || locationType == "nail")) {
@@ -206,7 +207,7 @@ export default function Menu(props) {
               <View style={styles.column}><Text style={styles.menuName}>{name} (Menu)</Text></View>
               <View style={styles.column}>
                 <View style={styles.menuActions}>
-                  {isOwner == true && (
+                  {userType == "owner" && (
                     <>
                       <TouchableOpacity style={styles.menuAction} onPress={() => {
                         props.navigation.navigate("addmenu", { parentMenuid: id, menuid: id })
@@ -258,7 +259,7 @@ export default function Menu(props) {
 
                   {(list.length - 1 == index && info.listType != "list" && show) && (
                     <View style={{ alignItems: 'center' }}>
-                      {isOwner == true && (
+                      {userType == "owner" && (
                         <TouchableOpacity style={styles.itemAdd} onPress={() => {
                           props.navigation.setParams({ refetch: true })
 
@@ -286,7 +287,7 @@ export default function Menu(props) {
 							))
 						  :
               <View style={{ alignItems: 'center' }}>
-                {isOwner == true && (
+                {userType == "owner" && (
                   <TouchableOpacity style={styles.itemAdd} onPress={() => {
                     props.navigation.setParams({ refetch: true })
 
@@ -667,7 +668,7 @@ export default function Menu(props) {
                                     </View>
 
                                     <View style={[styles.menuPhotoActions, { marginTop: -30 }]}>
-                                      {isOwner == true && (
+                                      {userType == "owner" && (
                                         <TouchableOpacity style={styles.menuPhotoAction} onPress={() => setMenuphotooption({ ...menuPhotooption, show: true, action: 'delete', info: item.photo })}>
                                           <Text style={styles.menuPhotoActionHeader}>{tr.t("buttons.delete")}</Text>
                                         </TouchableOpacity>
@@ -685,7 +686,7 @@ export default function Menu(props) {
     									</ScrollView>
     								)
     							)}
-                  {isOwner == true && (
+                  {userType == "owner" && (
                     <View style={{ alignItems: 'center' }}>
                       <TouchableOpacity style={styles.menuStart} onPress={() => {
                         allowCamera()
@@ -699,7 +700,7 @@ export default function Menu(props) {
                 </>
               )}
 
-              {isOwner == true && (
+              {userType == "owner" && (
                 <View style={{ alignItems: 'center' }}>
                   <TouchableOpacity style={[styles.menuStart, { marginVertical: 10 }]} onPress={() => {
                     props.navigation.setParams({ refetch: true })
