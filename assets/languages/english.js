@@ -329,12 +329,6 @@ const info = {
         restaurant: "Easier for customers to order"
       }
     },
-    bottomNavs: {
-      back: {
-        salon: "Back to\nappointment(s)",
-        restaurant: "Back to\norder(s)"
-      }
-    },
     hidden: {
       uploadMenu: {
         takePhoto: "Take a photo"
@@ -388,7 +382,8 @@ const info = {
       size: "Enter one price",
       sizes: "Add size",
       quantity: "Add quantity",
-      percent: "Add %"
+      percent: "Add %",
+      otherOption: "Add other"
     }
   },
 

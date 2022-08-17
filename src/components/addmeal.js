@@ -37,10 +37,15 @@ export default function Addmeal(props) {
   const [camType, setCamtype] = useState('back')
   const [choosing, setChoosing] = useState(false)
   const [name, setName] = useState('')
+  const [info, setInfo] = useState('')
   const [image, setImage] = useState({ uri: '', name: '', size: { height: 0, width: 0 }, loading: false })
+
   const [sizes, setSizes] = useState([])
   const [quantities, setQuantities] = useState([])
   const [percents, setPercents] = useState([])
+  const [extras, setExtras] = useState([])
+  const [options, setOptions] = useState([])
+
   const [sizeInfo, setSizeinfo] = useState({ show: false, sizes: ['Small', 'Medium', 'Large', 'Extra Large'], selected: '', price: '', errorMsg: '' })
   const [quantityInfo, setQuantityinfo] = useState({ show: false, input: '', price: '', errorMsg: '' })
   const [percentInfo, setPercentinfo] = useState({ show: false, input: '', price: '', errorMsg: '' })
@@ -50,7 +55,7 @@ export default function Addmeal(props) {
     show: false, type: '', errorMsg: '', loading: false, optionsEdit: '', 
     name: '', price: '', optionInfo: { selected: '', input: '', price: '' },
     image: { uri: '', name: '', size: { height: 0, width: 0 }, remove: false }, 
-    sizes: [], quantities: [], percents: [], 
+    sizes: [], quantities: [], percents: [], extras: [], 
     loading: false
   })
   const [loading, setLoading] = useState(false)
@@ -155,9 +160,12 @@ export default function Addmeal(props) {
         data = { ...data, price: changeInfo.price ? changeInfo.price : optionInfo.price }
 
         break;
-      case "options":
+      case "sizes":
+      case "quantities":
+      case "percents":
+      case "extras":
         const sizenames = { "small": false, "medium": false, "large": false, "extra large": false }
-        const newSizes = [...changeInfo.sizes], newQuantities = [...changeInfo.quantities], newPercents = [...changeInfo.percents]
+        const newSizes = [...changeInfo.sizes], newQuantities = [...changeInfo.quantities], newPercents = [...changeInfo.percents], newExtras = [...changeInfo.extras]
 
         for (let k = 0; k < sizes.length; k++) {
           if (!sizenames[sizes[k].name]) {
@@ -169,7 +177,7 @@ export default function Addmeal(props) {
           }
         }
 
-        if (sizes.length > 0 || quantities.length > 0 || (price && !isNaN(price))) {
+        if (newSizes.length > 0 || newQuantities.length > 0 || (price && !isNaN(price))) {
           newSizes.forEach(function (info) {
             delete info['key']
           })
@@ -179,10 +187,13 @@ export default function Addmeal(props) {
           newPercents.forEach(function (info) {
             delete info['key']
           })
+          newExtras.forEach(function (info) {
+            delete info['key']
+          })
 
           data = {
             ...data, 
-            options: {"sizes": newSizes, "quantities": newQuantities, "percents": newPercents}
+            options: {"sizes": newSizes, "quantities": newQuantities, "percents": newPercents, "extras": newExtras}
           }
         } else {
           if (sizes.length == 0 && !price) {
@@ -195,6 +206,8 @@ export default function Addmeal(props) {
             return
           }
         }
+
+        data["type"] = "options"
 
         break;
       default:
@@ -225,10 +238,14 @@ export default function Addmeal(props) {
               setPrice(changeInfo.price)
 
               break;
-            case "options":
+            case "sizes":
+            case "quantities":
+            case "percents":
+            case "extras":
               setSizes(changeInfo.sizes)
               setQuantities(changeInfo.quantities)
               setPercents(changeInfo.percents)
+              setExtras(changeInfo.extras)
 
               break;
           }
@@ -419,14 +436,39 @@ export default function Addmeal(props) {
       })
       .then((res) => {
         if (res) {
-          const { productImage, name, sizes, quantities, percents, price } = res.productInfo
+          const { productImage, name, info, sizes, quantities, percents, extras, price } = res.productInfo
+          const options = [], optionsList = []
+          let row = []
 
           setName(name)
+          setInfo(info)
           setImage({ ...image, uri: productImage.name ? logo_url + productImage.name : "" })
           setPrice(price)
+
           setSizes(sizes)
           setQuantities(quantities)
           setPercents(percents)
+          setExtras(extras)
+
+          options.push({ key: "options-" + options.length, name: "Size(s)", type: "sizes", list: sizes })
+          options.push({ key: "options-" + options.length, name: "Quantity(s)", type: "quantities", list: quantities })
+          options.push({ key: "options-" + options.length, name: "Percent(s)", type: "percents", list: percents })
+          options.push({ key: "options-" + options.length, name: "Option(s)", type: "extras", list: extras })
+
+          options.forEach(function (info, index) {
+            row.push(info)
+
+            if (row.length == 2) {
+              optionsList.push({ key: "optionlist-" + optionsList.length, row })
+              row = []
+            }
+
+            if (index == options.length - 1 && row.length > 0) {
+              optionsList.push({ key: "optionlist-" + optionsList.length, row })
+            }
+          })
+
+          setOptions(optionsList)
           setChangeinfo({ ...changeInfo, price })
           setLoaded(true)
         }
@@ -597,7 +639,7 @@ export default function Addmeal(props) {
                   {(sizes.length > 0 || quantities.length > 0 || percents.length > 0) && (
                     <View style={{ backgroundColor: 'rgba(0, 0, 0, 0.1)', width: '100%' }}>
                       <Text style={styles.optionsHeader}>Selected option(s)</Text>
-                      <View style={{ alignItems: 'center', width: '100%' }}>
+                      <View style={{ alignItems: 'center', width: '50%' }}>
                         <View style={styles.options}>
                           {sizes.map((size, index) => (
                             <View key={size.key} style={styles.option}>
@@ -707,45 +749,42 @@ export default function Addmeal(props) {
                 </View>
               </ScrollView>
             :
-            <View style={styles.updateInfoContainer}>
+            <ScrollView style={styles.updateInfoContainer}>
               <View style={styles.updateInfoBox}>
-                 <Text style={styles.updateHeader}>{name}</Text>
-                <View style={{ flexDirection: 'row' }}>
-                  <View>
-                    <View style={styles.updateInfoPhotoHolder}>
+                <View>
+                  <Text style={styles.updateHeader} onPress={() => setChangeinfo({ ...changeInfo, show: true, type: 'name', name })}>{name}</Text>
+                  <Text style={[styles.updateHeader, { fontSize: wsize(4), fontWeight: '200' }]} onPress={() => setChangeinfo({ ...changeInfo, show: true, type: 'name', name })}>{info}</Text>
+                </View>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+                  <View style={{ flexDirection: 'row' }}>
+                    <TouchableOpacity style={styles.updateInfoPhotoHolder} onPress={() => setChangeinfo({ ...changeInfo, show: true, type: 'photo', image: {...changeInfo.image, uri: '', name: '', size: { width: 0, height: 0 }}})}>
                       <Image style={{ height: '100%', width: '100%' }} source={image.uri ? { uri: image.uri } : require("../../assets/noimage.jpeg")}/>
+                    </TouchableOpacity>
+                    <View>
+                      {price ? <Text style={styles.updateInfoOption} onPress={() => setChangeinfo({ ...changeInfo, show: true, type: 'price', price })}>$ {price}</Text> : null}
                     </View>
                   </View>
-                  <View>
-                    {price ? 
-                      <Text style={styles.updateInfoOption}>$ {price}</Text>
-                      :
-                      <>
-                        {sizes.map(size => <Text key={size.key} style={styles.updateInfoOption}>{size.name}: ${size.price}</Text>)}
-                        {quantities.map(quantity => <Text key={quantity.key} style={styles.updateInfoOption}>{quantity.input}: ${quantity.price}</Text>)}
-                      </>
-                    }
-                        
-                    {percents.map(percent => <Text key={percent.key} style={styles.updateInfoOption}>{percent.input}: ${percent.price}</Text>)}
-                  </View>
                 </View>
-              </View>
 
-              <View style={styles.updateInfoActions}>
-                <TouchableOpacity style={styles.updateInfoAction} onPress={() => setChangeinfo({ ...changeInfo, show: true, type: 'name', name })}>
-                  <Text style={styles.updateInfoActionHeader}>Change <Text style={{ fontWeight: 'bold' }}>Name</Text></Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.updateInfoAction} onPress={() => setChangeinfo({ ...changeInfo, show: true, type: 'price', price })}>
-                  <Text style={styles.updateInfoActionHeader}>Change <Text style={{ fontWeight: 'bold' }}>ONE Price ($)</Text></Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.updateInfoAction} onPress={() => setChangeinfo({ ...changeInfo, show: true, type: 'photo', image: {...changeInfo.image, uri: '', name: '', size: { width: 0, height: 0 }}})}>
-                  <Text style={styles.updateInfoActionHeader}>Change <Text style={{ fontWeight: 'bold' }}>Photo</Text></Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.updateInfoAction} onPress={() => setChangeinfo({ ...changeInfo, show: true, type: 'options', sizes: [...sizes], quantities: [...quantities], percents: [...percents] })}>
-                  <Text style={styles.updateInfoActionHeader}>Change{'\n'}<Text style={{ fontWeight: 'bold' }}>(Size, Quantity, Percentage)</Text></Text>
-                </TouchableOpacity>
+                {options.map(info => (
+                  <View key={info.key} style={{ flexDirection: 'row', justifyContent: 'space-around', marginBottom: 50 }}>
+                    {info.row.map(rowInfo => (
+                      <TouchableOpacity key={rowInfo.key} onPress={() => setChangeinfo({ ...changeInfo, show: true, type: rowInfo.type, sizes: [...rowInfo.list] })}>
+                        <Text style={styles.updateInfoHeader}>{rowInfo.name}</Text>
+
+                        {rowInfo.list.length > 0 ? 
+                          rowInfo.list.map(option => <Text key={option.key} style={styles.updateInfoOption}>{option.name ? option.name : option.input}: ${option.price}</Text>)
+                          :
+                          <TouchableOpacity style={styles.updateInfoAdd} onPress={() => setChangeinfo({ ...changeInfo, show: true, type: rowInfo.type, sizes: [...rowInfo.list] })}>
+                            <Text style={styles.updateInfoAddHeader}>Add Some</Text>
+                          </TouchableOpacity>
+                        }
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                ))}
               </View>
-            </View>
+            </ScrollView>
           :
           <View style={styles.loading}>
             <ActivityIndicator color="black" size="large"/>
@@ -913,7 +952,7 @@ export default function Addmeal(props) {
 
                         <TextInput 
                           style={styles.addInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" 
-                          onChangeText={(name) => setChangeinfo({ ...changeInfo, name })} value={name} autoCorrect={false} autoCompleteType="off" 
+                          onChangeText={(name) => setChangeinfo({ ...changeInfo, name })} value={changeInfo.name} autoCorrect={false} autoCompleteType="off" 
                           autoCapitalize="none"
                         />
                       </View>
@@ -977,80 +1016,99 @@ export default function Addmeal(props) {
                       </View>
                     )}
 
-                    {changeInfo.type == 'options' && (
-                      (sizes.length > 0 || quantities.length > 0 || percents.length > 0) && (
-                        <View style={{ backgroundColor: 'rgba(0, 0, 0, 0.1)', width: '100%' }}>
+                    {(changeInfo.type == 'sizes' || changeInfo.type == 'quantities' || changeInfo.type == 'percents' || changeInfo.type == 'extras') && (
+                      (sizes.length > 0 || quantities.length > 0 || percents.length > 0 || extras.length > 0) && (
+                        <View style={{ backgroundColor: 'rgba(0, 0, 0, 0.1)', flexDirection: 'column', justifyContent: 'space-between', width: '100%' }}>
                           <View style={styles.addOptionBox}>
-                            <View style={styles.column}>
-                              <TouchableOpacity style={styles.addOption} onPress={() => setChangeinfo({ ...changeInfo, optionsEdit: 'size' })}>
-                                <Text style={styles.addOptionHeader}>{tr.t("addmeal.price.sizes")}</Text>
-                              </TouchableOpacity>
-                            </View>
-                            <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-                              <TouchableOpacity style={[styles.addOption, { margin: 10 }]} onPress={() => setChangeinfo({ ...changeInfo, optionsEdit: 'quantity' })}>
-                                <Text style={styles.addOptionHeader}>{tr.t("addmeal.price.quantity")}</Text>
-                              </TouchableOpacity>
-                              <TouchableOpacity style={[styles.addOption, { margin: 10 }]} onPress={() => setChangeinfo({ ...changeInfo, optionsEdit: 'percent' })}>
-                                <Text style={styles.addOptionHeader}>{tr.t("addmeal.price.percent")}</Text>
-                              </TouchableOpacity>
-                            </View>
+                            <TouchableOpacity style={[styles.addOption, { margin: 10 }]} onPress={() => {
+                              setChangeinfo({ 
+                                ...changeInfo, 
+                                optionsEdit: (
+                                  changeInfo.type == 'sizes' && 'size'
+                                  ||
+                                  changeInfo.type == 'quantities' && 'quantity'
+                                  ||
+                                  changeInfo.type == 'percents' && 'percent'
+                                  ||
+                                  changeInfo.type == 'extras' && 'otherOption'
+                                ) 
+                              })
+                            }}>
+                              <Text style={styles.addOptionHeader}>Add new</Text>
+                            </TouchableOpacity>
                           </View>
-                          <Text style={styles.optionsHeader}>Selected option(s)</Text>
-                          <View style={{ alignItems: 'center', width: '100%' }}>
-                            <View style={styles.options}>
-                              {changeInfo.sizes.map((size, index) => (
-                                <View key={size.key} style={styles.option}>
-                                  <TouchableOpacity style={styles.optionRemove} onPress={() => {
-                                    let newOptions = [...changeInfo.sizes]
+                          <ScrollView style={{ height: '70%', width: '100%' }}>
+                            <Text style={styles.optionsHeader}>Selected List</Text>
 
-                                    newOptions.splice(index, 1)
+                            {changeInfo.type == 'sizes' && changeInfo.sizes.map((size, index) => (
+                              <View key={size.key} style={styles.option}>
+                                <TouchableOpacity style={styles.optionRemove} onPress={() => {
+                                  let newOptions = [...changeInfo.sizes]
 
-                                    setChangeinfo({ ...changeInfo, sizes: newOptions })
-                                  }}>
-                                    <FontAwesome name="close" size={25}/>
-                                  </TouchableOpacity>
-                                  <View style={styles.optionTypeSelected}>
-                                    <Text style={styles.optionTypeSelectedHeader}>{size.name}</Text>
-                                  </View>
-                                  <Text style={styles.optionTypesHeader}>$ {size.price}</Text>
+                                  newOptions.splice(index, 1)
+
+                                  setChangeinfo({ ...changeInfo, sizes: newOptions })
+                                }}>
+                                  <FontAwesome name="close" size={25}/>
+                                </TouchableOpacity>
+                                <View style={styles.optionTypeSelected}>
+                                  <Text style={styles.optionTypeSelectedHeader}>{size.name}</Text>
                                 </View>
-                              ))}
-                              {changeInfo.quantities.map((quantity, index) => (
-                                <View key={quantity.key} style={styles.option}>
-                                  <TouchableOpacity style={styles.optionRemove} onPress={() => {
-                                    let newOptions = [...changeInfo.quantities]
+                                <Text style={styles.optionTypesHeader}>$ {size.price}</Text>
+                              </View>
+                            ))}
+                            {changeInfo.type == 'quantities' && changeInfo.quantities.map((quantity, index) => (
+                              <View key={quantity.key} style={styles.option}>
+                                <TouchableOpacity style={styles.optionRemove} onPress={() => {
+                                  let newOptions = [...changeInfo.quantities]
 
-                                    newOptions.splice(index, 1)
+                                  newOptions.splice(index, 1)
 
-                                    setChangeinfo({ ...changeInfo, quantities: newOptions })
-                                  }}>
-                                    <FontAwesome name="close" size={25}/>
-                                  </TouchableOpacity>
-                                  <View style={styles.optionTypeSelected}>
-                                    <Text style={styles.optionTypeSelectedHeader}>{quantity.input}</Text>
-                                  </View>
-                                  <Text style={styles.optionTypesHeader}>$ {quantity.price}</Text>
+                                  setChangeinfo({ ...changeInfo, quantities: newOptions })
+                                }}>
+                                  <FontAwesome name="close" size={25}/>
+                                </TouchableOpacity>
+                                <View style={styles.optionTypeSelected}>
+                                  <Text style={styles.optionTypeSelectedHeader}>{quantity.input}</Text>
                                 </View>
-                              ))}
-                              {changeInfo.percents.map((percent, index) => (
-                                <View key={percent.key} style={styles.option}>
-                                  <TouchableOpacity style={styles.optionRemove} onPress={() => {
-                                    let newOptions = [...changeInfo.percents]
+                                <Text style={styles.optionTypesHeader}>$ {quantity.price}</Text>
+                              </View>
+                            ))}
+                            {changeInfo.type == 'percents' && changeInfo.percents.map((percent, index) => (
+                              <View key={percent.key} style={styles.option}>
+                                <TouchableOpacity style={styles.optionRemove} onPress={() => {
+                                  let newOptions = [...changeInfo.percents]
 
-                                    newOptions.splice(index, 1)
+                                  newOptions.splice(index, 1)
 
-                                    setChangeinfo({ ...changeInfo, percents: newOptions })
-                                  }}>
-                                    <FontAwesome name="close" size={25}/>
-                                  </TouchableOpacity>
-                                  <View style={styles.optionTypeSelected}>
-                                    <Text style={styles.optionTypeSelectedHeader}>{percent.input}</Text>
-                                  </View>
-                                  <Text style={styles.optionTypesHeader}>$ {percent.price}</Text>
+                                  setChangeinfo({ ...changeInfo, percents: newOptions })
+                                }}>
+                                  <FontAwesome name="close" size={25}/>
+                                </TouchableOpacity>
+                                <View style={styles.optionTypeSelected}>
+                                  <Text style={styles.optionTypeSelectedHeader}>{percent.input}</Text>
                                 </View>
-                              ))}
-                            </View>
-                          </View>
+                                <Text style={styles.optionTypesHeader}>$ {percent.price}</Text>
+                              </View>
+                            ))}
+                            {changeInfo.type == 'extras' && changeInfo.extras.map((otherOption, index) => (
+                              <View key={otherOption.key} style={styles.option}>
+                                <TouchableOpacity style={styles.optionRemove} onPress={() => {
+                                  let newOptions = [...changeInfo.extras]
+
+                                  newOptions.splice(index, 1)
+
+                                  setChangeinfo({ ...changeInfo, extras: newOptions })
+                                }}>
+                                  <FontAwesome name="close" size={25}/>
+                                </TouchableOpacity>
+                                <View style={styles.optionTypeSelected}>
+                                  <Text style={styles.optionTypeSelectedHeader}>{otherOption.input}</Text>
+                                </View>
+                                <Text style={styles.optionTypesHeader}>$ {otherOption.price}</Text>
+                              </View>
+                            ))}
+                          </ScrollView>
                         </View>
                       )
                     )}
@@ -1086,11 +1144,11 @@ export default function Addmeal(props) {
                         <AntDesign name="close" size={30}/>
                       </TouchableOpacity>
 
-                      <Text style={styles.changeInfoOptionHeader}>New {changeInfo.optionsEdit} info</Text>
+                      <Text style={styles.changeInfoOptionHeader}>New info</Text>
 
-                      {(changeInfo.optionsEdit == 'quantity' || changeInfo.optionsEdit == 'percent') ? 
+                      {(changeInfo.optionsEdit == 'quantity' || changeInfo.optionsEdit == 'percent' || changeInfo.optionsEdit == 'otherOption') ? 
                         <>
-                          <TextInput style={styles.changeInfoOptionInput} placeholderTextColor="rgba(0, 0, 0, 0.5)" placeholder="Cream" value={changeInfo.optionInfo.input} onChangeText={input => setChangeinfo({ ...changeInfo, optionInfo: { ...changeInfo.optionInfo, input }})}/>
+                          <TextInput style={styles.changeInfoOptionInput} placeholderTextColor="rgba(0, 0, 0, 0.5)" placeholder="Name" value={changeInfo.optionInfo.input} onChangeText={input => setChangeinfo({ ...changeInfo, optionInfo: { ...changeInfo.optionInfo, input }})}/>
                           <TextInput style={styles.changeInfoOptionInput} placeholderTextColor="rgba(0, 0, 0, 0.5)" placeholder="4.99" value={changeInfo.optionInfo.price} onChangeText={(price) => setChangeinfo({ ...changeInfo, optionInfo: { ...changeInfo.optionInfo, price }})} keyboardType="numeric" autoCorrect={false} autoCapitalize="none"/>
                         </>
                         :
@@ -1135,6 +1193,10 @@ export default function Addmeal(props) {
                               options = [...changeInfo.sizes]
 
                               break;
+                            case "otherOption":
+                              options = [...changeInfo.extras]
+
+                              break;
                             default:
                           }
 
@@ -1156,6 +1218,12 @@ export default function Addmeal(props) {
                             setChangeinfo({ 
                               ...changeInfo, 
                               percents: [...changeInfo.percents, { key: "percent-" + new_key.toString(), input, price }],
+                              optionsEdit: '', optionInfo: { selected: '', input: '', price: '' }
+                            })
+                          } else if (changeInfo.optionsEdit == 'otherOption') {
+                            setChangeinfo({
+                              ...changeInfo,
+                              extras: [...changeInfo.extras, { key: "otherOption-" + new_key.toString(), input, price }],
                               optionsEdit: '', optionInfo: { selected: '', input: '', price: '' }
                             })
                           } else {
@@ -1201,12 +1269,12 @@ const styles = StyleSheet.create({
   cameraAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginBottom: 50, margin: 5, padding: 5, width: wsize(30) },
   cameraActionHeader: { fontSize: wsize(3), textAlign: 'center' },
 
-  addOptionBox: { backgroundColor: 'rgba(0, 0, 0, 0.1)', margin: '1%', padding: 5, width: '98%' },
-  addOption: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 10 },
+  addOptionBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.1)', margin: '1%', padding: 5, width: '98%' },
+  addOption: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 10, width: '50%' },
   addOptionHeader: { fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' }, 
 
   optionsHeader: { fontSize: wsize(6), fontWeight: 'bold', textAlign: 'center' },
-  options: { marginBottom: 10, width: '95%' },
+  options: { overflow: 'hidden', marginBottom: 10, width: '95%' },
   option: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, flexDirection: 'row', justifyContent: 'space-around', marginVertical: 5, paddingVertical: 5 },
   optionRemove: { alignItems: 'center', borderRadius: 15, borderStyle: 'solid', borderWidth: 2, height: 30, width: 30 },
   optionTypesBox: { alignItems: 'center' },
@@ -1226,27 +1294,27 @@ const styles = StyleSheet.create({
   addActionHeader: { fontSize: wsize(4) },
 
   // update
-  updateInfoContainer: { alignItems: 'center', height: '100%', width: '100%' },
+  updateInfoContainer: { height: '100%', width: '100%' },
   updateHeader: { fontSize: wsize(6), fontWeight: 'bold', textAlign: 'center' },
-  updateInfoBox: { borderStyle: 'solid', borderBottomWidth: 1, borderTopWidth: 1, flexDirection: 'column', height: '30%', justifyContent: 'space-around', padding: 5, width: '100%' },
+  updateInfoBox: { borderStyle: 'solid', flexDirection: 'column', height: '100%', justifyContent: 'space-around', padding: 5, width: '100%' },
   updateInfoPhotoHolder: { borderRadius: wsize(20) / 2, height: wsize(20), overflow: 'hidden', width: wsize(20) },
-  updateInfoOption: { fontSize: wsize(5), fontWeight: 'bold' },
-  updateInfoActions: { flexDirection: 'column', height: '70%', justifyContent: 'space-around' },
-  updateInfoAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 10 },
-  updateInfoActionHeader: { fontSize: wsize(6), textAlign: 'center' },
+  updateInfoOption: { fontSize: wsize(4), fontWeight: 'bold' },
+  updateInfoHeader: { fontSize: wsize(5), textAlign: 'center' },
+  updateInfoAdd: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5 },
+  updateInfoAddHeader: { fontSize: wsize(2), textAlign: 'center' },
 
   // change info box
   changeInfoBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
   changeInfoContainer: { backgroundColor: 'white', height: '80%', width: '80%' },
   changeInfoActions: { flexDirection: 'row', justifyContent: 'space-around', marginVertical: 50, width: '100%' },
   changeInfoAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 10, width: '30%' },
-  changeInfoActionHeader: { textAlign: 'center' },
+  changeInfoActionHeader: { fontSize: wsize(5), textAlign: 'center' },
 
   changeInfoOptionBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
   changeInfoOptionContainer: { alignItems: 'center', backgroundColor: 'white', height: '80%', width: '80%' },
   changeInfoOptionClose: { borderRadius: 20, borderStyle: 'solid', borderWidth: 2, marginVertical: 20 },
   changeInfoOptionHeader: { fontSize: wsize(6), fontWeight: 'bold', marginVertical: 20, textAlign: 'center' },
-  changeInfoOptionInput: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(9), height: 50, marginVertical: 3, padding: 3, textAlign: 'center', width: 150 }, 
+  changeInfoOptionInput: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(9), marginVertical: 3, padding: 3, textAlign: 'center', width: '90%' }, 
   changeInfoOptionDone: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 20, padding: 5 },
   changeInfoOptionDoneHeader: { fontSize: wsize(6), textAlign: 'center' },
 
@@ -1256,7 +1324,7 @@ const styles = StyleSheet.create({
   newSizeContainer: { alignItems: 'center', backgroundColor: 'white', height: '80%', width: '80%' },
   newSizeClose: { borderRadius: 20, borderStyle: 'solid', borderWidth: 2, marginVertical: 20 },
   newSizeHeader: { fontSize: wsize(6), fontWeight: 'bold', marginVertical: 20, textAlign: 'center' },
-  newSizeInput: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(9), height: 50, padding: 3, textAlign: 'center', width: 150 }, 
+  newSizeInput: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(9), padding: 3, textAlign: 'center', width: '50%' }, 
   newSizesBox: { alignItems: 'center' },
   newSizesHeader: { fontSize: wsize(5), fontWeight: 'bold', margin: 5 },
   newSizes: { flexDirection: 'row' },

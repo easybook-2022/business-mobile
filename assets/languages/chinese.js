@@ -329,12 +329,6 @@ const info = {
         restaurant: "客户下单更方便"
       }
     },
-    bottomNavs: {
-      back: {
-        salon: "回到约会",
-        restaurant: "返回订单"
-      }
-    },
     hidden: {
       uploadMenu: {
         takePhoto: "拍张照片"

@@ -123,7 +123,7 @@ export default function App() {
               )
             })}/>
             <Stack.Screen name="paymentrecords" component={Paymentrecords} options={({ navigation, route }) => ({
-              headerTitle: () => <Text style={styles.header}>Daily/Monthly Income</Text>,
+              headerTitle: () => <Text style={styles.header}>Daily/Monthly/Yearly Income</Text>,
               headerLeft: () => (
                 Platform.OS == 'ios' && (
                   <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>

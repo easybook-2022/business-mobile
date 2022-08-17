@@ -329,12 +329,6 @@ const info = {
         restaurant: "Khách hàng đặt hàng dễ dàng hơn"
       }
     },
-    bottomNavs: {
-      back: {
-        salon: "Quay lại\ncuộc hẹn",
-        restaurant: "Về đơn\nđặt hàng"
-      }
-    },
     hidden: {
       uploadMenu: {
         takePhoto: "Chụp ảnh"

@@ -329,12 +329,6 @@ const info = {
         restaurant: "Commande plus facile pour les clients"
       }
     },
-    bottomNavs: {
-      back: {
-        salon: "Retour\naux rendez-vous",
-        restaurant: "Retour\naux commandes"
-      }
-    },
     hidden: {
       uploadMenu: {
         takePhoto: "Prendre une photo"

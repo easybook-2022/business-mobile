@@ -37,7 +37,7 @@ export default function Paymentrecords(props) {
   useEffect(() => {
     getTheIncome()
   }, [])
-
+  
   return (
     <SafeAreaView style={styles.paymentRecords}>
       <View style={styles.box}>

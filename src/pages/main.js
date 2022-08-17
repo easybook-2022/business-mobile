@@ -3214,7 +3214,7 @@ export default function Main(props) {
   const { date, workersHour, workers } = chartInfo
   let currDay = date.day ? date.day.substr(0, 3) : ""
   const { daysInfo } = accountForm
-  const { sizes, quantities, percents } = showProductinfo
+  const { sizes, quantities, percents, extras } = showProductinfo
 
 	return (
 		<SafeAreaView style={styles.main}>
@@ -3527,11 +3527,11 @@ export default function Main(props) {
                   <View style={{ alignItems: 'center' }}>
                     <Text style={[styles.viewTypeHeader, { fontWeight: 'bold' }]}>This is {storeName}</Text>
 
-                    {logo.uri && (
+                    {logo.uri ? 
                       <View style={{ height: wsize(90), width: wsize(90) }}>
                         <Image style={resizePhoto(logo.size, wsize(90))} source={{ uri: logo.uri }}/>
                       </View>
-                    )}
+                    : null}
                   </View>
                 )}
 
@@ -3594,10 +3594,10 @@ export default function Main(props) {
                                     {item.orders.map(order => (
                                       <View key={order.key} style={[styles.order, { opacity: order.finish ? 0.3 : 1 }]}>
                                         <View style={styles.orderInfo}>
-                                          <Text style={styles.orderInfoHeader}>{order.name} {(order.sizes.length == 0 && order.quantities.length == 0 && order.percents.length == 0) && "(" + order.quantity + ")"}</Text>
+                                          <Text style={styles.orderInfoHeader}>{order.name} {(order.sizes.length == 0 && order.quantities.length == 0 && order.percents.length == 0 && order.extras.length == 0) && "(" + order.quantity + ")"}</Text>
                                           {order.note ? <Text style={[styles.orderInfoHeader, { fontWeight: '500' }]}>NOTE: {order.note}</Text> : null}
                                         
-                                          {(order.sizes.length > 0 || order.quantities.length > 0 || order.percents.length > 0) && (
+                                          {(order.sizes.length > 0 || order.quantities.length > 0 || order.percents.length > 0 || order.extras.length > 0) && (
                                             <View style={{ marginTop: 5 }}>
                                               {order.sizes.length > 0 && order.sizes.map(size => 
                                                 <Text 
@@ -3621,6 +3621,14 @@ export default function Main(props) {
                                                   style={styles.orderInfoHeader}
                                                 >
                                                   {percent["input"]}
+                                                </Text>
+                                              )}
+                                              {order.extras.length > 0 && order.extras.map(extra => 
+                                                <Text
+                                                  key={extra.key}
+                                                  style={styles.orderInfoHeader}
+                                                >
+                                                  Extra: {extra["input"]}
                                                 </Text>
                                               )}
                                             </View>
@@ -3947,7 +3955,9 @@ export default function Main(props) {
                           </View>
 
                           <Text style={styles.scheduleOptionHeader}>Or{'\n' + tr.t("main.hidden.scheduleOption.select.timeFactorHeader")}{tr.t("main.hidden.scheduleOption.select.pushBys." + scheduleOption.pushBy)}</Text>
+
                           <TextInput style={styles.scheduleInput} placeholder={"Enter how many " + scheduleOption.pushBy} onChangeText={factor => setScheduleoption({ ...scheduleOption, selectedFactor: factor })}/>
+
                           <TouchableOpacity style={styles.scheduleAction} onPress={() => pushTheAppointments()}>
                             <Text style={styles.scheduleActionHeader}>{tr.t("main.hidden.scheduleOption.rescheduleNow")}</Text>
                           </TouchableOpacity>
@@ -3983,14 +3993,14 @@ export default function Main(props) {
                             <Text style={styles.dayHeader}>{tr.t("days." + info.header)}: </Text>
                             <View style={styles.timeHeaders}>
                               <Text style={styles.timeHeader}>{info.opentime.hour}</Text>
-                              <View style={styles.column}><Text>:</Text></View>
+                              <View style={styles.column}><Text style={styles.timeHeaderSep}>:</Text></View>
                               <Text style={styles.timeHeader}>{info.opentime.minute}</Text>
                               <Text style={styles.timeHeader}>{info.opentime.period}</Text>
                             </View>
-                            <View style={styles.column}><Text> - </Text></View>
+                            <View style={styles.column}><Text style={styles.timeHeaderSep}> - </Text></View>
                             <View style={styles.timeHeaders}>
                               <Text style={styles.timeHeader}>{info.closetime.hour}</Text>
-                              <View style={styles.column}><Text>:</Text></View>
+                              <View style={styles.column}><Text style={styles.timeHeaderSep}>:</Text></View>
                               <Text style={styles.timeHeader}>{info.closetime.minute}</Text>
                               <Text style={styles.timeHeader}>{info.closetime.period}</Text>
                             </View>
@@ -4020,14 +4030,14 @@ export default function Main(props) {
                                       <Text style={styles.dayHeader}>{tr.t("days." + info.header)}: </Text>
                                       <View style={styles.timeHeaders}>
                                         <Text style={styles.timeHeader}>{info.opentime.hour}</Text>
-                                        <View style={styles.column}><Text>:</Text></View>
+                                        <View style={styles.column}><Text style={styles.timeHeaderSep}>:</Text></View>
                                         <Text style={styles.timeHeader}>{info.opentime.minute}</Text>
                                         <Text style={styles.timeHeader}>{info.opentime.period}</Text>
                                       </View>
-                                      <View style={styles.column}><Text> - </Text></View>
+                                      <View style={styles.column}><Text style={styles.timeHeaderSep}> - </Text></View>
                                       <View style={styles.timeHeaders}>
                                         <Text style={styles.timeHeader}>{info.closetime.hour}</Text>
-                                        <View style={styles.column}><Text>:</Text></View>
+                                        <View style={styles.column}><Text style={styles.timeHeaderSep}>:</Text></View>
                                         <Text style={styles.timeHeader}>{info.closetime.minute}</Text>
                                         <Text style={styles.timeHeader}>{info.closetime.period}</Text>
                                       </View>
@@ -4550,7 +4560,7 @@ export default function Main(props) {
                                 <View style={styles.accountHolders}>
                                   <Text style={styles.header}>{tr.t("main.editInfo.staff.header")}</Text>
 
-                                  {userType == true && (
+                                  {userType == "owner" && (
                                     <TouchableOpacity style={styles.accountHoldersAdd} onPress={() => {
                                       setAccountform({
                                         ...accountForm,
@@ -4589,7 +4599,7 @@ export default function Main(props) {
                                           <View style={styles.column}><Text style={styles.accountEditHeader}>{info.username}</Text></View>
 
                                           {(locationType == "hair" || locationType == "nail") && (
-                                            userType == true && (
+                                            userType == "owner" && (
                                               <View style={styles.column}>
                                                 <TouchableOpacity onPress={() => deleteTheOwner(info.id)}>
                                                   <AntDesign color="black" name="closecircleo" size={wsize(7)}/>
@@ -4658,7 +4668,7 @@ export default function Main(props) {
                                         <View key={item.key} style={styles.login}>
                                           <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
                                             <Text style={styles.loginIndex}>#{index + 1}</Text>
-                                            <View style={styles.column}><Text style={styles.loginHeader}>{item.cellnumber}</Text></View>
+                                            <View style={styles.column}><Text style={styles.loginHeader}>{displayPhonenumber('', item.cellnumber, () => {})}</Text></View>
                                           </View>
 
                                           <View style={{ alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.2)', width: '100%' }}>
@@ -4669,13 +4679,13 @@ export default function Main(props) {
                                             </View>
 
                                             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginVertical: 5 }}>
-                                              <View style={[styles.column, { width: '48%' }]}>
+                                              <View style={[styles.column, { marginHorizontal: '5%' }]}>
                                                 <TouchableOpacity style={styles.loginChange} onPress={() => setLogins({ ...logins, type: 'cellnumber', info: {...logins.info, id: item.id, noAccount: false, verifyCode: "", verified: false }})}>
                                                   <Text style={styles.loginChangeHeader}>Change number</Text>
                                                 </TouchableOpacity>
                                               </View>
 
-                                              <View style={[styles.column, { width: '48%' }]}>
+                                              <View style={[styles.column, { marginHorizontal: '5%' }]}>
                                                 <TouchableOpacity style={styles.loginChange} onPress={() => setLogins({ ...logins, type: 'password', info: {...logins.info, id: item.id }})}>
                                                   <Text style={styles.loginChangeHeader}>Change Password</Text>
                                                 </TouchableOpacity>
@@ -6080,6 +6090,14 @@ export default function Main(props) {
                               {percent["input"]}
                             </Text>
                           )}
+                          {item.extras.length > 0 && item.extras.map(extra => 
+                            <Text
+                              key={extra.key}
+                              style={styles.paymentInfoHeader}
+                            >
+                              {extra["input"]}
+                            </Text>
+                          )}
 
                           <Text style={styles.paymentInfoHeader}>${item.cost}</Text>
                         </View>
@@ -6101,118 +6119,116 @@ export default function Main(props) {
             {showProductinfo.show && (
               <View style={styles.productInfoBox}>
                 <View style={styles.productInfoContainer}>
-                  <View style={{ alignItems: 'center' }}>
-                    <ScrollView style={{ width: '100%' }} showsVerticalScrollIndicator={false}>
-                      <View style={{ alignItems: 'center' }}>
-                        <TouchableOpacity style={styles.productInfoClose} onPress={() => setShowproductinfo({ ...showProductinfo, show: false, loading: false })}>
-                          <AntDesign name="closecircleo" size={wsize(10)}/>
-                        </TouchableOpacity>
+                  <ScrollView style={{ height: '100%', width: '100%' }}>
+                    <View style={{ alignItems: 'center' }}>
+                      <TouchableOpacity style={styles.productInfoClose} onPress={() => setShowproductinfo({ ...showProductinfo, show: false, loading: false })}>
+                        <AntDesign name="closecircleo" size={wsize(10)}/>
+                      </TouchableOpacity>
 
-                        {showProductinfo.image.name && (
-                          <View style={styles.styles.imageHolder}>
-                            <Image source={{ uri: logo_url + showProductinfo.image.name }} style={styles.image}/>
-                          </View>
+                      {showProductinfo.image.name && (
+                        <View style={styles.styles.imageHolder}>
+                          <Image source={{ uri: logo_url + showProductinfo.image.name }} style={styles.image}/>
+                        </View>
+                      )}
+
+                      <Text style={styles.productInfoHeader}>{showProductinfo.name}</Text>
+
+                      <View style={styles.optionsBox}>
+                        {(sizes.length > 0 || quantities.length) > 0 && (
+                          <Text style={styles.optionsHeader}>
+                            {sizes.length > 0 ? 
+                              sizes.length == 1 ? "(1 size only)" : "Select a size"
+                              :
+                              quantities.length == 1 ? "(1 quantity only)" : "Select a quantity"
+                            }
+                          </Text>
                         )}
 
-                        <Text style={styles.productInfoHeader}>{showProductinfo.name}</Text>
-
-                        <View style={styles.optionsBox}>
-                          {(sizes.length > 0 || quantities.length) > 0 && (
-                            <Text style={styles.optionsHeader}>
-                              {sizes.length > 0 ? 
-                                sizes.length == 1 ? "(1 size only)" : "Select a size"
-                                :
-                                quantities.length == 1 ? "(1 quantity only)" : "Select a quantity"
-                              }
-                            </Text>
+                        <View style={styles.options}>
+                          {sizes.length > 0 && (
+                            sizes.length == 1 ? 
+                              <View style={styles.option}>
+                                <Text style={styles.optionPrice}>{sizes[0].name + ": $" + sizes[0].price}</Text>
+                              </View>
+                              :
+                              sizes.map((size, index) => (
+                                <View key={size.key} style={styles.option}>
+                                  <TouchableOpacity style={size.selected ? styles.optionTouchDisabled : styles.optionTouch} onPress={() => selectOption(index, "size")}>
+                                    <Text style={size.selected ? styles.optionTouchDisabledHeader : styles.optionTouchHeader}>{size.name}</Text>
+                                  </TouchableOpacity>
+                                  <View style={styles.column}><Text style={styles.optionPrice}>$ {size.price}</Text></View>
+                                </View>
+                              ))
                           )}
 
-                          <View style={styles.options}>
-                            {sizes.length > 0 && (
-                              sizes.length == 1 ? 
-                                <View style={styles.option}>
-                                  <Text style={styles.optionPrice}>{sizes[0].name + ": $" + sizes[0].price}</Text>
+                          {quantities.length > 0 && (
+                            quantities.length == 1 ? 
+                              <View style={styles.option}>
+                                <Text style={styles.optionPrice}>{quantities[0].input + ": $" + quantities[0].price}</Text>
+                              </View>
+                              :
+                              quantities.map((quantity, index) => (
+                                <View key={quantity.key} style={styles.option}>
+                                  <TouchableOpacity style={quantity.selected ? styles.optionTouchDisabled : styles.optionTouch} onPress={() => selectOption(index, "quantity")}>
+                                    <Text style={quantity.selected ? styles.optionTouchDisabledHeader : styles.optionTouchHeader}>{quantity.input}</Text>
+                                  </TouchableOpacity>
+                                  <View style={styles.column}><Text style={styles.optionPrice}>$ {quantity.price}</Text></View>
                                 </View>
-                                :
-                                sizes.map((size, index) => (
-                                  <View key={size.key} style={styles.option}>
-                                    <TouchableOpacity style={size.selected ? styles.optionTouchDisabled : styles.optionTouch} onPress={() => selectOption(index, "size")}>
-                                      <Text style={size.selected ? styles.optionTouchDisabledHeader : styles.optionTouchHeader}>{size.name}</Text>
-                                    </TouchableOpacity>
-                                    <View style={styles.column}><Text style={styles.optionPrice}>$ {size.price}</Text></View>
-                                  </View>
-                                ))
-                            )}
+                              ))
+                          )}
 
-                            {quantities.length > 0 && (
-                              quantities.length == 1 ? 
-                                <View style={styles.option}>
-                                  <Text style={styles.optionPrice}>{quantities[0].input + ": $" + quantities[0].price}</Text>
+                          {percents.length > 0 && (
+                            percents.length == 1 ? 
+                              <View style={styles.option}>
+                                <Text style={styles.optionPrice}>{percents[0].input + ": $" + percents[0].price}</Text>
+                              </View>
+                              :
+                              percents.map((percent, index) => (
+                                <View key={percent.key} style={styles.option}>
+                                  <TouchableOpacity style={percent.selected ? styles.optionTouchDisabled : styles.optionTouch} onPress={() => selectOption(index, "percent")}>
+                                    <Text style={percent.selected ? styles.optionTouchDisabledHeader : styles.optionTouchHeader}>{percent.input}</Text>
+                                  </TouchableOpacity>
+                                  <View style={styles.column}><Text style={styles.optionPrice}>$ {percent.price}</Text></View>
                                 </View>
-                                :
-                                quantities.map((quantity, index) => (
-                                  <View key={quantity.key} style={styles.option}>
-                                    <TouchableOpacity style={quantity.selected ? styles.optionTouchDisabled : styles.optionTouch} onPress={() => selectOption(index, "quantity")}>
-                                      <Text style={quantity.selected ? styles.optionTouchDisabledHeader : styles.optionTouchHeader}>{quantity.input}</Text>
-                                    </TouchableOpacity>
-                                    <View style={styles.column}><Text style={styles.optionPrice}>$ {quantity.price}</Text></View>
-                                  </View>
-                                ))
-                            )}
-
-                            {percents.length > 0 && (
-                              percents.length == 1 ? 
-                                <View style={styles.option}>
-                                  <Text style={styles.optionPrice}>{percents[0].input + ": $" + percents[0].price}</Text>
-                                </View>
-                                :
-                                percents.map((percent, index) => (
-                                  <View key={percent.key} style={styles.option}>
-                                    <TouchableOpacity style={percent.selected ? styles.optionTouchDisabled : styles.optionTouch} onPress={() => selectOption(index, "percent")}>
-                                      <Text style={percent.selected ? styles.optionTouchDisabledHeader : styles.optionTouchHeader}>{percent.input}</Text>
-                                    </TouchableOpacity>
-                                    <View style={styles.column}><Text style={styles.optionPrice}>$ {percent.price}</Text></View>
-                                  </View>
-                                ))
-                            )}
-                          </View>
+                              ))
+                          )}
                         </View>
-
-                        <View style={styles.quantityRow}>
-                          <View style={styles.quantity}>
-                            <View style={styles.column}><Text style={styles.quantityHeader}>Quantity:</Text></View>
-                            <View style={styles.column}><Text style={styles.quantityAction} onPress={() => changeQuantity("-")}>-</Text></View>
-                            <View style={styles.column}><Text style={styles.quantityHeader}>{showProductinfo.quantity}</Text></View>
-                            <View style={styles.column}><Text style={styles.quantityAction} onPress={() => changeQuantity("+")}>+</Text></View>
-                          </View>
-                        </View>
-
-                        <Text style={styles.price}>Cost: ${showProductinfo.cost.toFixed(2)}</Text>
-
-                        <View style={styles.note}>
-                          <Text style={styles.noteHeader}>Add some instruction if you want ?</Text>
-
-                          <View style={styles.noteInputContainer}>
-                            <TextInput
-                              style={styles.noteInput} multiline
-                              placeholdertextcolor="rgba(127, 127, 127, 0.8)" placeholder="Type in here"
-                              maxlength={100} onChangeText={note => setShowproductinfo({ ...showProductinfo, note })}
-                            />
-                          </View>
-                        </View>
-
-                        {showProductinfo.errorMsg ? <Text style={styles.errorMsg}>{showProductinfo.errorMsg}</Text> : null}
-
-                        <View style={styles.productInfoItemActions}>
-                          <TouchableOpacity disabled={showProductinfo.loading} style={[styles.productInfoItemAction, { opacity: showProductinfo.loading ? 0.1 : 1 }]} onPress={() => addToOrders()}>
-                            <Text style={styles.productInfoItemActionHeader}>Add to Orders</Text>
-                          </TouchableOpacity>
-                        </View>
-
-                        {showProductinfo.loading && <Loadingprogress/>}
                       </View>
-                    </ScrollView>
-                  </View>
+
+                      <View style={styles.quantityRow}>
+                        <View style={styles.quantity}>
+                          <View style={styles.column}><Text style={styles.quantityHeader}>Quantity:</Text></View>
+                          <View style={styles.column}><Text style={styles.quantityAction} onPress={() => changeQuantity("-")}>-</Text></View>
+                          <View style={styles.column}><Text style={styles.quantityHeader}>{showProductinfo.quantity}</Text></View>
+                          <View style={styles.column}><Text style={styles.quantityAction} onPress={() => changeQuantity("+")}>+</Text></View>
+                        </View>
+                      </View>
+
+                      <Text style={styles.price}>Cost: ${showProductinfo.cost.toFixed(2)}</Text>
+
+                      <View style={styles.note}>
+                        <Text style={styles.noteHeader}>Add some instruction if you want ?</Text>
+
+                        <View style={styles.noteInputContainer}>
+                          <TextInput
+                            style={styles.noteInput} multiline textAlignVertical="top"
+                            placeholdertextcolor="rgba(127, 127, 127, 0.8)" placeholder="Type in here"
+                            maxlength={100} onChangeText={note => setShowproductinfo({ ...showProductinfo, note })}
+                          />
+                        </View>
+                      </View>
+
+                      {showProductinfo.errorMsg ? <Text style={styles.errorMsg}>{showProductinfo.errorMsg}</Text> : null}
+
+                      <View style={styles.productInfoItemActions}>
+                        <TouchableOpacity disabled={showProductinfo.loading} style={[styles.productInfoItemAction, { opacity: showProductinfo.loading ? 0.1 : 1 }]} onPress={() => addToOrders()}>
+                          <Text style={styles.productInfoItemActionHeader}>Add to Orders</Text>
+                        </TouchableOpacity>
+                      </View>
+
+                      {showProductinfo.loading && <Loadingprogress/>}
+                    </View>
+                  </ScrollView>
                 </View>
               </View>
             )}
@@ -6243,15 +6259,16 @@ export default function Main(props) {
                           </View>
                           <View style={{ width: '33.3%' }}>
                             {item.price ? 
-                              <Text>$ {item.price} ({item.quantity})</Text>
+                              <Text style={styles.showOrderOptionHeader}>$ {item.price} ({item.quantity})</Text>
                               :
                               <>
-                                {item.sizes.map(info => info.selected ? <Text key={info.key}>{info.name}: ${info.price} ({item.quantity})</Text> : <Text key={info.key}></Text>)}
-                                {item.quantities.map(info => info.selected ? <Text key={info.key}>{info.input}: ${info.price} ({item.quantity})</Text> : <Text key={info.key}></Text>)}
+                                {item.sizes.map(info => info.selected ? <Text style={styles.showOrderOptionHeader} key={info.key}>{info.name}: ${info.price} ({item.quantity})</Text> : <Text key={info.key}></Text>)}
+                                {item.quantities.map(info => info.selected ? <Text style={styles.showOrderOptionHeader} key={info.key}>{info.input}: ${info.price} ({item.quantity})</Text> : <Text key={info.key}></Text>)}
                               </>
                             }
 
-                            {item.percents.map(info => info.selected ? <Text key={info.key}>{info.input}: ${info.price}</Text> : <Text key={info.key}></Text>)}
+                            {item.percents.map(info => info.selected ? <Text style={styles.showOrderOptionHeader} key={info.key}>{info.input}: ${info.price}</Text> : <Text key={info.key}></Text>)}
+                            {item.extras.map(info => info.selected ? <Text style={styles.showOrderOptionHeader} key={info.key}>{info.input}: ${info.price}</Text> : <Text key={info.key}></Text>)}
 
                             <Text style={styles.showOrderCost}>Cost: $ {item.cost}</Text>
                           </View>
@@ -6298,15 +6315,16 @@ export default function Main(props) {
                           </View>
                           <View style={{ width: '50%' }}>
                             {item.price ? 
-                              <Text>$ {item.price} ({item.quantity})</Text>
+                              <Text style={styles.showOrderOptionHeader}>$ {item.price} ({item.quantity})</Text>
                               :
                               <>
-                                {item.sizes.map(info => <Text key={info.key}>{info.name}: ${info.price}</Text>)}
-                                {item.quantities.map(info => <Text key={info.key}>{info.input}: ${info.price}</Text>)}
+                                {item.sizes.map(info => <Text style={styles.showOrderOptionHeader} key={info.key}>{info.name}: ${info.price}</Text>)}
+                                {item.quantities.map(info => <Text style={styles.showOrderOptionHeader} key={info.key}>{info.input}: ${info.price}</Text>)}
                               </>
                             }
 
-                            {item.percents.map(info => info.selected ? <Text key={info.key}>{info.input}: ${info.price}</Text> : <Text></Text>)}
+                            {item.percents.map(info => info.selected ? <Text style={styles.showOrderOptionHeader} key={info.key}>{info.input}: ${info.price}</Text> : <Text key={info.key}></Text>)}
+                            {item.extra.map(info => info.selected ? <Text style={styles.showOrderOptionHeader} key={info.key}>{info.input}: ${info.price}</Text> : <Text key={info.key}></Text>)}
 
                             <Text style={styles.showOrderCost}>Cost: $ {item.cost}</Text>
                           </View>
@@ -6484,9 +6502,10 @@ const styles = StyleSheet.create({
   workerInfoName: { color: 'black', fontSize: wsize(5), fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
   workerTime: {  },
   workerTimeContainer: { flexDirection: 'row', marginBottom: 20 },
-  dayHeader: { fontSize: wsize(5) },
+  dayHeader: { fontSize: wsize(3.5) },
   timeHeaders: { flexDirection: 'row' },
-  timeHeader: { fontSize: wsize(5), fontWeight: 'bold' },
+  timeHeader: { fontSize: wsize(3.5), fontWeight: 'bold' },
+  timeHeaderSep: { fontSize: wsize(3.5), fontWeight: 'bold' },
 
   moreInfosContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
   moreInfosBox: { alignItems: 'center', backgroundColor: 'white', height: '80%', width: '80%' },
@@ -6606,7 +6625,7 @@ const styles = StyleSheet.create({
   moreOptionsHeader: { fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
   moreOptions: { flexDirection: 'row', justifyContent: 'space-between' },
   moreOption: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: '45%' },
-  moreOptionHeader: { textAlign: 'center' },
+  moreOptionHeader: { fontSize: wsize(4), textAlign: 'center' },
 
   updateButtons: { flexDirection: 'row', justifyContent: 'space-around' },
   updateButton: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 10 },
@@ -6647,7 +6666,7 @@ const styles = StyleSheet.create({
 
   productInfoBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
   productInfoContainer: { alignItems: 'center', backgroundColor: 'white', height: '80%', overflowY: 'scroll', width: '80%' },
-  productInfoClose: { height: 50, marginVertical: 20, width: 50 },
+  productInfoClose: { height: wsize(10), marginVertical: 20, width: wsize(10) },
   imageHolder: { borderRadius: 50, height: 100, overflow: 'hidden', width: 100 },
   image: { height: '100%', width: '100%' },
   productInfoHeader: { fontSize: wsize(5), fontWeight: 'bold', paddingVertical: 10, textAlign: 'center' },
@@ -6664,33 +6683,35 @@ const styles = StyleSheet.create({
   options: {  },
   option: { flexDirection: 'row', marginVertical: 5 },
   optionTouchDisabled: { backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, color: 'white', padding: 10 },
-  optionTouchDisabledHeader: { color: 'white', textAlign: 'center' },
+  optionTouchDisabledHeader: { color: 'white', fontSize: wsize(4), textAlign: 'center' },
   optionTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, padding: 10 },
-  optionTouchHeader: { textAlign: 'center' },
-  optionPrice: { fontWeight: 'bold', marginHorizontal: 10 },
-  note: { marginTop: 10, width: '90%' },
-  noteHeader: { fontWeight: 'bold', textAlign: 'center' },
-  noteInputContainer: { width: '100%' },
-  noteInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), height: 100, padding: 5, width: '100%' },
+  optionTouchHeader: { fontSize: wsize(4), textAlign: 'center' },
+  optionPrice: { fontSize: wsize(4), fontWeight: 'bold', marginHorizontal: 10 },
+  note: { marginTop: 10, width: '100%' },
+  noteHeader: { fontSize: wsize(4), fontWeight: 'bold', textAlign: 'center' },
+  noteInputContainer: { alignItems: 'center', width: '100%' },
+  noteInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(4), height: 200, padding: 5, width: '80%' },
   quantityRow: { flexDirection: 'row', justifyContent: 'space-around' },
   quantity: { flexDirection: 'row', justifyContent: 'space-around' },
   quantityHeader: { borderRadius: 5, fontSize: wsize(5), fontWeight: 'bold', paddingVertical: 5 },
-  quantityAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, marginHorizontal: 10, padding: 10 },
+  quantityAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, fontSize: wsize(5), marginHorizontal: 10, paddingHorizontal: 10, textAlign: 'center' },
   price: { fontSize: wsize(5), fontWeight: 'bold', marginTop: 20, textAlign: 'center' },
   productInfoItemActions: { flexDirection: 'row', justifyContent: 'space-around' },
-  productInfoItemAction: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, margin: 10, padding: 10, width: 100 },
+  productInfoItemAction: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, margin: 10, padding: 10, width: wsize(50) },
   productInfoItemActionHeader: { fontSize: wsize(5), textAlign: 'center' },
 
   showOrdersBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
   showOrdersContainer: { alignItems: 'center', backgroundColor: 'white', height: '90%', width: '90%' },
   showOrdersClose: { height: wsize(10), marginVertical: 20, width: wsize(10) },
   showOrdersHeader: { fontSize: wsize(5), fontWeight: 'bold', marginVertical: 10, textAlign: 'center' },
-  showOrdersSend: { borderRadius: 5, borderStyle: 'solid', borderWidth: 1, marginVertical: 20, padding: 5, width: 100 },
-  showOrdersSendHeader: { textAlign: 'center' },
+  showOrdersSend: { borderRadius: 5, borderStyle: 'solid', borderWidth: 1, marginVertical: 20, padding: 5, width: wsize(30) },
+  showOrdersSendHeader: { fontSize: wsize(3), textAlign: 'center' },
   showOrdersList: { height: '60%', width: '100%' },
   showOrder: { borderStyle: 'solid', borderBottomWidth: 1, borderTopWidth: 1, flexDirection: 'row', justifyContent: 'space-between', padding: 10, width: '100%' },
   showOrderPhoto: { height: wsize(20), width: wsize(20) },
-  showOrderCost: { fontWeight: 'bold', marginTop: 30 },
+  showOrderHeader: { fontSize: wsize(4) },
+  showOrderOptionHeader: { fontSize: wsize(3) },
+  showOrderCost: { fontSize: wsize(4), fontWeight: 'bold', marginTop: 30 },
   showOrderDelete: { height: wsize(10), width: wsize(10) },
 
   orderSentAlertBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },

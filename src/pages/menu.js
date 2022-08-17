@@ -23,6 +23,7 @@ import { getServiceInfo, removeService } from '../apis/services'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import Ionicons from 'react-native-vector-icons/Ionicons'
+import SimpleLineIcons from 'react-native-vector-icons/SimpleLineIcons'
 
 // widgets
 import Loadingprogress from '../widgets/loadingprogress';
@@ -54,8 +55,9 @@ export default function Menu(props) {
 	const [uploadMenubox, setUploadmenubox] = useState({ show: false, action: '', uri: '', size: { width: 0, height: 0 }, choosing: false, name: '', loading: false })
 	const [menuPhotooption, setMenuphotooption] = useState({ show: false, action: '', photo: '', loading: false })
 	const [removeMenuinfo, setRemovemenuinfo] = useState({ show: false, id: "", name: "", loading: false })
-	const [removeServiceinfo, setRemoveserviceinfo] = useState({ show: false, id: "", name: "", image: "", price: 0, loading: false })
-	const [removeProductinfo, setRemoveproductinfo] = useState({ show: false, id: "", name: "", image: "", sizes: [], others: [], options: [], price: 0, loading: false })
+	const [removeServiceinfo, setRemoveserviceinfo] = useState({ show: false, id: "", name: "", image: { name: '', width: 0, height: 0 }, price: 0, loading: false })
+	const [removeProductinfo, setRemoveproductinfo] = useState({ show: false, id: "", name: "", image: { name: '', width: 0, height: 0 }, sizes: [], quantities: [], percents: [], extras: [], price: 0, loading: false })
+  const [changeMenu, setChangemenu] = useState({ show: false, parentMenuid: -1, name: '', image: { uri: '', name: '', width: 0, height: 0 }, list: [] })
 
 	const getTheLocationProfile = async() => {
 		const locationid = await AsyncStorage.getItem("locationid")
@@ -172,12 +174,14 @@ export default function Menu(props) {
                   <View style={styles.column}><Text style={styles.itemHeader}>$ {info.price} (1 size)</Text></View>
                   :
                   <>
-                    {info.sizes.map(size => <Text key={size.key} style={{ fontSize: wsize(4.5) }}><Text style={{ fontWeight: 'bold' }}>{size.name}</Text>: $ {size.price}</Text>)}
-                    {info.quantities.map(quantity => <Text key={quantity.key} style={{ fontSize: wsize(4.5) }}><Text style={{ fontWeight: 'bold' }}>{quantity.input}</Text>: ${quantity.price}</Text>)}
+                    <Text style={styles.itemHeader}>{info.sizes.length} Size(s)</Text>
+                    {info.sizes.map(size => <Text key={size.key} style={styles.itemPrice}><Text style={{ fontWeight: 'bold' }}>{size.name}</Text>: $ {size.price}</Text>)}
+                    {info.quantities.map(quantity => <Text key={quantity.key} style={styles.itemPrice}><Text style={{ fontWeight: 'bold' }}>{quantity.input}</Text>: ${quantity.price}</Text>)}
                   </>
                 }
 
-                {info.percents.map(percent => <Text key={percent.key} style={{ fontSize: wsize(4.5) }}><Text style={{ fontWeight: 'bold' }}>{percent.input}</Text>: $ {percent.price}</Text>)}
+                {info.percents.map(percent => <Text key={percent.key} style={styles.itemPrice}><Text style={{ fontWeight: 'bold' }}>{percent.input}</Text>: $ {percent.price}</Text>)}
+                {info.extras.map(extra => <Text key={extra.key} style={styles.itemPrice}><Text style={{ fontWeight: 'bold' }}>{extra.input}</Text>: $ {extra.price}</Text>)}
               </>
             )}
           </View>
@@ -204,23 +208,10 @@ export default function Menu(props) {
                   />
                 </View>
               )}
-              <View style={styles.column}><Text style={styles.menuName}>{name} (Menu)</Text></View>
               <View style={styles.column}>
-                <View style={styles.menuActions}>
-                  {userType == "owner" && (
-                    <>
-                      <TouchableOpacity style={styles.menuAction} onPress={() => {
-                        props.navigation.navigate("addmenu", { parentMenuid: id, menuid: id })
-                      }}>
-                        <Text style={styles.menuActionHeader}>{tr.t("buttons.change")}</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity style={styles.menuAction} onPress={() => removeTheMenu(id)}>
-                        <Text style={styles.menuActionHeader}>{tr.t("buttons.delete")}</Text>
-                      </TouchableOpacity>
-                    </>
-                  )}
-
-                  <TouchableOpacity style={styles.menuAction} onPress={() => {
+                <View style={{ flexDirection: 'row' }}>
+                  <Text style={styles.menuName}>{name} (Menu)</Text>
+                  <TouchableOpacity style={styles.menuToggle} onPress={() => {
                     let newList = [...menuInfo.list]
 
                     const toggleMenu = (list) => {
@@ -241,8 +232,22 @@ export default function Menu(props) {
 
                     setMenuinfo({ ...menuInfo, list: newList })
                   }}>
-                    <Text style={styles.menuActionHeader}>{show ? "Hide" : "Show"} List</Text>
+                    <SimpleLineIcons name={"arrow-" + (show ? "up" : "down")} size={wsize(7)}/>
                   </TouchableOpacity>
+                </View>
+              </View>
+              <View style={styles.column}>
+                <View style={styles.menuActions}>
+                  {userType == "owner" && (
+                    <>
+                      <TouchableOpacity style={styles.menuAction} onPress={() => setChangemenu({ ...changeMenu, show: true, parentMenuid: id, name, image, list })}>
+                        <Text style={styles.menuActionHeader}>{tr.t("buttons.change")}</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity style={styles.menuAction} onPress={() => removeTheMenu(id)}>
+                        <Text style={styles.menuActionHeader}>{tr.t("buttons.delete")}</Text>
+                      </TouchableOpacity>
+                    </>
+                  )}
                 </View>
               </View>
 						</View>
@@ -328,6 +333,246 @@ export default function Menu(props) {
 		)
 	}
 
+  const displayListBoxItem = (id, info) => {
+    return (
+      <TouchableOpacity style={styles.boxItem} onPress={() => {
+        if ((locationType == "hair" || locationType == "nail")) {
+          props.navigation.navigate("addservice", { parentMenuid: id, serviceid: info.id })
+        } else if (locationType == "restaurant") {
+          props.navigation.navigate("addmeal", { parentMenuid: id, productid: info.id })
+        } else {
+          props.navigation.navigate("addproduct", { parentMenuid: id, productid: info.id })
+        }
+      }}>
+        <View style={styles.boxItemRow}>
+          <View style={{ width: '50%' }}>
+            {info.image.name && (
+              <View style={styles.boxItemImageHolder}>
+                <Image 
+                  style={resizePhoto(info.image, wsize(10))} 
+                  source={{ uri: logo_url + info.image.name }}
+                />
+              </View>
+            )}
+            <View style={styles.column}><Text style={styles.boxItemHeader}>{info.name}</Text></View>
+            <View style={styles.column}><Text style={styles.boxItemMiniHeader}>{info.description}</Text></View>
+          </View>
+          <View style={[styles.column, { width: '50%' }]}>
+            {userType == "owner" && (
+              <View style={styles.boxItemActions}>
+                <TouchableOpacity style={styles.boxItemAction} onPress={() => {
+                  setChangemenu({ ...changeMenu, show: false })
+
+                  if ((locationType == "hair" || locationType == "nail")) {
+                    props.navigation.navigate("addservice", { parentMenuid: id, serviceid: info.id })
+                  } else if (locationType == "restaurant") {
+                    props.navigation.navigate("addmeal", { parentMenuid: id, productid: info.id })
+                  } else {
+                    props.navigation.navigate("addproduct", { parentMenuid: id, productid: info.id })
+                  }
+                }}>
+                  <Text style={styles.boxItemActionHeader}>{tr.t("buttons.change")}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.boxItemAction} onPress={() => (locationType == "hair" || locationType == "nail") ? removeTheService(info.id) : removeTheProduct(info.id)}>
+                  <Text style={styles.boxItemActionHeader}>{tr.t("buttons.delete")}</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {locationType == "restaurant" && (
+              <>
+                {info.price ? 
+                  <View style={styles.column}><Text style={styles.boxItemHeader}>$ {info.price} (1 size)</Text></View>
+                  :
+                  <>
+                    {info.sizes.length > 0 && <Text style={[styles.itemHeader, { fontSize: wsize(3), marginTop: 20 }]}>{info.sizes.length} Size(s)</Text>}
+                    {info.sizes.map(size => <Text key={size.key} style={styles.boxItemPrice}><Text style={{ fontWeight: 'bold' }}>{size.name}</Text>: $ {size.price}</Text>)}
+
+                    {info.quantities.length > 0 && <Text style={[styles.itemHeader, { fontSize: wsize(3), marginTop: 20 }]}>{info.quantities.length} Quantity(s)</Text>}
+                    {info.quantities.map(quantity => <Text key={quantity.key} style={styles.boxItemPrice}><Text style={{ fontWeight: 'bold' }}>{quantity.input}</Text>: ${quantity.price}</Text>)}
+                  </>
+                }
+
+                {info.percents.length > 0 && <Text style={[styles.itemHeader, { fontSize: wsize(3), marginTop: 20 }]}>{info.percents.length} Percent(s)</Text>}
+                {info.percents.map(percent => <Text key={percent.key} style={styles.boxItemPrice}><Text style={{ fontWeight: 'bold' }}>{percent.input}</Text>: $ {percent.price}</Text>)}
+
+                {info.extras.length > 0 && <Text style={[styles.itemHeader, { fontSize: wsize(3), marginTop: 20 }]}>{info.extras.length} Extra(s)</Text>}
+                {info.extras.map(extra => <Text key={extra.key} style={styles.boxItemPrice}><Text style={{ fontWeight: 'bold' }}>{extra.input}</Text>: $ {extra.price}</Text>)}
+              </>
+            )}
+          </View>
+        </View>
+      </TouchableOpacity>
+    )
+  }
+  const displayListBox = info => {
+    let { id, image, name, list, show = true, parentId = "" } = info
+    const header = ((locationType == "hair" || locationType == "nail") && "service") || 
+                  (locationType == "restaurant" && "meal") || 
+                  (locationType == "store" && "item")
+
+    return (
+      <View>
+        {name ? 
+          <View style={styles.boxMenu}>
+            <View style={styles.boxMenuRow}>
+              {image.name && (
+                <View style={styles.boxMenuImageHolder}>
+                  <Image 
+                    style={resizePhoto(image, wsize(20))} 
+                    source={{ uri: logo_url + image.name }}
+                  />
+                </View>
+              )}
+              <View style={styles.column}>
+                <View style={{ flexDirection: 'row' }}>
+                  <Text style={styles.boxMenuName}>{name} (Menu)</Text>
+                  <TouchableOpacity style={styles.boxMenuToggle} onPress={() => {
+                    let newList = [...menuInfo.list]
+
+                    const toggleMenu = (list) => {
+                      list.forEach(function (item) {
+                        if (item.parentId == parentId) {
+                          item.show = false
+                        }
+
+                        if (item.id == id) {
+                          item.show = show ? false : true
+                        } else if (item.list) {
+                          toggleMenu(item.list)
+                        }
+                      })
+                    }
+
+                    toggleMenu(newList)
+
+                    setMenuinfo({ ...menuInfo, list: newList })
+                  }}>
+                    <SimpleLineIcons name={"arrow-" + (show ? "up" : "down")} size={wsize(7)}/>
+                  </TouchableOpacity>
+                </View>
+              </View>
+              <View style={styles.column}>
+                <View style={styles.boxMenuActions}>
+                  {userType == "owner" && (
+                    <>
+                      <TouchableOpacity style={styles.boxMenuAction} onPress={() => setChangemenu({ ...changeMenu, show: true, parentMenuid: id, name, list })}>
+                        <Text style={styles.boxMenuActionHeader}>{tr.t("buttons.change")}</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity style={styles.boxMenuAction} onPress={() => removeTheMenu(id)}>
+                        <Text style={styles.boxMenuActionHeader}>{tr.t("buttons.delete")}</Text>
+                      </TouchableOpacity>
+                    </>
+                  )}
+                </View>
+              </View>
+            </View>
+
+            {list.length > 0 ? 
+              list.map((info, index) => (
+                <View key={"list-" + index}>
+                  {show && (
+                    info.listType == "list" ? 
+                      displayListBox({ id: info.id, name: info.name, image: info.image, list: info.list, show: info.show, parentId: info.parentId })
+                      :
+                      displayListBoxItem(id, info)
+                  )}
+
+                  {(list.length - 1 == index && info.listType != "list" && show) && (
+                    <View style={{ alignItems: 'center' }}>
+                      {userType == "owner" && (
+                        <TouchableOpacity style={styles.boxItemAdd} onPress={() => {
+                          props.navigation.setParams({ refetch: true })
+                          setChangemenu({ ...changeMenu, show: false })
+
+                          if ((locationType == "hair" || locationType == "nail")) {
+                            props.navigation.navigate(
+                              "addservice", 
+                              { parentMenuid: id, serviceid: null }
+                            )
+                          } else {
+                            props.navigation.navigate(
+                              locationType == "store" ? "addproduct" : "addmeal", 
+                              { parentMenuid: id, productid: null }
+                            )
+                          }
+                        }}>
+                          <View style={styles.column}>
+                            <Text style={styles.boxItemAddHeader}>{tr.t("buttons.add" + header)}</Text>
+                          </View>
+                          <AntDesign color="black" name="pluscircleo" size={wsize(7)}/>
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  )}
+                </View>
+              ))
+              :
+              <View style={{ alignItems: 'center' }}>
+                {userType == "owner" && (
+                  <TouchableOpacity style={styles.boxItemAdd} onPress={() => {
+                    props.navigation.setParams({ refetch: true })
+                    setChangemenu({ ...changeMenu, show: false })
+
+                    if ((locationType == "hair" || locationType == "nail")) {
+                      props.navigation.navigate(
+                        "addservice", 
+                        { parentMenuid: id, serviceid: null }
+                      )
+                    } else {
+                      props.navigation.navigate(
+                        locationType == "store" ? "addproduct" : "addmeal", 
+                        { parentMenuid: id, productid: null }
+                      )
+                    }
+                  }}>
+                    <View style={styles.column}>
+                      <Text style={styles.boxItemAddHeader}>{tr.t("buttons.add" + header)}</Text>
+                    </View>
+                    <AntDesign color="black" name="pluscircleo" size={wsize(7)}/>
+                  </TouchableOpacity>
+                )}
+              </View>
+            }
+          </View>
+          :
+          list.map((info, index) => (
+            <View key={"list-" + index}>
+              {show && (
+                info.listType == "list" ? 
+                  displayListBox({ id: info.id, name: info.name, image: info.image, list: info.list, show: info.show, parentId: info.parentId })
+                  :
+                  displayListBoxItem(id, info)
+              )}
+            </View>
+          ))
+        }
+      </View>
+    )
+  }
+
+  const saveTheMenu = () => {
+    const { parentMenuid, name, image } = [...changeInfo]
+    const data = { parentMenuid, name, image }
+
+    saveMenu(data)
+      .then((res) => {
+        if (res.status == 200) {
+          return res.data
+        }
+      })
+      .then((res) => {
+        if (res) {
+          setChangeinfo({ ...changeInfo, show: false })
+        }
+      })
+      .catch((err) => {
+        if (err.response && err.response.status == 400) {
+          const { errormsg, status } = err.response.data
+        }
+      })
+  }
+
 	const removeTheMenu = id => {
     setRemovemenuinfo({ ...removeMenuinfo, loading: true })
 
@@ -382,9 +627,16 @@ export default function Menu(props) {
 				})
 				.then((res) => {
 					if (res) {
-						const { productImage, name, options, others, price, sizes } = res.productInfo
+						const { productImage, name, price, sizes, quantities, percents, extras } = res.productInfo
 
-						setRemoveproductinfo({ ...removeProductinfo, show: true, id, name, image: productImage, sizes, others, options, price, loading: false })
+            setChangemenu({ ...changeMenu, show: false })
+            setRemoveproductinfo({ 
+              ...removeProductinfo, show: true, 
+              id, name, 
+              image: productImage, 
+              sizes, quantities, percents, extras, 
+              price, loading: false 
+            })
 					}
 				})
 				.catch((err) => {
@@ -701,41 +953,43 @@ export default function Menu(props) {
               )}
 
               {userType == "owner" && (
-                <View style={{ alignItems: 'center' }}>
-                  <TouchableOpacity style={[styles.menuStart, { marginVertical: 10 }]} onPress={() => {
-                    props.navigation.setParams({ refetch: true })
-                    props.navigation.navigate(
-                      "addmenu", 
-                      { parentMenuid: createMenuoptionbox.id, menuid: null }
-                    )
-                  }}>
-                    <Text style={styles.menuStartHeader}>{tr.t("buttons.addmenu")}</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.menuStart} onPress={() => {
-                    props.navigation.setParams({ refetch: true })
+                <View style={{ alignItems: 'center', flexDirection: 'row', justifyContent: 'space-around' }}>
+                  <View style={{ flexDirection: 'row' }}>
+                    <TouchableOpacity style={styles.menuStart} onPress={() => {
+                      props.navigation.setParams({ refetch: true })
+                      props.navigation.navigate(
+                        "addmenu", 
+                        { parentMenuid: createMenuoptionbox.id, menuid: null }
+                      )
+                    }}>
+                      <Text style={styles.menuStartHeader}>{tr.t("buttons.addmenu")}</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.menuStart} onPress={() => {
+                      props.navigation.setParams({ refetch: true })
 
-                    if ((locationType == "hair" || locationType == "nail")) {
-                      props.navigation.navigate(
-                        "addservice", 
-                        { parentMenuid: -1, serviceid: null }
-                      )
-                    } else {
-                      props.navigation.navigate(
-                        locationType == "store" ? "addproduct" : "addmeal", 
-                        { parentMenuid: -1, productid: null }
-                      )
-                    }
-                  }}>
-                    <Text style={styles.menuStartHeader}>{
-                      locationType == "hair" || locationType == "nail" ? 
-                        tr.t("buttons.addservice")
-                        :
-                        locationType == "store" ? 
-                          tr.t("buttons.addproduct")
+                      if ((locationType == "hair" || locationType == "nail")) {
+                        props.navigation.navigate(
+                          "addservice", 
+                          { parentMenuid: -1, serviceid: null }
+                        )
+                      } else {
+                        props.navigation.navigate(
+                          locationType == "store" ? "addproduct" : "addmeal", 
+                          { parentMenuid: -1, productid: null }
+                        )
+                      }
+                    }}>
+                      <Text style={styles.menuStartHeader}>{
+                        locationType == "hair" || locationType == "nail" ? 
+                          tr.t("buttons.addservice")
                           :
-                          tr.t("buttons.addmeal")
-                    }</Text>
-                  </TouchableOpacity>
+                          locationType == "store" ? 
+                            tr.t("buttons.addproduct")
+                            :
+                            tr.t("buttons.addmeal")
+                      }</Text>
+                    </TouchableOpacity>
+                  </View>
                   {(locationType == "hair" || locationType == "nail") && <Text style={styles.menuStartMessage}>{tr.t("menu.lists.easier." + (header == "service" ? "salon" : "restaurant"))}</Text>}
                 </View>
               )}
@@ -745,17 +999,6 @@ export default function Menu(props) {
           
 					<View style={styles.bottomNavs}>
 						<View style={styles.bottomNavsRow}>
-							<TouchableOpacity style={styles.bottomNavButton} onPress={() => props.navigation.dispatch(
-                CommonActions.reset({
-                  index: 0,
-                  routes: [{ name: "main", params: { menu: true }}]
-                })
-              )}>
-                <Text style={styles.bottomNavButtonHeader}>
-                  {locationType == "hair" || locationType == "nail" ? tr.t("menu.bottomNavs.back.salon") : tr.t("menu.bottomNavs.back.restaurant")}
-                </Text>
-							</TouchableOpacity>
-
   						<View style={styles.column}>
                 <TouchableOpacity style={styles.bottomNavButton} onPress={() => {
                   AsyncStorage.clear()
@@ -963,28 +1206,53 @@ export default function Menu(props) {
                   <View style={styles.productInfoImageHolder}>
                     <Image 
                       source={removeProductinfo.image.name ? { uri: logo_url + removeProductinfo.image.name } : require("../../assets/noimage.jpeg")} 
-                      style={resizePhoto(removeProductinfo.image, wsize(50))}
+                      style={resizePhoto(removeProductinfo.image, wsize(20))}
                     />
                   </View>
 
 									<Text style={styles.productInfoName}>Item: {removeProductinfo.name}</Text>
 
 									<View>
-										{removeProductinfo.sizes.map((size, sizeindex) => (
-											<Text key={size.key}>
-												<Text>{size.name} ($ {size.price.toFixed(2)})</Text>
-											</Text>
-										))}
+    								{removeProductinfo.sizes.length > 0 && (
+                      <View style={{ marginBottom: 20 }}>
+                        <Text style={styles.productInfoOptionHeader}>{removeProductinfo.sizes.length} Size(s)</Text>
+                        {removeProductinfo.sizes.map(size => <Text key={size.key}>{size.name} ($ {size.price})</Text>)}
+                      </View>
+                    )}
+
+                    {removeProductinfo.quantities.length > 0 && (
+                      <View style={{ marginBottom: 20 }}>
+                        <Text style={styles.productInfoOptionHeader}>{removeProductinfo.quantities.length} Quantity(s)</Text>
+                        {removeProductinfo.quantities.map(quantity => <Text key={quantity.key}>{quantity.input} ($ {quantity.price})</Text>)}
+                      </View>
+                    )}
+
+                    {removeProductinfo.percents.length > 0 && (
+                      <View style={{ marginBottom: 20 }}>
+                        <Text style={styles.productInfoOptionHeader}>{removeProductinfo.percents.length} Percent(s)</Text>
+                        {removeProductinfo.percents.map(percent => <Text key={percent.key}>{percent.input} ($ {percent.price})</Text>)}
+                      </View>
+                    )}
+
+                    {removeProductinfo.extras.length > 0 && (
+                      <View style={{ marginBottom: 20 }}>
+                        <Text style={styles.productInfoOptionHeader}>{removeProductinfo.extras.length} Extra(s)</Text>
+                        {removeProductinfo.extras.map(extra => <Text key={extra.key}>{extra.input} ($ {extra.price})</Text>)}
+                      </View>
+                    )}
 									</View>
 
 									{removeProductinfo.price ? 
-										<Text style={styles.productInfoPrice}><Text style={{ fontWeight: 'bold' }}>Price: </Text>$ {(removeProductinfo.price).toFixed(2)}</Text>
+										<Text style={styles.productInfoPrice}><Text style={{ fontWeight: 'bold' }}>Price: </Text>$ {removeProductinfo.price}</Text>
 									: null }
 
 									<Text style={styles.productInfoHeader}>Are you sure you want to delete this {header}</Text>
 
 									<View style={styles.productInfoActions}>
-										<TouchableOpacity style={styles.productInfoAction} onPress={() => setRemoveproductinfo({ ...removeProductinfo, show: false })}>
+										<TouchableOpacity style={styles.productInfoAction} onPress={() => {
+                      setChangemenu({ ...changeMenu, show: true })
+                      setRemoveproductinfo({ ...removeProductinfo, show: false })
+                    }}>
 											<Text style={styles.productInfoActionHeader}>{tr.t("buttons.cancel")}</Text>
 										</TouchableOpacity>
 										<TouchableOpacity style={styles.productInfoAction} onPress={() => removeTheProduct(removeProductinfo.id)}>
@@ -1024,6 +1292,33 @@ export default function Menu(props) {
 							</SafeAreaView>
 						</Modal>
 					)}
+          {changeMenu.show && (
+            <Modal transparent={true}>
+              <SafeAreaView style={styles.changeMenuContainer}>
+                <View style={styles.changeMenuBox}>
+                  <TouchableOpacity style={styles.changeMenuClose} onPress={() => setChangemenu({ ...changeMenu, show: false, list: [] })}>
+                    <AntDesign name="close" size={wsize(8)}/>
+                  </TouchableOpacity>
+
+                  <Text style={styles.changeMenuHeader}>Edit menu info</Text>
+                  {changeMenu.image.uri && (
+                    <View style={styles.changeMenuPhotoHolder}>
+                      <Image style={resizePhoto(changeMenu.image)} source={{ uri: logo_url + changeMenu.image.uri }}/>
+                    </View>
+                  )}
+                  <TextInput style={styles.changeMenuInput} maxlength={20} value={changeMenu.name} onChangeText={name => setChangemenu({ ...changeMenu, name })}/>
+
+                  <TouchableOpacity style={styles.changeMenuDone} onPress={() => saveTheMenu()}>
+                    <Text style={styles.changeMenuDoneHeader}>Save Menu Name</Text>
+                  </TouchableOpacity>
+
+                  <ScrollView style={styles.changeMenuListBox} showsVerticalScrollIndicator={false}>
+                    {displayListBox({ id: changeMenu.parentMenuid, name: "", image: "", list: changeMenu.list })}
+                  </ScrollView>
+                </View>
+              </SafeAreaView>
+            </Modal>
+          )}
 				</View>
 				:
 				<View style={styles.loading}>
@@ -1037,6 +1332,37 @@ export default function Menu(props) {
 }
 
 const styles = StyleSheet.create({
+  changeMenuContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
+  changeMenuBox: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '95%', justifyContent: 'space-between', width: '95%' },
+  changeMenuClose: { borderRadius: wsize(8) / 2, borderStyle: 'solid', borderWidth: 5, marginVertical: 20 },
+  changeMenuHeader: { fontSize: wsize(5) },
+  changeMenuInput: { borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), marginHorizontal: '5%', padding: 5, width: '90%' },
+  changeMenuListBox: { paddingHorizontal: '5%', width: '100%' },
+  changeMenuDone: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 10, padding: 10 },
+  changeMenuDoneHeader: { fontSize: wsize(5), textAlign: 'center' },
+
+  boxMenu: { backgroundColor: 'rgba(0, 0, 0, 0.2)', marginBottom: 30, paddingVertical: 10, width: '100%' },
+  boxMenuRow: {  },
+  boxMenuImageHolder: { borderRadius: wsize(20) / 2, height: wsize(20), overflow: 'hidden', width: wsize(20) },
+  boxMenuName: { color: 'black', fontSize: wsize(5), fontWeight: 'bold', marginLeft: 10, width: '70%' },
+  boxMenuToggle: { marginHorizontal: 10 },
+  boxMenuActions: { flexDirection: 'row' },
+  boxMenuAction: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, marginLeft: 10, padding: 3 },
+  boxMenuActionHeader: { fontSize: wsize(6), textAlign: 'center' },
+  boxItemAdd: {  },
+  boxItemAddHeader: {  },
+  boxItem: { backgroundColor: 'rgba(0, 0, 0, 0.1)', borderRadius: 5, borderStyle: 'solid', marginTop: 10, padding: 10 },
+  boxItemRow: { flexDirection: 'row' },
+  boxItemImageHolder: { borderRadius: wsize(10) / 2, height: wsize(10), overflow: 'hidden', width: wsize(10) },
+  boxItemHeader: { fontSize: wsize(3) },
+  boxItemPrice: { fontSize: wsize(3) },
+  boxItemMiniHeader: { fontSize: wsize(3) },
+  boxItemActions: { flexDirection: 'row' },
+  boxItemAction: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 5 },
+  boxItemActionHeader: { fontSize: wsize(4), textAlign: 'center' },
+
+
+
 	menuBox: { backgroundColor: 'rgba(127, 127, 127, 0.1)', height: '100%', width: '100%' },
 	box: { flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 
@@ -1044,7 +1370,7 @@ const styles = StyleSheet.create({
 	menuPhotoActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	menuPhotoAction: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 3 },
 	menuPhotoActionHeader: { fontSize: wsize(3), textAlign: 'center' },
-	menuStart: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5 },
+	menuStart: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, paddingHorizontal: 10 },
 	menuStartHeader: { fontSize: wsize(7), textAlign: 'center' },
   menuStartMessage: { fontSize: wsize(4), textAlign: 'center' },
   menuStartDiv: { fontSize: wsize(7), fontWeight: 'bold', marginVertical: 20 },
@@ -1052,7 +1378,8 @@ const styles = StyleSheet.create({
 	menu: { backgroundColor: 'white', marginBottom: 30, paddingVertical: 10, width: '100%' },
   menuRow: {  },
 	menuImageHolder: { borderRadius: wsize(20) / 2, height: wsize(20), overflow: 'hidden', width: wsize(20) },
-	menuName: { color: 'black', fontSize: wsize(6), fontWeight: 'bold', marginLeft: 5 },
+	menuName: { color: 'black', fontSize: wsize(5), fontWeight: 'bold', marginLeft: 10, width: '70%' },
+  menuToggle: { marginHorizontal: 10 },
 	menuActions: { flexDirection: 'row' },
 	menuAction: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, marginLeft: 10, padding: 3 },
 	menuActionHeader: { fontSize: wsize(6), textAlign: 'center' },
@@ -1062,6 +1389,7 @@ const styles = StyleSheet.create({
   itemRow: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: '2%' },
 	itemImageHolder: { borderRadius: wsize(20) / 2, height: wsize(20), overflow: 'hidden', width: wsize(20) },
 	itemHeader: { fontSize: wsize(4), fontWeight: 'bold', marginHorizontal: 10, textDecorationStyle: 'solid' },
+  itemPrice: { fontSize: wsize(4.5) },
   itemMiniHeader: { fontSize: wsize(4) },
 	itemActions: { flexDirection: 'row' },
 	itemAction: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, marginLeft: 10, padding: 3 },
@@ -1120,9 +1448,9 @@ const styles = StyleSheet.create({
 	productInfoContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	productInfoBox: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '80%', justifyContent: 'space-between', padding: 10, width: '80%' },
 	productInfoBoxHeader: { fontSize: wsize(6), textAlign: 'center' },
-	productInfoImageHolder: { borderRadius: wsize(50) / 2, flexDirection: 'column', justifyContent: 'space-around', overflow: 'hidden', width: wsize(50) },
+	productInfoImageHolder: { borderRadius: wsize(20) / 2, flexDirection: 'column', justifyContent: 'space-around', overflow: 'hidden', width: wsize(20) },
 	productInfoName: { fontSize: wsize(5), fontWeight: 'bold' },
-	productInfoQuantity: {  },
+	productInfoOptionHeader: { fontSize: wsize(3) },
 	productInfoPrice: { fontSize: wsize(5) },
 	productInfoHeader: { fontSize: wsize(5), fontWeight: 'bold', paddingHorizontal: 10, textAlign: 'center' },
 	productInfoActions: { flexDirection: 'row', justifyContent: 'space-around' },
