@@ -41,7 +41,7 @@ export default function Menu(props) {
 	const [locationType, setLocationtype] = useState('')
   const [userType, setUsertype] = useState('')
 
-	const [menuInfo, setMenuinfo] = useState({ list: [], photos: [] })
+	const [menus, setMenus] = useState([])
 
 	const [loaded, setLoaded] = useState(false)
 
@@ -122,7 +122,7 @@ export default function Menu(props) {
 			})
 			.then((res) => {
 				if (res) {
-					setMenuinfo({ ...menuInfo, list: res.list, photos: res.photos })
+					setMenus(res.list)
 					setLoaded(true)
 				}
 			})
@@ -212,7 +212,7 @@ export default function Menu(props) {
                 <View style={{ flexDirection: 'row' }}>
                   <Text style={styles.menuName}>{name} (Menu)</Text>
                   <TouchableOpacity style={styles.menuToggle} onPress={() => {
-                    let newList = [...menuInfo.list]
+                    let newList = [...menus]
 
                     const toggleMenu = (list) => {
                       list.forEach(function (item) {
@@ -230,7 +230,7 @@ export default function Menu(props) {
 
                     toggleMenu(newList)
 
-                    setMenuinfo({ ...menuInfo, list: newList })
+                    setMenus(newList)
                   }}>
                     <SimpleLineIcons name={"arrow-" + (show ? "up" : "down")} size={wsize(7)}/>
                   </TouchableOpacity>
@@ -428,7 +428,7 @@ export default function Menu(props) {
                 <View style={{ flexDirection: 'row' }}>
                   <Text style={styles.boxMenuName}>{name} (Menu)</Text>
                   <TouchableOpacity style={styles.boxMenuToggle} onPress={() => {
-                    let newList = [...menuInfo.list]
+                    let newList = [...newList]
 
                     const toggleMenu = (list) => {
                       list.forEach(function (item) {
@@ -446,7 +446,7 @@ export default function Menu(props) {
 
                     toggleMenu(newList)
 
-                    setMenuinfo({ ...menuInfo, list: newList })
+                    setMenus(newList)
                   }}>
                     <SimpleLineIcons name={"arrow-" + (show ? "up" : "down")} size={wsize(7)}/>
                   </TouchableOpacity>
@@ -552,8 +552,10 @@ export default function Menu(props) {
   }
 
   const saveTheMenu = () => {
-    const { parentMenuid, name, image } = [...changeInfo]
-    const data = { parentMenuid, name, image }
+    const { parentMenuid, name } = changeMenu
+    const { uri, size } = uploadMenubox
+    const image = { uri, size }
+    const data = { menuid: parentMenuid, name, image }
 
     saveMenu(data)
       .then((res) => {
@@ -563,7 +565,7 @@ export default function Menu(props) {
       })
       .then((res) => {
         if (res) {
-          setChangeinfo({ ...changeInfo, show: false })
+          setChangemenu({ ...changeMenu, show: false })
         }
       })
       .catch((err) => {
@@ -904,54 +906,6 @@ export default function Menu(props) {
 				<View style={styles.box}>
 					<ScrollView style={{ height: '90%', width: '100%' }}>
 						<View style={{ paddingVertical: 10 }}>
-              {(locationType == "hair" || locationType == "nail") && (
-                <>
-    							{menuInfo.photos.length > 0 && (
-    								menuInfo.photos[0].row && ( 
-    									<ScrollView style={{ width: '100%' }}>
-    										{menuInfo.photos.map(info => (
-    											<View key={info.key} style={styles.menuRow}>
-    												{info.row.map(item => (
-    													<View key={item.key} style={{ width: width * 0.3 }}>
-    														{item.photo && (
-                                  <>
-                                    <View style={resizePhoto(item.photo, width * 0.3)}>
-                                      <Image style={{ height: '100%', width: '100%' }} source={{ uri: logo_url + item.photo.name }}/>
-                                    </View>
-
-                                    <View style={[styles.menuPhotoActions, { marginTop: -30 }]}>
-                                      {userType == "owner" && (
-                                        <TouchableOpacity style={styles.menuPhotoAction} onPress={() => setMenuphotooption({ ...menuPhotooption, show: true, action: 'delete', info: item.photo })}>
-                                          <Text style={styles.menuPhotoActionHeader}>{tr.t("buttons.delete")}</Text>
-                                        </TouchableOpacity>
-                                      )}
-                                      <TouchableOpacity style={styles.menuPhotoAction} onPress={() => setMenuphotooption({ ...menuPhotooption, show: true, action: '', info: item.photo })}>
-                                        <Text style={styles.menuPhotoActionHeader}>{tr.t("buttons.see")}</Text>
-                                      </TouchableOpacity>
-                                    </View>
-                                  </>
-    														)}
-    													</View>
-    												))}
-    											</View>
-    										))}
-    									</ScrollView>
-    								)
-    							)}
-                  {userType == "owner" && (
-                    <View style={{ alignItems: 'center' }}>
-                      <TouchableOpacity style={styles.menuStart} onPress={() => {
-                        allowCamera()
-                        setUploadmenubox({ ...uploadMenubox, show: true, uri: '', name: '' })
-                      }}>
-                        <Text style={styles.menuStartHeader}>{tr.t("menu.photos.upload")}</Text>
-                      </TouchableOpacity>
-                      <Text style={[styles.menuStartMessage, { marginBottom: '30%' }]}>({tr.t("menu.photos.easier")})</Text>
-                    </View>
-                  )}
-                </>
-              )}
-
               {userType == "owner" && (
                 <View style={{ alignItems: 'center', flexDirection: 'row', justifyContent: 'space-around' }}>
                   <View style={{ flexDirection: 'row' }}>
@@ -990,10 +944,9 @@ export default function Menu(props) {
                       }</Text>
                     </TouchableOpacity>
                   </View>
-                  {(locationType == "hair" || locationType == "nail") && <Text style={styles.menuStartMessage}>{tr.t("menu.lists.easier." + (header == "service" ? "salon" : "restaurant"))}</Text>}
                 </View>
               )}
-              {displayList({ id: "", name: "", image: "", list: menuInfo.list })}
+              {displayList({ id: "", name: "", image: "", list: menus })}
 						</View>
 					</ScrollView>
           
@@ -1053,87 +1006,6 @@ export default function Menu(props) {
 									</View>
 								</View>
 							</SafeAreaView>
-						</Modal>
-					)}
-					{uploadMenubox.show && (
-						<Modal transparent={true}>
-							<SafeAreaView style={styles.uploadMenuContainer}>
-								{!uploadMenubox.action ? 
-									<View style={styles.uploadMenuBox}>
-										<TouchableOpacity style={styles.uploadMenuClose} onPress={() => setUploadmenubox({ ...uploadMenubox, show: false, uri: '', name: '' })}>
-											<AntDesign name="close" size={wsize(7)}/>
-										</TouchableOpacity>
-										<View style={styles.uploadMenuActions}>
-											<TouchableOpacity style={styles.uploadMenuAction} onPress={() => setUploadmenubox({ ...uploadMenubox, action: 'camera' })}>
-												<Text style={styles.uploadMenuActionHeader}>{tr.t("menu.hidden.uploadMenu.takePhoto")}</Text>
-											</TouchableOpacity>
-											<TouchableOpacity style={styles.uploadMenuAction} onPress={() => {
-                        allowChoosing()
-                        choosePhoto()
-                      }}>
-												<Text style={styles.uploadMenuActionHeader}>{tr.t("buttons.choosePhoto")}</Text>
-											</TouchableOpacity>
-										</View>
-									</View>
-									:
-									<View style={styles.uploadMenuCameraContainer}>
-                    <TouchableOpacity style={styles.uploadMenuClose} onPress={() => setUploadmenubox({ ...uploadMenubox, show: false, uri: '', name: '', action: '' })}>
-                      <AntDesign name="close" size={wsize(7)}/>
-                    </TouchableOpacity>
-
-                    {!uploadMenubox.uri ? 
-                      !uploadMenubox.choosing && (
-                        <>
-                          <Camera 
-                            style={styles.uploadMenuCamera} 
-                            ref={r => {setCamcomp(r)}}
-                            type={camType}
-                          />
-
-                          <View style={{ alignItems: 'center', marginVertical: 10 }}>
-                            <Ionicons name="camera-reverse-outline" size={wsize(7)} onPress={() => setCamtype(camType == 'back' ? 'front' : 'back')}/>
-                          </View>
-                        </>
-                      )
-                      :
-                      <View style={resizePhoto(uploadMenubox.size, width)}>
-                        <Image style={{ height: '100%', width: '100%' }} source={{ uri: uploadMenubox.uri }}/>
-                      </View>
-                    }
-
-                    {!uploadMenubox.uri ? 
-                      <View style={styles.uploadMenuCameraActions}>
-                        <TouchableOpacity style={[styles.uploadMenuCameraAction, { opacity: uploadMenubox.loading ? 0.5 : 1 }]} disabled={uploadMenubox.loading} onPress={() => setUploadmenubox({ ...uploadMenubox, action: '' })}>
-                          <Text style={styles.uploadMenuCameraActionHeader}>{tr.t("buttons.cancel")}</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={[styles.uploadMenuCameraAction, { opacity: uploadMenubox.loading ? 0.5 : 1 }]} disabled={uploadMenubox.loading} onPress={() => {
-                          allowChoosing()
-                          choosePhoto()
-                        }}>
-                          <Text style={styles.uploadMenuCameraActionHeader}>{tr.t("buttons.choosePhoto")}</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={[styles.uploadMenuCameraAction, { opacity: uploadMenubox.loading ? 0.5 : 1 }]} disabled={uploadMenubox.loading} onPress={snapPhoto.bind(this)}>
-                          <Text style={styles.uploadMenuCameraActionHeader}>{tr.t("buttons.takePhoto")}</Text>
-                        </TouchableOpacity>
-                      </View>
-                      :
-                      <View style={styles.uploadMenuCameraActions}>
-                        <TouchableOpacity style={[styles.uploadMenuCameraAction, { opacity: uploadMenubox.loading ? 0.5 : 1 }]} disabled={uploadMenubox.loading} onPress={() => setUploadmenubox({ ...uploadMenubox, action: '', uri: '', name: '' })}>
-                          <Text style={styles.uploadMenuCameraActionHeader}>{tr.t("buttons.cancel")}</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={[styles.uploadMenuCameraAction, { opacity: uploadMenubox.loading ? 0.5 : 1 }]} disabled={uploadMenubox.loading} onPress={() => setUploadmenubox({ ...uploadMenubox, uri: '', name: '' })}>
-                          <Text style={styles.uploadMenuCameraActionHeader}>{tr.t("buttons.takePhoto")}</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={[styles.uploadMenuCameraAction, { opacity: uploadMenubox.loading ? 0.5 : 1 }]} disabled={uploadMenubox.loading} onPress={() => uploadMenuphoto()}>
-                          <Text style={styles.uploadMenuCameraActionHeader}>{tr.t("buttons.done")}</Text>
-                        </TouchableOpacity>
-                      </View>
-                    }
-                  </View>
-								}
-							</SafeAreaView>
-
-              {uploadMenubox.loading && <Modal transparent={true}><Loadingprogress/></Modal>}
 						</Modal>
 					)}
 					{menuPhotooption.show && (
@@ -1301,21 +1173,105 @@ export default function Menu(props) {
                   </TouchableOpacity>
 
                   <Text style={styles.changeMenuHeader}>Edit menu info</Text>
-                  {changeMenu.image.uri && (
-                    <View style={styles.changeMenuPhotoHolder}>
-                      <Image style={resizePhoto(changeMenu.image)} source={{ uri: logo_url + changeMenu.image.uri }}/>
-                    </View>
-                  )}
-                  <TextInput style={styles.changeMenuInput} maxlength={20} value={changeMenu.name} onChangeText={name => setChangemenu({ ...changeMenu, name })}/>
 
-                  <TouchableOpacity style={styles.changeMenuDone} onPress={() => saveTheMenu()}>
-                    <Text style={styles.changeMenuDoneHeader}>Save Menu Name</Text>
-                  </TouchableOpacity>
+                  <View style={{ flexDirection: 'row' }}>
+                    <TouchableOpacity style={styles.changeMenuPhotoHolder} onPress={() => setUploadmenubox({ ...uploadMenubox, show: true })}>
+                      <Image style={resizePhoto(changeMenu.image, wsize(20))} source={changeMenu.image.uri ? { uri: logo_url + changeMenu.image.uri } : require("../../assets/noimage.jpeg")}/>
+                    </TouchableOpacity>
+                    <View style={{ alignItems: 'center', width: '50%' }}>
+                      <TextInput style={styles.changeMenuInput} maxlength={20} value={changeMenu.name} onChangeText={name => setChangemenu({ ...changeMenu, name })}/>
+                      <TouchableOpacity style={styles.changeMenuDone} onPress={() => saveTheMenu()}>
+                        <Text style={styles.changeMenuDoneHeader}>Save Menu Name</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
 
                   <ScrollView style={styles.changeMenuListBox} showsVerticalScrollIndicator={false}>
                     {displayListBox({ id: changeMenu.parentMenuid, name: "", image: "", list: changeMenu.list })}
                   </ScrollView>
                 </View>
+
+                {uploadMenubox.show && (
+                  <Modal transparent={true}>
+                    <SafeAreaView style={styles.uploadMenuContainer}>
+                      {!uploadMenubox.action ? 
+                        <View style={styles.uploadMenuBox}>
+                          <TouchableOpacity style={styles.uploadMenuClose} onPress={() => setUploadmenubox({ ...uploadMenubox, show: false, uri: '', name: '' })}>
+                            <AntDesign name="close" size={wsize(7)}/>
+                          </TouchableOpacity>
+                          <View style={styles.uploadMenuActions}>
+                            <TouchableOpacity style={styles.uploadMenuAction} onPress={() => setUploadmenubox({ ...uploadMenubox, action: 'camera' })}>
+                              <Text style={styles.uploadMenuActionHeader}>{tr.t("menu.hidden.uploadMenu.takePhoto")}</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.uploadMenuAction} onPress={() => {
+                              allowChoosing()
+                              choosePhoto()
+                            }}>
+                              <Text style={styles.uploadMenuActionHeader}>{tr.t("buttons.choosePhoto")}</Text>
+                            </TouchableOpacity>
+                          </View>
+                        </View>
+                        :
+                        <View style={styles.uploadMenuCameraContainer}>
+                          <TouchableOpacity style={styles.uploadMenuClose} onPress={() => setUploadmenubox({ ...uploadMenubox, show: false, uri: '', name: '', action: '' })}>
+                            <AntDesign name="close" size={wsize(7)}/>
+                          </TouchableOpacity>
+
+                          {!uploadMenubox.uri ? 
+                            !uploadMenubox.choosing && (
+                              <>
+                                <Camera 
+                                  style={styles.uploadMenuCamera} 
+                                  ref={r => {setCamcomp(r)}}
+                                  type={camType}
+                                />
+
+                                <View style={{ alignItems: 'center', marginVertical: 10 }}>
+                                  <Ionicons name="camera-reverse-outline" size={wsize(7)} onPress={() => setCamtype(camType == 'back' ? 'front' : 'back')}/>
+                                </View>
+                              </>
+                            )
+                            :
+                            <View style={resizePhoto(uploadMenubox.size, width)}>
+                              <Image style={{ height: '100%', width: '100%' }} source={{ uri: uploadMenubox.uri }}/>
+                            </View>
+                          }
+
+                          {!uploadMenubox.uri ? 
+                            <View style={styles.uploadMenuCameraActions}>
+                              <TouchableOpacity style={[styles.uploadMenuCameraAction, { opacity: uploadMenubox.loading ? 0.5 : 1 }]} disabled={uploadMenubox.loading} onPress={() => setUploadmenubox({ ...uploadMenubox, action: '' })}>
+                                <Text style={styles.uploadMenuCameraActionHeader}>{tr.t("buttons.cancel")}</Text>
+                              </TouchableOpacity>
+                              <TouchableOpacity style={[styles.uploadMenuCameraAction, { opacity: uploadMenubox.loading ? 0.5 : 1 }]} disabled={uploadMenubox.loading} onPress={() => {
+                                allowChoosing()
+                                choosePhoto()
+                              }}>
+                                <Text style={styles.uploadMenuCameraActionHeader}>{tr.t("buttons.choosePhoto")}</Text>
+                              </TouchableOpacity>
+                              <TouchableOpacity style={[styles.uploadMenuCameraAction, { opacity: uploadMenubox.loading ? 0.5 : 1 }]} disabled={uploadMenubox.loading} onPress={snapPhoto.bind(this)}>
+                                <Text style={styles.uploadMenuCameraActionHeader}>{tr.t("buttons.takePhoto")}</Text>
+                              </TouchableOpacity>
+                            </View>
+                            :
+                            <View style={styles.uploadMenuCameraActions}>
+                              <TouchableOpacity style={[styles.uploadMenuCameraAction, { opacity: uploadMenubox.loading ? 0.5 : 1 }]} disabled={uploadMenubox.loading} onPress={() => setUploadmenubox({ ...uploadMenubox, action: '', uri: '', name: '' })}>
+                                <Text style={styles.uploadMenuCameraActionHeader}>{tr.t("buttons.cancel")}</Text>
+                              </TouchableOpacity>
+                              <TouchableOpacity style={[styles.uploadMenuCameraAction, { opacity: uploadMenubox.loading ? 0.5 : 1 }]} disabled={uploadMenubox.loading} onPress={() => setUploadmenubox({ ...uploadMenubox, uri: '', name: '' })}>
+                                <Text style={styles.uploadMenuCameraActionHeader}>{tr.t("buttons.takePhoto")}</Text>
+                              </TouchableOpacity>
+                              <TouchableOpacity style={[styles.uploadMenuCameraAction, { opacity: uploadMenubox.loading ? 0.5 : 1 }]} disabled={uploadMenubox.loading} onPress={() => saveTheMenu()}>
+                                <Text style={styles.uploadMenuCameraActionHeader}>{tr.t("buttons.done")}</Text>
+                              </TouchableOpacity>
+                            </View>
+                          }
+                        </View>
+                      }
+                    </SafeAreaView>
+
+                    {uploadMenubox.loading && <Modal transparent={true}><Loadingprogress/></Modal>}
+                  </Modal>
+                )}
               </SafeAreaView>
             </Modal>
           )}
@@ -1336,10 +1292,11 @@ const styles = StyleSheet.create({
   changeMenuBox: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '95%', justifyContent: 'space-between', width: '95%' },
   changeMenuClose: { borderRadius: wsize(8) / 2, borderStyle: 'solid', borderWidth: 5, marginVertical: 20 },
   changeMenuHeader: { fontSize: wsize(5) },
-  changeMenuInput: { borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), marginHorizontal: '5%', padding: 5, width: '90%' },
+  changeMenuPhotoHolder: { height: wsize(20), width: wsize(20) },
+  changeMenuInput: { borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), marginHorizontal: '5%', padding: 5, width: '100%' },
   changeMenuListBox: { paddingHorizontal: '5%', width: '100%' },
-  changeMenuDone: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 10, padding: 10 },
-  changeMenuDoneHeader: { fontSize: wsize(5), textAlign: 'center' },
+  changeMenuDone: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 10, padding: 10, width: '50%' },
+  changeMenuDoneHeader: { fontSize: wsize(3), textAlign: 'center' },
 
   boxMenu: { backgroundColor: 'rgba(0, 0, 0, 0.2)', marginBottom: 30, paddingVertical: 10, width: '100%' },
   boxMenuRow: {  },
@@ -1425,7 +1382,7 @@ const styles = StyleSheet.create({
 	uploadMenuClose: { borderRadius: 18, borderStyle: 'solid', borderWidth: 2 },
 	uploadMenuActions: { flexDirection: 'column', height: '50%', justifyContent: 'space-around' },
 	uploadMenuAction: { borderRadius: 3, borderStyle: 'solid', borderWidth: 1, padding: 5 },
-	uploadMenuActionHeader: { fontSize: wsize(7), textAlign: 'center' },
+	uploadMenuActionHeader: { fontSize: wsize(4), textAlign: 'center' },
 	uploadMenuCameraContainer: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	uploadMenuCamera: { height: '70%', width: '100%' },
 	uploadMenuCameraActions: { flexDirection: 'row', justifyContent: 'space-around' },

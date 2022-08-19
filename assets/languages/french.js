@@ -83,9 +83,9 @@ const info = {
     },
     list: {
       header: "Vous verrez vos rendez-vous ici",
-      clientName: "Nom du client",
+      client: "client",
       staff: "Nom du personnel",
-      changeTime: "Changer d'heure avec le client"
+      change: "Changer"
     },
     chart: {
       stillBusy: "toujours occupé",
@@ -168,11 +168,6 @@ const info = {
           header: "Obtenez des rendez-vous par",
           both: "Propriétaires et personnel",
           owner: "Propriétaires uniquement"
-        },
-        useVoice: {
-          header: "Utiliser la voix",
-          yes: "Oui",
-          no: "Non"
         },
         paymentRecords: "Voir les revenus"
       },
@@ -316,18 +311,6 @@ const info = {
     header: {
       edit: "Modifier le menu",
       view: "Afficher le menu"
-    },
-    photos: {
-      header: "Photo(s)",
-      upload: "Prendre une photo de menu",
-      easier: "Plus facile pour vous"
-    },
-    lists: {
-      header: "Listes",
-      easier: {
-        salon: "Réservation plus facile pour les clients",
-        restaurant: "Commande plus facile pour les clients"
-      }
     },
     hidden: {
       uploadMenu: {

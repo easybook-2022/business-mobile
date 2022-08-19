@@ -151,13 +151,6 @@ export const getWorkersHour = data => {
   )
 }
 
-export const setUseVoice = data => {
-  return axios.post(
-    `${beginUrl}set_use_voice`,
-    data
-  )
-}
-
 export const switchAccount = data => {
   return axios.post(
     `${beginUrl}/switch_account`,

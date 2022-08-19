@@ -76,7 +76,7 @@ const styles = StyleSheet.create({
   body: { alignItems: 'center', flexDirection: 'column', height: '90%', justifyContent: 'space-around', width: '100%' },
   authOptions: { alignItems: 'center', width: '100%' },
   authOptionTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: '10%', padding: 10, width: '70%' },
-  authOptionTouchHeader: { fontSize: 20, textAlign: 'center' },
+  authOptionTouchHeader: { fontSize: wsize(6), textAlign: 'center' },
 
   bottomNavs: { backgroundColor: 'white', flexDirection: 'column', height: '10%', justifyContent: 'space-around', width: '100%' },
   bottomNavsRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },

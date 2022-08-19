@@ -129,6 +129,10 @@ export const getLocationProfile = data => {
   )
 }
 
-export const getIncome = id => {
-  return axios.get(`${beginUrl}/get_income/${id}`)
+export const getRestaurantIncome = id => {
+  return axios.get(`${beginUrl}/get_restaurant_income/${id}`)
+}
+
+export const getSalonIncome = id => {
+  return axios.get(`${beginUrl}/get_salon_income/${id}`)
 }

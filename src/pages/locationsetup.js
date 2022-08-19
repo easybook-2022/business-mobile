@@ -1076,7 +1076,7 @@ const styles = StyleSheet.create({
   typeSelection: { backgroundColor: 'rgba(127, 127, 127, 0.05)', borderStyle: 'solid', borderWidth: 2, flexDirection: 'column', height: hsize(10), justifyContent: 'space-around', marginBottom: 10, padding: 5, width: '100%' },
   typeSelectionRow: { flexDirection: 'row', justifyContent: 'space-between' },
   typeSelectionHeader: { fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
-  typeSelectionIcon: { height: wsize(15), width: wsize(15) },
+  typeSelectionIcon: { height: wsize(10), width: wsize(10) },
   typeSelectionAction: { fontSize: wsize(5), textAlign: 'center' },
 
   inputContainer: { width: '80%' },

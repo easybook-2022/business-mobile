@@ -83,9 +83,9 @@ const info = {
     },
     list: {
       header: "You will see your appointment(s) here",
-      clientName: "Client name",
+      client: "Client",
       staff: "Staff name",
-      changeTime: "Change time with client"
+      change: "Change"
     },
     chart: {
       stillBusy: "Still busy",
@@ -168,11 +168,6 @@ const info = {
           header: "Get appointments by",
           both: "Owners and Staffs",
           owner: "Owners only"
-        },
-        useVoice: {
-          header: "Use voice",
-          yes: "Yes",
-          no: "No"
         },
         paymentRecords: "See Income"
       },
@@ -316,18 +311,6 @@ const info = {
     header: {
       edit: "Edit Menu",
       view: "View Menu"
-    },
-    photos: {
-      header: "Photo(s)",
-      upload: "Take a\nmenu photo",
-      easier: "Easier for you"
-    },
-    lists: {
-      header: "List(s)",
-      easier: {
-        salon: "Easier for clients to book",
-        restaurant: "Easier for customers to order"
-      }
     },
     hidden: {
       uploadMenu: {

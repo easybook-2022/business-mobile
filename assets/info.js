@@ -65,7 +65,6 @@ export const registerLocationInfo = {
   longitude: registerLocation.longitude, latitude: registerLocation.latitude
 }
 export const url = local_url ? wifi_api_url : server_api_url
-export const useSpeech = local_url == false
 export const logo_url = url + "/static/"
 export const timeControl = (timetype, value, dir, open) => {
   let hour, minute, period

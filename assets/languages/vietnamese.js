@@ -83,9 +83,9 @@ const info = {
     },
     list: {
       header: "Bạn sẽ thấy các cuộc hẹn của mình ở đây",
-      clientName: "Tên khách hàng",
+      client: "khách hàng",
       staff: "Nhân Viên",
-      changeTime: "Thay đổi thời\ngian với khách hàng"
+      change: "biến đổi"
     },
     chart: {
       stillBusy: "vẫn bận",
@@ -168,11 +168,6 @@ const info = {
           header: "Get appointments by",
           both: "Chủ sở hữu và nhân viên",
           owner: "Chỉ chủ sở hữu"
-        },
-        useVoice: {
-          header: "Sử dụng giọng nói",
-          yes: "Đúng",
-          no: "Không"
         },
         paymentRecords: "Xem thu nhập"
       },
@@ -316,18 +311,6 @@ const info = {
     header: {
       edit: "Chỉnh sửa menu",
       view: "Xem menu"
-    },
-    photos: {
-      header: "Hình ảnh",
-      upload: "Chụp ảnh menu",
-      easier: "Dễ dàng hơn cho bạn"
-    },
-    lists: {
-      header: "Danh sách",
-      easier: {
-        salon: "Khách hàng đặt phòng dễ dàng hơn",
-        restaurant: "Khách hàng đặt hàng dễ dàng hơn"
-      }
     },
     hidden: {
       uploadMenu: {

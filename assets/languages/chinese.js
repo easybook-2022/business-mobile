@@ -83,9 +83,9 @@ const info = {
     },
     list: {
       header: "你会在这里看到你的约会",
-      clientName: "客户名称",
+      client: "客户",
       staff: "员工姓名",
-      changeTime: "与客户更改时间"
+      change: "改变"
     },
     chart: {
       stillBusy: "还在忙",
@@ -168,11 +168,6 @@ const info = {
           header: "通过以下方式获得约会",
           both: "业主和员工",
           owner: "仅限所有者"
-        },
-        useVoice: {
-          header: "使用语音",
-          yes: "是的",
-          no: "不"
         },
         paymentRecords: "查看收入"
       },
@@ -316,18 +311,6 @@ const info = {
     header: {
       edit: "编辑菜单",
       view: "查看菜单"
-    },
-    photos: {
-      header: "相片",
-      upload: "拍摄菜单照片",
-      easier: "对你来说更容易"
-    },
-    lists: {
-      header: "列表",
-      easier: {
-        salon: "客户预订更方便",
-        restaurant: "客户下单更方便"
-      }
     },
     hidden: {
       uploadMenu: {

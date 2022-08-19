@@ -95,7 +95,7 @@ export default function Booktime(props) {
           const prevTime = new Date(unix)
 
           blocked.forEach(function (info) {
-            info["time"] = JSON.parse(info["time"])
+            info["time"] = info["time"]
             info["unix"] = jsonDateToUnix(info["time"])
           })
 
@@ -383,8 +383,7 @@ export default function Booktime(props) {
     const { date, day, month, year } = selectedDateinfo, { blocked } = bookedDateinfo
     const { openHour, openMinute, closeHour, closeMinute } = hoursInfo[day]
     const numBlockTaken = scheduleid ? 1 + blocked.length : 0
-    let start = day in allWorkerstime ? allWorkerstime[day][0]["start"] : openHour + ":" + openMinute
-    let end = day in allWorkerstime ? allWorkerstime[day][0]["end"] : closeHour + ":" + closeMinute
+    let start = openHour + ":" + openMinute, end = closeHour + ":" + closeMinute, workerStart = 0, workerEnd = 0
     let timeStr = month + " " + date + " " + year + " "
     let openDateStr = Date.parse(timeStr + start), closeDateStr = Date.parse(timeStr + end), calcDateStr = openDateStr
     let currenttime = Date.now(), newTimes = [], timesRow = [], timesNum = 0
@@ -464,25 +463,26 @@ export default function Booktime(props) {
 
         for (let k = 1; k <= numBlockTaken; k++) {
           if (selectedWorkerinfo.id > -1) { // stylist is picked by client
-            let { start, end } = selectedWorkerinfo.hours[day]
+            workerStart = selectedWorkerinfo.hours[day].start
+            workerEnd = selectedWorkerinfo.hours[day].end
 
             if (startCalc + "-" + selectedWorkerinfo.id + "-bl" in scheduled[selectedWorkerinfo.id]["scheduled"]) { // time is blocked
-              if (!JSON.stringify(blocked).includes("\"unix\":" + startCalc)) {
+              if (!JSON.stringify(bookedDateinfo.blocked).includes("\"unix\":" + startCalc)) { // blocked time belong to schedule
                 timeBlocked = true
               }
-            } else if (
+            }
+
+            if ( // time is taken
               startCalc + "-" + selectedWorkerinfo.id + "-co" in scheduled[selectedWorkerinfo.id]["scheduled"]
               ||
               startCalc + "-" + selectedWorkerinfo.id + "-ca" in scheduled[selectedWorkerinfo.id]["scheduled"]
             ) { // time is taken
-              if (
-                scheduled[selectedWorkerinfo.id]["scheduled"][startCalc + "-" + selectedWorkerinfo.id + "-co"] != scheduleid
-                ||
-                scheduled[selectedWorkerinfo.id]["scheduled"][startCalc + "-" + selectedWorkerinfo.id + "-ca"] != scheduleid
-              ) {
+              if (startCalc != oldTime) {
                 timeBlocked = true
               }
-            } else if (startCalc >= Date.parse(timeStr + end)) { // stylist is off
+            }
+
+            if (startCalc >= Date.parse(timeStr + workerEnd)) { // stylist is off
               timeBlocked = true
             }
           }
@@ -561,7 +561,7 @@ export default function Booktime(props) {
       .then((res) => {
         if (res) {
           if (res.receiver) {
-            data = { ...data, receiver: res.receiver, time, worker: res.worker }
+            data = { ...data, receiver: res.receiver, receiveType: res.receiveType, time, worker: res.worker }
 
             socket.emit("socket/salonChangeAppointment", data, () => {
               setConfirm({ ...confirm, requested: true, loading: false })

@@ -21,7 +21,9 @@ import Walkin from './src/pages/walkin'
 import Locationsetup from './src/pages/locationsetup'
 import Main from './src/pages/main'
 import Booktime from './src/pages/booktime'
-import Paymentrecords from './src/pages/paymentrecords'
+
+import Salonincomerecords from './src/pages/salonincomerecords'
+import Restaurantincomerecords from './src/pages/restaurantincomerecords'
 import Cartorders from './src/pages/cartorders'
 
 // salons' components
@@ -122,7 +124,17 @@ export default function App() {
                 )
               )
             })}/>
-            <Stack.Screen name="paymentrecords" component={Paymentrecords} options={({ navigation, route }) => ({
+            <Stack.Screen name="salonincomerecords" component={Salonincomerecords} options={({ navigation, route }) => ({
+              headerTitle: () => <Text style={styles.header}>Dailey/Monthly/Yearly Income</Text>,
+              headerLeft: () => (
+                Platform.OS == 'ios' && (
+                  <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>
+                    <Text style={styles.backHeader}>Go Back</Text>
+                  </TouchableOpacity>
+                )
+              )
+            })}/>
+            <Stack.Screen name="restaurantincomerecords" component={Restaurantincomerecords} options={({ navigation, route }) => ({
               headerTitle: () => <Text style={styles.header}>Daily/Monthly/Yearly Income</Text>,
               headerLeft: () => (
                 Platform.OS == 'ios' && (
@@ -207,7 +219,7 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  header: { fontSize: wsize(5), fontWeight: 'bold' },
+  header: { fontSize: wsize(3), fontWeight: 'bold' },
   back: { alignItems: 'center', borderRadius: 3, borderStyle: 'solid', borderWidth: 1, padding: 5, width: wsize(20) },
   backHeader: { fontSize: wsize(3), fontWeight: 'bold' },
 });

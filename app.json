@@ -19,13 +19,6 @@
     ],
     "plugins": [
       [
-        "@react-native-voice/voice",
-        {
-          "microphonePermission": "EasyBook (Business) uses microphone to enable users to reply to clients/customers",
-          "speechRecognitionPermission": "EasyBook (Business) securely recognize user speech to reply to clients/customers"
-        }
-      ],
-      [
         "expo-notifications",
         {
           "icon": "./assets/notification.png",
