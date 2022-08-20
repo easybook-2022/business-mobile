@@ -270,7 +270,7 @@ const info = {
     }
   },
   booktime: {
-    header: "请求不同的时间",
+    header: "更改约会",
     pickStaff: "选择员工（可选)",
     pickAnotherStaff: "选择不同的员工（可选)",
     pickToday: "今天选",

@@ -30,9 +30,9 @@ export default function Booktime(props) {
   const [name, setName] = useState()
   const [hoursInfo, setHoursinfo] = useState({})
   const [oldTime, setOldtime] = useState(0)
-  const [selectedDateinfo, setSelecteddateinfo] = useState({ month: '', year: 0, day: '', date: 0 })
+  const [selectedDateinfo, setSelecteddateinfo] = useState({ month: '', year: 0, day: '', date: 0, hour: 0, minute: 0 })
   const [bookedDateinfo, setBookeddateinfo] = useState({ month: '', year: 0, day: '', date: 0, blocked: [] })
-  const [selectedWorkerinfo, setSelectedworkerinfo] = useState({ id: -1, hours: {}, loading: false })
+  const [selectedWorkerinfo, setSelectedworkerinfo] = useState({ id: -1, username: '', profile: { name: '', width: 0, height: 0 }, hours: {}, loading: false })
   const [calendar, setCalendar] = useState({ firstDay: 0, numDays: 30, data: [
     { key: "day-row-0", row: [
         { key: "day-0-0", num: 0, passed: false }, { key: "day-0-1", num: 0, passed: false }, { key: "day-0-2", num: 0, passed: false }, 
@@ -71,7 +71,7 @@ export default function Booktime(props) {
   const [scheduled, setScheduled] = useState({})
   const [loaded, setLoaded] = useState(false)
 
-  const [step, setStep] = useState(0)
+  const [step, setStep] = useState(null)
   const [confirm, setConfirm] = useState({ show: false, service: "", time: 0, workerIds: [], note: "", requested: false, errormsg: "" })
 
   const getTheAppointmentInfo = (fetchBlocked) => {
@@ -90,13 +90,30 @@ export default function Booktime(props) {
           setName(name)
           setOldtime(unix)
 
-          if (!fetchBlocked) setSelectedworkerinfo({ ...selectedWorkerinfo, id: worker.id })
+          if (!fetchBlocked) {
+            setSelectedworkerinfo({ 
+              ...selectedWorkerinfo, 
+              id: worker.id, username: worker.username, 
+              profile: JSON.parse(worker.profile),
+              hours: worker.days
+            })
+          }
 
           const prevTime = new Date(unix)
 
           blocked.forEach(function (info) {
             info["time"] = info["time"]
             info["unix"] = jsonDateToUnix(info["time"])
+          })
+
+          setSelecteddateinfo({
+            ...selectedDateinfo,
+            month: months[prevTime.getMonth()],  
+            day: days[prevTime.getDay()],
+            year: prevTime.getFullYear(),
+            date: prevTime.getDate(),
+            hour: prevTime.getHours(),
+            minute: prevTime.getMinutes()
           })
 
           setBookeddateinfo({ 
@@ -240,7 +257,7 @@ export default function Booktime(props) {
         currDate 
         : 
         bookedDateinfo.date < currDate ? currDate : bookedDateinfo.date,
-      year 
+      year
     })
     setCalendar({ ...calendar, data, firstDay, numDays })
   }
@@ -346,7 +363,7 @@ export default function Booktime(props) {
         }
       })
   }
-  const selectWorker = id => {
+  const selectWorker = (id, close = false) => {
     getStylistInfo(id)
       .then((res) => {
         if (res.status == 200) {
@@ -355,7 +372,7 @@ export default function Booktime(props) {
       })
       .then((res) => {
         if (res) {
-          setSelectedworkerinfo({ ...selectedWorkerinfo, id, hours: res.days })
+          setSelectedworkerinfo({ ...selectedWorkerinfo, id, username: res.username, profile: res.profile, hours: res.days })
           setStep(1)
         }
       })
@@ -661,6 +678,31 @@ export default function Booktime(props) {
       <View style={styles.box}>
         {loaded ? 
           <>
+            {step == null && (
+              <View style={styles.options}>
+                <TouchableOpacity style={styles.option} onPress={() => setStep(0)}>
+                  <View style={styles.column}><Text style={styles.optionHeader}>Change Stylist</Text></View>
+
+                  <View style={{ alignItems: 'center' }}>
+                    <View style={styles.selectedProfile}>
+                      <Image style={resizePhoto(selectedWorkerinfo.profile, wsize(10))} source={{ uri: logo_url + selectedWorkerinfo.profile.name }}/>
+                    </View>
+                    <Text style={styles.selectedHeader}>{selectedWorkerinfo.username}</Text>
+                  </View>
+                </TouchableOpacity>
+                
+                <View style={{ alignItems: 'center', width: '100%' }}>
+                  <Text style={styles.optionOldHeader}>{displayTime(jsonDateToUnix(selectedDateinfo))}</Text>
+                  <TouchableOpacity style={styles.option} onPress={() => selectWorker(selectedWorkerinfo.id)}>
+                    <View style={styles.column}><Text style={styles.optionHeader}>Change Date</Text></View>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.option} onPress={() => setStep(2)}>
+                    <View style={styles.column}><Text style={styles.optionHeader}>Change Time</Text></View>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+
             {step == 0 && (
               <View style={styles.workerSelection}>
                 <Text style={styles.workerSelectionHeader}>{!scheduleid ? tr.t("booktime.pickStaff") : tr.t("booktime.pickAnotherStaff")}</Text>
@@ -672,7 +714,7 @@ export default function Booktime(props) {
                       <View key={item.key} style={styles.workersRow}>
                         {item.row.map(info => (
                           info.id ? 
-                            <TouchableOpacity key={info.key} style={[styles.worker, { backgroundColor: (selectedWorkerinfo.id == info.id) ? 'rgba(0, 0, 0, 0.3)' : null }]} disabled={selectedWorkerinfo.loading} onPress={() => selectWorker(info.id)}>
+                            <TouchableOpacity key={info.key} style={[styles.worker, { backgroundColor: (selectedWorkerinfo.id == info.id) ? 'rgba(0, 0, 0, 0.3)' : null }]} disabled={selectedWorkerinfo.loading} onPress={() => selectWorker(info.id, true)}>
                               <View style={styles.workerProfile}>
                                 <Image 
                                   source={info.profile.name ? { uri: logo_url + info.profile.name } : require("../../assets/profilepicture.jpeg")} 
@@ -779,7 +821,15 @@ export default function Booktime(props) {
               </View>
             )}
 
-            <View style={styles.actions}>
+            {step == null && (
+              <View style={styles.actions}>
+                <TouchableOpacity style={styles.action} onPress={() => salonChangeTheAppointment()}>
+                  <Text style={styles.actionHeader}>{tr.t("buttons.done")}</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {/*<View style={styles.actions}>
               <TouchableOpacity style={styles.action} onPress={() => {
                 switch (step) {
                   case 0:
@@ -823,7 +873,7 @@ export default function Booktime(props) {
                   )}
                 </>
               )}
-            </View>
+            </View>*/}
           </>
           :
           <View style={{ alignItems: 'center', flexDirection: 'column', height: '80%', justifyContent: 'space-around' }}>
@@ -833,17 +883,6 @@ export default function Booktime(props) {
 
         <View style={styles.bottomNavs}>
           <View style={styles.bottomNavsRow}>
-            <View style={styles.column}>
-              <TouchableOpacity style={styles.bottomNavButton} onPress={() => props.navigation.dispatch(
-                CommonActions.reset({
-                  index: 0,
-                  routes: [{ name: "main", params: { initialize: true }}]
-                })
-              )}>
-                <Text style={styles.bottomNavButtonHeader}>{tr.t("buttons.back")}</Text>
-              </TouchableOpacity>
-            </View>
-
             <View style={styles.column}>
               <TouchableOpacity style={styles.bottomNavButton} onPress={() => {
                 AsyncStorage.clear()
@@ -925,6 +964,14 @@ export default function Booktime(props) {
 const styles = StyleSheet.create({
   booktime: { backgroundColor: 'white', height: '100%', width: '100%' },
   box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
+
+  options: { alignItems: 'center', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '100%' },
+  option: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, flexDirection: 'row', justifyContent: 'space-around', marginVertical: 5, padding: 5, width: '50%' },
+  optionHeader: { fontSize: wsize(5), fontWeight: '200', textAlign: 'center' },
+  optionOldHeader: { backgroundColor: 'black', color: 'white', fontSize: wsize(5), padding: 10 },
+
+  selectedHeader: { fontSize: wsize(3), fontWeight: 'bold' },
+  selectedProfile: { borderRadius: wsize(10) / 2, height: wsize(10), overflow: 'hidden', width: wsize(10) },
 
   workerSelection: { alignItems: 'center', marginTop: 20 },
   workerSelectionHeader: { fontSize: wsize(8), fontWeight: 'bold', textAlign: 'center' },

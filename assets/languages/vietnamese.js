@@ -270,7 +270,7 @@ const info = {
     }
   },
   booktime: {
-    header: "Yêu cầu thời gian khác",
+    header: "Thay đổi cuộc hẹn",
     pickStaff: "Chọn một nhân viên (Tùy chọn)",
     pickAnotherStaff: "Chọn một nhân viên khác (Tùy chọn)",
     pickToday: "Chọn ngay hôm nay",

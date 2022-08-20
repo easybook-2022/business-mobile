@@ -270,7 +270,7 @@ const info = {
     }
   },
   booktime: {
-    header: "Request different time",
+    header: "Change appointment",
     pickStaff: "Pick a staff (Optional)",
     pickAnotherStaff: "Pick a different staff (Optional)",
     pickToday: "Pick today",

@@ -3137,62 +3137,125 @@ export default function Main(props) {
             {viewType == "appointments_list" && ( 
               !appointments.loading ?
                 appointments.list.length > 0 ? 
-                  <FlatList
-                    style={{ flexDirection: 'row', flexWrap: 'wrap' }}
-                    showsVerticalScrollIndicator={false}
-                    data={appointments.list}
-                    renderItem={({ item, index }) => 
-                      <View key={item.key} style={styles.schedule}>
-                        <TouchableOpacity style={styles.scheduleRemove} onPress={() => showScheduleOption(item.id, "list", index, "remove")}>
-                          <AntDesign name="close" size={wsize(5)}/>
-                        </TouchableOpacity>
-
-                        <Text style={styles.scheduleHeader}>{item.name}</Text>
-                        {item.image.name && (
-                          <View style={styles.scheduleImageHolder}>
-                            <Image 
-                              style={resizePhoto(item.image, wsize(20))} 
-                              source={{ uri: logo_url + item.image.name }}
-                            />
+                  <>
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+                      {appointments.list.map((item, index) => (
+                        <View key={item.key} style={styles.schedule}>
+                          <View style={{ flexDirection: 'row' }}>
+                            <TouchableOpacity style={styles.scheduleRemove} onPress={() => showScheduleOption(item.id, "list", index, "remove")}>
+                              <AntDesign name="close" size={wsize(5)}/>
+                            </TouchableOpacity>
+                            <Text style={[styles.scheduleHeader, { fontSize: wsize(4), fontWeight: 'bold' }]}>#{index + 1}</Text>
                           </View>
-                        )}
 
-                        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                          <View style={{ width: '50%' }}>
-                            <Text style={styles.scheduleHeader}>
-                              {tr.t("main.list.client") + ': ' + item.client.username}
-                              {item.worker && '\n' + tr.t("main.list.staff") + ': ' + item.worker.username}
-                            </Text>
+                          <Text style={styles.scheduleHeader}>{item.name}</Text>
+
+                          {item.image.name && (
+                            <View style={styles.scheduleImageHolder}>
+                              <Image 
+                                style={resizePhoto(item.image, wsize(20))} 
+                                source={{ uri: logo_url + item.image.name }}
+                              />
+                            </View>
+                          )}
+
+                          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                            <View style={{ width: '50%' }}>
+                              <Text style={styles.scheduleHeader}>
+                                {tr.t("main.list.client") + ': ' + item.client.username}
+                                {item.worker && '\n' + tr.t("main.list.staff") + ': ' + item.worker.username}
+                              </Text>
+                            </View>
+                            <View style={{ width: '50%' }}>
+                              <Text style={[styles.scheduleHeader, { fontSize: wsize(4), fontWeight: 'bold' }]}>
+                                {displayTime(item.time)
+                                    .replace("today at", tr.t("headers.todayAt"))
+                                    .replace("tomorrow at", tr.t("headers.tomorrowAt"))
+                                }
+                              </Text>
+                            </View>
                           </View>
-                          <View style={{ width: '50%' }}>
-                            <Text style={[styles.scheduleHeader, { fontSize: wsize(4), fontWeight: 'bold' }]}>
-                              {displayTime(item.time)
-                                  .replace("today at", tr.t("headers.todayAt"))
-                                  .replace("tomorrow at", tr.t("headers.tomorrowAt"))
-                              }
-                            </Text>
+
+                          <Text style={[styles.scheduleHeader, { fontSize: wsize(3) }]}>({(item.type == "confirmed" ? "app booked" : "walk-in booked")})</Text>
+                          
+                          <View style={styles.scheduleActions}>
+                            <View style={styles.column}>
+                              <TouchableOpacity style={styles.scheduleAction} onPress={() => {
+                                props.navigation.navigate("booktime", { scheduleid: item.id, serviceid: item.serviceid, serviceinfo: item.name })
+                              }}>
+                                <Text style={styles.scheduleActionHeader}>{tr.t("main.list.change")}</Text>
+                              </TouchableOpacity>
+                            </View>
+                            <View style={styles.column}>
+                              <TouchableOpacity style={styles.scheduleAction} onPress={() => doneTheService(index, item.id)}>
+                                <Text style={styles.scheduleActionHeader}>{tr.t("buttons.done")}</Text>
+                              </TouchableOpacity>
+                            </View>
                           </View>
                         </View>
-
-                        <Text style={[styles.scheduleHeader, { fontSize: wsize(3) }]}>({(item.type == "confirmed" ? "app booked" : "walk-in booked")})</Text>
-                        
-                        <View style={styles.scheduleActions}>
-                          <View style={styles.column}>
-                            <TouchableOpacity style={styles.scheduleAction} onPress={() => {
-                              props.navigation.navigate("booktime", { scheduleid: item.id, serviceid: item.serviceid, serviceinfo: item.name })
-                            }}>
-                              <Text style={styles.scheduleActionHeader}>{tr.t("main.list.change")}</Text>
+                      ))}
+                    </View>
+                    {/*<FlatList
+                      style={{ flexDirection: 'row', flexWrap: 'wrap' }}
+                      showsVerticalScrollIndicator={false}
+                      data={appointments.list}
+                      renderItem={({ item, index }) => 
+                        <View key={item.key} style={styles.schedule}>
+                          <View style={{ flexDirection: 'row' }}>
+                            <TouchableOpacity style={styles.scheduleRemove} onPress={() => showScheduleOption(item.id, "list", index, "remove")}>
+                              <AntDesign name="close" size={wsize(5)}/>
                             </TouchableOpacity>
+                            <Text style={[styles.scheduleHeader, { fontSize: wsize(4), fontWeight: 'bold' }]}>#{index + 1}</Text>
                           </View>
-                          <View style={styles.column}>
-                            <TouchableOpacity style={styles.scheduleAction} onPress={() => doneTheService(index, item.id)}>
-                              <Text style={styles.scheduleActionHeader}>{tr.t("buttons.done")}</Text>
-                            </TouchableOpacity>
+
+                          <Text style={styles.scheduleHeader}>{item.name}</Text>
+
+                          {item.image.name && (
+                            <View style={styles.scheduleImageHolder}>
+                              <Image 
+                                style={resizePhoto(item.image, wsize(20))} 
+                                source={{ uri: logo_url + item.image.name }}
+                              />
+                            </View>
+                          )}
+
+                          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                            <View style={{ width: '50%' }}>
+                              <Text style={styles.scheduleHeader}>
+                                {tr.t("main.list.client") + ': ' + item.client.username}
+                                {item.worker && '\n' + tr.t("main.list.staff") + ': ' + item.worker.username}
+                              </Text>
+                            </View>
+                            <View style={{ width: '50%' }}>
+                              <Text style={[styles.scheduleHeader, { fontSize: wsize(4), fontWeight: 'bold' }]}>
+                                {displayTime(item.time)
+                                    .replace("today at", tr.t("headers.todayAt"))
+                                    .replace("tomorrow at", tr.t("headers.tomorrowAt"))
+                                }
+                              </Text>
+                            </View>
+                          </View>
+
+                          <Text style={[styles.scheduleHeader, { fontSize: wsize(3) }]}>({(item.type == "confirmed" ? "app booked" : "walk-in booked")})</Text>
+                          
+                          <View style={styles.scheduleActions}>
+                            <View style={styles.column}>
+                              <TouchableOpacity style={styles.scheduleAction} onPress={() => {
+                                props.navigation.navigate("booktime", { scheduleid: item.id, serviceid: item.serviceid, serviceinfo: item.name })
+                              }}>
+                                <Text style={styles.scheduleActionHeader}>{tr.t("main.list.change")}</Text>
+                              </TouchableOpacity>
+                            </View>
+                            <View style={styles.column}>
+                              <TouchableOpacity style={styles.scheduleAction} onPress={() => doneTheService(index, item.id)}>
+                                <Text style={styles.scheduleActionHeader}>{tr.t("buttons.done")}</Text>
+                              </TouchableOpacity>
+                            </View>
                           </View>
                         </View>
-                      </View>
-                    }
-                  />
+                      }
+                    />*/}
+                  </>
                   :
                   <View style={styles.bodyResult}>
                     <Text style={styles.bodyResultHeader}>{tr.t("main.list.header")}</Text>
@@ -6257,7 +6320,7 @@ const styles = StyleSheet.create({
 
   viewTypes: { flexDirection: 'row', justifyContent: 'space-around' },
   viewType: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: '40%' },
-  viewTypeHeader: { fontSize: wsize(4), textAlign: 'center' },
+  viewTypeHeader: { fontSize: wsize(3), textAlign: 'center' },
 
 	// body
 	body: { height: '90%', width: '100%' },
