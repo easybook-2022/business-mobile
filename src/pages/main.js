@@ -3145,7 +3145,7 @@ export default function Main(props) {
                             <TouchableOpacity style={styles.scheduleRemove} onPress={() => showScheduleOption(item.id, "list", index, "remove")}>
                               <AntDesign name="close" size={wsize(5)}/>
                             </TouchableOpacity>
-                            <Text style={[styles.scheduleHeader, { fontSize: wsize(4), fontWeight: 'bold' }]}>#{index + 1}</Text>
+                            <Text style={[styles.scheduleHeader, { fontSize: wsize(4), fontWeight: 'bold' }]}>#{index + 1} ({item.worker.id == ownerId ? "you" : item.worker.username})</Text>
                           </View>
 
                           <Text style={styles.scheduleHeader}>{item.name}</Text>
@@ -3159,25 +3159,22 @@ export default function Main(props) {
                             </View>
                           )}
 
-                          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                            <View style={{ width: '50%' }}>
-                              <Text style={styles.scheduleHeader}>
-                                {tr.t("main.list.client") + ': ' + item.client.username}
-                                {item.worker && '\n' + tr.t("main.list.staff") + ': ' + item.worker.username}
-                              </Text>
-                            </View>
-                            <View style={{ width: '50%' }}>
-                              <Text style={[styles.scheduleHeader, { fontSize: wsize(4), fontWeight: 'bold' }]}>
-                                {displayTime(item.time)
-                                    .replace("today at", tr.t("headers.todayAt"))
-                                    .replace("tomorrow at", tr.t("headers.tomorrowAt"))
-                                }
-                              </Text>
-                            </View>
+                          <View>
+                            <Text style={styles.scheduleHeader}>
+                              {tr.t("main.list.client") + ': ' + item.client.username}
+                            </Text>
+                          </View>
+                          <View>
+                            <Text style={styles.scheduleTimeHeader}>
+                              {displayTime(item.time)
+                                  .replace("today at", tr.t("headers.todayAt"))
+                                  .replace("tomorrow at", tr.t("headers.tomorrowAt"))
+                              }
+                            </Text>
                           </View>
 
                           <Text style={[styles.scheduleHeader, { fontSize: wsize(3) }]}>({(item.type == "confirmed" ? "app booked" : "walk-in booked")})</Text>
-                          
+
                           <View style={styles.scheduleActions}>
                             <View style={styles.column}>
                               <TouchableOpacity style={styles.scheduleAction} onPress={() => {
@@ -3195,6 +3192,7 @@ export default function Main(props) {
                         </View>
                       ))}
                     </View>
+
                     {/*<FlatList
                       style={{ flexDirection: 'row', flexWrap: 'wrap' }}
                       showsVerticalScrollIndicator={false}
@@ -6337,7 +6335,8 @@ const styles = StyleSheet.create({
 	scheduleRow: { flexDirection: 'row', justifyContent: 'space-between' },
 	scheduleImageHolder: { borderRadius: wsize(20) / 2, margin: 5, overflow: 'hidden', width: wsize(20) },
 	scheduleImage: { height: wsize(20), width: wsize(20) },
-	scheduleHeader: { fontSize: wsize(3), fontWeight: '200', textAlign: 'center' },
+	scheduleHeader: { fontSize: wsize(2.5), fontWeight: '200', textAlign: 'center' },
+  scheduleTimeHeader: { fontSize: wsize(2.5), fontWeight: 'bold', textAlign: 'center' },
   scheduleInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(6), padding: 5, width: '90%' },
 	scheduleActions: { flexDirection: 'row', justifyContent: 'space-around' },
   column: { flexDirection: 'column', justifyContent: 'space-around' },

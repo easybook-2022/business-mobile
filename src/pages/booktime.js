@@ -30,7 +30,7 @@ export default function Booktime(props) {
   const [name, setName] = useState()
   const [hoursInfo, setHoursinfo] = useState({})
   const [oldTime, setOldtime] = useState(0)
-  const [selectedDateinfo, setSelecteddateinfo] = useState({ month: '', year: 0, day: '', date: 0, hour: 0, minute: 0 })
+  const [selectedDateinfo, setSelecteddateinfo] = useState({ month: '', year: 0, day: '', date: 0, hour: 0, minute: 0, select: false })
   const [bookedDateinfo, setBookeddateinfo] = useState({ month: '', year: 0, day: '', date: 0, blocked: [] })
   const [selectedWorkerinfo, setSelectedworkerinfo] = useState({ id: -1, username: '', profile: { name: '', width: 0, height: 0 }, hours: {}, loading: false })
   const [calendar, setCalendar] = useState({ firstDay: 0, numDays: 30, data: [
@@ -109,7 +109,7 @@ export default function Booktime(props) {
           setSelecteddateinfo({
             ...selectedDateinfo,
             month: months[prevTime.getMonth()],  
-            day: days[prevTime.getDay()],
+            day: days[prevTime.getDay()].substr(0, 3),
             year: prevTime.getFullYear(),
             date: prevTime.getDate(),
             hour: prevTime.getHours(),
@@ -275,7 +275,6 @@ export default function Booktime(props) {
           const { hours } = res
 
           setHoursinfo(hours)
-          setLoaded(true)
         }
       })
       .catch((err) => {
@@ -360,6 +359,7 @@ export default function Booktime(props) {
           }
 
           setScheduled(workersHour)
+          setStep(null)
         }
       })
   }
@@ -373,7 +373,13 @@ export default function Booktime(props) {
       .then((res) => {
         if (res) {
           setSelectedworkerinfo({ ...selectedWorkerinfo, id, username: res.username, profile: res.profile, hours: res.days })
-          setStep(1)
+          setSelecteddateinfo({ ...selectedDateinfo, select: true })
+
+          if (close) {
+            setStep(1)
+          } else {
+            setStep(null)
+          }
         }
       })
   }
@@ -660,18 +666,17 @@ export default function Booktime(props) {
     getAllTheStylists()
     getTheLocationHours()
     getAllTheWorkersTime()
+    getAllScheduledTimes()
     getTheAppointmentInfo()
   }, [])
 
   useEffect(() => {
-    const prevTime = new Date(oldTime)
-      
-    getCalendar(prevTime.getMonth(), prevTime.getFullYear())
-  }, [selectedWorkerinfo.hours])
-
-  useEffect(() => {
-    if (Object.keys(scheduled).length > 0) selectDate()
-  }, [scheduled])
+    if (selectedDateinfo.select) {
+      const prevTime = new Date(oldTime)
+        
+      getCalendar(prevTime.getMonth(), prevTime.getFullYear())
+    }
+  }, [selectedDateinfo.select])
 
   return (
     <SafeAreaView style={styles.booktime}>
@@ -685,7 +690,7 @@ export default function Booktime(props) {
 
                   <View style={{ alignItems: 'center' }}>
                     <View style={styles.selectedProfile}>
-                      <Image style={resizePhoto(selectedWorkerinfo.profile, wsize(10))} source={{ uri: logo_url + selectedWorkerinfo.profile.name }}/>
+                      <Image style={resizePhoto(selectedWorkerinfo.profile, wsize(10))} source={selectedWorkerinfo.profile.name ? { uri: logo_url + selectedWorkerinfo.profile.name } : require("../../assets/profilepicture.jpeg")}/>
                     </View>
                     <Text style={styles.selectedHeader}>{selectedWorkerinfo.username}</Text>
                   </View>
@@ -693,10 +698,10 @@ export default function Booktime(props) {
                 
                 <View style={{ alignItems: 'center', width: '100%' }}>
                   <Text style={styles.optionOldHeader}>{displayTime(jsonDateToUnix(selectedDateinfo))}</Text>
-                  <TouchableOpacity style={styles.option} onPress={() => selectWorker(selectedWorkerinfo.id)}>
+                  <TouchableOpacity style={styles.option} onPress={() => selectWorker(selectedWorkerinfo.id, true)}>
                     <View style={styles.column}><Text style={styles.optionHeader}>Change Date</Text></View>
                   </TouchableOpacity>
-                  <TouchableOpacity style={styles.option} onPress={() => setStep(2)}>
+                  <TouchableOpacity style={styles.option} onPress={() => selectDate()}>
                     <View style={styles.column}><Text style={styles.optionHeader}>Change Time</Text></View>
                   </TouchableOpacity>
                 </View>
@@ -714,7 +719,7 @@ export default function Booktime(props) {
                       <View key={item.key} style={styles.workersRow}>
                         {item.row.map(info => (
                           info.id ? 
-                            <TouchableOpacity key={info.key} style={[styles.worker, { backgroundColor: (selectedWorkerinfo.id == info.id) ? 'rgba(0, 0, 0, 0.3)' : null }]} disabled={selectedWorkerinfo.loading} onPress={() => selectWorker(info.id, true)}>
+                            <TouchableOpacity key={info.key} style={[styles.worker, { backgroundColor: (selectedWorkerinfo.id == info.id) ? 'rgba(0, 0, 0, 0.3)' : null }]} disabled={selectedWorkerinfo.loading} onPress={() => selectWorker(info.id)}>
                               <View style={styles.workerProfile}>
                                 <Image 
                                   source={info.profile.name ? { uri: logo_url + info.profile.name } : require("../../assets/profilepicture.jpeg")} 
@@ -823,57 +828,16 @@ export default function Booktime(props) {
 
             {step == null && (
               <View style={styles.actions}>
-                <TouchableOpacity style={styles.action} onPress={() => salonChangeTheAppointment()}>
+                <TouchableOpacity style={styles.action} onPress={() => {
+                  const { day, month, date, year, hour, minute } = selectedDateinfo
+                  const time = { day, month, date, year, hour, minute }
+
+                  selectTime({ time: jsonDateToUnix(time), workerIds: [selectedWorkerinfo.hours[day]["workerId"]] })
+                }}>
                   <Text style={styles.actionHeader}>{tr.t("buttons.done")}</Text>
                 </TouchableOpacity>
               </View>
             )}
-
-            {/*<View style={styles.actions}>
-              <TouchableOpacity style={styles.action} onPress={() => {
-                switch (step) {
-                  case 0:
-                    props.navigation.goBack()
-
-                    break;
-                  default:
-                }
-
-                setStep(step - 1)
-              }}>
-                <Text style={styles.actionHeader}>{tr.t("buttons.back")}</Text>
-              </TouchableOpacity>
-
-              {(step == 0 || step == 1) && (
-                <>
-                  {step == 0 && ( 
-                    <>
-                      <TouchableOpacity style={styles.action} onPress={() => {
-                        setSelectedworkerinfo({ ...selectedWorkerinfo, id: -1, hours: {} })
-                        setStep(1)
-                      }}>
-                        <Text style={styles.actionHeader}>{tr.t("buttons.random")}</Text>
-                      </TouchableOpacity>
-
-                      {selectedWorkerinfo.id > -1 && (
-                        <TouchableOpacity style={styles.action} onPress={() => selectWorker(selectedWorkerinfo.id)}>
-                          <Text style={styles.actionHeader}>{tr.t("buttons.next")}</Text>
-                        </TouchableOpacity>
-                      )}
-                    </>
-                  )}
-
-                  {step == 1 && (
-                    <TouchableOpacity style={styles.action} onPress={() => {
-                      getTheAppointmentInfo(true)
-                      getAllScheduledTimes()
-                    }}>
-                      <Text style={styles.actionHeader}>{tr.t("buttons.next")}</Text>
-                    </TouchableOpacity>
-                  )}
-                </>
-              )}
-            </View>*/}
           </>
           :
           <View style={{ alignItems: 'center', flexDirection: 'column', height: '80%', justifyContent: 'space-around' }}>
