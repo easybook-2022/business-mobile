@@ -145,7 +145,7 @@ export default function App() {
               )
             })}/>
             <Stack.Screen name="cartorders" component={Cartorders} options={({ navigation, route }) => ({
-              headerTitle: () => <Text style={styles.header}>#{route.params.ordernumber} {tr.t("orders.header")}</Text>,
+              headerTitle: () => <Text style={styles.header}>{tr.t("orders.header")}</Text>,
               headerLeft: () => (
                 Platform.OS == 'ios' && (
                   <TouchableOpacity style={styles.back} onPress={() => navigation.dispatch(
@@ -219,7 +219,7 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  header: { fontSize: wsize(3), fontWeight: 'bold' },
+  header: { fontSize: wsize(5), fontWeight: 'bold' },
   back: { alignItems: 'center', borderRadius: 3, borderStyle: 'solid', borderWidth: 1, padding: 5, width: wsize(20) },
   backHeader: { fontSize: wsize(3), fontWeight: 'bold' },
 });

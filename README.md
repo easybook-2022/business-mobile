@@ -1,4 +1,4 @@
-# mobile
+# business-mobile
 
 # dependencies
 yarn add 
@@ -23,3 +23,4 @@ keytool -genkeypair -alias <keystore alias> -keyalg RSA -keysize 2048 -validity 
 keytool -importkeystore -srckeystore serviceapp-business.jks -destkeystore serviceapp-business.jks -deststoretype pkcs12, migrate
 
 keytool -export -rfc -alias <keystore alias> -file upload_certificate.pem -keystore serviceapp-business.jks, get upload certificate.pem
+	

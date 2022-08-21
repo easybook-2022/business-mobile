@@ -49,10 +49,6 @@ export const getAppointments = data => {
 	)
 }
 
-export const getCartOrderers = id => {
-	return axios.get(`${beginUrl}get_cart_orderers/${id}`)
-}
-
 export const getCartOrders = id => {
 	return axios.get(`${beginUrl}get_cart_orders/${id}`)
 }
@@ -76,13 +72,6 @@ export const blockTime = data => {
     `${beginUrl}block_time`,
     data
   )
-}
-
-export const getOrders = data => {
-	return axios.post(
-		`${beginUrl}get_orders`,
-		data
-	)
 }
 
 export const doneService = id => {

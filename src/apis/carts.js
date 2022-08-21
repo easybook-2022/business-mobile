@@ -16,3 +16,10 @@ export const setWaitTime = data => {
     data
   )
 }
+
+export const getOrders = data => {
+  return axios.post(
+    `${beginUrl}get_orders`,
+    data
+  )
+}
