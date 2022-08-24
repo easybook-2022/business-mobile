@@ -19,13 +19,6 @@
     ],
     "plugins": [
       [
-        "expo-notifications",
-        {
-          "icon": "./assets/notification.png",
-          "color": "#ffffff"
-        }
-      ],
-      [
         "expo-image-picker",
         {
           "photosPermission": "EasyBook (Business) allows users to select photo for your profile/location/menu/product/service"

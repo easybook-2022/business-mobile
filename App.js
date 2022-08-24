@@ -17,7 +17,6 @@ import Picklanguage from './src/pages/picklanguage'
 import Tables from './src/pages/tables'
 import List from './src/pages/list'
 import Authoption from './src/pages/authoption'
-import Walkin from './src/pages/walkin'
 import Locationsetup from './src/pages/locationsetup'
 import Main from './src/pages/main'
 import Booktime from './src/pages/booktime'
@@ -39,7 +38,7 @@ const wsize = p => {return width * (p / 100)}
 
 export default function App() {
   const Stack = createNativeStackNavigator();
-
+  
   const [fontLoaded] = useFonts({ Chilanka_400Regular });
   const [route, setRoute] = useState(null)
 
@@ -107,7 +106,6 @@ export default function App() {
             })}/>
             <Stack.Screen name="list" component={List} options={{ headerShown: false }}/>
             <Stack.Screen name="authoption" component={Authoption} options={{ headerShown: false }}/>
-            <Stack.Screen name="walkin" component={Walkin} options={{ headerShown: false }}/>
             <Stack.Screen name="locationsetup" component={Locationsetup} options={{ headerShown: false }}/>
             <Stack.Screen name="main" component={Main} options={{ headerShown: false }}/>
             <Stack.Screen name="booktime" component={Booktime} options={({ navigation, route }) => ({

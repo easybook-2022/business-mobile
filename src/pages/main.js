@@ -7,7 +7,6 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useKeepAwake } from 'expo-keep-awake'
 import Constants from 'expo-constants';
-import * as Notifications from 'expo-notifications';
 import { useFocusEffect, useIsFocused, CommonActions } from '@react-navigation/native';
 import * as FileSystem from 'expo-file-system'
 import * as ImageManipulator from 'expo-image-manipulator'
@@ -22,7 +21,7 @@ import { tr } from '../../assets/translate'
 import { loginInfo, ownerSigninInfo, socket, logo_url, timeControl, tableUrl } from '../../assets/info'
 import { getId, displayTime, resizePhoto, displayPhonenumber } from 'geottuse-tools'
 import { 
-  updateNotificationToken, verifyUser, updateLogins, addOwner, updateOwner, deleteOwner, getStylistInfo, 
+  verifyUser, updateLogins, addOwner, updateOwner, deleteOwner, getStylistInfo, 
   getOtherWorkers, getAccounts, getOwnerInfo, logoutUser, getWorkersTime, getAllWorkersTime, getWorkersHour
 } from '../apis/owners'
 import { getLocationProfile, getLocationHours, updateLocationHours, updateInformation, getLogins, updateAddress, updateLogo, setReceiveType } from '../apis/locations'
@@ -48,7 +47,6 @@ export default function Main(props) {
   useKeepAwake()
 
   const [language, setLanguage] = useState('')
-	const [notificationPermission, setNotificationpermission] = useState(null);
 	const [ownerId, setOwnerid] = useState(null)
   const [userType, setUsertype] = useState('')
 	const [locationType, setLocationtype] = useState('')
@@ -130,44 +128,6 @@ export default function Main(props) {
 
   const [getWorkersbox, setGetworkersbox] = useState({ show: false, day: '', workers: [] })
 
-	const getNotificationPermission = async() => {
-		const ownerid = await AsyncStorage.getItem("ownerid")
-		const { status } = await Notifications.getPermissionsAsync()
-
-    if (status == "granted") {
-      setNotificationpermission(true)
-    } else {
-      const info = await Notifications.requestPermissionsAsync()
-
-      if (info.status == "granted") {
-        setNotificationpermission(true)
-      }
-    }
-
-    const { data } = await Notifications.getExpoPushTokenAsync({
-      experienceId: "@robogram/serviceapp-business"
-    })
-
-    if (ownerid) {
-      updateNotificationToken({ ownerid, token: data })
-        .then((res) => {
-          if (res.status == 200) {
-            return res.data
-          }
-        })
-        .then((res) => {
-          if (res) {
-
-          }
-        })
-        .catch((err) => {
-          if (err.response && err.response.status == 400) {
-            const { errormsg, status } = err.response.data
-          }
-        })
-    }
-	}
-
   const getTheLocationProfile = async() => {
 		const ownerid = await AsyncStorage.getItem("ownerid")
     const usertype = await AsyncStorage.getItem("userType")
@@ -185,7 +145,7 @@ export default function Main(props) {
 			})
 			.then((res) => {
 				if (res) {
-					const { name, logo, type, receiveType, hours } = res.info
+					const { name, logo, type, receiveType, hours, phonenumber } = res.info
           let openInfo, openMinute, openHour, openPeriod, closeInfo, closeMinute, closeHour, closePeriod
           let currDate, calcDate, header, openTime, closeTime, locationHours = []
 
@@ -234,40 +194,14 @@ export default function Main(props) {
 
 						setOwnerid(ownerid)
 						setStorename(name)
-            setPhonenumber(res.info.phonenumber)
+            setPhonenumber(phonenumber)
             setLogo({ ...logo, uri: logo.name ? logo_url + logo.name : "", size: { width: logo.width, height: logo.height }})
             setLocationtype(type)
             setLocationreceivetype(receiveType)
             setLocationhours(hours)
             setShowinfo({ ...showInfo, locationHours })
             setHoursrange(hours)
-
-						if (type == 'store' || type == 'restaurant') {
-              if (type == 'store') {
-                getAllCartOrderers()
-              } else {
-                switch (usertype) {
-                  case "orderer":
-                    if (tableInfo) {
-                      setTable({ ...table, id: tableInfo.id, name: tableInfo.name })
-                      getAllMenus()
-                    } else {
-                      getAllTables()
-                    }
-
-                    break;
-                  case "kitchen":
-                    getAllOrderingTables(true)
-
-                    break;
-                  case "owner":
-                    setLoaded(true)
-
-                    break;
-                  default:
-                }
-              }
-						}
+            setLoaded(true)
 					})
 				}
 			})
@@ -291,13 +225,12 @@ export default function Main(props) {
           const { hours } = res
 
           setHoursinfo(hours)
+          setLoaded(true)
         }
       })
       .catch((err) => {
         if (err.response && err.response.status == 400) {
           const { errormsg, status } = err.response.data
-
-
         }
       })
   }
@@ -364,8 +297,6 @@ export default function Main(props) {
 
     getTheLocationProfile()
     getTheLocationHours()
-
-		if (Constants.isDevice) getNotificationPermission()
 	}
   const pickLanguage = async(language) => {
     AsyncStorage.setItem("language", language)
@@ -797,6 +728,7 @@ export default function Main(props) {
             username: '', cellnumber: '', 
             currentPassword: '', newPassword: '', confirmPassword: '', 
             profile: { uri: '', name: '', size: { width: 0, height: 0 } }, 
+            daysInfo: { working: ['', '', '', '', '', '', ''], done: false, sameHours: null }, workerHours: [], workerHourssameday: null, editHours: false,
             loading: false, errorMsg: ""
           })
           setEditinfo({ ...editInfo, show: true })
@@ -1462,8 +1394,6 @@ export default function Main(props) {
   const header = (locationType == "hair" || locationType == "nail") && " Salon " || 
                   locationType == "restaurant" && " Restaurant " || 
                   locationType == "store" && " Store "
-  const currenttime = Date.now()
-  let currDay = date.day ? date.day.substr(0, 3) : ""
   const { daysInfo } = accountForm
 
 	return (
@@ -1631,7 +1561,7 @@ export default function Main(props) {
       }
 
       {(
-        showInfo.show || showMoreoptions.infoType || showDisabledscreen || 
+        showInfo.show || showMoreoptions.infoType != '' || showDisabledscreen || 
         showAddtable.show || showRemovetable.show
       ) && (
         <Modal transparent={true}>
@@ -1714,7 +1644,8 @@ export default function Main(props) {
                 </View>
               </View>
             )}
-            {showMoreoptions.infoType && (
+
+            {showMoreoptions.infoType != '' && (
               <View style={styles.moreInfosContainer}>
                 <View style={styles.moreInfosBox}>
                   {editInfo.show && (
@@ -1892,7 +1823,7 @@ export default function Main(props) {
                           <ScrollView style={{ height: '100%', width: '100%' }}>
                             <Text style={[styles.header, { fontSize: wsize(6), textAlign: 'center' }]}>{tr.t("main.editingHours.header")}</Text>
 
-                            {editInfo.locationHours.map((info, index) => (
+                            {locationHours.map((info, index) => (
                               <View key={index} style={styles.workerHour}>
                                 {info.close == false ? 
                                   <>
@@ -3509,12 +3440,13 @@ export default function Main(props) {
                 </View>
               </View>
             )}
-      			{showDisabledscreen && (
-    					<Disable 
+
+            {showDisabledscreen && (
+              <Disable 
                 close={() => socket.emit("socket/business/login", ownerId, () => setShowdisabledscreen(false))}
                 language={language}
               />
-      			)}
+            )}
           </SafeAreaView>
         </Modal>
       )}
@@ -3562,17 +3494,17 @@ const styles = StyleSheet.create({
   showInfoContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
   showInfoBox: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '90%', justifyContent: 'space-around', width: '90%' },
   showInfoClose: { alignItems: 'center', borderRadius: 20, borderStyle: 'solid', borderWidth: 2, marginVertical: 30 },
-  showInfoHeader: { fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
+  showInfoHeader: { fontSize: wsize(8), fontWeight: 'bold', textAlign: 'center' },
   workerInfoList: { marginVertical: 40, width: '100%' },
   workerInfo: { alignItems: 'center' },
   workerInfoProfile: { borderRadius: wsize(30) / 2, height: wsize(30), overflow: 'hidden', width: wsize(30) },
   workerInfoName: { color: 'black', fontSize: wsize(5), fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
   workerTime: {  },
   workerTimeContainer: { flexDirection: 'row', marginBottom: 20 },
-  dayHeader: { fontSize: wsize(3.5) },
+  dayHeader: { fontSize: wsize(5) },
   timeHeaders: { flexDirection: 'row' },
-  timeHeader: { fontSize: wsize(3.5), fontWeight: 'bold' },
-  timeHeaderSep: { fontSize: wsize(3.5), fontWeight: 'bold' },
+  timeHeader: { fontSize: wsize(5), fontWeight: 'bold' },
+  timeHeaderSep: { fontSize: wsize(5), fontWeight: 'bold' },
 
   moreInfosContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
   moreInfosBox: { alignItems: 'center', backgroundColor: 'white', height: '80%', width: '80%' },

@@ -1077,7 +1077,7 @@ const styles = StyleSheet.create({
   typeSelectionRow: { flexDirection: 'row', justifyContent: 'space-between' },
   typeSelectionHeader: { fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
   typeSelectionIcon: { height: wsize(10), width: wsize(10) },
-  typeSelectionAction: { fontSize: wsize(5), textAlign: 'center' },
+  typeSelectionAction: { fontSize: wsize(3), textAlign: 'center' },
 
   inputContainer: { width: '80%' },
   inputHeader: { fontSize: wsize(5), fontWeight: 'bold', marginTop: 20 },
