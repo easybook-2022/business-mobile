@@ -148,13 +148,17 @@ const info = {
       },
       showMoreoptions: {
         changeMenu: "Change Menu",
+        changeInfo: "Change Business Info",
         changeStaffinfo: "Change Staffs Info",
         changeLogininfo: "Change Login Info",
         changeBusinessinformation: "Change name/phonenumber",
         changeBusinesslocation: "Change Address",
         changeBusinesslogo: "Change Photo",
         changeBusinesshours: "Change Hour(s)",
-        moreBusinesses: "Your Business(es)",
+        moreBusinesses: {
+          none: "Add a new business",
+          some: "Your Business(es)"
+        },
         walkIn: "Client Walk-In",
         switchAccount: {
           header: "Switch account to",
@@ -165,7 +169,7 @@ const info = {
         changeLanguage: "Change language",
         editTables: "Edit Table(s)",
         getAppointmentsby: {
-          header: "Get appointments by",
+          header: "Who can see appointments ?",
           both: "Owners and Staffs",
           owner: "Owners only"
         },

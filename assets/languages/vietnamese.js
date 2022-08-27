@@ -148,13 +148,17 @@ const info = {
       },
       showMoreoptions: {
         changeMenu: "Thay đổi menu",
+        changeInfo: "Thay đổi thông tin",
         changeStaffinfo: "Thay đổi thông tin nhân viên",
         changeLogininfo: "Thay đổi thông tin đăng nhập",
         changeBusinessinformation: "Thay đổi tên / số điện thoại",
         changeBusinesslocation: "Thay đổi địa chỉ",
         changeBusinesslogo: "Thay đổi ảnh",
         changeBusinesshours: "Thay đổi Giờ làm việc",
-        moreBusinesses: "Doanh nghiệp của bạn",
+        moreBusinesses: {
+          none: "Thêm một doanh nghiệp mới",
+          some: "Doanh nghiệp của bạn"
+        },
         walkIn: "Khách hàng bước vào",
         switchAccount: {
           header: "Chuyển tài khoản sang",
@@ -165,7 +169,7 @@ const info = {
         changeLanguage: "Thay đổi ngôn ngữ",
         editTables: "Chỉnh sửa bảng",
         getAppointmentsby: {
-          header: "Get appointments by",
+          header: "Ai có thể xem các cuộc hẹn",
           both: "Chủ sở hữu và nhân viên",
           owner: "Chỉ chủ sở hữu"
         },

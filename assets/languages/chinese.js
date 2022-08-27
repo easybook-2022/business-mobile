@@ -148,13 +148,17 @@ const info = {
       },
       showMoreoptions: {
         changeMenu: "更改菜单",
+        changeInfo: "更改信息",
         changeStaffinfo: "更改员工信息",
         changeLogininfo: "更改登录信息",
         changeBusinessinformation: "更改姓名/电话号码",
         changeBusinesslocation: "更换地址",
         changeBusinesslogo: "更改照片",
         changeBusinesshours: "更改营业时间",
-        moreBusinesses: "您的企业",
+        moreBusinesses: {
+          none: "添加新业务",
+          some: "您的业务"
+        },
         walkIn: "客户上门",
         switchAccount: {
           header: "将帐户切换到",
@@ -165,7 +169,7 @@ const info = {
         changeLanguage: "改变语言",
         editTables: "编辑表格",
         getAppointmentsby: {
-          header: "通过以下方式获得约会",
+          header: "谁可以查看约会 ?",
           both: "业主和员工",
           owner: "仅限所有者"
         },

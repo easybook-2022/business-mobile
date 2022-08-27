@@ -182,6 +182,8 @@ export default function Register(props) {
 	const register = async() => {
     setLoading(true)
 
+    const locationid = await AsyncStorage.getItem("locationid")
+    const locationtype = await AsyncStorage.getItem("locationtype")
     const id = await AsyncStorage.getItem("ownerid")
     const hours = {}, { sameHours } = daysInfo
     let invalid = false
@@ -259,7 +261,11 @@ export default function Register(props) {
               const { msg } = res
 
               setLoading(false)
+
               AsyncStorage.setItem("phase", "main")
+              AsyncStorage.setItem("locationid", locationid)
+              AsyncStorage.setItem("locationtype", locationtype)
+              AsyncStorage.setItem("userType", "owner")
 
               props.navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "main", params: { firstTime: true }}]}));
             }
@@ -515,7 +521,7 @@ export default function Register(props) {
     									<>
     										<Image style={styles.camera} source={{ uri: profile.uri }}/>
 
-    										<TouchableOpacity style={styles.cameraAction} onPress={() => setProfile({ uri: '', name: '' })}>
+    										<TouchableOpacity style={styles.cameraAction} onPress={() => setProfile({ ...profile, uri: '', name: '' })}>
     											<Text style={styles.cameraActionHeader}>{tr.t("buttons.cancel")}</Text>
     										</TouchableOpacity>
     									</>
@@ -922,7 +928,7 @@ const styles = StyleSheet.create({
 	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(10), paddingHorizontal: 5, width: '100%' },
 
 	cameraContainer: { alignItems: 'center', width: '100%' },
-	camera: { height: height * 0.6, width },
+	camera: { height: height * 0.5, width: height * 0.5 },
 	cameraActions: { flexDirection: 'row' },
 	cameraAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: wsize(30) },
 	cameraActionHeader: { fontSize: wsize(4), textAlign: 'center' },

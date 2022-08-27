@@ -4,6 +4,7 @@ import {
   View, FlatList, Image, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, 
   Keyboard, StyleSheet, Modal, KeyboardAvoidingView
 } from 'react-native'
+import axios from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useKeepAwake } from 'expo-keep-awake'
 import Constants from 'expo-constants';
@@ -50,6 +51,7 @@ export default function Main(props) {
 	const [ownerId, setOwnerid] = useState(null)
   const [userType, setUsertype] = useState('')
 	const [locationType, setLocationtype] = useState('')
+  const [menuState, setMenustate] = useState('')
 
 	const [appointments, setAppointments] = useState({ list: [], loading: false })
 	const [cartOrderers, setCartorderers] = useState([])
@@ -86,7 +88,7 @@ export default function Main(props) {
     username: '', editUsername: false,
     cellnumber: '', verified: false, verifyCode: '', editCellnumber: false,
     currentPassword: '', newPassword: '', confirmPassword: '', editPassword: false,
-    profile: { uri: '', name: '', size: { width: 0, height: 0 }}, editProfile: false, camType: 'front',
+    profile: { uri: '', name: '', size: { width: 0, height: 0 }, diff: false }, editProfile: false, camType: 'front',
     daysInfo: { working: ['', '', '', '', '', '', ''], done: false, sameHours: null }, workerHours: [], workerHourssameday: null, editHours: false,
     loading: false,
     errorMsg: ''
@@ -94,6 +96,7 @@ export default function Main(props) {
 
   const [locationInfo, setLocationinfo] = useState('')
   const [locationCoords, setLocationcoords] = useState({ longitude: null, latitude: null, longitudeDelta: null, latitudeDelta: null })
+  const [numBusinesses, setNumbusinesses] = useState(0)
   const [storeName, setStorename] = useState('')
   const [phonenumber, setPhonenumber] = useState('')
   const [logo, setLogo] = useState({ uri: '', name: '', size: { width: 0, height: 0 }, loading: false })
@@ -133,7 +136,7 @@ export default function Main(props) {
     const usertype = await AsyncStorage.getItem("userType")
 		const locationid = await AsyncStorage.getItem("locationid")
     const tableInfo = JSON.parse(await AsyncStorage.getItem("table"))
-		const data = { locationid }
+		const data = { locationid, ownerid }
 
     setUsertype(usertype)
 
@@ -193,6 +196,7 @@ export default function Main(props) {
             }
 
 						setOwnerid(ownerid)
+            setNumbusinesses(res.info.numBusinesses)
 						setStorename(name)
             setPhonenumber(phonenumber)
             setLogo({ ...logo, uri: logo.name ? logo_url + logo.name : "", size: { width: logo.width, height: logo.height }})
@@ -523,7 +527,8 @@ export default function Main(props) {
           ...accountForm,
           profile: {
             uri: `${FileSystem.documentDirectory}/${char}.jpg`,
-            name: `${char}.jpg`, size: { width, height: width }
+            name: `${char}.jpg`, size: { width, height: width },
+            diff: true
           },
           loading: false
         })
@@ -1023,7 +1028,7 @@ export default function Main(props) {
             username: "", editUsername: false, 
             cellnumber: "", editCellnumber: false,
             currentPassword: "", newPassword: "", confirmPassword: "", editPassword: false, 
-            profile: { name: "", uri: "" }, editProfile: false, 
+            profile: { uri: '', name: '', size: { width: 0, height: 0 }, diff: false }, editProfile: false, 
             daysInfo: { working: ['', '', '', '', '', '', ''], done: false, sameHours: null }, workerHours: [], workerHourssameday: null, editHours: false,
             loading: false, errorMsg: ""
           })
@@ -1403,131 +1408,146 @@ export default function Main(props) {
   				<View style={styles.body}>
             <ScrollView style={{ width: '100%' }} showsVerticalScrollIndicator={false}>
               <View style={{ alignItems: 'center', width: '100%' }}>
-                <TouchableOpacity style={styles.viewTypeOption} onPress={() => {
-                  setShowmoreoptions({ ...showMoreoptions, show: false })
-                  props.navigation.navigate("menu", { userType })
-                }}>
-                  <Text style={styles.viewTypeOptionHeader}>{tr.t("main.hidden.showMoreoptions.changeMenu")}</Text>
-                </TouchableOpacity>
+                {!menuState ? 
+                  <>
+                    <TouchableOpacity style={styles.viewTypeSettingTouch} onPress={() => {
+                      setShowmoreoptions({ ...showMoreoptions, show: false })
+                      props.navigation.navigate("menu", { userType })
+                    }}>
+                      <Text style={styles.viewTypeSettingTouchHeader}>{tr.t("main.hidden.showMoreoptions.changeMenu")}</Text>
+                    </TouchableOpacity>
 
-                {(locationType == "hair" || locationType == "nail") && (
-                  <TouchableOpacity style={styles.viewTypeOption} onPress={() => {
-                    setEditinfo({ ...editInfo, show: true, type: 'users' })
-                    setShowmoreoptions({ ...showMoreoptions, infoType: 'users' })
-                    getAllAccounts()
-                  }}>
-                    <Text style={styles.viewTypeOptionHeader}>{tr.t("main.hidden.showMoreoptions.changeStaffinfo")}</Text>
-                  </TouchableOpacity>
-                )}
+                    <TouchableOpacity style={styles.viewTypeSettingTouch} onPress={() => setMenustate('info')}>
+                      <Text style={styles.viewTypeSettingTouchHeader}>{tr.t("main.hidden.showMoreoptions.changeInfo")}</Text>
+                    </TouchableOpacity>
 
-                {(locationType == "store" || locationType == "restaurant") && (
-                  <TouchableOpacity style={styles.viewTypeOption} onPress={() => {
-                    getTheLogins()
-                    setEditinfo({ ...editInfo, show: true, type: 'login' })
-                    setShowmoreoptions({ ...showMoreoptions, infoType: 'login' })
-                  }}>
-                    <Text style={styles.viewTypeOptionHeader}>{tr.t("main.hidden.showMoreoptions.changeLogininfo")}</Text>
-                  </TouchableOpacity>
-                )}
-
-                <TouchableOpacity style={styles.viewTypeOption} onPress={() => {
-                  setShowmoreoptions({ ...showMoreoptions, infoType: 'information' })
-                  setEditinfo({ ...editInfo, show: true, type: 'information', storeName, phonenumber })
-                }}>
-                  <Text style={styles.viewTypeOptionHeader}>{tr.t("main.hidden.showMoreoptions.changeBusinessinformation")}</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.viewTypeOption} onPress={() => {
-                  setShowmoreoptions({ ...showMoreoptions, infoType: 'location' })
-                  setEditinfo({ ...editInfo, show: true, type: 'location' })
-                }}>
-                  <Text style={styles.viewTypeOptionHeader}>{tr.t("main.hidden.showMoreoptions.changeBusinesslocation")}</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.viewTypeOption} onPress={() => {
-                  setShowmoreoptions({ ...showMoreoptions, infoType: 'logo' })
-                  setEditinfo({ ...editInfo, show: true, type: 'logo' })
-                }}>
-                  <Text style={styles.viewTypeOptionHeader}>{tr.t("main.hidden.showMoreoptions.changeBusinesslogo")}</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.viewTypeOption} onPress={() => {
-                  setShowmoreoptions({ ...showMoreoptions, infoType: 'hours' })
-                  setEditinfo({ ...editInfo, show: true, type: 'hours' })
-                }}>
-                  <Text style={styles.viewTypeOptionHeader}>{tr.t("main.hidden.showMoreoptions.changeBusinesshours")}</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.viewTypeOption} onPress={() => {
-                  AsyncStorage.removeItem("locationid")
-                  AsyncStorage.removeItem("locationtype")
-                  AsyncStorage.setItem("phase", "list")
-
-                  setShowmoreoptions({ ...showMoreoptions, show: false })
-
-                  setTimeout(function () {
-                    props.navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "list" }]}));
-                  }, 1000)
-                }}>
-                  <Text style={styles.viewTypeOptionHeader}>{tr.t("main.hidden.showMoreoptions.moreBusinesses")}</Text>
-                </TouchableOpacity>
-
-                {(locationType == "hair" || locationType == "nail") && (
-                  <TouchableOpacity style={styles.viewTypeOption} onPress={() => {
-                    AsyncStorage.setItem("phase", "walkin")
-
-                    setShowmoreoptions({ ...showMoreoptions, show: false })
-
-                    setTimeout(function () {
-                      props.navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "walkin" }]}));
-                    }, 1000)
-                  }}>
-                    <Text style={styles.viewTypeOptionHeader}>{tr.t("main.hidden.showMoreoptions.walkIn")}</Text>
-                  </TouchableOpacity>
-                )}
-
-                {(locationType == "hair" || locationType == "nail") && (
-                  <View style={styles.viewTypeOptionsBox}>
-                    <Text style={styles.viewTypeOptionsHeader}>{tr.t("main.hidden.showMoreoptions.getAppointmentsby.header")}</Text>
-
-                    <View style={styles.viewTypeOptions}>
-                      <TouchableOpacity style={[styles.viewTypeOption, { backgroundColor: locationReceivetype == 'everyone' ? 'black' : 'white', width: '40%' }]} onPress={() => setTheReceiveType('everyone')}>
-                        <Text style={[styles.viewTypeOptionHeader, { color: locationReceivetype == 'everyone' ? 'white' : 'black' }]}>{tr.t("main.hidden.showMoreoptions.getAppointmentsby.both")}</Text>
+                    {(locationType == "hair" || locationType == "nail") ? 
+                      <TouchableOpacity style={styles.viewTypeSettingTouch} onPress={() => {
+                        setEditinfo({ ...editInfo, show: true, type: 'users' })
+                        setShowmoreoptions({ ...showMoreoptions, infoType: 'users' })
+                        getAllAccounts()
+                      }}>
+                        <Text style={styles.viewTypeSettingTouchHeader}>{tr.t("main.hidden.showMoreoptions.changeStaffinfo")}</Text>
                       </TouchableOpacity>
-                      <TouchableOpacity style={[styles.viewTypeOption, { backgroundColor: locationReceivetype == 'owner' ? 'black' : 'white', width: '40%' }]} onPress={() => setTheReceiveType('owner')}>
-                        <Text style={[styles.viewTypeOptionHeader, { color: locationReceivetype == 'owner' ? 'white' : 'black' }]}>{tr.t("main.hidden.showMoreoptions.getAppointmentsby.owner")}</Text>
+                      :
+                      <TouchableOpacity style={styles.viewTypeSettingTouch} onPress={() => {
+                        getTheLogins()
+                        setEditinfo({ ...editInfo, show: true, type: 'login' })
+                        setShowmoreoptions({ ...showMoreoptions, infoType: 'login' })
+                      }}>
+                        <Text style={styles.viewTypeSettingTouchHeader}>{tr.t("main.hidden.showMoreoptions.changeLogininfo")}</Text>
                       </TouchableOpacity>
-                    </View>
-                  </View>
-                )}
+                    }
 
-                {locationType == "restaurant" && (
-                  <TouchableOpacity style={styles.viewTypeOption} onPress={() => {
-                    setShowmoreoptions({ ...showMoreoptions, show: false })
-                    props.navigation.navigate("tables")
-                  }}>
-                    <Text style={styles.viewTypeOptionHeader}>{tr.t("main.hidden.showMoreoptions.editTables")}</Text>
-                  </TouchableOpacity>
-                )}
+                    <TouchableOpacity style={styles.viewTypeSettingTouch} onPress={() => {
+                      AsyncStorage.removeItem("locationid")
+                      AsyncStorage.removeItem("locationtype")
+                      AsyncStorage.setItem("phase", "list")
 
-                <TouchableOpacity style={styles.viewTypeOption} onPress={() => {
-                  setShowmoreoptions({ ...showMoreoptions, show: false })
+                      setShowmoreoptions({ ...showMoreoptions, show: false })
 
-                  if (locationType == "restaurant") {
-                    props.navigation.navigate("restaurantincomerecords")
-                  } else {
-                    props.navigation.navigate("salonincomerecords")
-                  }
-                }}>
-                  <Text style={styles.viewTypeOptionHeader}>{tr.t("main.hidden.showMoreoptions.paymentRecords")}</Text>
-                </TouchableOpacity>
+                      setTimeout(function () {
+                        props.navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "list" }]}));
+                      }, 1000)
+                    }}>
+                      <Text style={styles.viewTypeSettingTouchHeader}>{tr.t("main.hidden.showMoreoptions.moreBusinesses." + (numBusinesses == 1 ? "none" : "some"))}</Text>
+                    </TouchableOpacity>
 
-                <TouchableOpacity style={styles.viewTypeOption} onPress={() => {
-                  setShowmoreoptions({ ...showMoreoptions, infoType: 'changelanguage' })
-                  setEditinfo({ ...editInfo, show: true, type: 'changelanguage' })
-                }}>
-                  <Text style={styles.viewTypeOptionHeader}>{tr.t("main.hidden.showMoreoptions.changeLanguage")}</Text>
-                </TouchableOpacity>
+                    {(locationType == "hair" || locationType == "nail") && (
+                      <TouchableOpacity style={styles.viewTypeSettingTouch} onPress={() => {
+                        AsyncStorage.setItem("phase", "walkin")
+
+                        setShowmoreoptions({ ...showMoreoptions, show: false })
+
+                        setTimeout(function () {
+                          props.navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "walkin" }]}));
+                        }, 1000)
+                      }}>
+                        <Text style={styles.viewTypeSettingTouchHeader}>{tr.t("main.hidden.showMoreoptions.walkIn")}</Text>
+                      </TouchableOpacity>
+                    )}
+
+                    {(locationType == "hair" || locationType == "nail") && (
+                      <View style={styles.viewTypeSettingsBox}>
+                        <Text style={styles.viewTypeSettingsHeader}>{tr.t("main.hidden.showMoreoptions.getAppointmentsby.header")}</Text>
+
+                        <View style={{ alignItems: 'center' }}>
+                          <View style={styles.viewTypeSettingsOptions}>
+                            <TouchableOpacity style={[styles.viewTypeSettingOption, { backgroundColor: locationReceivetype == 'everyone' ? 'black' : 'white' }]} onPress={() => setTheReceiveType('everyone')}>
+                              <Text style={[styles.viewTypeSettingOptionHeader, { color: locationReceivetype == 'everyone' ? 'white' : 'black' }]}>{tr.t("main.hidden.showMoreoptions.getAppointmentsby.both")}</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={[styles.viewTypeSettingOption, { backgroundColor: locationReceivetype == 'owner' ? 'black' : 'white' }]} onPress={() => setTheReceiveType('owner')}>
+                              <Text style={[styles.viewTypeSettingOptionHeader, { color: locationReceivetype == 'owner' ? 'white' : 'black' }]}>{tr.t("main.hidden.showMoreoptions.getAppointmentsby.owner")}</Text>
+                            </TouchableOpacity>
+                          </View>
+                        </View>
+                      </View>
+                    )}
+
+                    {locationType == "restaurant" && (
+                      <TouchableOpacity style={styles.viewTypeSettingTouch} onPress={() => {
+                        setShowmoreoptions({ ...showMoreoptions, show: false })
+                        props.navigation.navigate("tables")
+                      }}>
+                        <Text style={styles.viewTypeSettingTouchHeader}>{tr.t("main.hidden.showMoreoptions.editTables")}</Text>
+                      </TouchableOpacity>
+                    )}
+
+                    <TouchableOpacity style={styles.viewTypeSettingTouch} onPress={() => {
+                      setShowmoreoptions({ ...showMoreoptions, show: false })
+
+                      if (locationType == "restaurant") {
+                        props.navigation.navigate("restaurantincomerecords")
+                      } else {
+                        props.navigation.navigate("salonincomerecords")
+                      }
+                    }}>
+                      <Text style={styles.viewTypeSettingTouchHeader}>{tr.t("main.hidden.showMoreoptions.paymentRecords")}</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity style={styles.viewTypeSettingTouch} onPress={() => {
+                      setShowmoreoptions({ ...showMoreoptions, infoType: 'changelanguage' })
+                      setEditinfo({ ...editInfo, show: true, type: 'changelanguage' })
+                    }}>
+                      <Text style={styles.viewTypeSettingTouchHeader}>{tr.t("main.hidden.showMoreoptions.changeLanguage")}</Text>
+                    </TouchableOpacity>
+                  </>
+                  :
+                  <>
+                    <TouchableOpacity style={[styles.viewTypeSettingTouch, { flexDirection: 'row', justifyContent: 'space-around', width: '30%' }]} onPress={() => setMenustate('')}>
+                      <Entypo name="chevron-left" size={wsize(10)}/>
+                      <View style={styles.column}><Text style={styles.viewTypeSettingTouchHeader}>{tr.t("buttons.back")}</Text></View>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity style={styles.viewTypeSettingTouch} onPress={() => {
+                      setShowmoreoptions({ ...showMoreoptions, infoType: 'information' })
+                      setEditinfo({ ...editInfo, show: true, type: 'information', storeName, phonenumber })
+                    }}>
+                      <Text style={styles.viewTypeSettingTouchHeader}>{tr.t("main.hidden.showMoreoptions.changeBusinessinformation")}</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity style={styles.viewTypeSettingTouch} onPress={() => {
+                      setShowmoreoptions({ ...showMoreoptions, infoType: 'location' })
+                      setEditinfo({ ...editInfo, show: true, type: 'location' })
+                    }}>
+                      <Text style={styles.viewTypeSettingTouchHeader}>{tr.t("main.hidden.showMoreoptions.changeBusinesslocation")}</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity style={styles.viewTypeSettingTouch} onPress={() => {
+                      setShowmoreoptions({ ...showMoreoptions, infoType: 'logo' })
+                      setEditinfo({ ...editInfo, show: true, type: 'logo' })
+                    }}>
+                      <Text style={styles.viewTypeSettingTouchHeader}>{tr.t("main.hidden.showMoreoptions.changeBusinesslogo")}</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity style={styles.viewTypeSettingTouch} onPress={() => {
+                      setShowmoreoptions({ ...showMoreoptions, infoType: 'hours' })
+                      setEditinfo({ ...editInfo, show: true, type: 'hours' })
+                    }}>
+                      <Text style={styles.viewTypeSettingTouchHeader}>{tr.t("main.hidden.showMoreoptions.changeBusinesshours")}</Text>
+                    </TouchableOpacity>
+                  </>
+                }  
               </View>
             </ScrollView>
   				</View>
@@ -1559,7 +1579,7 @@ export default function Main(props) {
           <ActivityIndicator color="black" size="small"/>
         </View>
       }
-
+      
       {(
         showInfo.show || showMoreoptions.infoType != '' || showDisabledscreen || 
         showAddtable.show || showRemovetable.show
@@ -1644,7 +1664,6 @@ export default function Main(props) {
                 </View>
               </View>
             )}
-
             {showMoreoptions.infoType != '' && (
               <View style={styles.moreInfosContainer}>
                 <View style={styles.moreInfosBox}>
@@ -3093,6 +3112,9 @@ export default function Main(props) {
                                             <TouchableOpacity style={[styles.cameraAction, { opacity: accountForm.loading ? 0.5 : 1 }]} disabled={accountForm.loading} onPress={snapProfile.bind(this)}>
                                               <Text style={styles.cameraActionHeader}>Take this photo</Text>
                                             </TouchableOpacity>
+                                            <TouchableOpacity style={[styles.cameraAction, { opacity: accountForm.loading ? 0.5 : 1 }]} disabled={accountForm.loading} onPress={() => updateTheOwner()}>
+                                              <Text style={styles.cameraActionHeader}>Skip</Text>
+                                            </TouchableOpacity>
                                             <TouchableOpacity style={[styles.cameraAction, { opacity: accountForm.loading ? 0.5 : 1 }]} disabled={accountForm.loading} onPress={() => {
                                               allowChoosing()
                                               chooseProfile()
@@ -3322,47 +3344,51 @@ export default function Main(props) {
 
                                   <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
                                     <View style={{ flexDirection: 'row' }}>
-                                      <TouchableOpacity style={[styles.accountformSubmit, { opacity: accountForm.loading ? 0.3 : 1 }]} disabled={accountForm.loading} onPress={() => {
-                                        accountHolders.forEach(function (info) {
-                                          if (info.id == accountForm.id) {
-                                            if (accountForm.self == true) {
-                                              setAccountform({ 
-                                                ...accountForm, 
-                                                editType: '',
-                                                username: info.username, editUsername: false,
-                                                cellnumber: info.cellnumber, verified: false, verifyCode: '', editCellnumber: false,
-                                                currentPassword: '', newPassword: '', confirmPassword: '', editPassword: false,
-                                                profile: { 
-                                                  uri: info.profile.name ? logo_url + info.profile.name : "", 
-                                                  name: info.profile.name ? info.profile.name : "", 
-                                                  size: { width: info.profile.width, height: info.profile.height }
-                                                }, editProfile: false,
-                                                daysInfo: { working: ['', '', '', '', '', '', ''], done: false, sameHours: null }, workerHours: [], workerHourssameday: null, editHours: false,
-                                                errorMsg: "", loading: false
-                                              })
+                                      {(!accountForm.editProfile || accountForm.profile.diff) && (
+                                        <>
+                                          <TouchableOpacity style={[styles.accountformSubmit, { opacity: accountForm.loading ? 0.3 : 1 }]} disabled={accountForm.loading} onPress={() => {
+                                            accountHolders.forEach(function (info) {
+                                              if (info.id == accountForm.id) {
+                                                if (accountForm.self == true) {
+                                                  setAccountform({ 
+                                                    ...accountForm, 
+                                                    editType: '',
+                                                    username: info.username, editUsername: false,
+                                                    cellnumber: info.cellnumber, verified: false, verifyCode: '', editCellnumber: false,
+                                                    currentPassword: '', newPassword: '', confirmPassword: '', editPassword: false,
+                                                    profile: { 
+                                                      uri: info.profile.name ? logo_url + info.profile.name : "", 
+                                                      name: info.profile.name ? info.profile.name : "", 
+                                                      size: { width: info.profile.width, height: info.profile.height }
+                                                    }, editProfile: false,
+                                                    daysInfo: { working: ['', '', '', '', '', '', ''], done: false, sameHours: null }, workerHours: [], workerHourssameday: null, editHours: false,
+                                                    errorMsg: "", loading: false
+                                                  })
+                                                } else {
+                                                  setAccountform({
+                                                    ...accountForm,
+                                                    show: false,
+                                                    workerHours: info.hours, editHours: false,
+                                                    loading: false
+                                                  })
+                                                  setEditinfo({ ...editInfo, show: true })
+                                                }
+                                              }
+                                            })
+                                          }}>
+                                            <Text style={styles.accountformSubmitHeader}>{tr.t("buttons.cancel")}</Text>
+                                          </TouchableOpacity>
+                                          <TouchableOpacity style={[styles.accountformSubmit, { opacity: accountForm.loading ? 0.3 : 1 }]} disabled={accountForm.loading} onPress={() => {
+                                            if (accountForm.type == 'add') {
+                                              addNewOwner()
                                             } else {
-                                              setAccountform({
-                                                ...accountForm,
-                                                show: false,
-                                                workerHours: info.hours, editHours: false,
-                                                loading: false
-                                              })
-                                              setEditinfo({ ...editInfo, show: true })
+                                              updateTheOwner()
                                             }
-                                          }
-                                        })
-                                      }}>
-                                        <Text style={styles.accountformSubmitHeader}>{tr.t("buttons.cancel")}</Text>
-                                      </TouchableOpacity>
-                                      <TouchableOpacity style={[styles.accountformSubmit, { opacity: accountForm.loading ? 0.3 : 1 }]} disabled={accountForm.loading} onPress={() => {
-                                        if (accountForm.type == 'add') {
-                                          addNewOwner()
-                                        } else {
-                                          updateTheOwner()
-                                        }
-                                      }}>
-                                        <Text style={styles.accountformSubmitHeader}>{accountForm.type == 'add' ? tr.t("buttons.add") : tr.t("buttons.update")}</Text>
-                                      </TouchableOpacity>
+                                          }}>
+                                            <Text style={styles.accountformSubmitHeader}>{accountForm.type == 'add' ? tr.t("buttons.add") : tr.t("buttons.update")}</Text>
+                                          </TouchableOpacity>
+                                        </>
+                                      )}
                                     </View>
                                   </View>
                                 </>
@@ -3440,7 +3466,6 @@ export default function Main(props) {
                 </View>
               </View>
             )}
-
             {showDisabledscreen && (
               <Disable 
                 close={() => socket.emit("socket/business/login", ownerId, () => setShowdisabledscreen(false))}
@@ -3463,11 +3488,13 @@ const styles = StyleSheet.create({
 	// body
 	body: { alignItems: 'center', height: '90%', width: '100%' },
 
-  viewTypeOptionsBox: { alignItems: 'center', marginHorizontal: 10, marginVertical: 50 },
-  viewTypeOptionsHeader: { fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
-  viewTypeOptions: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
-  viewTypeOption: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: '80%' },
-  viewTypeOptionHeader: { fontSize: wsize(6), textAlign: 'center' },
+  viewTypeSettingTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 10, padding: 5, width: '50%' },
+  viewTypeSettingTouchHeader: { fontSize: wsize(5), textAlign: 'center' },
+  viewTypeSettingsBox: { marginVertical: 50, width: '100%' },
+  viewTypeSettingsHeader: { fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
+  viewTypeSettingsOptions: { flexDirection: 'row', justifyContent: 'space-around' },
+  viewTypeSettingOption: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: '30%' },
+  viewTypeSettingOptionHeader: { fontSize: wsize(4), textAlign: 'center' },
 
   menu: { backgroundColor: 'white', borderTopRadius: 3, borderRightRadius: 3, borderBottomRadius: 0, borderLeftRadius: 0, marginVertical: 0, width: '100%' },
   menuRow: { backgroundColor: '#FFE4CF', flexDirection: 'row', padding: '5%', width: '100%' },

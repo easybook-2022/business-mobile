@@ -148,13 +148,17 @@ const info = {
       },
       showMoreoptions: {
         changeMenu: "Changer de menu",
+        changeInfo: "Modifier les informations",
         changeStaffinfo: "Modifier les informations du personnel",
         changeLogininfo: "Modifier les informations de connexion",
         changeBusinessinformation: "Changer de nom/numéro de téléphone",
         changeBusinesslocation: "Changement d'adresse",
         changeBusinesslogo: "Changer la photo",
         changeBusinesshours: "Changer les heures d'ouverture",
-        moreBusinesses: "Vos entreprises",
+        moreBusinesses: {
+          none: "Ajouter une nouvelle entreprise",
+          some: "Vos entreprises"
+        },
         walkIn: "Client sans rendez-vous",
         switchAccount: {
           header: "Changer de compte pour",
@@ -165,7 +169,7 @@ const info = {
         changeLanguage: "Changer de langue",
         editTables: "Modifier les tableaux",
         getAppointmentsby: {
-          header: "Obtenez des rendez-vous par",
+          header: "Qui peut voir les rendez-vous ?",
           both: "Propriétaires et personnel",
           owner: "Propriétaires uniquement"
         },
