@@ -3,6 +3,7 @@ import {
   SafeAreaView, ActivityIndicator, Platform, Dimensions, ScrollView, View, FlatList, Text, Image, TextInput, 
   TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet, Modal 
 } from 'react-native';
+import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CommonActions } from '@react-navigation/native';
 import { displayTime, resizePhoto } from 'geottuse-tools'
@@ -17,6 +18,7 @@ import AntDesign from 'react-native-vector-icons/AntDesign'
 
 const { height, width } = Dimensions.get('window')
 const wsize = p => {return width * (p / 100)}
+let source
 
 export default function Booktime(props) {
   const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
@@ -75,7 +77,9 @@ export default function Booktime(props) {
   const [confirm, setConfirm] = useState({ show: false, service: "", time: 0, workerIds: [], note: "", requested: false, errormsg: "" })
 
   const getTheAppointmentInfo = (fetchBlocked) => {
-    getAppointmentInfo(scheduleid)
+    const data = { scheduleid, cancelToken: source.token }
+
+    getAppointmentInfo(data)
       .then((res) => {
         if (res.status == 200) {
           return res.data
@@ -263,8 +267,9 @@ export default function Booktime(props) {
   }
   const getTheLocationHours = async(time) => {
     const locationid = await AsyncStorage.getItem("locationid")
+    const data = { locationid, cancelToken: source.token }
     
-    getLocationHours(locationid)
+    getLocationHours(data)
       .then((res) => {
         if (res.status == 200) {
           return res.data
@@ -289,8 +294,9 @@ export default function Booktime(props) {
     setLanguage(await AsyncStorage.getItem("language"))
 
     const locationid = await AsyncStorage.getItem("locationid")
+    const data = { locationid, cancelToken: source.token }
 
-    getAllStylists(locationid)
+    getAllStylists(data)
       .then((res) => {
         if (res.status == 200) {
           return res.data
@@ -309,8 +315,9 @@ export default function Booktime(props) {
   }
   const getAllTheWorkersTime = async() => {
     const locationid = await AsyncStorage.getItem("locationid")
+    const data = { locationid, cancelToken: source.token }
 
-    getAllWorkersTime(locationid)
+    getAllWorkersTime(data)
       .then((res) => {
         if (res.status == 200) {
           return res.data
@@ -329,7 +336,7 @@ export default function Booktime(props) {
   }
   const getAllScheduledTimes = async() => {
     const locationid = await AsyncStorage.getItem("locationid")
-    const data = { locationid, ownerid: null }
+    const data = { locationid, ownerid: null, cancelToken: source.token }
 
     getWorkersHour(data)
       .then((res) => {
@@ -362,9 +369,16 @@ export default function Booktime(props) {
           setStep(null)
         }
       })
+      .catch((err) => {
+        if (err.response && err.response.status == 400) {
+          const { errormsg, status } = err.response.data
+        }
+      })
   }
   const selectWorker = (id, close = false) => {
-    getStylistInfo(id)
+    const data = { id, cancelToken: source.token }
+
+    getStylistInfo(data)
       .then((res) => {
         if (res.status == 200) {
           return res.data
@@ -380,6 +394,11 @@ export default function Booktime(props) {
           } else {
             setStep(null)
           }
+        }
+      })
+      .catch((err) => {
+        if (err.response && err.response.status == 400) {
+          const { errormsg, status } = err.response.data
         }
       })
   }
@@ -572,7 +591,7 @@ export default function Booktime(props) {
       time: selecteddate, note: note ? note : "", 
       type: "salonChangeAppointment",
       timeDisplay: displayTime(selecteddate),
-      blocked, unix: time
+      blocked, unix: time, cancelToken: source.token
     }
 
     salonChangeAppointment(data)
@@ -639,8 +658,9 @@ export default function Booktime(props) {
 
   const logout = async() => {
     const ownerid = await AsyncStorage.getItem("ownerid")
+    const data = { ownerid, cancelToken: source.token }
 
-    logoutUser(ownerid)
+    logoutUser(data)
       .then((res) => {
         if (res.status == 200) {
           return res.data
@@ -668,6 +688,14 @@ export default function Booktime(props) {
     getAllTheWorkersTime()
     getAllScheduledTimes()
     getTheAppointmentInfo()
+
+    source = axios.CancelToken.source();
+
+    return () => {
+      if (source) {
+        source.cancel("components got unmounted");
+      }
+    }
   }, [])
 
   useEffect(() => {

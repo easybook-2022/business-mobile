@@ -4,6 +4,7 @@ import {
   Text, TextInput, Image, Keyboard, TouchableOpacity, TouchableWithoutFeedback, StyleSheet, 
   PermissionsAndroid
 } from 'react-native'
+import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import * as FileSystem from 'expo-file-system'
@@ -24,6 +25,7 @@ import Loadingprogress from '../widgets/loadingprogress';
 const { height, width } = Dimensions.get('window')
 const wsize = p => {return width * (p / 100)}
 const steps = ['name', 'photo']
+let source
 
 export default function Addmenu(props) {
 	const params = props.route.params
@@ -50,7 +52,7 @@ export default function Addmenu(props) {
 
 		const ownerid = await AsyncStorage.getItem("ownerid")
 		const locationid = await AsyncStorage.getItem("locationid")
-		const data = { locationid, parentMenuid: parentMenuid > -1 ? parentMenuid : "", name, image }
+		const data = { locationid, parentMenuid: parentMenuid > -1 ? parentMenuid : "", name, image, cancelToken: source.token }
 
 		addNewMenu(data)
 			.then((res) => {
@@ -76,7 +78,7 @@ export default function Addmenu(props) {
 	const saveTheMenu = () => {
     setLoading(true)
 
-		const data = { menuid: parentMenuid > -1 ? parentMenuid : "", name, image, permission: cameraPermission && pickingPermission }
+		const data = { menuid: parentMenuid > -1 ? parentMenuid : "", name, image, permission: cameraPermission && pickingPermission, cancelToken: source.token }
 		
 		saveMenu(data)
 			.then((res) => {
@@ -134,8 +136,10 @@ export default function Addmenu(props) {
     tr.locale = await AsyncStorage.getItem("language")
 
     setLanguage(await AsyncStorage.getItem("language"))
+
+    const data = { menuid, cancelToken: source.token }
     
-		getMenuInfo(menuid)
+		getMenuInfo(data)
 			.then((res) => {
 				if (res.status == 200) {
 					return res.data
@@ -273,6 +277,14 @@ export default function Addmenu(props) {
   
 	useEffect(() => {
 		getTheMenuInfo()
+
+    source = axios.CancelToken.source();
+
+    return () => {
+      if (source) {
+        source.cancel("components got unmounted");
+      }
+    }
 	}, [])
 
 	return (

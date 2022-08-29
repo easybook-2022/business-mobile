@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { SafeAreaView, View, FlatList, Text, TextInput, TouchableOpacity, StyleSheet, Dimensions, Modal } from 'react-native';
+import axios from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BarCodeScanner } from 'expo-barcode-scanner';
 import QRCode from 'react-native-qrcode-svg';
@@ -12,6 +13,7 @@ import AntDesign from 'react-native-vector-icons/AntDesign'
 
 const { height, width } = Dimensions.get('window')
 const wsize = p => {return width * (p / 100)}
+let source
 
 export default function Tables() {
   const [ownerId, setOwnerid] = useState(null)
@@ -30,8 +32,8 @@ export default function Tables() {
       const { table } = showAddtable
 
       if (table) {
-        const data = { locationid, table, tableid: getId() }
-
+        const data = { locationid, table, tableid: getId(), cancelToken: source.token }
+        
         addTable(data)
           .then((res) => {
             if (res.status == 200) {
@@ -67,8 +69,9 @@ export default function Tables() {
       setShowremovetable({ ...showRemovetable, show: true, table: { id, name } })
     } else {
       const { id } = showRemovetable.table
+      const data = { tableid: id, cancelToken: source.token }
 
-      removeTable(id)
+      removeTable(data)
         .then((res) => {
           if (res.status == 200) {
             return res.data
@@ -80,12 +83,18 @@ export default function Tables() {
             getTheTables()
           }
         })
+        .catch((err) => {
+          if (err.response && err.response.status == 400) {
+            const { errormsg, status } = err.response.data
+          }
+        })
     }
   }
   const showQrCode = async(id) => {
     const locationid = await AsyncStorage.getItem("locationid")
+    const data = { tableid: id, cancelToken: source.token }
 
-    getQrCode(id)
+    getQrCode(data)
       .then((res) => {
         if (res.status == 200) {
           return res.data
@@ -110,24 +119,39 @@ export default function Tables() {
     setLanguage(await AsyncStorage.getItem("language"))
 
     const locationid = await AsyncStorage.getItem("locationid")
-    const ownerid = await AsyncStorage.getItem("ownerid")
+    const data = { locationid, cancelToken: source.token }
 
-    getTables(locationid)
+    getTables(data)
       .then((res) => {
         if (res.status == 200) {
           return res.data
         }
       })
-      .then((res) => {
+      .then(async(res) => {
         if (res) {
+          const ownerid = await AsyncStorage.getItem("ownerid")
+
           setTables(res.tables)
           setOwnerid(ownerid)
+        }
+      })
+      .catch((err) => {
+        if (err.response && err.response.status == 400) {
+          const { errormsg, status } = err.response.data
         }
       })
   }
 
   useEffect(() => {
     getTheTables()
+
+    source = axios.CancelToken.source();
+
+    return () => {
+      if (source) {
+        source.cancel("components got unmounted");
+      }
+    }
   }, [])
 
   return (

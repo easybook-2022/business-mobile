@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
 import { SafeAreaView, View, FlatList, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native'
+import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getRestaurantIncome } from '../apis/locations'
 
 const { height, width } = Dimensions.get('window')
 const wsize = p => {return width * (p / 100)}
+let source
 
 export default function Restaurantincomerecords(props) {
   const [daily, setDaily] = useState([])
@@ -14,8 +16,9 @@ export default function Restaurantincomerecords(props) {
 
   const getTheIncome = async() => {
     const locationid = await AsyncStorage.getItem("locationid")
+    const data = { locationid, cancelToken: source.token }
 
-    getRestaurantIncome(locationid)
+    getRestaurantIncome(data)
       .then((res) => {
         if (res.status == 200) {
           return res.data
@@ -36,6 +39,14 @@ export default function Restaurantincomerecords(props) {
 
   useEffect(() => {
     getTheIncome()
+
+    source = axios.CancelToken.source();
+
+    return () => {
+      if (source) {
+        source.cancel("components got unmounted");
+      }
+    }
   }, [])
   
   return (

@@ -3,8 +3,13 @@ import { url } from '../../assets/info'
 
 const beginUrl = `${url}/owners/`
 
-export const verifyUser = cellnumber => {
-	return axios.get(`${beginUrl}owner_verify/${cellnumber}`)
+export const verifyUser = data => {
+  const { cellnumber, cancelToken } = data
+
+	return axios.get(
+    `${beginUrl}owner_verify/${cellnumber}`,
+    { cancelToken }
+  )
 }
 
 export const updateLogins = data => {
@@ -21,8 +26,13 @@ export const loginUser = data => {
 	)
 }
 
-export const logoutUser = id => {
-  return axios.get(`${beginUrl}owner_logout/${id}`)
+export const logoutUser = data => {
+  const { ownerid, cancelToken } = data
+
+  return axios.get(
+    `${beginUrl}owner_logout/${ownerid}`,
+    { cancelToken }
+  )
 }
 
 export const registerUser = data => {
@@ -117,16 +127,22 @@ export const updateOwner = data => {
 	)
 }
 
-export const deleteOwner = id => {
-  return axios.get(`${beginUrl}delete_owner/${id}`)
+export const deleteOwner = data => {
+  const { id, cancelToken } = data
+
+  return axios.get(
+    `${beginUrl}delete_owner/${id}`,
+    { cancelToken }
+  )
 }
 
-export const getWorkers = id => {
-  return axios.get(`${beginUrl}get_workers/${id}`)
-}
+export const getAllStylists = data => {
+  const { locationid, cancelToken } = data
 
-export const getAllStylists = id => {
-  return axios.get(`${beginUrl}get_all_stylists/${id}`)
+  return axios.get(
+    `${beginUrl}get_all_stylists/${locationid}`,
+    { cancelToken }
+  )
 }
 
 export const getAllWorkingStylists = data => {
@@ -136,12 +152,22 @@ export const getAllWorkingStylists = data => {
   )
 }
 
-export const getStylistInfo = id => {
-  return axios.get(`${beginUrl}get_stylist_info/${id}`)
+export const getStylistInfo = data => {
+  const { workerid, cancelToken } = data
+
+  return axios.get(
+    `${beginUrl}get_stylist_info/${workerid}`,
+    { cancelToken }
+  )
 }
 
-export const getAllWorkersTime = id => {
-  return axios.get(`${beginUrl}get_all_workers_time/${id}`)
+export const getAllWorkersTime = data => {
+  const { locationid, cancelToken } = data
+
+  return axios.get(
+    `${beginUrl}get_all_workers_time/${locationid}`,
+    { cancelToken }
+  )
 }
 
 export const getWorkersHour = data => {
@@ -172,12 +198,22 @@ export const getOtherWorkers = data => {
   )
 }
 
-export const getWorkersTime = id => {
-  return axios.get(`${beginUrl}get_workers_time/${id}`)
+export const getWorkersTime = data => {
+  const { locationid, cancelToken } = data
+
+  return axios.get(
+    `${beginUrl}get_workers_time/${locationid}`,
+    { cancelToken }
+  )
 }
 
-export const getOwnerInfo = id => {
-  return axios.get(`${beginUrl}get_owner_info/${id}`)
+export const getOwnerInfo = data => {
+  const { ownerid, cancelToken } = data
+
+  return axios.get(
+    `${beginUrl}get_owner_info/${ownerid}`,
+    { cancelToken }
+  )
 }
 
 export const setOwnerHours = data => {
@@ -187,12 +223,22 @@ export const setOwnerHours = data => {
   )
 }
 
-export const getAccounts = id => {
-	return axios.get(`${beginUrl}get_accounts/${id}`)
+export const getAccounts = data => {
+  const { locationid, cancelToken } = data
+
+	return axios.get(
+    `${beginUrl}get_accounts/${locationid}`,
+    { cancelToken }
+  )
 }
 
-export const getCode = cellnumber => {
-	return axios.get(`${beginUrl}get_reset_code/${cellnumber}`)
+export const getCode = data => {
+  const { cellnumber, cancelToken } = data
+
+	return axios.get(
+    `${beginUrl}get_reset_code/${cellnumber}`,
+    { cancelToken }
+  )
 }
 
 export const resetPassword = data => {

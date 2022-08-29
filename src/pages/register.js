@@ -4,6 +4,7 @@ import {
   Image, TouchableOpacity, TouchableWithoutFeedback, Modal, Keyboard, StyleSheet, PermissionsAndroid, 
   KeyboardAvoidingView
 } from 'react-native';
+import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import * as FileSystem from 'expo-file-system'
@@ -29,6 +30,7 @@ const wsize = p => {return width * (p / 100)}
 const steps = ['nickname', 'profile', 'hours']
 const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+let source
 
 export default function Register(props) {
   const [language, setLanguage] = useState('')
@@ -57,7 +59,7 @@ export default function Register(props) {
     const locationid = await AsyncStorage.getItem("locationid")
     const locationtype = await AsyncStorage.getItem("locationtype")
     const newBusiness = await AsyncStorage.getItem("newBusiness")
-    const data = { locationid }
+    const data = { locationid, cancelToken: source.token }
 
     tr.locale = await AsyncStorage.getItem("language")
 
@@ -248,37 +250,37 @@ export default function Register(props) {
     })
 
     if (!invalid) {
-      const data = { id, username, profile, permission: cameraPermission || pickingPermission, hours }
+      const data = { id, username, profile, permission: cameraPermission || pickingPermission, hours, cancelToken: source.token }
 
       saveUserInfo(data)
         .then((res) => {
-            if (res.status == 200) {
-              return res.data
-            }
-          })
-          .then((res) => {
-            if (res) {
-              const { msg } = res
-
-              setLoading(false)
-
-              AsyncStorage.setItem("phase", "main")
-              AsyncStorage.setItem("locationid", locationid)
-              AsyncStorage.setItem("locationtype", locationtype)
-              AsyncStorage.setItem("userType", "owner")
-
-              props.navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "main", params: { firstTime: true }}]}));
-            }
-          })
-          .catch((err) => {
-            if (err.response && err.response.status == 400) {
-              const { errormsg, status } = err.response.data
-
-              setErrormsg(tr.t("register.nameErrormsg"))
-            }
+          if (res.status == 200) {
+            return res.data
+          }
+        })
+        .then((res) => {
+          if (res) {
+            const { msg } = res
 
             setLoading(false)
-          })
+
+            AsyncStorage.setItem("phase", "main")
+            AsyncStorage.setItem("locationid", locationid)
+            AsyncStorage.setItem("locationtype", locationtype)
+            AsyncStorage.setItem("userType", "owner")
+
+            props.navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "main", params: { firstTime: true }}]}));
+          }
+        })
+        .catch((err) => {
+          if (err.response && err.response.status == 400) {
+            const { errormsg, status } = err.response.data
+
+            setErrormsg(tr.t("register.nameErrormsg"))
+          }
+
+          setLoading(false)
+        })
     } else {
       setErrormsg("Please choose an option for all the days")
 
@@ -491,6 +493,14 @@ export default function Register(props) {
 
   useEffect(() => {
     getTheLocationProfile()
+
+    source = axios.CancelToken.source();
+
+    return () => {
+      if (source) {
+        source.cancel("components got unmounted");
+      }
+    }
   }, [])
 
   useEffect(() => {

@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { SafeAreaView, Platform, Dimensions, View, ImageBackground, Text, TextInput, Image, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet } from 'react-native';
+import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { getCode } from '../apis/owners'
@@ -8,14 +9,17 @@ import { displayPhonenumber } from 'geottuse-tools'
 
 const { height, width } = Dimensions.get('window')
 const wsize = p => {return width * (p / 100)}
+let source
 
 export default function Forgotpassword({ navigation }) {
 	const [info, setInfo] = useState({ cellnumber: loginInfo.cellnumber, resetcode: '111111', sent: false })
 	const [code, setCode] = useState('')
 	const [errorMsg, setErrormsg] = useState('')
-	
+
 	const getTheCode = () => {
-		getCode(info.cellnumber)
+    const data = { cellnumber: info.cellnumber, cancelToken: source.token }
+
+		getCode(data)
 			.then((res) => {
 				if (res.status == 200) {
 					return res.data
@@ -46,6 +50,16 @@ export default function Forgotpassword({ navigation }) {
 			setErrormsg("Reset code is wrong")
 		}
 	}
+
+  useEffect(() => {
+    source = axios.CancelToken.source();
+
+    return () => {
+      if (source) {
+        source.cancel("components got unmounted");
+      }
+    }
+  }, [])
 
 	return (
 		<SafeAreaView style={styles.forgotpassword}>

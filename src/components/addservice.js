@@ -3,6 +3,7 @@ import {
   SafeAreaView, Platform, ActivityIndicator, Dimensions, ScrollView, Modal, View, Text, 
   TextInput, Image, Keyboard, TouchableOpacity, TouchableWithoutFeedback, StyleSheet, PermissionsAndroid
 } from 'react-native'
+import axios from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import * as FileSystem from 'expo-file-system'
@@ -25,6 +26,7 @@ import Loadingprogress from '../widgets/loadingprogress';
 const { height, width } = Dimensions.get('window')
 const wsize = p => {return width * (p / 100)}
 const steps = ['name', 'photo', 'price']
+let source
 
 export default function Addservice(props) {
 	const params = props.route.params
@@ -49,7 +51,7 @@ export default function Addservice(props) {
 		const locationid = await AsyncStorage.getItem("locationid")
 
 		if (name && (price && !isNaN(price))) {
-			const data = { locationid, menuid: parentMenuid > -1 ? parentMenuid : "", name, image, price }
+			const data = { locationid, menuid: parentMenuid > -1 ? parentMenuid : "", name, image, price, cancelToken: source.token }
 
 			setLoading(true)
 
@@ -94,7 +96,7 @@ export default function Addservice(props) {
 		const locationid = await AsyncStorage.getItem("locationid")
 
 		if (name && (price && !isNaN(price))) {
-			const data = { locationid, menuid: parentMenuid > -1 ? parentMenuid : "", serviceid, name, image, price }
+			const data = { locationid, menuid: parentMenuid > -1 ? parentMenuid : "", serviceid, name, image, price, cancelToken: source.token }
 
       setLoading(true)
 
@@ -287,7 +289,9 @@ export default function Addservice(props) {
 	}
 	
 	const getTheServiceInfo = async() => {
-		getServiceInfo(serviceid)
+    const data = { serviceid, cancelToken: source.token }
+
+		getServiceInfo(data)
 			.then((res) => {
 				if (res.status == 200) {
 					return res.data
@@ -322,6 +326,14 @@ export default function Addservice(props) {
     initialize()
     
 		if (serviceid) getTheServiceInfo()
+
+    source = axios.CancelToken.source();
+
+    return () => {
+      if (source) {
+        source.cancel("components got unmounted");
+      }
+    }
 	}, [])
   
 	return (

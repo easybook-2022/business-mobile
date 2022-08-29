@@ -3,11 +3,16 @@ import { url } from '../../assets/info'
 
 const beginUrl = `${url}/menus/`
 
-export const getMenus = id => {
-	return axios.get(`${beginUrl}get_menus/${id}`)
+export const getMenus = data => {
+  const { locationid, cancelToken } = data
+
+	return axios.get(
+    `${beginUrl}get_menus/${locationid}`,
+    { cancelToken }
+  )
 }
 
-export const addNewMenu = (data) => {
+export const addNewMenu = data => {
 	const form = new FormData()
   const { uri, name, type = "image/jpeg", size } = data.image
 
@@ -27,12 +32,22 @@ export const addNewMenu = (data) => {
   )
 }
 
-export const removeMenu = id => {
-	return axios.get(`${beginUrl}remove_menu/${id}`)
+export const removeMenu = data => {
+  const { menuid, cancelToken } = data
+
+	return axios.get(
+    `${beginUrl}remove_menu/${menuid}`,
+    { cancelToken }
+  )
 }
 
-export const getMenuInfo = id => {
-	return axios.get(`${beginUrl}get_menu_info/${id}`)
+export const getMenuInfo = data => {
+  const { menuid, cancelToken } = data
+
+	return axios.get(
+    `${beginUrl}get_menu_info/${menuid}`,
+    { cancelToken }
+  )
 }
 
 export const saveMenu = data => {

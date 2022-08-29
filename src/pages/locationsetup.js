@@ -4,6 +4,7 @@ import {
   Image, TouchableOpacity, TouchableWithoutFeedback, Keyboard, Modal, StyleSheet, PermissionsAndroid, 
   KeyboardAvoidingView
 } from 'react-native';
+import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import * as FileSystem from 'expo-file-system'
@@ -33,6 +34,7 @@ const hsize = p => {return height * (p / 100)}
 
 const steps = ['type', 'name', 'location', 'phonenumber', 'logo', 'hours']
 const daysArr = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+let source
 
 export default function Locationsetup({ navigation }) {
   const [language, setLanguage] = useState('')
@@ -66,7 +68,7 @@ export default function Locationsetup({ navigation }) {
 
 	const [loading, setLoading] = useState(false)
 	const [errorMsg, setErrormsg] = useState('')
-
+  
 	const setupYourLocation = async() => {
     setLoading(true)
 
@@ -134,7 +136,7 @@ export default function Locationsetup({ navigation }) {
 
 			const data = {
 				storeName, phonenumber, logo, hours, type, 
-				longitude, latitude, ownerid
+				longitude, latitude, ownerid, cancelToken: source.token
 			}
 
 			if (!invalid) {
@@ -460,6 +462,14 @@ export default function Locationsetup({ navigation }) {
 
   useEffect(() => {
     initialize()
+
+    source = axios.CancelToken.source();
+
+    return () => {
+      if (source) {
+        source.cancel("components got unmounted");
+      }
+    }
   }, [])
 
   useEffect(() => {

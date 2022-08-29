@@ -73,22 +73,6 @@ export const updateLogo = data => {
   )
 }
 
-export const fetchNumRequests = id => {
-	return axios.get(`${beginUrl}fetch_num_requests/${id}`)
-}
-
-export const fetchNumAppointments = id => {
-	return axios.get(`${beginUrl}fetch_num_appointments/${id}`)
-}
-
-export const fetchNumCartOrderers = id => {
-	return axios.get(`${beginUrl}fetch_num_cartorderers/${id}`)
-}
-
-export const fetchNumorders = id => {
-	return axios.get(`${beginUrl}fetch_num_orders/${id}`)
-}
-
 export const updateLocationHours = data => {
 	return axios.post(
 		`${beginUrl}update_location_hours`,
@@ -96,8 +80,13 @@ export const updateLocationHours = data => {
 	)
 }
 
-export const getLogins = id => { // for restaurants only
-  return axios.get(`${beginUrl}/get_logins/${id}`)
+export const getLogins = data => { // for restaurants only
+  const { locationid, cancelToken } = data
+
+  return axios.get(
+    `${beginUrl}/get_logins/${locationid}`,
+    { cancelToken }
+  )
 }
 
 export const setReceiveType = data => {
@@ -114,12 +103,22 @@ export const getDayHours = data => {
   )
 }
 
-export const getLocationHours = id => {
-	return axios.get(`${beginUrl}get_location_hours/${id}`)
+export const getLocationHours = data => {
+  const { locationid, cancelToken } = data
+
+	return axios.get(
+    `${beginUrl}get_location_hours/${locationid}`,
+    { cancelToken }
+  )
 }
 
-export const getAllLocations = id => {
-  return axios.get(`${beginUrl}get_all_locations/${id}`)
+export const getAllLocations = data => {
+  const { ownerid, cancelToken } = data
+
+  return axios.get(
+    `${beginUrl}get_all_locations/${ownerid}`,
+    { cancelToken }
+  )
 }
 
 export const getLocationProfile = data => {
@@ -129,10 +128,20 @@ export const getLocationProfile = data => {
   )
 }
 
-export const getRestaurantIncome = id => {
-  return axios.get(`${beginUrl}/get_restaurant_income/${id}`)
+export const getRestaurantIncome = data => {
+  const { locationid, cancelToken } = data
+
+  return axios.get(
+    `${beginUrl}/get_restaurant_income/${locationid}`,
+    { cancelToken }
+  )
 }
 
-export const getSalonIncome = id => {
-  return axios.get(`${beginUrl}/get_salon_income/${id}`)
+export const getSalonIncome = data => {
+  const { id, cancelToken } = data
+
+  return axios.get(
+    `${beginUrl}/get_salon_income/${id}`,
+    { cancelToken }
+  )
 }

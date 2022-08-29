@@ -3,6 +3,7 @@ import {
   SafeAreaView, Platform, ActivityIndicator, Dimensions, ScrollView, Modal, View, Text, 
   TextInput, Image, Keyboard, TouchableOpacity, TouchableWithoutFeedback, StyleSheet, PermissionsAndroid
 } from 'react-native'
+import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import * as FileSystem from 'expo-file-system'
@@ -25,6 +26,7 @@ import Loadingprogress from '../widgets/loadingprogress';
 const { height, width } = Dimensions.get('window')
 const wsize = p => {return width * (p / 100)}
 const steps = ['name', 'photo', 'options']
+let source
 
 export default function Addmeal(props) {
   const params = props.route.params
@@ -91,7 +93,8 @@ export default function Addmeal(props) {
 
       const data = { 
         locationid, menuid: parentMenuid > -1 ? parentMenuid : "", name, image, 
-        options: {"sizes": newSizes, "quantities": newQuantities, "percents": newPercents}, price: sizes.length > 0 ? "" : price 
+        options: {"sizes": newSizes, "quantities": newQuantities, "percents": newPercents}, price: sizes.length > 0 ? "" : price, 
+        cancelToken: source.token
       }
 
       setLoading(true)
@@ -139,7 +142,7 @@ export default function Addmeal(props) {
   const updateTheMeal = async() => {
     const locationid = await AsyncStorage.getItem("locationid")
     const { type, optionsEdit, optionInfo } = changeInfo
-    let data = { locationid, type, menuid: parentMenuid > -1 ? parentMenuid : "", productid }
+    let data = { locationid, type, menuid: parentMenuid > -1 ? parentMenuid : "", productid, cancelToken: source.token }
 
     switch (type) {
       case "name":
@@ -428,7 +431,9 @@ export default function Addmeal(props) {
     }
   }
   const getTheMealInfo = async() => {
-    getProductInfo(productid)
+    const data = { productid, cancelToken: source.token }
+
+    getProductInfo(data)
       .then((res) => {
         if (res.status == 200) {
           return res.data
@@ -482,6 +487,14 @@ export default function Addmeal(props) {
 
   useEffect(() => {
     if (productid) getTheMealInfo()
+
+    source = axios.CancelToken.source();
+
+    return () => {
+      if (source) {
+        source.cancel("components got unmounted");
+      }
+    }
   }, [])
 
   useEffect(() => {

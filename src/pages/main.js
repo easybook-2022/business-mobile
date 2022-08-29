@@ -39,6 +39,7 @@ import Loadingprogress from '../widgets/loadingprogress'
 
 const { height, width } = Dimensions.get('window')
 const wsize = p => {return width * (p / 100)}
+let source
 
 export default function Main(props) {
   let updateWorkersHour
@@ -136,7 +137,7 @@ export default function Main(props) {
     const usertype = await AsyncStorage.getItem("userType")
 		const locationid = await AsyncStorage.getItem("locationid")
     const tableInfo = JSON.parse(await AsyncStorage.getItem("table"))
-		const data = { locationid, ownerid }
+		const data = { locationid, ownerid, cancelToken: source.token }
 
     setUsertype(usertype)
 
@@ -217,8 +218,9 @@ export default function Main(props) {
 	}
   const getTheLocationHours = async() => {
     const locationid = await AsyncStorage.getItem("locationid")
+    const data = { locationid, cancelToken: source.token }
 
-    getLocationHours(locationid)
+    getLocationHours(data)
       .then((res) => {
         if (res.status == 200) {
           return res.data
@@ -240,8 +242,9 @@ export default function Main(props) {
   }
   const getTheWorkersTime = async() => {
     const locationid = await AsyncStorage.getItem("locationid")
+    const data = { locationid, cancelToken: source.token }
 
-    getWorkersTime(locationid)
+    getWorkersTime(data)
       .then((res) => {
         if (res.status == 200) {
           return res.data
@@ -260,8 +263,9 @@ export default function Main(props) {
   }
   const getAllTheWorkersTime = async() => {
     const locationid = await AsyncStorage.getItem("locationid")
+    const data = { locationid, cancelToken: source.token }
 
-    getAllWorkersTime(locationid)
+    getAllWorkersTime(data)
       .then((res) => {
         if (res.status == 200) {
           return res.data
@@ -272,12 +276,18 @@ export default function Main(props) {
           setWorkershoursinfo(res.workers)
         }
       })
+      .catch((err) => {
+        if (err.response && err.response.status == 400) {
+          const { errormsg, status } = err.response.data
+        }
+      })
   }
 
   const logout = async() => {
     const ownerid = await AsyncStorage.getItem("ownerid")
+    const data = { ownerid, cancelToken: source.token }
 
-    logoutUser(ownerid)
+    logoutUser(data)
       .then((res) => {
         if (res.status == 200) {
           return res.data
@@ -290,6 +300,11 @@ export default function Main(props) {
 
             props.navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "auth" }]}));
           })
+        }
+      })
+      .catch((err) => {
+        if (err.response && err.response.status == 400) {
+          const { errormsg, status } = err.response.data
         }
       })
   }
@@ -313,8 +328,9 @@ export default function Main(props) {
   }
   const getTheLogins = async() => {
     const locationid = await AsyncStorage.getItem("locationid")
+    const data = { locationid, cancelToken: source.token }
 
-    getLogins(locationid)
+    getLogins(data)
       .then((res) => {
         if (res.status == 200) {
           return res.data
@@ -334,11 +350,17 @@ export default function Main(props) {
           })
         }
       })
+      .catch((err) => {
+        if (err.response && err.response.status == 400) {
+          const { errormsg, status } = err.response.data
+        }
+      })
   }
   const verifyLogin = () => {
     const { cellnumber } = logins.info
+    const data = { cellnumber, cancelToken: source.token }
 
-    verifyUser(cellnumber)
+    verifyUser(data)
       .then((res) => {
         if (res.status == 200) {
           return res.data
@@ -364,8 +386,9 @@ export default function Main(props) {
     setAccountform({ ...accountForm, loading: true })
 
     const { cellnumber } = accountForm
+    const data = { cellnumber, cancelToken: source.token }
 
-    verifyUser(cellnumber)
+    verifyUser(data)
       .then((res) => {
         if (res.status == 200) {
           return res.data
@@ -388,8 +411,9 @@ export default function Main(props) {
   }
   const getAllAccounts = async() => {
     const locationid = await AsyncStorage.getItem("locationid")
+    const data = { locationid, cancelToken: source.token }
 
-    getAccounts(locationid)
+    getAccounts(data)
       .then((res) => {
         if (res.status == 200) {
           return res.data
@@ -411,7 +435,7 @@ export default function Main(props) {
 
     if (storeName && phonenumber) {
       const id = await AsyncStorage.getItem("locationid")
-      const data = { id, storeName, phonenumber }
+      const data = { id, storeName, phonenumber, cancelToken: source.token }
 
       updateInformation(data)
         .then((res) => {
@@ -453,7 +477,7 @@ export default function Main(props) {
     const { longitude, latitude } = locationCoords
 
     const id = await AsyncStorage.getItem("locationid")
-    const data = { id, longitude, latitude }
+    const data = { id, longitude, latitude, cancelToken: source.token }
 
     updateAddress(data)
       .then((res) => {
@@ -479,7 +503,7 @@ export default function Main(props) {
   }
   const updateTheLogo = async() => {
     const id = await AsyncStorage.getItem("locationid")
-    const data = { id, logo }
+    const data = { id, logo, cancelToken: source.token }
 
     updateLogo(data)
       .then((res) => {
@@ -716,7 +740,7 @@ export default function Main(props) {
 
     const id = await AsyncStorage.getItem("locationid")
     const { cellnumber, username, newPassword, confirmPassword, profile } = accountForm
-    const data = { id, cellnumber, username, password: newPassword, confirmPassword: newPassword, hours, profile }
+    const data = { id, cellnumber, username, password: newPassword, confirmPassword: newPassword, hours, profile, cancelToken: source.token }
 
     addOwner(data)
       .then((res) => {
@@ -760,7 +784,9 @@ export default function Main(props) {
       })
   }
   const deleteTheLogin = id => {
-    deleteOwner(id)
+    const data = { id, cancelToken: source.token }
+
+    deleteOwner(data)
       .then((res) => {
         if (res.status == 200) {
           return res.data
@@ -769,6 +795,11 @@ export default function Main(props) {
       .then((res) => {
         if (res) {
           getTheLogins()
+        }
+      })
+      .catch((err) => {
+        if (err.response && err.response.status == 400) {
+          const { errormsg, status } = err.response.data
         }
       })
   }
@@ -924,7 +955,7 @@ export default function Main(props) {
     setAccountform({ ...accountForm, loading: true, errorMsg: "" })
 
     const { cellnumber, username, profile, currentPassword, newPassword, confirmPassword } = accountForm
-    let data = { ownerid: accountForm.id, type: accountForm.editType }
+    let data = { ownerid: accountForm.id, type: accountForm.editType, cancelToken: source.token }
 
     switch (accountForm.editType) {
       case "cellnumber":
@@ -1058,7 +1089,9 @@ export default function Main(props) {
   }
   const deleteTheOwner = id => {
     if (!deleteOwnerbox.show) {
-      getStylistInfo(id)
+      const data = { id, cancelToken: source.token }
+
+      getStylistInfo(data)
         .then((res) => {
           if (res.status == 200) {
             return res.data
@@ -1085,8 +1118,9 @@ export default function Main(props) {
         })
     } else {
       const { id } = deleteOwnerbox
+      const data = { id, cancelToken: source.token }
 
-      deleteOwner(id)
+      deleteOwner(data)
         .then((res) => {
           if (res.status == 200) {
             return res.data
@@ -1226,7 +1260,7 @@ export default function Main(props) {
       hours[day.header.substr(0, 3)] = { opentime: newOpentime, closetime: newClosetime, close }
     })
 
-    const data = { locationid, hours: JSON.stringify(hours) }
+    const data = { locationid, hours: JSON.stringify(hours), cancelToken: source.token }
 
     updateLocationHours(data)
       .then((res) => {
@@ -1253,7 +1287,7 @@ export default function Main(props) {
   const updateTheLogins = async() => {
     const { type, info, owners } = logins
     const { id, cellnumber, verified, noAccount, currentPassword, newPassword, confirmPassword, userType } = info
-    let data = { type, id }
+    let data = { type, id, cancelToken: source.token }
 
     switch (type) {
       case "all":
@@ -1344,7 +1378,7 @@ export default function Main(props) {
   }
   const setTheReceiveType = async(type) => {
     const locationid = await AsyncStorage.getItem("locationid")
-    const data = { locationid, type }
+    const data = { locationid, type, cancelToken: source.token }
 
     setReceiveType(data)
       .then((res) => {
@@ -1378,6 +1412,14 @@ export default function Main(props) {
   
 	useEffect(() => {
     initialize()
+
+    source = axios.CancelToken.source();
+
+    return () => {
+      if (source) {
+        source.cancel("components got unmounted");
+      }
+    }
   }, [])
 
   useFocusEffect(

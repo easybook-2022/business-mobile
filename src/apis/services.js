@@ -10,8 +10,13 @@ export const getServices = data => {
 	)
 }
 
-export const getServiceInfo = id => {
-	return axios.get(`${beginUrl}get_service_info/${id}`)
+export const getServiceInfo = data => {
+  const { serviceid, cancelToken } = data
+
+	return axios.get(
+    `${beginUrl}get_service_info/${serviceid}`,
+    { cancelToken }
+  )
 }
 
 export const addNewService = data => {
@@ -55,6 +60,11 @@ export const updateService = data => {
 	)
 }
 
-export const removeService = (id) => {
-	return axios.get(`${beginUrl}remove_service/${id}`)
+export const removeService = data => {
+  const { serviceid, cancelToken } = data
+
+	return axios.get(
+    `${beginUrl}remove_service/${serviceid}`,
+    { cancelToken }
+  )
 }

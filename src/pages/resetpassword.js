@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { SafeAreaView, Platform, Dimensions, View, ImageBackground, Text, TextInput, Image, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet } from 'react-native';
+import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
@@ -8,6 +9,7 @@ import { userInfo } from '../../assets/info'
 
 const { height, width } = Dimensions.get('window')
 const wsize = p => {return width * (p / 100)}
+let source
 
 export default function Resetpassword(props) {
 	const offsetPadding = Constants.statusBarHeight
@@ -19,7 +21,7 @@ export default function Resetpassword(props) {
 	const [errorMsg, setErrormsg] = useState('')
 
 	const reset = () => {
-		const data = { cellnumber, newPassword, confirmPassword }
+		const data = { cellnumber, newPassword, confirmPassword, cancelToken: source.token }
 
 		resetPassword(data)
 			.then((res) => {
@@ -47,6 +49,16 @@ export default function Resetpassword(props) {
 				}
 			})
 	}
+
+  useEffect(() => {
+    source = axios.CancelToken.source();
+
+    return () => {
+      if (source) {
+        source.cancel("components got unmounted");
+      }
+    }
+  }, [])
 
 	return (
 		<SafeAreaView style={style.resetpassword}>

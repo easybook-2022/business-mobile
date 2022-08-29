@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { SafeAreaView, ActivityIndicator, Dimensions, FlatList, View, Image, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import { CommonActions } from '@react-navigation/native';
+import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { tr } from '../../assets/translate'
 import { getAllLocations } from '../apis/locations'
@@ -13,6 +14,7 @@ import AntDesign from 'react-native-vector-icons/AntDesign'
 
 const { height, width } = Dimensions.get('window')
 const wsize = p => {return width * (p / 100)}
+let source
 
 export default function Locationslist(props) {
   const [language, setLanguage] = useState('')
@@ -21,12 +23,13 @@ export default function Locationslist(props) {
 
   const getTheAllLocations = async() => {
     const ownerid = await AsyncStorage.getItem("ownerid")
+    const data = { ownerid, cancelToken: source.token }
 
     tr.locale = await AsyncStorage.getItem("language")
 
     setLanguage(await AsyncStorage.getItem("language"))
 
-    getAllLocations(ownerid)
+    getAllLocations(data)
       .then((res) => {
         if (res.status == 200) {
           return res.data
@@ -36,6 +39,11 @@ export default function Locationslist(props) {
         if (res) {
           setLocations(res.locations)
           setLoaded(true)
+        }
+      })
+      .catch((err) => {
+        if (err.response && err.response.status == 400) {
+          const { errormsg, status } = err.response.data
         }
       })
   }
@@ -51,6 +59,14 @@ export default function Locationslist(props) {
 
   useEffect(() => {
     if (!loaded) getTheAllLocations()
+
+    source = axios.CancelToken.source();
+
+    return () => {
+      if (source) {
+        source.cancel("components got unmounted");
+      }
+    }
   }, [])
 
   return (

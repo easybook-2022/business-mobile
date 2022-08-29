@@ -23,7 +23,6 @@ import Booktime from './src/pages/booktime'
 
 import Salonincomerecords from './src/pages/salonincomerecords'
 import Restaurantincomerecords from './src/pages/restaurantincomerecords'
-import Cartorders from './src/pages/cartorders'
 
 // salons' components
 import Addmenu from './src/components/addmenu'
@@ -137,21 +136,6 @@ export default function App() {
               headerLeft: () => (
                 Platform.OS == 'ios' && (
                   <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>
-                    <Text style={styles.backHeader}>Go Back</Text>
-                  </TouchableOpacity>
-                )
-              )
-            })}/>
-            <Stack.Screen name="cartorders" component={Cartorders} options={({ navigation, route }) => ({
-              headerTitle: () => <Text style={styles.header}>{tr.t("orders.header")}</Text>,
-              headerLeft: () => (
-                Platform.OS == 'ios' && (
-                  <TouchableOpacity style={styles.back} onPress={() => navigation.dispatch(
-                    CommonActions.reset({
-                      index: 0,
-                      routes: [{ name: "main", params: { cartorders: true }}]
-                    })
-                  )}>
                     <Text style={styles.backHeader}>Go Back</Text>
                   </TouchableOpacity>
                 )

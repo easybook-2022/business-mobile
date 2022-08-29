@@ -4,6 +4,7 @@ import {
   TextInput, Image, TouchableOpacity, KeyboardAvoidingView, TouchableWithoutFeedback, 
   Keyboard, ScrollView, StyleSheet, Modal, PermissionsAndroid
 } from 'react-native'
+import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { useFocusEffect, useIsFocused, CommonActions } from '@react-navigation/native';
@@ -16,7 +17,6 @@ import { logo_url } from '../../assets/info'
 import { resizePhoto } from 'geottuse-tools'
 import { tr } from '../../assets/translate'
 import { getLocationProfile } from '../apis/locations'
-import { getOwnerInfo } from '../apis/owners'
 import { getMenus, addNewMenu, removeMenu, getMenuInfo, saveMenu, uploadMenu, deleteMenu } from '../apis/menus'
 import { getProductInfo, removeProduct } from '../apis/products'
 import { getServiceInfo, removeService } from '../apis/services'
@@ -30,6 +30,7 @@ import Loadingprogress from '../widgets/loadingprogress';
 
 const { height, width } = Dimensions.get('window')
 const wsize = p => {return width * (p / 100)}
+let source
 
 export default function Menu(props) {
   const [language, setLanguage] = useState('')
@@ -61,7 +62,8 @@ export default function Menu(props) {
 
 	const getTheLocationProfile = async() => {
 		const locationid = await AsyncStorage.getItem("locationid")
-		const data = { locationid }
+    const usertype = await AsyncStorage.getItem("userType")
+		const data = { locationid, cancelToken: source.token }
 
     tr.locale = await AsyncStorage.getItem("language")
 
@@ -80,6 +82,8 @@ export default function Menu(props) {
 
 					setLocationtype(type)
 					getAllMenus()
+
+          setUsertype(usertype)
 				}
 			})
 			.catch((err) => {
@@ -88,33 +92,13 @@ export default function Menu(props) {
 				}
 			})
 	}
-  const getTheOwnerInfo = async() => {
-    const ownerid = await AsyncStorage.getItem("ownerid")
-    const usertype = await AsyncStorage.getItem("userType")
-
-    getOwnerInfo(ownerid)
-      .then((res) => {
-        if (res.status == 200) {
-          return res.data
-        }
-      })
-      .then((res) => {
-        if (res) {
-          setUsertype(usertype)
-        }
-      })
-      .catch((err) => {
-        if (err.response && err.response.status == 400) {
-          const { errormsg, status } = err.response.data
-        }
-      })
-  }
   
 	// menus
 	const getAllMenus = async() => {
 		const locationid = await AsyncStorage.getItem("locationid")
+    const data = { locationid, cancelToken: source.token }
 
-		getMenus(locationid)
+		getMenus(data)
 			.then((res) => {
 				if (res.status == 200) {
 					return res.data
@@ -555,7 +539,7 @@ export default function Menu(props) {
     const { parentMenuid, name } = changeMenu
     const { uri, size } = uploadMenubox
     const image = { uri, size }
-    const data = { menuid: parentMenuid, name, image }
+    const data = { menuid: parentMenuid, name, image, cancelToken: source.token }
 
     saveMenu(data)
       .then((res) => {
@@ -579,7 +563,9 @@ export default function Menu(props) {
     setRemovemenuinfo({ ...removeMenuinfo, loading: true })
 
 		if (!removeMenuinfo.show) {
-			getMenuInfo(id)
+      const data = { menuid: id, cancelToken: source.token }
+
+			getMenuInfo(data)
 				.then((res) => {
 					if (res.status == 200) {
 						return res.data
@@ -598,7 +584,9 @@ export default function Menu(props) {
 					}
 				})
 		} else {
-			removeMenu(id)
+      const data = { menuid: id, cancelToken: source.token }
+
+			removeMenu(data)
 				.then((res) => {
 					if (res.status == 200) {
 						return res.data
@@ -621,7 +609,9 @@ export default function Menu(props) {
     setRemoveproductinfo({ ...removeProductinfo, loading: true })
 
 		if (!removeProductinfo.show) {
-			getProductInfo(id)
+      const data = { productid: id, cancelToken: source.token }
+
+			getProductInfo(data)
 				.then((res) => {
 					if (res.status == 200) {
 						return res.data
@@ -647,7 +637,9 @@ export default function Menu(props) {
 					}
 				})
 		} else {
-			removeProduct(id)
+      const data = { productid: id, cancelToken: source.token }
+
+			removeProduct(data)
 				.then((res) => {
 					if (res.status == 200) {
 						return res.data
@@ -670,7 +662,9 @@ export default function Menu(props) {
     setRemoveserviceinfo({ ...removeServiceinfo, loading: true })
 
 		if (!removeServiceinfo.show) {
-			getServiceInfo(id)
+      const data = { serviceid: id, cancelToken: source.token }
+
+			getServiceInfo(data)
 				.then((res) => {
 					if (res.status == 200) {
 						return res.data
@@ -689,7 +683,9 @@ export default function Menu(props) {
 					}
 				})
 		} else {
-			removeService(id)
+      const data = { serviceid: id, cancelToken: source.token }
+
+			removeService(data)
 				.then((res) => {
 					if (res.status == 200) {
 						return res.data
@@ -781,7 +777,7 @@ export default function Menu(props) {
 		const locationid = await AsyncStorage.getItem("locationid")
 		const { uri, name, size } = uploadMenubox
 		const image = { uri, name }
-		const data = { locationid, image, size }
+		const data = { locationid, image, size, cancelToken: source.token }
 
 		uploadMenu(data)
 			.then((res) => {
@@ -806,7 +802,7 @@ export default function Menu(props) {
 
 		const locationid = await AsyncStorage.getItem("locationid")
 		const { info } = menuPhotooption
-		const data = { locationid, photo: info.name }
+		const data = { locationid, photo: info.name, cancelToken: source.token }
 
 		deleteMenu(data)
 			.then((res) => {
@@ -878,7 +874,14 @@ export default function Menu(props) {
 	useEffect(() => {
     if (!loaded) {
       getTheLocationProfile()
-      getTheOwnerInfo()
+    }
+
+    source = axios.CancelToken.source();
+
+    return () => {
+      if (source) {
+        source.cancel("components got unmounted");
+      }
     }
 	}, [])
 
@@ -1288,15 +1291,13 @@ export default function Menu(props) {
 }
 
 const styles = StyleSheet.create({
-  changeMenuContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
-  changeMenuBox: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '95%', justifyContent: 'space-between', width: '95%' },
-  changeMenuClose: { borderRadius: wsize(8) / 2, borderStyle: 'solid', borderWidth: 5, marginVertical: 20 },
-  changeMenuHeader: { fontSize: wsize(5) },
-  changeMenuPhotoHolder: { height: wsize(20), width: wsize(20) },
-  changeMenuInput: { borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), marginHorizontal: '5%', padding: 5, width: '100%' },
-  changeMenuListBox: { paddingHorizontal: '5%', width: '100%' },
-  changeMenuDone: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 10, padding: 10, width: '50%' },
-  changeMenuDoneHeader: { fontSize: wsize(3), textAlign: 'center' },
+	menuBox: { backgroundColor: 'rgba(127, 127, 127, 0.1)', height: '100%', width: '100%' },
+	box: { flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
+
+	menuStart: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, paddingHorizontal: 10 },
+	menuStartHeader: { fontSize: wsize(7), textAlign: 'center' },
+  menuStartMessage: { fontSize: wsize(4), textAlign: 'center' },
+  menuStartDiv: { fontSize: wsize(7), fontWeight: 'bold', marginVertical: 20 },
 
   boxMenu: { backgroundColor: 'rgba(0, 0, 0, 0.2)', marginBottom: 30, paddingVertical: 10, width: '100%' },
   boxMenuRow: {  },
@@ -1317,20 +1318,6 @@ const styles = StyleSheet.create({
   boxItemActions: { flexDirection: 'row' },
   boxItemAction: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 5 },
   boxItemActionHeader: { fontSize: wsize(4), textAlign: 'center' },
-
-
-
-	menuBox: { backgroundColor: 'rgba(127, 127, 127, 0.1)', height: '100%', width: '100%' },
-	box: { flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
-
-  menusHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(20), fontWeight: 'bold', textAlign: 'center' },
-	menuPhotoActions: { flexDirection: 'row', justifyContent: 'space-around' },
-	menuPhotoAction: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 3 },
-	menuPhotoActionHeader: { fontSize: wsize(3), textAlign: 'center' },
-	menuStart: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, paddingHorizontal: 10 },
-	menuStartHeader: { fontSize: wsize(7), textAlign: 'center' },
-  menuStartMessage: { fontSize: wsize(4), textAlign: 'center' },
-  menuStartDiv: { fontSize: wsize(7), fontWeight: 'bold', marginVertical: 20 },
 
 	menu: { backgroundColor: 'white', marginBottom: 30, paddingVertical: 10, width: '100%' },
   menuRow: {  },
@@ -1426,6 +1413,16 @@ const styles = StyleSheet.create({
 	serviceInfoActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	serviceInfoAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 10, padding: 5, width: wsize(30) },
 	serviceInfoActionHeader: { fontSize: wsize(4), textAlign: 'center' },
+
+  changeMenuContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
+  changeMenuBox: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '95%', justifyContent: 'space-between', width: '95%' },
+  changeMenuClose: { borderRadius: wsize(8) / 2, borderStyle: 'solid', borderWidth: 5, marginVertical: 20 },
+  changeMenuHeader: { fontSize: wsize(5) },
+  changeMenuPhotoHolder: { height: wsize(20), width: wsize(20) },
+  changeMenuInput: { borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), marginHorizontal: '5%', padding: 5, width: '100%' },
+  changeMenuListBox: { paddingHorizontal: '5%', width: '100%' },
+  changeMenuDone: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 10, padding: 10, width: '50%' },
+  changeMenuDoneHeader: { fontSize: wsize(3), textAlign: 'center' },
 
   loading: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
   column: { flexDirection: 'column', justifyContent: 'space-around' },

@@ -3,8 +3,13 @@ import { url } from '../../assets/info'
 
 const beginUrl = `${url}/products/`
 
-export const getProductInfo = id => {
-	return axios.get(`${beginUrl}get_product_info/${id}`)
+export const getProductInfo = data => {
+  const { productid, cancelToken } = data
+
+	return axios.get(
+    `${beginUrl}get_product_info/${productid}`,
+    { cancelToken }
+  )
 }
 
 export const addNewProduct = data => {
@@ -68,6 +73,11 @@ export const updateProduct = data => {
 	)
 }
 
-export const removeProduct = (id) => {
-	return axios.post(`${beginUrl}remove_product/${id}`)
+export const removeProduct = data => {
+  const { productid, cancelToken } = data
+
+	return axios.post(
+    `${beginUrl}remove_product/${productid}`,
+    { cancelToken }
+  )
 }
