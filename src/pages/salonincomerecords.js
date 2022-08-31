@@ -37,9 +37,9 @@ export default function Salonincomerecords(props) {
   }
 
   useEffect(() => {
-    getTheIncome()
-
     source = axios.CancelToken.source();
+    
+    getTheIncome()
 
     return () => {
       if (source) {

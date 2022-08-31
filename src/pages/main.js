@@ -1411,9 +1411,9 @@ export default function Main(props) {
   }
   
 	useEffect(() => {
-    initialize()
-
     source = axios.CancelToken.source();
+    
+    initialize()
 
     return () => {
       if (source) {
@@ -3009,7 +3009,11 @@ export default function Main(props) {
                                   {accountForm.errorMsg ? <Text style={styles.errorMsg}>{accountForm.errorMsg}</Text> : null}
                                   {accountForm.loading ? <ActivityIndicator marginBottom={10} size="small"/> : null}
 
-                                  {(!accountForm.verifyCode && accountForm.addStep != 3) && (
+                                  {!(
+                                    (accountForm.addStep == 0 && accountForm.verifyCode && accountForm.addStep == 0) 
+                                    ||
+                                    (accountForm.addStep == 4 && daysInfo.done == true && daysInfo.sameHours == null)
+                                  ) && (
                                     <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
                                       <View style={{ flexDirection: 'row' }}>
                                         <TouchableOpacity style={[styles.accountformSubmit, { opacity: accountForm.loading ? 0.3 : 1 }]} disabled={accountForm.loading} onPress={() => {

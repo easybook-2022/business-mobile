@@ -376,12 +376,12 @@ const info = {
 
   // global
   "Hair salon": "Hair\nsalon",
-  "Nail salon": "Nair\nsalon",
+  "Nail salon": "Nail\nsalon",
   Store: "Store",
   Restaurant: "Restaurant",
 
   "hair salon": "hair\nsalon",
-  "nail salon": "nair\nsalon",
+  "nail salon": "nail\nsalon",
   store: "store",
   restaurant: "restaurant",
 

@@ -683,13 +683,13 @@ export default function Booktime(props) {
   }
 
   useEffect(() => {
+    source = axios.CancelToken.source();
+
     getAllTheStylists()
     getTheLocationHours()
     getAllTheWorkersTime()
     getAllScheduledTimes()
     getTheAppointmentInfo()
-
-    source = axios.CancelToken.source();
 
     return () => {
       if (source) {

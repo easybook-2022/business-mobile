@@ -143,9 +143,9 @@ export default function Tables() {
   }
 
   useEffect(() => {
-    getTheTables()
-
     source = axios.CancelToken.source();
+    
+    getTheTables()
 
     return () => {
       if (source) {

@@ -872,11 +872,11 @@ export default function Menu(props) {
 	}
 
 	useEffect(() => {
+    source = axios.CancelToken.source();
+    
     if (!loaded) {
       getTheLocationProfile()
     }
-
-    source = axios.CancelToken.source();
 
     return () => {
       if (source) {

@@ -16,7 +16,6 @@ import Resetpassword from './src/pages/resetpassword'
 import Picklanguage from './src/pages/picklanguage'
 import Tables from './src/pages/tables'
 import List from './src/pages/list'
-import Authoption from './src/pages/authoption'
 import Locationsetup from './src/pages/locationsetup'
 import Main from './src/pages/main'
 import Booktime from './src/pages/booktime'
@@ -104,7 +103,6 @@ export default function App() {
               )
             })}/>
             <Stack.Screen name="list" component={List} options={{ headerShown: false }}/>
-            <Stack.Screen name="authoption" component={Authoption} options={{ headerShown: false }}/>
             <Stack.Screen name="locationsetup" component={Locationsetup} options={{ headerShown: false }}/>
             <Stack.Screen name="main" component={Main} options={{ headerShown: false }}/>
             <Stack.Screen name="booktime" component={Booktime} options={({ navigation, route }) => ({

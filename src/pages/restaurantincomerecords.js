@@ -38,9 +38,9 @@ export default function Restaurantincomerecords(props) {
   }
 
   useEffect(() => {
-    getTheIncome()
-
     source = axios.CancelToken.source();
+    
+    getTheIncome()
 
     return () => {
       if (source) {

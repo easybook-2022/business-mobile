@@ -461,9 +461,9 @@ export default function Locationsetup({ navigation }) {
   }
 
   useEffect(() => {
-    initialize()
-
     source = axios.CancelToken.source();
+
+    initialize()
 
     return () => {
       if (source) {
