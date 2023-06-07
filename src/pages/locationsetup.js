@@ -497,7 +497,7 @@ export default function Locationsetup({ navigation }) {
                         minLength={2} 
                         fetchDetails={true}
                         onPress={(data, details = null) => getCoords(details.geometry.location)}
-                        query={{ key: 'AIzaSyAKftYxd_CLjHhk0gAKppqB3LxgR6aYFjE', language: 'en' }}
+                        query={{ key: 'AIzaSyB-j2gPbIFPN5ZocdemALOBDEr-zkx6dDU', language: 'en' }}
                         nearbyPlacesAPI='GooglePlacesSearch'
                         debounce={100}
                       />
@@ -973,7 +973,7 @@ export default function Locationsetup({ navigation }) {
                 {(setupType == "logo" && (cameraPermission || pickingPermission)) && (
                   <View style={styles.cameraContainer}>
                     <Text style={[styles.inputHeader, { textAlign: 'center' }]}>{tr.t("locationsetup.photo." + header)} (Optional)</Text>
-
+                    
                     {logo.uri ? (
                       <>
                         <Image style={styles.camera} source={{ uri: logo.uri }}/>

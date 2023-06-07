@@ -2,7 +2,7 @@
   "expo": {
     "name": "EasyBook B",
     "slug": "serviceapp-business",
-    "version": "0.0.0",
+    "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -28,7 +28,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.geottuse.serviceapp.business",
-      "buildNumber": "0",
+      "buildNumber": "27",
       "infoPlist": {
         "NSCameraUsageDescription": "EasyBook (Business) uses camera to allow you to capture a photo for your profile/location/menu/product/service",
         "NSPhotoLibraryUsageDescription": "EasyBook (Business) allows users to select photo for your profile/location/menu/product/service",
@@ -43,7 +43,7 @@
       "googleServicesFile": "./google-services.json",
       "config": {
         "googleMaps": {
-          "apiKey": "AIzaSyAKftYxd_CLjHhk0gAKppqB3LxgR6aYFjE"
+          "apiKey": "AIzaSyB-j2gPbIFPN5ZocdemALOBDEr-zkx6dDU"
         }
       }
     }

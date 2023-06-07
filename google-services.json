@@ -1,34 +1,41 @@
 {
   "project_info": {
-    "project_number": "519136339510",
-    "project_id": "serviceapp-business",
-    "storage_bucket": "serviceapp-business.appspot.com"
+    "project_number": "435676304591",
+    "project_id": "easybook-a2759",
+    "storage_bucket": "easybook-a2759.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:519136339510:android:a7702e8997041a2d05da97",
+        "mobilesdk_app_id": "1:435676304591:android:dd0a3e9e06e0c452ccd3ba",
         "android_client_info": {
           "package_name": "com.geottuse.serviceapp.business"
         }
       },
       "oauth_client": [
         {
-          "client_id": "519136339510-dpfm8qmfu4ss679k7pb1khd4ijsvghm7.apps.googleusercontent.com",
+          "client_id": "435676304591-knlrqqlnef8c332hs2uunrafc6qiq6ji.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyDpsMF-Loqvp5ticIW-LISkt8G495X_3GY"
+          "current_key": "AIzaSyDApacTKouN7rwxjjWDpcOA-iYLxsztDGQ"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "519136339510-dpfm8qmfu4ss679k7pb1khd4ijsvghm7.apps.googleusercontent.com",
+              "client_id": "435676304591-knlrqqlnef8c332hs2uunrafc6qiq6ji.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "435676304591-h7gmmqhoiat9seatdndfgcoahvnuqnon.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.geottuse.serviceapp.business"
+              }
             }
           ]
         }
